@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PAIZÃO RENT CAR - Sistema de Locação</title>
 
-    <!-- Firebase SDKs (CDN) -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js">
     </script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js">
@@ -34,13 +33,11 @@
             --fluxo-saida: #e74c3c;
             --fluxo-saldo: #e6a817;
         }
-
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-
         body {
             font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
             background: var(--bg-dark);
@@ -49,7 +46,6 @@
             overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
         }
-
         #login-screen {
             display: flex;
             align-items: center;
@@ -233,7 +229,6 @@
         #app-screen.active {
             display: flex;
         }
-
         .top-header {
             position: sticky;
             top: 0;
@@ -272,7 +267,6 @@
             text-transform: uppercase;
             letter-spacing: 1.5px;
         }
-
         .top-nav {
             display: flex;
             align-items: center;
@@ -309,7 +303,6 @@
         .top-nav button .nav-icon {
             font-size: 18px;
         }
-
         #btn-filtro-locacoes-nav {
             border: 1px dashed var(--border);
             margin-left: 4px;
@@ -319,7 +312,6 @@
             background: rgba(230, 168, 23, 0.08);
             color: var(--primary);
         }
-
         #btn-menu-nav {
             border: 2px solid var(--primary);
             background: rgba(230, 168, 23, 0.08);
@@ -345,7 +337,6 @@
                 box-shadow: 0 0 0 10px rgba(230, 168, 23, 0);
             }
         }
-
         .top-user {
             display: flex;
             align-items: center;
@@ -394,7 +385,6 @@
             background: rgba(231, 76, 60, 0.1);
             border-color: #e74c3c;
         }
-
         .mobile-menu-toggle {
             display: none;
             background: transparent;
@@ -409,14 +399,12 @@
         .mobile-menu-toggle:hover {
             background: rgba(255, 255, 255, 0.05);
         }
-
         .main-content {
             flex: 1;
             padding: 28px 32px;
             background: var(--bg-dark);
             min-height: calc(100vh - var(--header-height));
         }
-
         .page {
             display: none;
             animation: fadeIn 0.35s ease;
@@ -447,7 +435,6 @@
             color: var(--text-muted);
             font-size: 13px;
         }
-
         .card {
             background: var(--bg-card);
             border: 1px solid var(--border);
@@ -550,7 +537,6 @@
                 padding: 4px 10px;
             }
         }
-
         .form-group-app {
             margin-bottom: 16px;
         }
@@ -681,7 +667,6 @@
         .btn-pdf:hover {
             background: #3b6fd4;
         }
-
         .table-wrapper {
             overflow-x: auto;
             border-radius: 10px;
@@ -857,7 +842,6 @@
             color: var(--fluxo-saldo);
             font-weight: 700;
         }
-
         .stats-row {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
@@ -918,7 +902,6 @@
         .stat-card.saldo-card.saldo-negativo .stat-value {
             color: var(--fluxo-saida);
         }
-
         .opcionais-group {
             display: flex;
             flex-wrap: wrap;
@@ -958,7 +941,45 @@
             cursor: pointer;
             flex-shrink: 0;
         }
-
+        .permissoes-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding-top: 4px;
+        }
+        .permissoes-grid label {
+            display: flex !important;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            color: #d0d3db !important;
+            font-size: 12px !important;
+            font-weight: 400 !important;
+            text-transform: none !important;
+            letter-spacing: 0 !important;
+            user-select: none;
+            padding: 6px 12px;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        .permissoes-grid label:hover {
+            border-color: #555;
+            background: #1f2330;
+        }
+        .permissoes-grid label:has(input:checked) {
+            border-color: var(--accent);
+            background: rgba(45, 95, 207, 0.15);
+            color: #fff !important;
+        }
+        .permissoes-grid input[type="checkbox"] {
+            width: 14px !important;
+            height: 14px;
+            accent-color: var(--accent);
+            cursor: pointer;
+            flex-shrink: 0;
+        }
         .documentos-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -980,7 +1001,6 @@
         .documentos-grid .form-group-app label {
             font-size: 10px;
         }
-
         .edit-banner {
             background: rgba(45, 95, 207, 0.15);
             border: 1px solid rgba(45, 95, 207, 0.4);
@@ -997,7 +1017,6 @@
         .edit-banner.show {
             display: flex;
         }
-
         .toast {
             position: fixed;
             top: 20px;
@@ -1041,7 +1060,6 @@
         .toast-info {
             background: #2d5fcf;
         }
-
         .search-bar-container {
             display: flex;
             align-items: center;
@@ -1168,8 +1186,6 @@
                 justify-content: center;
             }
         }
-
-        /* Indicador de sincronização Firebase */
         .sync-indicator {
             display: inline-flex;
             align-items: center;
@@ -1204,6 +1220,23 @@
             50% {
                 opacity: 0.4;
             }
+        }
+        .readonly-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            background: rgba(230, 168, 23, 0.2);
+            color: var(--primary);
+            border: 1px solid rgba(230, 168, 23, 0.4);
+        }
+        .section-divider {
+            border-top: 1px dashed var(--border);
+            margin: 20px 0 16px 0;
+            padding-top: 16px;
         }
     </style>
 </head>
@@ -1242,39 +1275,22 @@
                     <small>Gestão de Frotas</small>
                 </div>
             </div>
-
             <nav class="top-nav" id="top-nav">
-                <button class="active" data-page="dashboard">
-                    <span class="nav-icon">📊</span> Dashboard
-                </button>
-                <button data-page="veiculos">
-                    <span class="nav-icon">🚙</span> Veículos
-                </button>
-                <button data-page="locatarios">
-                    <span class="nav-icon">👥</span> Locatários
-                </button>
-                <button data-page="locacoes">
-                    <span class="nav-icon">📋</span> Locações
-                </button>
-                <button data-page="fluxocaixa" style="border:1px solid var(--border);">
-                    <span class="nav-icon">💰</span> Fluxo de Caixa
-                </button>
-                <button id="btn-filtro-locacoes-nav" title="Abrir filtro de locações em janela separada">
-                    <span class="nav-icon">🔍</span> Filtro
-                </button>
-                <button id="btn-menu-nav" title="Abrir o sistema completo na janela SEGURO (sem login)">
-                    <span class="nav-icon">🪟</span> SEGURO
-                </button>
+                <button class="active" data-page="dashboard"><span class="nav-icon">📊</span> Dashboard</button>
+                <button data-page="veiculos"><span class="nav-icon">🚙</span> Veículos</button>
+                <button data-page="locatarios" class="nav-admin-only"><span class="nav-icon">👥</span> Locatários</button>
+                <button data-page="locacoes" class="nav-admin-only"><span class="nav-icon">📋</span> Locações</button>
+                <button data-page="fluxocaixa" class="nav-admin-only" style="border:1px solid var(--border);"><span class="nav-icon">💰</span> Fluxo de Caixa</button>
+                <button data-page="usuarios" class="nav-admin-only" style="border:1px solid var(--accent);"><span class="nav-icon">👤</span> Usuários</button>
+                <button id="btn-filtro-locacoes-nav" class="nav-admin-only" title="Abrir filtro de locações em janela separada"><span class="nav-icon">🔍</span> Filtro</button>
+                <button id="btn-menu-nav" title="Abrir o sistema completo na janela SEGURO (sem login)"><span class="nav-icon">🪟</span> SEGURO</button>
             </nav>
-
             <div class="top-user">
-                <span class="sync-indicator online" id="sync-indicator" title="Status da sincronização com Firebase">
-                    <span class="sync-dot"></span> <span id="sync-text">Online</span>
-                </span>
-                <div class="user-avatar">S</div>
+                <span class="sync-indicator online" id="sync-indicator" title="Status da sincronização com Firebase"><span class="sync-dot"></span> <span id="sync-text">Online</span></span>
+                <div class="user-avatar" id="user-avatar-inicial">S</div>
                 <div class="user-info">
-                    <div class="user-name">SERGIO</div>
-                    <div class="user-role">Administrador</div>
+                    <div class="user-name" id="user-name-display">SERGIO</div>
+                    <div class="user-role" id="user-role-display">Administrador</div>
                 </div>
                 <button class="btn-logout" id="btn-logout" title="Sair">🚪</button>
                 <button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="Menu">☰</button>
@@ -1284,106 +1300,38 @@
         <main class="main-content" id="main-content">
             <!-- Dashboard -->
             <div class="page active" id="page-dashboard">
-                <div class="page-header">
-                    <h2>📊 Dashboard</h2>
-                    <p>Visão geral do sistema PAIZÃO RENT CAR</p>
-                </div>
+                <div class="page-header"><h2>📊 Dashboard</h2><p>Visão geral do sistema PAIZÃO RENT CAR</p></div>
                 <div class="stats-row" id="stats-row">
-                    <div class="stat-card">
-                        <div class="stat-icon">🚙</div>
-                        <div class="stat-value" id="stat-veiculos">0</div>
-                        <div class="stat-label">Veículos Cadastrados</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">👥</div>
-                        <div class="stat-value" id="stat-locatarios">0</div>
-                        <div class="stat-label">Locatários</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">📋</div>
-                        <div class="stat-value" id="stat-locacoes">0</div>
-                        <div class="stat-label">Locações Ativas</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">💰</div>
-                        <div class="stat-value" id="stat-receita">R$ 0</div>
-                        <div class="stat-label">Receita Semanal Estimada</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">🔒</div>
-                        <div class="stat-value" id="stat-receita-caucao">R$ 0</div>
-                        <div class="stat-label">Receita Caução Estimada</div>
-                    </div>
+                    <div class="stat-card"><div class="stat-icon">🚙</div><div class="stat-value" id="stat-veiculos">0</div><div class="stat-label">Veículos Cadastrados</div></div>
+                    <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-value" id="stat-locatarios">0</div><div class="stat-label">Locatários</div></div>
+                    <div class="stat-card"><div class="stat-icon">📋</div><div class="stat-value" id="stat-locacoes">0</div><div class="stat-label">Locações Ativas</div></div>
+                    <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value" id="stat-receita">R$ 0</div><div class="stat-label">Receita Semanal Estimada</div></div>
+                    <div class="stat-card"><div class="stat-icon">🔒</div><div class="stat-value" id="stat-receita-caucao">R$ 0</div><div class="stat-label">Receita Caução Estimada</div></div>
                 </div>
-                <div class="card">
-                    <div class="card-title"><span class="icon">🕐</span> Últimos Cadastros</div>
-                    <div id="ultimos-cadastros" style="color:var(--text-muted); font-size:13px;">
-                        Nenhum cadastro realizado ainda.
-                    </div>
-                </div>
+                <div class="card"><div class="card-title"><span class="icon">🕐</span> Últimos Cadastros</div><div id="ultimos-cadastros" style="color:var(--text-muted);font-size:13px;">Nenhum cadastro realizado ainda.</div></div>
             </div>
 
             <!-- Veículos -->
             <div class="page" id="page-veiculos">
-                <div class="page-header">
-                    <h2>🚙 Cadastro de Veículos</h2>
-                    <p>Gerencie a frota de veículos com todos os dados, valores e documentos</p>
-                </div>
+                <div class="page-header"><h2>🚙 Cadastro de Veículos</h2><p id="veiculos-subtitle">Gerencie a frota de veículos com todos os dados, valores e documentos</p></div>
                 <div class="card" id="card-form-veiculo">
                     <div class="card-title"><span class="icon">📝</span> <span id="veic-form-title">Novo Veículo</span></div>
-                    <div class="edit-banner" id="edit-banner-veiculo">
-                        ✏️ <span id="edit-banner-veiculo-text">Você está editando um veículo existente.</span>
-                    </div>
+                    <div class="edit-banner" id="edit-banner-veiculo">✏️ <span id="edit-banner-veiculo-text">Você está editando um veículo existente.</span></div>
                     <form id="form-veiculo" autocomplete="off">
                         <div class="grid-3">
-                            <div class="form-group-app">
-                                <label>Marca / Fabricante</label>
-                                <input type="text" id="v-marca" placeholder="Ex: Volkswagen" required>
-                            </div>
-                            <div class="form-group-app">
-                                <label>Modelo do Veículo</label>
-                                <input type="text" id="v-modelo" placeholder="Ex: Gol 1.6" required>
-                            </div>
-                            <div class="form-group-app">
-                                <label>Cor</label>
-                                <input type="text" id="v-cor" placeholder="Ex: Branco" required>
-                            </div>
-                            <div class="form-group-app">
-                                <label>Potência do Motor</label>
-                                <input type="text" id="v-potencia" placeholder="Ex: 1.6, 2.0, 1.0 Turbo" required>
-                            </div>
-                            <div class="form-group-app">
-                                <label>Placa</label>
-                                <input type="text" id="v-placa" placeholder="Ex: ABC-1234" required maxlength="8">
-                            </div>
-                            <div class="form-group-app">
-                                <label>KM Atual</label>
-                                <input type="number" id="v-km" placeholder="Ex: 45000" required>
-                            </div>
-                            <div class="form-group-app">
-                                <label>RENAVAN</label>
-                                <input type="text" id="v-renavan" placeholder="11 dígitos" required maxlength="11">
-                            </div>
-                            <div class="form-group-app">
-                                <label>Chassi</label>
-                                <input type="text" id="v-chassi" placeholder="17 caracteres" required maxlength="17">
-                            </div>
-                            <div class="form-group-app">
-                                <label>Valor Locação Semanal (R$)</label>
-                                <input type="text" id="v-valor-semanal" placeholder="R$ 0,00" required oninput="formatarMoedaInput(this)" onblur="formatarMoedaInputBlur(this)">
-                            </div>
-                            <div class="form-group-app">
-                                <label>Valor do Caução (R$)</label>
-                                <input type="text" id="v-caucao" placeholder="R$ 0,00" required oninput="formatarMoedaInput(this)" onblur="formatarMoedaInputBlur(this)">
-                            </div>
-                            <div class="form-group-app">
-                                <label>Anexar Documento (PDF)</label>
-                                <input type="file" id="v-documento" accept=".pdf">
-                                <small style="color:var(--text-muted); font-size:10px;">Arquivo PDF do documento do veículo</small>
-                            </div>
+                            <div class="form-group-app"><label>Marca / Fabricante</label><input type="text" id="v-marca" placeholder="Ex: Volkswagen" required></div>
+                            <div class="form-group-app"><label>Modelo do Veículo</label><input type="text" id="v-modelo" placeholder="Ex: Gol 1.6" required></div>
+                            <div class="form-group-app"><label>Cor</label><input type="text" id="v-cor" placeholder="Ex: Branco" required></div>
+                            <div class="form-group-app"><label>Potência do Motor</label><input type="text" id="v-potencia" placeholder="Ex: 1.6, 2.0, 1.0 Turbo" required></div>
+                            <div class="form-group-app"><label>Placa</label><input type="text" id="v-placa" placeholder="Ex: ABC-1234" required maxlength="8"></div>
+                            <div class="form-group-app"><label>KM Atual</label><input type="number" id="v-km" placeholder="Ex: 45000" required></div>
+                            <div class="form-group-app"><label>RENAVAN</label><input type="text" id="v-renavan" placeholder="11 dígitos" required maxlength="11"></div>
+                            <div class="form-group-app"><label>Chassi</label><input type="text" id="v-chassi" placeholder="17 caracteres" required maxlength="17"></div>
+                            <div class="form-group-app"><label>Valor Locação Semanal (R$)</label><input type="text" id="v-valor-semanal" placeholder="R$ 0,00" required oninput="formatarMoedaInput(this)" onblur="formatarMoedaInputBlur(this)"></div>
+                            <div class="form-group-app"><label>Valor do Caução (R$)</label><input type="text" id="v-caucao" placeholder="R$ 0,00" required oninput="formatarMoedaInput(this)" onblur="formatarMoedaInputBlur(this)"></div>
+                            <div class="form-group-app"><label>Anexar Documento (PDF)</label><input type="file" id="v-documento" accept=".pdf"><small style="color:var(--text-muted);font-size:10px;">Arquivo PDF do documento do veículo</small></div>
                         </div>
-                        <div class="form-group-app" style="margin-top:4px;">
-                            <label>Opcionais do Veículo</label>
+                        <div class="form-group-app" style="margin-top:4px;"><label>Opcionais do Veículo</label>
                             <div class="opcionais-group">
                                 <label><input type="checkbox" id="v-op-ar"> ❄️ Ar Condicionado</label>
                                 <label><input type="checkbox" id="v-op-vidros"> 🪟 Vidros Elétricos</label>
@@ -1391,7 +1339,15 @@
                                 <label><input type="checkbox" id="v-op-rodas"> 🛞 Rodas de Liga Leve</label>
                             </div>
                         </div>
-                        <div style="display:flex; gap:12px; margin-top:8px;">
+                        <div class="section-divider" id="section-permissoes-veiculo">
+                            <div class="form-group-app"><label>👤 Usuários com Acesso a este Veículo</label>
+                                <div class="permissoes-grid" id="permissoes-veiculo-grid">
+                                    <span style="color:var(--text-muted);font-size:12px;">Nenhum usuário cadastrado.</span>
+                                </div>
+                                <small style="color:var(--text-muted);font-size:10px;">Selecione os usuários que poderão visualizar este veículo. Se nenhum for selecionado, apenas o administrador terá acesso.</small>
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:12px;margin-top:8px;">
                             <button type="submit" class="btn-app btn-save" id="btn-submit-veiculo">💾 Salvar Veículo</button>
                             <button type="button" class="btn-app btn-cancel" id="btn-cancel-veiculo">Limpar</button>
                             <button type="button" class="btn-app btn-cancel" id="btn-cancel-edicao-veiculo" style="display:none;">❌ Cancelar Edição</button>
@@ -1404,150 +1360,61 @@
                         <button class="scroll-btn scroll-btn-left" aria-label="Rolar para esquerda">◀</button>
                         <button class="scroll-btn scroll-btn-right" aria-label="Rolar para direita">▶</button>
                         <table id="tabela-veiculos">
-                            <thead>
-                                <tr>
-                                    <th>Marca</th><th>Modelo</th><th>Cor</th><th>Potência</th><th>Placa</th><th>KM</th><th>RENAVAN</th><th>Chassi</th><th>Valor Semanal</th><th>Caução</th><th>Opcionais</th><th>Documento</th><th>Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tbody-veiculos">
-                                <tr><td colspan="13" class="empty-state"><span class="icon">🚙</span><br>Nenhum veículo cadastrado</td></tr>
-                            </tbody>
+                            <thead><tr><th>Marca</th><th>Modelo</th><th>Cor</th><th>Potência</th><th>Placa</th><th>KM</th><th>RENAVAN</th><th>Chassi</th><th>Valor Semanal</th><th>Caução</th><th>Opcionais</th><th>Documento</th><th id="th-acoes-veiculos">Ações</th></tr></thead>
+                            <tbody id="tbody-veiculos"><tr><td colspan="13" class="empty-state"><span class="icon">🚙</span><br>Nenhum veículo cadastrado</td></tr></tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
-            <!-- Locatários -->
+            <!-- Locatários (admin only) -->
             <div class="page" id="page-locatarios">
-                <div class="page-header">
-                    <h2>👥 Cadastro de Locatários</h2>
-                    <p>Gerencie os dados pessoais dos locatários</p>
-                </div>
+                <div class="page-header"><h2>👥 Cadastro de Locatários</h2><p>Gerencie os dados pessoais dos locatários</p></div>
                 <div class="card" id="card-form-locatario">
                     <div class="card-title"><span class="icon">📝</span> <span id="locat-form-title">Novo Locatário</span></div>
-                    <div class="edit-banner" id="edit-banner-locatario">
-                        ✏️ <span id="edit-banner-locatario-text">Você está editando um locatário existente.</span>
-                    </div>
+                    <div class="edit-banner" id="edit-banner-locatario">✏️ <span id="edit-banner-locatario-text">Você está editando um locatário existente.</span></div>
                     <form id="form-locatario" autocomplete="off">
                         <div class="grid-3">
-                            <div class="form-group-app">
-                                <label>Nome Completo</label>
-                                <input type="text" id="l-nome" placeholder="Nome do locatário" required>
-                            </div>
-                            <div class="form-group-app">
-                                <label>CPF</label>
-                                <input type="text" id="l-cpf" placeholder="000.000.000-00" required maxlength="14">
-                            </div>
-                            <div class="form-group-app">
-                                <label>RG</label>
-                                <input type="text" id="l-rg" placeholder="Número do RG" required>
-                            </div>
-                            <div class="form-group-app">
-                                <label>CNH</label>
-                                <input type="text" id="l-cnh" placeholder="Número da CNH" required>
-                            </div>
-                            <div class="form-group-app">
-                                <label>Telefone</label>
-                                <input type="text" id="l-fone" placeholder="(00) 00000-0000" required maxlength="15">
-                            </div>
-                            <div class="form-group-app">
-                                <label>CEP</label>
-                                <input type="text" id="l-cep" placeholder="00000-000" required maxlength="9">
-                            </div>
-                            <div class="form-group-app">
-                                <label>Endereço</label>
-                                <input type="text" id="l-endereco" placeholder="Rua, número" required>
-                            </div>
-                            <div class="form-group-app">
-                                <label>Bairro</label>
-                                <input type="text" id="l-bairro" placeholder="Bairro" required>
-                            </div>
-                            <div class="form-group-app">
-                                <label>Cidade</label>
-                                <input type="text" id="l-cidade" placeholder="Cidade" required>
-                            </div>
+                            <div class="form-group-app"><label>Nome Completo</label><input type="text" id="l-nome" placeholder="Nome do locatário" required></div>
+                            <div class="form-group-app"><label>CPF</label><input type="text" id="l-cpf" placeholder="000.000.000-00" required maxlength="14"></div>
+                            <div class="form-group-app"><label>RG</label><input type="text" id="l-rg" placeholder="Número do RG" required></div>
+                            <div class="form-group-app"><label>CNH</label><input type="text" id="l-cnh" placeholder="Número da CNH" required></div>
+                            <div class="form-group-app"><label>Telefone</label><input type="text" id="l-fone" placeholder="(00) 00000-0000" required maxlength="15"></div>
+                            <div class="form-group-app"><label>CEP</label><input type="text" id="l-cep" placeholder="00000-000" required maxlength="9"></div>
+                            <div class="form-group-app"><label>Endereço</label><input type="text" id="l-endereco" placeholder="Rua, número" required></div>
+                            <div class="form-group-app"><label>Bairro</label><input type="text" id="l-bairro" placeholder="Bairro" required></div>
+                            <div class="form-group-app"><label>Cidade</label><input type="text" id="l-cidade" placeholder="Cidade" required></div>
                         </div>
-                        <div style="display:flex; gap:12px; margin-top:8px;">
+                        <div style="display:flex;gap:12px;margin-top:8px;">
                             <button type="submit" class="btn-app btn-save" id="btn-submit-locatario">💾 Salvar Locatário</button>
                             <button type="button" class="btn-app btn-cancel" id="btn-cancel-locatario">Limpar</button>
                             <button type="button" class="btn-app btn-cancel" id="btn-cancel-edicao-locatario" style="display:none;">❌ Cancelar Edição</button>
                         </div>
                     </form>
                 </div>
-                <div class="card">
-                    <div class="card-title"><span class="icon">📋</span> Locatários Cadastrados</div>
+                <div class="card"><div class="card-title"><span class="icon">📋</span> Locatários Cadastrados</div>
                     <div class="table-wrapper" id="table-wrapper-locatarios">
                         <button class="scroll-btn scroll-btn-left" aria-label="Rolar para esquerda">◀</button>
                         <button class="scroll-btn scroll-btn-right" aria-label="Rolar para direita">▶</button>
-                        <table id="tabela-locatarios">
-                            <thead>
-                                <tr>
-                                    <th>Nome</th><th>CPF</th><th>RG</th><th>CNH</th><th>Telefone</th><th>Cidade</th><th>Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tbody-locatarios">
-                                <tr><td colspan="7" class="empty-state"><span class="icon">👥</span><br>Nenhum locatário cadastrado</td></tr>
-                            </tbody>
-                        </table>
+                        <table id="tabela-locatarios"><thead><tr><th>Nome</th><th>CPF</th><th>RG</th><th>CNH</th><th>Telefone</th><th>Cidade</th><th>Ações</th></tr></thead><tbody id="tbody-locatarios"><tr><td colspan="7" class="empty-state"><span class="icon">👥</span><br>Nenhum locatário cadastrado</td></tr></tbody></table>
                     </div>
                 </div>
             </div>
 
-            <!-- Locações -->
+            <!-- Locações (admin only) -->
             <div class="page" id="page-locacoes">
-                <div class="page-header">
-                    <h2>📋 Locações</h2>
-                    <p>Vincule locatários a veículos e gerencie as locações</p>
-                </div>
+                <div class="page-header"><h2>📋 Locações</h2><p>Vincule locatários a veículos e gerencie as locações</p></div>
                 <div class="card" id="card-form-locacao">
                     <div class="card-title"><span class="icon">🔗</span> <span id="loc-form-title">Nova Locação</span></div>
-                    <div class="edit-banner" id="edit-banner">
-                        ✏️ <span id="edit-banner-text">Você está editando uma locação existente.</span>
-                    </div>
+                    <div class="edit-banner" id="edit-banner">✏️ <span id="edit-banner-text">Você está editando uma locação existente.</span></div>
                     <form id="form-locacao" autocomplete="off">
-                        <div class="grid-2">
-                            <div class="form-group-app">
-                                <label>Veículo</label>
-                                <select id="loc-veiculo" required>
-                                    <option value="">Selecione um veículo...</option>
-                                </select>
-                            </div>
-                            <div class="form-group-app">
-                                <label>Locatário</label>
-                                <select id="loc-locatario" required>
-                                    <option value="">Selecione um locatário...</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="grid-2">
-                            <div class="form-group-app">
-                                <label>Data Início</label>
-                                <input type="date" id="loc-data-inicio" required>
-                            </div>
-                            <div class="form-group-app">
-                                <label>Data Fim do Contrato</label>
-                                <input type="date" id="loc-data-fim" required>
-                            </div>
-                        </div>
+                        <div class="grid-2"><div class="form-group-app"><label>Veículo</label><select id="loc-veiculo" required><option value="">Selecione um veículo...</option></select></div><div class="form-group-app"><label>Locatário</label><select id="loc-locatario" required><option value="">Selecione um locatário...</option></select></div></div>
+                        <div class="grid-2"><div class="form-group-app"><label>Data Início</label><input type="date" id="loc-data-inicio" required></div><div class="form-group-app"><label>Data Fim do Contrato</label><input type="date" id="loc-data-fim" required></div></div>
                         <div class="card-title" style="margin-top:20px;"><span class="icon">💳</span> Pagamento do Caução</div>
                         <div class="grid-3">
-                            <div class="form-group-app">
-                                <label>Forma Pagamento Caução</label>
-                                <select id="loc-forma-caucao" required>
-                                    <option value="">Selecione...</option>
-                                    <option value="avista">À Vista</option>
-                                    <option value="parcelado">Parcelado na Semana</option>
-                                    <option value="entrada_parcelado">Caução com Entrada e Parcelamento</option>
-                                </select>
-                            </div>
-                            <div class="form-group-app" id="loc-grupo-entrada-caucao" style="display:none;">
-                                <label>Valor da Entrada do Caução (R$)</label>
-                                <input type="text" id="loc-entrada-caucao" placeholder="R$ 0,00" step="0.01" min="0" oninput="formatarMoedaInput(this)" onblur="formatarMoedaInputBlur(this)">
-                            </div>
-                            <div class="form-group-app" id="loc-grupo-parcelas" style="display:none;">
-                                <label>Nº de Parcelas (na semana)</label>
-                                <input type="number" id="loc-parcelas" placeholder="Ex: 4" min="1" max="20" value="2">
-                            </div>
+                            <div class="form-group-app"><label>Forma Pagamento Caução</label><select id="loc-forma-caucao" required><option value="">Selecione...</option><option value="avista">À Vista</option><option value="parcelado">Parcelado na Semana</option><option value="entrada_parcelado">Caução com Entrada e Parcelamento</option></select></div>
+                            <div class="form-group-app" id="loc-grupo-entrada-caucao" style="display:none;"><label>Valor da Entrada do Caução (R$)</label><input type="text" id="loc-entrada-caucao" placeholder="R$ 0,00" step="0.01" min="0" oninput="formatarMoedaInput(this)" onblur="formatarMoedaInputBlur(this)"></div>
+                            <div class="form-group-app" id="loc-grupo-parcelas" style="display:none;"><label>Nº de Parcelas (na semana)</label><input type="number" id="loc-parcelas" placeholder="Ex: 4" min="1" max="20" value="2"></div>
                         </div>
                         <div class="card-title" style="margin-top:20px;"><span class="icon">📎</span> Documentos do Locatário (até 8 anexos)</div>
                         <div class="documentos-grid" id="documentos-locatario-grid">
@@ -1560,149 +1427,101 @@
                             <div class="form-group-app"><label>DOC CARRO</label><input type="file" accept=".pdf,.jpg,.jpeg,.png" class="doc-input"></div>
                             <div class="form-group-app"><label>COMPR ENDEREÇO</label><input type="file" accept=".pdf,.jpg,.jpeg,.png" class="doc-input"></div>
                         </div>
-                        <div style="display:flex; gap:12px; margin-top:16px;">
+                        <div style="display:flex;gap:12px;margin-top:16px;">
                             <button type="submit" class="btn-app btn-save" id="btn-submit-locacao">✅ Confirmar Locação</button>
                             <button type="button" class="btn-app btn-cancel" id="btn-cancel-edicao-locacao" style="display:none;">❌ Cancelar Edição</button>
                         </div>
                     </form>
                 </div>
-                <div class="card">
-                    <div class="card-title"><span class="icon">📋</span> Locações Ativas</div>
+                <div class="card"><div class="card-title"><span class="icon">📋</span> Locações Ativas</div>
                     <div class="search-bar-container" id="search-bar-locacoes">
-                        <div class="search-input-wrapper">
-                            <span class="search-icon">🔍</span>
-                            <input type="text" id="input-busca-locacoes" placeholder="Pesquisar por PLACA do veículo ou CPF do locatário..." autocomplete="off">
-                            <button class="clear-search-btn" id="clear-search-btn" title="Limpar pesquisa" type="button">✕</button>
-                        </div>
-                        <div class="search-results-info" id="search-results-info">
-                            <span id="search-count-text">Total: <strong class="highlight-count" id="search-count-num">0</strong> locações</span>
-                        </div>
-                        <button class="btn-limpar-filtro" id="btn-limpar-filtro-locacoes" style="display:none;" type="button">
-                            🧹 Limpar Filtro
-                        </button>
+                        <div class="search-input-wrapper"><span class="search-icon">🔍</span><input type="text" id="input-busca-locacoes" placeholder="Pesquisar por PLACA do veículo ou CPF do locatário..." autocomplete="off"><button class="clear-search-btn" id="clear-search-btn" title="Limpar pesquisa" type="button">✕</button></div>
+                        <div class="search-results-info" id="search-results-info"><span id="search-count-text">Total: <strong class="highlight-count" id="search-count-num">0</strong> locações</span></div>
+                        <button class="btn-limpar-filtro" id="btn-limpar-filtro-locacoes" style="display:none;" type="button">🧹 Limpar Filtro</button>
                     </div>
                     <div class="table-wrapper" id="table-wrapper-locacoes">
                         <button class="scroll-btn scroll-btn-left" aria-label="Rolar para esquerda">◀</button>
                         <button class="scroll-btn scroll-btn-right" aria-label="Rolar para direita">▶</button>
-                        <table id="tabela-locacoes">
-                            <thead>
-                                <tr>
-                                    <th>Veículo</th><th>Placa</th><th>Locatário</th><th>CPF</th><th>Data Início</th><th>Data Fim</th><th>Valor Semanal</th><th>Caução</th><th>Status</th><th>Docs</th><th>Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tbody-locacoes">
-                                <tr><td colspan="11" class="empty-state"><span class="icon">📋</span><br>Nenhuma locação ativa</td></tr>
-                            </tbody>
-                        </table>
+                        <table id="tabela-locacoes"><thead><tr><th>Veículo</th><th>Placa</th><th>Locatário</th><th>CPF</th><th>Data Início</th><th>Data Fim</th><th>Valor Semanal</th><th>Caução</th><th>Status</th><th>Docs</th><th>Ações</th></tr></thead><tbody id="tbody-locacoes"><tr><td colspan="11" class="empty-state"><span class="icon">📋</span><br>Nenhuma locação ativa</td></tr></tbody></table>
                     </div>
                 </div>
             </div>
 
-            <!-- Fluxo de Caixa -->
+            <!-- Fluxo de Caixa (admin only) -->
             <div class="page" id="page-fluxocaixa">
-                <div class="page-header">
-                    <h2>💰 Fluxo de Caixa</h2>
-                    <p>Registre entradas e saídas financeiras e acompanhe o saldo</p>
-                </div>
+                <div class="page-header"><h2>💰 Fluxo de Caixa</h2><p>Registre entradas e saídas financeiras e acompanhe o saldo</p></div>
                 <div class="stats-row" id="stats-row-fluxo">
-                    <div class="stat-card entrada-card">
-                        <div class="stat-icon">📥</div>
-                        <div class="stat-value" id="stat-total-entradas">R$ 0,00</div>
-                        <div class="stat-label">Total de Entradas</div>
-                    </div>
-                    <div class="stat-card saida-card">
-                        <div class="stat-icon">📤</div>
-                        <div class="stat-value" id="stat-total-saidas">R$ 0,00</div>
-                        <div class="stat-label">Total de Saídas</div>
-                    </div>
-                    <div class="stat-card saldo-card" id="stat-saldo-card">
-                        <div class="stat-icon">💵</div>
-                        <div class="stat-value" id="stat-saldo-atual">R$ 0,00</div>
-                        <div class="stat-label">Saldo Atual</div>
-                    </div>
+                    <div class="stat-card entrada-card"><div class="stat-icon">📥</div><div class="stat-value" id="stat-total-entradas">R$ 0,00</div><div class="stat-label">Total de Entradas</div></div>
+                    <div class="stat-card saida-card"><div class="stat-icon">📤</div><div class="stat-value" id="stat-total-saidas">R$ 0,00</div><div class="stat-label">Total de Saídas</div></div>
+                    <div class="stat-card saldo-card" id="stat-saldo-card"><div class="stat-icon">💵</div><div class="stat-value" id="stat-saldo-atual">R$ 0,00</div><div class="stat-label">Saldo Atual</div></div>
                 </div>
                 <div class="card" id="card-form-fluxo">
                     <div class="card-title"><span class="icon">📝</span> <span id="fluxo-form-title">Nova Transação</span></div>
-                    <div class="edit-banner" id="edit-banner-fluxo">
-                        ✏️ <span id="edit-banner-fluxo-text">Você está editando uma transação existente.</span>
-                    </div>
+                    <div class="edit-banner" id="edit-banner-fluxo">✏️ <span id="edit-banner-fluxo-text">Você está editando uma transação existente.</span></div>
                     <form id="form-fluxo" autocomplete="off">
                         <div class="grid-3">
-                            <div class="form-group-app">
-                                <label>Descrição da Transação</label>
-                                <input type="text" id="f-descricao" placeholder="Ex: Pagamento de aluguel, Abastecimento, etc." required>
-                            </div>
-                            <div class="form-group-app">
-                                <label>Valor (R$)</label>
-                                <input type="text" id="f-valor" placeholder="R$ 0,00" step="0.01" min="0.01" required oninput="formatarMoedaInput(this)" onblur="formatarMoedaInputBlur(this)">
-                            </div>
-                            <div class="form-group-app">
-                                <label>Tipo de Transação</label>
-                                <select id="f-tipo" required>
-                                    <option value="">Selecione o tipo...</option>
-                                    <option value="entrada">📥 Entrada (Receita)</option>
-                                    <option value="saida">📤 Saída (Despesa)</option>
-                                </select>
-                            </div>
+                            <div class="form-group-app"><label>Descrição da Transação</label><input type="text" id="f-descricao" placeholder="Ex: Pagamento de aluguel, Abastecimento, etc." required></div>
+                            <div class="form-group-app"><label>Valor (R$)</label><input type="text" id="f-valor" placeholder="R$ 0,00" step="0.01" min="0.01" required oninput="formatarMoedaInput(this)" onblur="formatarMoedaInputBlur(this)"></div>
+                            <div class="form-group-app"><label>Tipo de Transação</label><select id="f-tipo" required><option value="">Selecione o tipo...</option><option value="entrada">📥 Entrada (Receita)</option><option value="saida">📤 Saída (Despesa)</option></select></div>
                         </div>
                         <div class="grid-3">
-                            <div class="form-group-app">
-                                <label>Data da Transação</label>
-                                <input type="date" id="f-data" required>
-                            </div>
-                            <div class="form-group-app">
-                                <label>Categoria (opcional)</label>
-                                <select id="f-categoria">
-                                    <option value="">Geral / Outros</option>
-                                    <option value="locacao">Locação de Veículo</option>
-                                    <option value="manutencao">Manutenção</option>
-                                    <option value="combustivel">Combustível</option>
-                                    <option value="imposto">Imposto / Taxa</option>
-                                    <option value="multa">Multa</option>
-                                    <option value="seguro">Seguro</option>
-                                    <option value="outros">Outros</option>
-                                </select>
-                            </div>
-                            <div class="form-group-app">
-                                <label>Observação (opcional)</label>
-                                <input type="text" id="f-observacao" placeholder="Observações adicionais...">
-                            </div>
+                            <div class="form-group-app"><label>Data da Transação</label><input type="date" id="f-data" required></div>
+                            <div class="form-group-app"><label>Categoria (opcional)</label><select id="f-categoria"><option value="">Geral / Outros</option><option value="locacao">Locação de Veículo</option><option value="manutencao">Manutenção</option><option value="combustivel">Combustível</option><option value="imposto">Imposto / Taxa</option><option value="multa">Multa</option><option value="seguro">Seguro</option><option value="outros">Outros</option></select></div>
+                            <div class="form-group-app"><label>Observação (opcional)</label><input type="text" id="f-observacao" placeholder="Observações adicionais..."></div>
                         </div>
-                        <div style="display:flex; gap:12px; margin-top:8px;">
+                        <div style="display:flex;gap:12px;margin-top:8px;">
                             <button type="submit" class="btn-app btn-save" id="btn-submit-fluxo">💾 Registrar Transação</button>
                             <button type="button" class="btn-app btn-cancel" id="btn-cancel-fluxo">Limpar</button>
                             <button type="button" class="btn-app btn-cancel" id="btn-cancel-edicao-fluxo" style="display:none;">❌ Cancelar Edição</button>
                         </div>
                     </form>
                 </div>
-                <div class="card">
-                    <div class="card-title"><span class="icon">📋</span> Transações Registradas</div>
+                <div class="card"><div class="card-title"><span class="icon">📋</span> Transações Registradas</div>
                     <div class="search-bar-container" id="search-bar-fluxo">
-                        <div class="search-input-wrapper">
-                            <span class="search-icon">🔍</span>
-                            <input type="text" id="input-busca-fluxo" placeholder="Pesquisar por descrição ou categoria..." autocomplete="off">
-                            <button class="clear-search-btn" id="clear-search-btn-fluxo" title="Limpar pesquisa" type="button">✕</button>
-                        </div>
-                        <div class="search-results-info" id="search-results-info-fluxo">
-                            <span id="search-count-text-fluxo">Total: <strong class="highlight-count" id="search-count-num-fluxo">0</strong> transações</span>
-                        </div>
-                        <button class="btn-limpar-filtro" id="btn-limpar-filtro-fluxo" style="display:none;" type="button">
-                            🧹 Limpar Filtro
-                        </button>
+                        <div class="search-input-wrapper"><span class="search-icon">🔍</span><input type="text" id="input-busca-fluxo" placeholder="Pesquisar por descrição ou categoria..." autocomplete="off"><button class="clear-search-btn" id="clear-search-btn-fluxo" title="Limpar pesquisa" type="button">✕</button></div>
+                        <div class="search-results-info" id="search-results-info-fluxo"><span id="search-count-text-fluxo">Total: <strong class="highlight-count" id="search-count-num-fluxo">0</strong> transações</span></div>
+                        <button class="btn-limpar-filtro" id="btn-limpar-filtro-fluxo" style="display:none;" type="button">🧹 Limpar Filtro</button>
                     </div>
                     <div class="table-wrapper" id="table-wrapper-fluxo">
                         <button class="scroll-btn scroll-btn-left" aria-label="Rolar para esquerda">◀</button>
                         <button class="scroll-btn scroll-btn-right" aria-label="Rolar para direita">▶</button>
-                        <table id="tabela-fluxo">
-                            <thead>
-                                <tr>
-                                    <th>Data</th><th>Descrição</th><th>Categoria</th><th>Tipo</th><th>Valor</th><th>Observação</th><th>Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tbody-fluxo">
-                                <tr><td colspan="7" class="empty-state"><span class="icon">💰</span><br>Nenhuma transação registrada</td></tr>
-                            </tbody>
-                        </table>
+                        <table id="tabela-fluxo"><thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Tipo</th><th>Valor</th><th>Observação</th><th>Ações</th></tr></thead><tbody id="tbody-fluxo"><tr><td colspan="7" class="empty-state"><span class="icon">💰</span><br>Nenhuma transação registrada</td></tr></tbody></table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Usuários (admin only) -->
+            <div class="page" id="page-usuarios">
+                <div class="page-header"><h2>👤 Gerenciamento de Usuários</h2><p>Crie e gerencie usuários com acesso limitado a veículos específicos</p></div>
+                <div class="card" id="card-form-usuario">
+                    <div class="card-title"><span class="icon">📝</span> <span id="usuario-form-title">Novo Usuário</span></div>
+                    <div class="edit-banner" id="edit-banner-usuario">✏️ <span id="edit-banner-usuario-text">Você está editando um usuário existente.</span></div>
+                    <form id="form-usuario" autocomplete="off">
+                        <div class="grid-3">
+                            <div class="form-group-app"><label>Nome do Usuário</label><input type="text" id="u-nome" placeholder="Nome completo" required></div>
+                            <div class="form-group-app"><label>Login (Usuário)</label><input type="text" id="u-login" placeholder="Nome de usuário para login" required autocomplete="off"></div>
+                            <div class="form-group-app"><label>Senha</label><input type="password" id="u-senha" placeholder="Senha de acesso" required autocomplete="off"></div>
+                        </div>
+                        <div class="section-divider">
+                            <div class="form-group-app"><label>🚙 Veículos Permitidos para este Usuário</label>
+                                <div class="permissoes-grid" id="permissoes-usuario-grid">
+                                    <span style="color:var(--text-muted);font-size:12px;">Nenhum veículo cadastrado.</span>
+                                </div>
+                                <small style="color:var(--text-muted);font-size:10px;">Marque os veículos que este usuário poderá visualizar. Ele terá acesso apenas aos dados e documentos dos veículos selecionados.</small>
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:12px;margin-top:8px;">
+                            <button type="submit" class="btn-app btn-save" id="btn-submit-usuario">💾 Salvar Usuário</button>
+                            <button type="button" class="btn-app btn-cancel" id="btn-cancel-usuario">Limpar</button>
+                            <button type="button" class="btn-app btn-cancel" id="btn-cancel-edicao-usuario" style="display:none;">❌ Cancelar Edição</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card"><div class="card-title"><span class="icon">📋</span> Usuários Cadastrados</div>
+                    <div class="table-wrapper" id="table-wrapper-usuarios">
+                        <button class="scroll-btn scroll-btn-left" aria-label="Rolar para esquerda">◀</button>
+                        <button class="scroll-btn scroll-btn-right" aria-label="Rolar para direita">▶</button>
+                        <table id="tabela-usuarios"><thead><tr><th>Nome</th><th>Login</th><th>Perfil</th><th>Veículos Permitidos</th><th>Data Criação</th><th>Ações</th></tr></thead><tbody id="tbody-usuarios"><tr><td colspan="6" class="empty-state"><span class="icon">👤</span><br>Nenhum usuário cadastrado</td></tr></tbody></table>
                     </div>
                 </div>
             </div>
@@ -1721,163 +1540,164 @@
                 appId: "1:226273766671:web:d82b540a9317f8a08b627a",
                 measurementId: "G-JPRYWHGQNC"
             };
-
-            // Inicializa Firebase
             firebase.initializeApp(firebaseConfig);
             const db = firebase.firestore();
             const storage = firebase.storage();
 
-            // Referências das coleções
             const colecoes = {
                 veiculos: db.collection('veiculos'),
                 locatarios: db.collection('locatarios'),
                 locacoes: db.collection('locacoes'),
-                fluxocaixa: db.collection('fluxocaixa')
+                fluxocaixa: db.collection('fluxocaixa'),
+                usuarios: db.collection('usuarios')
             };
 
             // ===================== VARIÁVEIS GLOBAIS =====================
-            const CREDENCIAIS = { usuario: 'SERGIO', senha: '080888' };
-
-            // Dados carregados do Firestore (atualizados em tempo real)
             let veiculos = [];
             let locatarios = [];
             let locacoes = [];
             let fluxoCaixa = [];
+            let usuarios = [];
+            let usuarioLogado = null; // { id, usuario, senha, nome, role, veiculosPermitidos }
 
             let editandoVeiculoId = null;
             let editandoLocatarioId = null;
             let editandoLocacaoId = null;
             let editandoFluxoId = null;
+            let editandoUsuarioId = null;
             let termoBuscaLocacoes = '';
             let termoBuscaFluxo = '';
-
-            // Flags de carregamento inicial
             let dadosCarregados = false;
             let listenersAtivos = [];
 
+            // ===================== FUNÇÕES AUXILIARES =====================
+            function getVeiculosPermitidos() {
+                if (!usuarioLogado) return [];
+                if (usuarioLogado.role === 'admin') return veiculos;
+                const idsPermitidos = usuarioLogado.veiculosPermitidos || [];
+                return veiculos.filter(v => idsPermitidos.includes(v.id));
+            }
+
+            function getLocacoesPermitidas() {
+                if (!usuarioLogado) return [];
+                if (usuarioLogado.role === 'admin') return locacoes;
+                const veiculosPermitidos = getVeiculosPermitidos();
+                const idsVeiculosPermitidos = veiculosPermitidos.map(v => v.id);
+                return locacoes.filter(l => idsVeiculosPermitidos.includes(l.veiculoId));
+            }
+
+            function isAdmin() { return usuarioLogado && usuarioLogado.role === 'admin'; }
+
+            function atualizarUIporPerfil() {
+                const adminElements = document.querySelectorAll('.nav-admin-only');
+                const formVeiculoCard = document.getElementById('card-form-veiculo');
+                const sectionPermissoes = document.getElementById('section-permissoes-veiculo');
+                const thAcoesVeiculos = document.getElementById('th-acoes-veiculos');
+                const veiculosSubtitle = document.getElementById('veiculos-subtitle');
+
+                if (isAdmin()) {
+                    adminElements.forEach(el => el.style.display = '');
+                    if (formVeiculoCard) formVeiculoCard.style.display = '';
+                    if (sectionPermissoes) sectionPermissoes.style.display = '';
+                    if (thAcoesVeiculos) thAcoesVeiculos.style.display = '';
+                    if (veiculosSubtitle) veiculosSubtitle.textContent =
+                        'Gerencie a frota de veículos com todos os dados, valores e documentos';
+                    document.getElementById('user-role-display').textContent = 'Administrador';
+                    document.getElementById('user-role-display').style.color = 'var(--primary)';
+                } else {
+                    adminElements.forEach(el => el.style.display = 'none');
+                    if (formVeiculoCard) formVeiculoCard.style.display = 'none';
+                    if (sectionPermissoes) sectionPermissoes.style.display = 'none';
+                    if (thAcoesVeiculos) thAcoesVeiculos.style.display = 'none';
+                    if (veiculosSubtitle) veiculosSubtitle.textContent =
+                        'Visualize os veículos e faça download dos documentos';
+                    document.getElementById('user-role-display').textContent = 'Usuário';
+                    document.getElementById('user-role-display').style.color = 'var(--accent)';
+                }
+                atualizarPermissoesVeiculoGrid();
+                atualizarPermissoesUsuarioGrid();
+            }
+
             // ===================== LISTENERS EM TEMPO REAL =====================
             function ativarListenersFirestore() {
-                // Limpa listeners anteriores
                 listenersAtivos.forEach(unsub => unsub());
                 listenersAtivos = [];
-
-                // Listener Veículos
                 const unsubVeiculos = colecoes.veiculos.onSnapshot((snapshot) => {
                     veiculos = [];
-                    snapshot.forEach(doc => {
-                        veiculos.push({ id: doc.id, ...doc.data() });
-                    });
+                    snapshot.forEach(doc => { veiculos.push({ id: doc.id, ...doc.data() }); });
                     if (dadosCarregados) {
                         atualizarTabelaVeiculos();
                         atualizarDashboard();
                         atualizarSelectsLocacao();
+                        atualizarPermissoesVeiculoGrid();
+                        atualizarPermissoesUsuarioGrid();
                     }
-                }, (error) => {
-                    console.error('Erro listener veículos:', error);
-                });
+                }, (error) => { console.error('Erro listener veículos:', error); });
                 listenersAtivos.push(unsubVeiculos);
-
-                // Listener Locatários
                 const unsubLocatarios = colecoes.locatarios.onSnapshot((snapshot) => {
                     locatarios = [];
-                    snapshot.forEach(doc => {
-                        locatarios.push({ id: doc.id, ...doc.data() });
-                    });
-                    if (dadosCarregados) {
-                        atualizarTabelaLocatarios();
+                    snapshot.forEach(doc => { locatarios.push({ id: doc.id, ...doc.data() }); });
+                    if (dadosCarregados) { atualizarTabelaLocatarios();
                         atualizarDashboard();
-                        atualizarSelectsLocacao();
-                    }
-                }, (error) => {
-                    console.error('Erro listener locatários:', error);
-                });
+                        atualizarSelectsLocacao(); }
+                }, (error) => { console.error('Erro listener locatários:', error); });
                 listenersAtivos.push(unsubLocatarios);
-
-                // Listener Locações
                 const unsubLocacoes = colecoes.locacoes.onSnapshot((snapshot) => {
                     locacoes = [];
-                    snapshot.forEach(doc => {
-                        locacoes.push({ id: doc.id, ...doc.data() });
-                    });
-                    if (dadosCarregados) {
-                        atualizarTabelaLocacoes();
+                    snapshot.forEach(doc => { locacoes.push({ id: doc.id, ...doc.data() }); });
+                    if (dadosCarregados) { atualizarTabelaLocacoes();
                         atualizarDashboard();
-                        atualizarSelectsLocacao();
-                    }
-                }, (error) => {
-                    console.error('Erro listener locações:', error);
-                });
+                        atualizarSelectsLocacao(); }
+                }, (error) => { console.error('Erro listener locações:', error); });
                 listenersAtivos.push(unsubLocacoes);
-
-                // Listener Fluxo de Caixa
                 const unsubFluxo = colecoes.fluxocaixa.onSnapshot((snapshot) => {
                     fluxoCaixa = [];
-                    snapshot.forEach(doc => {
-                        fluxoCaixa.push({ id: doc.id, ...doc.data() });
-                    });
-                    if (dadosCarregados) {
-                        atualizarResumoFluxoCaixa();
-                        atualizarTabelaFluxoCaixa();
-                    }
-                }, (error) => {
-                    console.error('Erro listener fluxo caixa:', error);
-                });
+                    snapshot.forEach(doc => { fluxoCaixa.push({ id: doc.id, ...doc.data() }); });
+                    if (dadosCarregados) { atualizarResumoFluxoCaixa();
+                        atualizarTabelaFluxoCaixa(); }
+                }, (error) => { console.error('Erro listener fluxo caixa:', error); });
                 listenersAtivos.push(unsubFluxo);
-
-                // Marca como carregado após um curto delay
-                setTimeout(() => {
-                    if (!dadosCarregados) {
-                        dadosCarregados = true;
-                        inicializarInterface();
+                const unsubUsuarios = colecoes.usuarios.onSnapshot((snapshot) => {
+                    usuarios = [];
+                    snapshot.forEach(doc => { usuarios.push({ id: doc.id, ...doc.data() }); });
+                    if (dadosCarregados) {
+                        atualizarTabelaUsuarios();
+                        atualizarPermissoesVeiculoGrid();
+                        atualizarPermissoesUsuarioGrid();
                     }
-                }, 500);
+                }, (error) => { console.error('Erro listener usuários:', error); });
+                listenersAtivos.push(unsubUsuarios);
+                setTimeout(() => { if (!dadosCarregados) { dadosCarregados = true;
+                        inicializarInterface(); } }, 500);
             }
 
-            // ===================== INDICADOR DE SINCRONIZAÇÃO =====================
             function atualizarIndicadorSync(online) {
                 const indicador = document.getElementById('sync-indicator');
                 const syncText = document.getElementById('sync-text');
                 if (indicador && syncText) {
-                    if (online) {
-                        indicador.className = 'sync-indicator online';
-                        syncText.textContent = 'Online';
-                    } else {
-                        indicador.className = 'sync-indicator offline';
-                        syncText.textContent = 'Offline';
-                    }
+                    indicador.className = 'sync-indicator ' + (online ? 'online' : 'offline');
+                    syncText.textContent = online ? 'Online' : 'Offline';
                 }
             }
-
-            // Monitora conectividade
             window.addEventListener('online', () => atualizarIndicadorSync(true));
             window.addEventListener('offline', () => atualizarIndicadorSync(false));
 
-            // ===================== FUNÇÕES DE INTEGRAÇÃO: LOCAÇÃO -> FLUXO DE CAIXA =====================
+            // ===================== SINCRONIZAÇÃO FLUXO DE CAIXA =====================
             async function removerEntradasFluxoLocacao(locacao) {
                 if (!locacao || !locacao.fluxoCaixaIds || locacao.fluxoCaixaIds.length === 0) return;
                 const batch = db.batch();
-                for (const fluxoId of locacao.fluxoCaixaIds) {
-                    const docRef = colecoes.fluxocaixa.doc(fluxoId);
-                    batch.delete(docRef);
-                }
-                try {
-                    await batch.commit();
-                } catch (error) {
-                    console.error('Erro ao remover entradas do fluxo:', error);
-                }
+                for (const fluxoId of locacao.fluxoCaixaIds) { batch.delete(colecoes.fluxocaixa.doc(fluxoId)); }
+                try { await batch.commit(); } catch (error) { console.error('Erro ao remover entradas do fluxo:',
+                    error); }
             }
-
             async function criarEntradasFluxoLocacao(locacao) {
                 const idsCriados = [];
                 const dataTransacao = locacao.dataInicio || new Date().toISOString().split('T')[0];
                 const descricaoBase =
                     `${locacao.veiculoNome || 'Veículo'} (${locacao.veiculoPlaca || 'sem placa'}) - ${locacao.locatarioNome || 'Locatário'}`;
-
                 const batch = db.batch();
-
-                // 1) Entrada referente ao valor semanal
                 const entradaSemanalRef = colecoes.fluxocaixa.doc();
-                const entradaSemanal = {
+                batch.set(entradaSemanalRef, {
                     descricao: `Locação: ${descricaoBase}`,
                     valor: parseFloat(locacao.valorSemanal) || 0,
                     tipo: 'entrada',
@@ -1886,16 +1706,12 @@
                     observacao: `Locação semanal - Contrato de ${new Date(locacao.dataInicio).toLocaleDateString('pt-BR')} até ${new Date(locacao.dataFim).toLocaleDateString('pt-BR')}`,
                     dataCriacao: new Date().toISOString(),
                     dataAtualizacao: new Date().toISOString()
-                };
-                batch.set(entradaSemanalRef, entradaSemanal);
+                });
                 idsCriados.push(entradaSemanalRef.id);
-
-                // 2) Caução
                 const valorCaucaoTotal = parseFloat(locacao.caucao) || 0;
-
                 if (locacao.formaCaucao === 'avista' && valorCaucaoTotal > 0) {
                     const entradaCaucaoRef = colecoes.fluxocaixa.doc();
-                    const entradaCaucao = {
+                    batch.set(entradaCaucaoRef, {
                         descricao: `Caução (À Vista): ${descricaoBase}`,
                         valor: valorCaucaoTotal,
                         tipo: 'entrada',
@@ -1904,14 +1720,13 @@
                         observacao: 'Caução pago integralmente à vista',
                         dataCriacao: new Date().toISOString(),
                         dataAtualizacao: new Date().toISOString()
-                    };
-                    batch.set(entradaCaucaoRef, entradaCaucao);
+                    });
                     idsCriados.push(entradaCaucaoRef.id);
                 } else if (locacao.formaCaucao === 'entrada_parcelado') {
                     const valorEntrada = parseFloat(locacao.valorEntradaCaucao || 0);
                     if (valorEntrada > 0) {
                         const entradaCaucaoRef = colecoes.fluxocaixa.doc();
-                        const entradaCaucao = {
+                        batch.set(entradaCaucaoRef, {
                             descricao: `Caução Entrada: ${descricaoBase}`,
                             valor: valorEntrada,
                             tipo: 'entrada',
@@ -1920,25 +1735,18 @@
                             observacao: `Caução (Entrada) - ${locacao.parcelasCaucao || '?'} parcelas restantes`,
                             dataCriacao: new Date().toISOString(),
                             dataAtualizacao: new Date().toISOString()
-                        };
-                        batch.set(entradaCaucaoRef, entradaCaucao);
+                        });
                         idsCriados.push(entradaCaucaoRef.id);
                     }
                 }
-
-                try {
-                    await batch.commit();
-                } catch (error) {
-                    console.error('Erro ao criar entradas no fluxo:', error);
-                }
+                try { await batch.commit(); } catch (error) { console.error('Erro ao criar entradas no fluxo:',
+                    error); }
                 return idsCriados;
             }
-
             async function atualizarDescricaoFluxoLocacao(locacao) {
                 if (!locacao || !locacao.fluxoCaixaIds || locacao.fluxoCaixaIds.length === 0) return;
                 const descricaoBase =
                     `${locacao.veiculoNome || 'Veículo'} (${locacao.veiculoPlaca || 'sem placa'}) - ${locacao.locatarioNome || 'Locatário'}`;
-
                 for (const fluxoId of locacao.fluxoCaixaIds) {
                     try {
                         const docRef = colecoes.fluxocaixa.doc(fluxoId);
@@ -1950,61 +1758,109 @@
                                 updateData.descricao = `Locação: ${descricaoBase}`;
                                 updateData.observacao =
                                     `Locação semanal - Contrato de ${new Date(locacao.dataInicio).toLocaleDateString('pt-BR')} até ${new Date(locacao.dataFim).toLocaleDateString('pt-BR')}`;
-                                updateData.dataAtualizacao = new Date().toISOString();
                             } else if (dados.descricao && (dados.descricao.startsWith('Caução Entrada:') || dados
                                     .descricao.startsWith('Caução (À Vista):'))) {
                                 updateData.descricao = dados.descricao.replace(/:.*/, `: ${descricaoBase}`);
-                                updateData.dataAtualizacao = new Date().toISOString();
                             }
-                            if (Object.keys(updateData).length > 0) {
-                                await docRef.update(updateData);
-                            }
+                            if (Object.keys(updateData).length > 0) { updateData.dataAtualizacao = new Date()
+                                    .toISOString();
+                                await docRef.update(updateData); }
                         }
-                    } catch (error) {
-                        console.error('Erro ao atualizar descrição fluxo:', error);
-                    }
+                    } catch (error) { console.error('Erro ao atualizar descrição fluxo:', error); }
                 }
             }
-
-            // ===================== SINCRONIZAÇÃO DE DADOS RELACIONADOS =====================
             async function syncLocacoesVeiculo(veiculoId) {
                 const veiculo = veiculos.find(v => v.id === veiculoId);
                 if (!veiculo) return;
                 for (const loc of locacoes) {
                     if (loc.veiculoId === veiculoId) {
-                        const updateData = {
-                            veiculoPlaca: veiculo.placa,
-                            veiculoNome: `${veiculo.marca} ${veiculo.modelo}`,
-                            valorSemanal: veiculo.valorSemanal,
-                            caucao: veiculo.caucao,
-                            dataAtualizacao: new Date().toISOString()
-                        };
-                        try {
-                            await colecoes.locacoes.doc(loc.id).update(updateData);
-                        } catch (error) {
-                            console.error('Erro ao sincronizar locação:', error);
-                        }
+                        const updateData = { veiculoPlaca: veiculo.placa, veiculoNome: `${veiculo.marca} ${veiculo.modelo}`,
+                            valorSemanal: veiculo.valorSemanal, caucao: veiculo.caucao, dataAtualizacao: new Date()
+                                .toISOString() };
+                        try { await colecoes.locacoes.doc(loc.id).update(updateData); } catch (error) { console
+                                .error('Erro ao sincronizar locação:', error); }
                         await atualizarDescricaoFluxoLocacao({ ...loc, ...updateData });
                     }
                 }
             }
-
             async function syncLocacoesLocatario(locatarioId) {
                 const locatario = locatarios.find(l => l.id === locatarioId);
                 if (!locatario) return;
                 for (const loc of locacoes) {
                     if (loc.locatarioId === locatarioId) {
-                        const updateData = {
-                            locatarioNome: locatario.nome,
-                            locatarioCPF: locatario.cpf,
-                            dataAtualizacao: new Date().toISOString()
-                        };
-                        try {
-                            await colecoes.locacoes.doc(loc.id).update(updateData);
-                        } catch (error) {
-                            console.error('Erro ao sincronizar locação:', error);
-                        }
+                        const updateData = { locatarioNome: locatario.nome, locatarioCPF: locatario.cpf,
+                            dataAtualizacao: new Date().toISOString() };
+                        try { await colecoes.locacoes.doc(loc.id).update(updateData); } catch (error) { console
+                                .error('Erro ao sincronizar locação:', error); }
                         await atualizarDescricaoFluxoLocacao({ ...loc, ...updateData });
+                    }
+                }
+            }
+
+            // ===================== SISTEMA DE USUÁRIOS E PERMISSÕES =====================
+            async function garantirAdminPadrao() {
+                try {
+                    const snapshot = await colecoes.usuarios.where('usuario', '==', 'SERGIO').get();
+                    if (snapshot.empty) {
+                        await colecoes.usuarios.add({
+                            usuario: 'SERGIO',
+                            senha: '080888',
+                            nome: 'SERGIO',
+                            role: 'admin',
+                            veiculosPermitidos: [],
+                            dataCriacao: new Date().toISOString(),
+                            dataAtualizacao: new Date().toISOString()
+                        });
+                        console.log('✅ Admin padrão criado: SERGIO / 080888');
+                    }
+                } catch (error) {
+                    console.error('Erro ao garantir admin padrão:', error);
+                }
+            }
+
+            function atualizarPermissoesVeiculoGrid() {
+                const grid = document.getElementById('permissoes-veiculo-grid');
+                if (!grid || !isAdmin()) return;
+                const usuariosNaoAdmin = usuarios.filter(u => u.role !== 'admin');
+                if (usuariosNaoAdmin.length === 0) {
+                    grid.innerHTML = '<span style="color:var(--text-muted);font-size:12px;">Nenhum usuário não-admin cadastrado. Cadastre usuários na página "Usuários".</span>';
+                    return;
+                }
+                grid.innerHTML = usuariosNaoAdmin.map(u => `
+                    <label><input type="checkbox" class="perm-veiculo-check" value="${u.id}" ${(editandoVeiculoId && u.veiculosPermitidos && u.veiculosPermitidos.includes(editandoVeiculoId)) ? 'checked' : ''}> 👤 ${u.nome} <small style="color:var(--text-muted);">(${u.usuario})</small></label>
+                `).join('');
+            }
+
+            function atualizarPermissoesUsuarioGrid() {
+                const grid = document.getElementById('permissoes-usuario-grid');
+                if (!grid || !isAdmin()) return;
+                if (veiculos.length === 0) {
+                    grid.innerHTML =
+                        '<span style="color:var(--text-muted);font-size:12px;">Nenhum veículo cadastrado.</span>';
+                    return;
+                }
+                grid.innerHTML = veiculos.map(v => `
+                    <label><input type="checkbox" class="perm-usuario-check" value="${v.id}" ${(editandoUsuarioId && usuarios.find(u => u.id === editandoUsuarioId)?.veiculosPermitidos?.includes(v.id)) ? 'checked' : ''}> 🚙 ${v.marca} ${v.modelo} <small style="color:var(--text-muted);">(${v.placa})</small></label>
+                `).join('');
+            }
+
+            async function sincronizarPermissoesVeiculo(veiculoId) {
+                if (!isAdmin()) return;
+                const checks = document.querySelectorAll('.perm-veiculo-check');
+                const usuariosSelecionados = [];
+                checks.forEach(ch => { if (ch.checked) usuariosSelecionados.push(ch.value); });
+                for (const usuario of usuarios) {
+                    if (usuario.role === 'admin') continue;
+                    const temPermissao = usuariosSelecionados.includes(usuario.id);
+                    const jaPossui = (usuario.veiculosPermitidos || []).includes(veiculoId);
+                    if (temPermissao && !jaPossui) {
+                        const novosPermitidos = [...(usuario.veiculosPermitidos || []), veiculoId];
+                        try { await colecoes.usuarios.doc(usuario.id).update({ veiculosPermitidos: novosPermitidos,
+                                dataAtualizacao: new Date().toISOString() }); } catch (e) { console.error(e); }
+                    } else if (!temPermissao && jaPossui) {
+                        const novosPermitidos = (usuario.veiculosPermitidos || []).filter(id => id !== veiculoId);
+                        try { await colecoes.usuarios.doc(usuario.id).update({ veiculosPermitidos: novosPermitidos,
+                                dataAtualizacao: new Date().toISOString() }); } catch (e) { console.error(e); }
                     }
                 }
             }
@@ -2025,129 +1881,108 @@
                 document.body.appendChild(toast);
                 setTimeout(() => toast.remove(), 3200);
             }
-
             window.formatarMoedaInput = function(input) {
                 let valor = input.value.replace(/\D/g, '');
-                if (valor === '') {
-                    input.value = '';
-                    return;
-                }
+                if (valor === '') { input.value = ''; return; }
                 valor = (parseInt(valor, 10) / 100).toFixed(2);
                 input.value = 'R$ ' + valor.replace('.', ',');
             };
-
             window.formatarMoedaInputBlur = function(input) {
-                if (input.value === '' || input.value === 'R$ ') {
-                    input.value = '';
-                } else if (!input.value.includes(',')) {
+                if (input.value === '' || input.value === 'R$ ') { input.value = ''; } else if (!input.value
+                    .includes(',')) {
                     let valor = input.value.replace(/\D/g, '');
-                    if (valor === '') {
-                        input.value = '';
-                        return;
-                    }
+                    if (valor === '') { input.value = ''; return; }
                     valor = (parseInt(valor, 10) / 100).toFixed(2);
                     input.value = 'R$ ' + valor.replace('.', ',');
                 }
             };
 
-            function parseMoedaBR(valorString) {
-                if (!valorString) return 0;
-                let limpo = valorString.replace(/[^\d,]/g, '').replace(',', '.');
-                return parseFloat(limpo) || 0;
-            }
+            function parseMoedaBR(valorString) { if (!valorString) return 0; let limpo = valorString.replace(/[^\d,]/g,
+                    '').replace(',', '.'); return parseFloat(limpo) || 0; }
 
-            function formatarMoeda(valor) {
-                return 'R$ ' + parseFloat(valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2,
-                    maximumFractionDigits: 2 });
-            }
+            function formatarMoeda(valor) { return 'R$ ' + parseFloat(valor || 0).toLocaleString('pt-BR', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2 }); }
 
-            function aplicarMascaraCPF(valor) {
-                valor = valor.replace(/\D/g, '').substring(0, 11);
-                return valor.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-            }
+            function aplicarMascaraCPF(valor) { valor = valor.replace(/\D/g, '').substring(0, 11); return valor.replace(
+                    /(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4'); }
 
-            function aplicarMascaraTelefone(valor) {
-                valor = valor.replace(/\D/g, '').substring(0, 11);
-                if (valor.length <= 10) return valor.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
-                return valor.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$4');
-            }
+            function aplicarMascaraTelefone(valor) { valor = valor.replace(/\D/g, '').substring(0, 11); if (valor.length <=
+                    10) return valor.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3'); return valor.replace(
+                    /(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$4'); }
 
-            function aplicarMascaraCEP(valor) {
-                valor = valor.replace(/\D/g, '').substring(0, 8);
-                return valor.replace(/(\d{5})(\d{3})/, '$1-$2');
-            }
+            function aplicarMascaraCEP(valor) { valor = valor.replace(/\D/g, '').substring(0, 8); return valor.replace(
+                    /(\d{5})(\d{3})/, '$1-$2'); }
 
-            function aplicarMascaraPlaca(valor) {
-                valor = valor.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 7);
-                if (valor.length >= 4) valor = valor.substring(0, 3) + '-' + valor.substring(3);
-                return valor;
-            }
+            function aplicarMascaraPlaca(valor) { valor = valor.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 7); if (
+                    valor.length >= 4) valor = valor.substring(0, 3) + '-' + valor.substring(3); return valor; }
 
-            function sanitizarParaBusca(str) {
-                if (!str) return '';
-                return str.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-            }
+            function sanitizarParaBusca(str) { if (!str) return ''; return str.replace(/[^a-zA-Z0-9]/g, '').toLowerCase(); }
 
             function navegarPara(pageName) {
+                if (!isAdmin() && ['locatarios', 'locacoes', 'fluxocaixa', 'usuarios'].includes(pageName)) {
+                    showToast('⚠️ Acesso restrito ao administrador.', 'error');
+                    return;
+                }
                 pages.forEach(p => p.classList.remove('active'));
                 const targetPage = document.getElementById('page-' + pageName);
                 if (targetPage) targetPage.classList.add('active');
                 navButtons.forEach(b => b.classList.remove('active'));
                 const activeBtn = document.querySelector(`.top-nav button[data-page="${pageName}"]`);
                 if (activeBtn) activeBtn.classList.add('active');
-
                 if (pageName === 'dashboard') atualizarDashboard();
                 if (pageName === 'veiculos') { atualizarTabelaVeiculos();
                     initScrollButtons(); }
-                if (pageName === 'locatarios') { atualizarTabelaLocatarios();
+                if (pageName === 'locatarios' && isAdmin()) { atualizarTabelaLocatarios();
                     initScrollButtons(); }
-                if (pageName === 'locacoes') {
-                    atualizarSelectsLocacao();
+                if (pageName === 'locacoes' && isAdmin()) { atualizarSelectsLocacao();
                     atualizarTabelaLocacoes();
-                    initScrollButtons();
-                    if (termoBuscaLocacoes) {
-                        document.getElementById('input-busca-locacoes').value = termoBuscaLocacoes;
-                        atualizarUIBuscaLocacoes();
-                    }
-                }
-                if (pageName === 'fluxocaixa') {
-                    atualizarResumoFluxoCaixa();
+                    initScrollButtons(); if (termoBuscaLocacoes) { document.getElementById('input-busca-locacoes')
+                            .value = termoBuscaLocacoes;
+                        atualizarUIBuscaLocacoes(); } }
+                if (pageName === 'fluxocaixa' && isAdmin()) { atualizarResumoFluxoCaixa();
                     atualizarTabelaFluxoCaixa();
-                    initScrollButtons();
-                    if (termoBuscaFluxo) {
-                        document.getElementById('input-busca-fluxo').value = termoBuscaFluxo;
-                        atualizarUIBuscaFluxo();
-                    }
-                }
+                    initScrollButtons(); if (termoBuscaFluxo) { document.getElementById('input-busca-fluxo').value =
+                            termoBuscaFluxo;
+                        atualizarUIBuscaFluxo(); } }
+                if (pageName === 'usuarios' && isAdmin()) { atualizarTabelaUsuarios();
+                    atualizarPermissoesUsuarioGrid();
+                    initScrollButtons(); }
             }
 
             navButtons.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const page = btn.getAttribute('data-page');
-                    navegarPara(page);
-                });
+                btn.addEventListener('click', () => { const page = btn.getAttribute('data-page');
+                    navegarPara(page); });
             });
 
-            loginForm.addEventListener('submit', function(e) {
+            loginForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
-                const user = document.getElementById('login-user').value.trim();
-                const pass = document.getElementById('login-pass').value.trim();
-                if (user === CREDENCIAIS.usuario && pass === CREDENCIAIS.senha) {
-                    loginError.classList.remove('show');
-                    loginScreen.style.display = 'none';
-                    appScreen.classList.add('active');
-
-                    // Ativa listeners do Firestore se ainda não ativados
-                    if (!dadosCarregados) {
-                        ativarListenersFirestore();
+                const userInput = document.getElementById('login-user').value.trim();
+                const passInput = document.getElementById('login-pass').value.trim();
+                try {
+                    const snapshot = await colecoes.usuarios.where('usuario', '==', userInput).where('senha',
+                        '==', passInput).get();
+                    if (!snapshot.empty) {
+                        const doc = snapshot.docs[0];
+                        usuarioLogado = { id: doc.id, ...doc.data() };
+                        loginError.classList.remove('show');
+                        loginScreen.style.display = 'none';
+                        appScreen.classList.add('active');
+                        document.getElementById('user-name-display').textContent = usuarioLogado.nome;
+                        document.getElementById('user-avatar-inicial').textContent = usuarioLogado.nome
+                            .charAt(0).toUpperCase();
+                        atualizarUIporPerfil();
+                        if (!dadosCarregados) { ativarListenersFirestore(); } else { inicializarInterface(); }
+                        showToast(`✅ Bem-vindo, ${usuarioLogado.nome}!`, 'success');
                     } else {
-                        inicializarInterface();
+                        loginError.classList.add('show');
+                        document.getElementById('login-pass').value = '';
+                        document.getElementById('login-pass').focus();
+                        setTimeout(() => loginError.classList.remove('show'), 3000);
                     }
-                    showToast('✅ Bem-vindo, SERGIO!', 'success');
-                } else {
+                } catch (error) {
+                    console.error('Erro no login:', error);
                     loginError.classList.add('show');
-                    document.getElementById('login-pass').value = '';
-                    document.getElementById('login-pass').focus();
                     setTimeout(() => loginError.classList.remove('show'), 3000);
                 }
             });
@@ -2159,6 +1994,7 @@
                     document.getElementById('login-pass').value = '';
                     document.getElementById('login-user').value = '';
                     loginError.classList.remove('show');
+                    usuarioLogado = null;
                     termoBuscaLocacoes = '';
                     document.getElementById('input-busca-locacoes').value = '';
                     atualizarUIBuscaLocacoes();
@@ -2170,6 +2006,7 @@
             });
 
             function inicializarInterface() {
+                atualizarUIporPerfil();
                 navegarPara('dashboard');
                 initScrollButtons();
                 atualizarIndicadorSync(navigator.onLine);
@@ -2185,19 +2022,13 @@
                     function updateScrollButtons() {
                         const tolerance = 2;
                         const canScrollLeft = wrapper.scrollLeft > tolerance;
-                        const canScrollRight = wrapper.scrollLeft < (wrapper.scrollWidth - wrapper
-                            .clientWidth - tolerance);
+                        const canScrollRight = wrapper.scrollLeft < (wrapper.scrollWidth - wrapper.clientWidth -
+                            tolerance);
                         btnLeft.classList.toggle('visible', canScrollLeft);
                         btnRight.classList.toggle('visible', canScrollRight);
                     }
-
-                    btnLeft.addEventListener('click', () => {
-                        wrapper.scrollBy({ left: -300, behavior: 'smooth' });
-                    });
-                    btnRight.addEventListener('click', () => {
-                        wrapper.scrollBy({ left: 300, behavior: 'smooth' });
-                    });
-
+                    btnLeft.addEventListener('click', () => { wrapper.scrollBy({ left: -300, behavior: 'smooth' }); });
+                    btnRight.addEventListener('click', () => { wrapper.scrollBy({ left: 300, behavior: 'smooth' }); });
                     wrapper.addEventListener('scroll', updateScrollButtons);
                     window.addEventListener('resize', updateScrollButtons);
                     updateScrollButtons();
@@ -2206,34 +2037,27 @@
             }
 
             function atualizarDashboard() {
-                document.getElementById('stat-veiculos').textContent = veiculos.length;
-                document.getElementById('stat-locatarios').textContent = locatarios.length;
-                document.getElementById('stat-locacoes').textContent = locacoes.length;
-                const receitaTotal = locacoes.reduce((sum, loc) => sum + (parseFloat(loc.valorSemanal) || 0), 0);
-                document.getElementById('stat-receita').textContent = formatarMoeda(receitaTotal);
-                const receitaCaucao = locacoes.reduce((sum, loc) => sum + (parseFloat(loc.caucao) || 0), 0);
-                document.getElementById('stat-receita-caucao').textContent = formatarMoeda(receitaCaucao);
-
+                const veiculosPerm = getVeiculosPermitidos();
+                const locacoesPerm = getLocacoesPermitidas();
+                document.getElementById('stat-veiculos').textContent = veiculosPerm.length;
+                document.getElementById('stat-locatarios').textContent = isAdmin() ? locatarios.length : '—';
+                document.getElementById('stat-locacoes').textContent = isAdmin() ? locacoesPerm.length : '—';
+                const receitaTotal = locacoesPerm.reduce((sum, loc) => sum + (parseFloat(loc.valorSemanal) || 0), 0);
+                document.getElementById('stat-receita').textContent = isAdmin() ? formatarMoeda(receitaTotal) : '—';
+                const receitaCaucao = locacoesPerm.reduce((sum, loc) => sum + (parseFloat(loc.caucao) || 0), 0);
+                document.getElementById('stat-receita-caucao').textContent = isAdmin() ? formatarMoeda(receitaCaucao) :
+                    '—';
                 const ultimosDiv = document.getElementById('ultimos-cadastros');
                 let html = '';
-                if (veiculos.length === 0 && locatarios.length === 0) {
-                    html = '<span style="color:var(--text-muted);">Nenhum cadastro realizado ainda.</span>';
+                if (veiculosPerm.length === 0) {
+                    html = '<span style="color:var(--text-muted);">Nenhum veículo disponível para visualização.</span>';
                 } else {
-                    const ultimosVeiculos = veiculos.slice(-3).reverse();
-                    const ultimosLocatarios = locatarios.slice(-3).reverse();
-                    if (ultimosVeiculos.length > 0) {
-                        html += '<strong style="color:#fff;">🚙 Últimos Veículos:</strong><br>';
-                        ultimosVeiculos.forEach(v => {
-                            html +=
-                                `• ${v.marca} ${v.modelo} - Placa: ${v.placa} - KM: ${v.km} - Semanal: ${formatarMoeda(v.valorSemanal)}<br>`;
-                        });
-                    }
-                    if (ultimosLocatarios.length > 0) {
-                        html += '<br><strong style="color:#fff;">👥 Últimos Locatários:</strong><br>';
-                        ultimosLocatarios.forEach(l => {
-                            html += `• ${l.nome} - CPF: ${l.cpf}<br>`;
-                        });
-                    }
+                    const ultimosVeiculos = veiculosPerm.slice(-3).reverse();
+                    html += '<strong style="color:#fff;">🚙 Veículos Disponíveis:</strong><br>';
+                    ultimosVeiculos.forEach(v => {
+                        html +=
+                            `• ${v.marca} ${v.modelo} - Placa: ${v.placa} - KM: ${v.km} - Semanal: ${formatarMoeda(v.valorSemanal)}<br>`;
+                    });
                 }
                 ultimosDiv.innerHTML = html || '<span style="color:var(--text-muted);">Nenhum cadastro.</span>';
             }
@@ -2241,10 +2065,7 @@
             // ===================== VEÍCULOS =====================
             const formVeiculo = document.getElementById('form-veiculo');
             const inputPlaca = document.getElementById('v-placa');
-            inputPlaca.addEventListener('input', function() {
-                this.value = aplicarMascaraPlaca(this.value);
-            });
-
+            inputPlaca.addEventListener('input', function() { this.value = aplicarMascaraPlaca(this.value); });
             const btnSubmitVeiculo = document.getElementById('btn-submit-veiculo');
             const btnCancelVeiculo = document.getElementById('btn-cancel-veiculo');
             const btnCancelEdicaoVeiculo = document.getElementById('btn-cancel-edicao-veiculo');
@@ -2275,26 +2096,24 @@
                 btnCancelEdicaoVeiculo.style.display = 'none';
                 editBannerVeiculo.classList.remove('show');
                 veicFormTitle.textContent = 'Novo Veículo';
+                atualizarPermissoesVeiculoGrid();
             }
-
             btnCancelVeiculo.addEventListener('click', resetarFormVeiculo);
-            btnCancelEdicaoVeiculo.addEventListener('click', function() {
-                resetarFormVeiculo();
-                showToast('📋 Edição cancelada. Formulário limpo.', 'info');
-            });
+            btnCancelEdicaoVeiculo.addEventListener('click', function() { resetarFormVeiculo();
+                showToast('📋 Edição cancelada. Formulário limpo.', 'info'); });
 
             formVeiculo.addEventListener('submit', async function(e) {
+                if (!isAdmin()) { showToast('⚠️ Apenas o administrador pode cadastrar veículos.', 'error');
+                    return; }
                 e.preventDefault();
                 const documentoInput = document.getElementById('v-documento');
                 const documentoFile = documentoInput.files[0];
-
                 const opcionais = {
                     ar: document.getElementById('v-op-ar').checked,
                     vidros: document.getElementById('v-op-vidros').checked,
                     multimidia: document.getElementById('v-op-multimidia').checked,
                     rodas: document.getElementById('v-op-rodas').checked
                 };
-
                 async function salvarVeiculo(docURL = null, docNome = null) {
                     const dadosVeiculo = {
                         marca: document.getElementById('v-marca').value.trim(),
@@ -2310,101 +2129,76 @@
                         opcionais: opcionais,
                         dataAtualizacao: new Date().toISOString()
                     };
-
                     if (editandoVeiculoId) {
-                        if (docURL) {
-                            dadosVeiculo.documentoURL = docURL;
-                            dadosVeiculo.documentoNome = docNome;
-                        } else {
-                            const veiculoAtual = veiculos.find(v => v.id === editandoVeiculoId);
+                        if (docURL) { dadosVeiculo.documentoURL = docURL;
+                            dadosVeiculo.documentoNome = docNome; } else { const veiculoAtual = veiculos.find(v =>
+                                v.id === editandoVeiculoId);
                             dadosVeiculo.documentoURL = veiculoAtual?.documentoURL || null;
-                            dadosVeiculo.documentoNome = veiculoAtual?.documentoNome || null;
-                        }
+                            dadosVeiculo.documentoNome = veiculoAtual?.documentoNome || null; }
                         try {
                             await colecoes.veiculos.doc(editandoVeiculoId).update(dadosVeiculo);
+                            await sincronizarPermissoesVeiculo(editandoVeiculoId);
                             resetarFormVeiculo();
                             showToast('✅ Veículo atualizado com sucesso!', 'success');
                             await syncLocacoesVeiculo(editandoVeiculoId);
-                        } catch (error) {
-                            console.error('Erro ao atualizar veículo:', error);
-                            showToast('❌ Erro ao atualizar veículo.', 'error');
-                        }
+                        } catch (error) { console.error('Erro ao atualizar veículo:', error);
+                            showToast('❌ Erro ao atualizar veículo.', 'error'); }
                     } else {
-                        const novoVeiculo = {
-                            ...dadosVeiculo,
-                            documentoURL: docURL,
-                            documentoNome: docNome,
-                            dataCadastro: new Date().toISOString()
-                        };
+                        const novoVeiculo = { ...dadosVeiculo, documentoURL: docURL, documentoNome: docNome,
+                            dataCadastro: new Date().toISOString() };
                         try {
                             const docRef = await colecoes.veiculos.add(novoVeiculo);
+                            await sincronizarPermissoesVeiculo(docRef.id);
                             resetarFormVeiculo();
                             showToast('✅ Veículo cadastrado com sucesso!', 'success');
                             await syncLocacoesVeiculo(docRef.id);
-                        } catch (error) {
-                            console.error('Erro ao cadastrar veículo:', error);
-                            showToast('❌ Erro ao cadastrar veículo.', 'error');
-                        }
+                        } catch (error) { console.error('Erro ao cadastrar veículo:', error);
+                            showToast('❌ Erro ao cadastrar veículo.', 'error'); }
                     }
                 }
-
                 if (documentoFile) {
-                    if (documentoFile.size > 8 * 1024 * 1024) {
-                        showToast('⚠️ Arquivo PDF muito grande! Limite de 8MB.', 'error');
-                        return;
-                    }
+                    if (documentoFile.size > 8 * 1024 * 1024) { showToast(
+                            '⚠️ Arquivo PDF muito grande! Limite de 8MB.', 'error'); return; }
                     showToast('⏳ Enviando documento para o Firebase Storage...', 'info');
                     try {
-                        const storageRef = storage.ref(
-                            `documentos/veiculos/${Date.now()}_${documentoFile.name}`);
+                        const storageRef = storage.ref(`documentos/veiculos/${Date.now()}_${documentoFile.name}`);
                         const uploadTask = await storageRef.put(documentoFile);
                         const docURL = await uploadTask.ref.getDownloadURL();
                         await salvarVeiculo(docURL, documentoFile.name);
-                    } catch (error) {
-                        console.error('Erro upload documento:', error);
-                        showToast('❌ Erro ao enviar documento. Tente novamente.', 'error');
-                    }
-                } else {
-                    await salvarVeiculo(null, null);
-                }
+                    } catch (error) { console.error('Erro upload documento:', error);
+                        showToast('❌ Erro ao enviar documento. Tente novamente.', 'error'); }
+                } else { await salvarVeiculo(null, null); }
             });
 
             function atualizarTabelaVeiculos() {
                 const tbody = document.getElementById('tbody-veiculos');
-                if (veiculos.length === 0) {
+                const veiculosPerm = getVeiculosPermitidos();
+                const thAcoes = document.getElementById('th-acoes-veiculos');
+                if (!isAdmin() && thAcoes) thAcoes.style.display = 'none';
+                if (isAdmin() && thAcoes) thAcoes.style.display = '';
+                const colspan = isAdmin() ? 13 : 12;
+                if (veiculosPerm.length === 0) {
                     tbody.innerHTML =
-                        '<tr><td colspan="13" class="empty-state"><span class="icon">🚙</span><br>Nenhum veículo cadastrado</td></tr>';
+                        `<tr><td colspan="${colspan}" class="empty-state"><span class="icon">🚙</span><br>${isAdmin() ? 'Nenhum veículo cadastrado' : 'Nenhum veículo disponível para visualização'}</td></tr>`;
                     return;
                 }
-                tbody.innerHTML = veiculos.map(v => `
+                tbody.innerHTML = veiculosPerm.map(v => `
                     <tr>
-                        <td>${v.marca}</td>
-                        <td>${v.modelo}</td>
-                        <td>${v.cor}</td>
-                        <td><strong>${v.potencia || '—'}</strong></td>
-                        <td><strong>${v.placa}</strong></td>
-                        <td>${(v.km || 0).toLocaleString('pt-BR')}</td>
-                        <td>${v.renavan}</td>
-                        <td><small>${v.chassi}</small></td>
-                        <td class="highlight-valor">${formatarMoeda(v.valorSemanal)}</td>
-                        <td class="highlight-valor">${formatarMoeda(v.caucao)}</td>
-                        <td>${formatarOpcionais(v.opcionais)}</td>
+                        <td>${v.marca}</td><td>${v.modelo}</td><td>${v.cor}</td><td><strong>${v.potencia || '—'}</strong></td>
+                        <td><strong>${v.placa}</strong></td><td>${(v.km || 0).toLocaleString('pt-BR')}</td><td>${v.renavan}</td>
+                        <td><small>${v.chassi}</small></td><td class="highlight-valor">${formatarMoeda(v.valorSemanal)}</td>
+                        <td class="highlight-valor">${formatarMoeda(v.caucao)}</td><td>${formatarOpcionais(v.opcionais)}</td>
                         <td>${v.documentoURL ? `<a href="${v.documentoURL}" target="_blank" class="btn-pdf" title="Ver Documento">📄 Ver PDF</a>` : '<span style="color:var(--text-muted);">—</span>'}</td>
-                        <td>
-                            <button class="btn-edit" onclick="window._editarVeiculo('${v.id}')" title="Editar Veículo">✏️</button>
-                            <button class="btn-danger" onclick="window._excluirVeiculo('${v.id}')" title="Excluir">🗑️</button>
-                        </td>
+                        ${isAdmin() ? `<td><button class="btn-edit" onclick="window._editarVeiculo('${v.id}')" title="Editar Veículo">✏️</button><button class="btn-danger" onclick="window._excluirVeiculo('${v.id}')" title="Excluir">🗑️</button></td>` : ''}
                     </tr>
                 `).join('');
                 initScrollButtons();
             }
 
             window._editarVeiculo = function(id) {
+                if (!isAdmin()) { showToast('⚠️ Apenas o administrador pode editar veículos.', 'error'); return; }
                 const veiculo = veiculos.find(v => v.id === id);
-                if (!veiculo) {
-                    showToast('❌ Veículo não encontrado.', 'error');
-                    return;
-                }
+                if (!veiculo) { showToast('❌ Veículo não encontrado.', 'error'); return; }
                 editandoVeiculoId = id;
                 document.getElementById('v-marca').value = veiculo.marca || '';
                 document.getElementById('v-modelo').value = veiculo.modelo || '';
@@ -2421,7 +2215,6 @@
                 document.getElementById('v-op-multimidia').checked = veiculo.opcionais?.multimidia || false;
                 document.getElementById('v-op-rodas').checked = veiculo.opcionais?.rodas || false;
                 document.getElementById('v-documento').value = '';
-
                 btnSubmitVeiculo.textContent = '💾 Atualizar Veículo';
                 btnCancelEdicaoVeiculo.style.display = 'inline-block';
                 editBannerVeiculo.classList.add('show');
@@ -2429,37 +2222,32 @@
                     `Editando veículo: ${veiculo.marca} ${veiculo.modelo} - Placa: ${veiculo.placa}`;
                 veicFormTitle.textContent = 'Editar Veículo';
                 document.getElementById('card-form-veiculo').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                atualizarPermissoesVeiculoGrid();
                 showToast('✏️ Modo de edição ativado.', 'info');
             };
 
             window._excluirVeiculo = async function(id) {
+                if (!isAdmin()) { showToast('⚠️ Apenas o administrador pode excluir veículos.', 'error'); return; }
                 if (!confirm('Tem certeza que deseja excluir este veículo?')) return;
                 const emLocacao = locacoes.some(l => l.veiculoId === id);
-                if (emLocacao) {
-                    showToast('⚠️ Este veículo está vinculado a uma locação ativa. Remova a locação primeiro.',
-                        'error');
-                    return;
-                }
+                if (emLocacao) { showToast(
+                        '⚠️ Este veículo está vinculado a uma locação ativa. Remova a locação primeiro.', 'error');
+                    return; }
                 if (editandoVeiculoId === id) resetarFormVeiculo();
-                try {
-                    await colecoes.veiculos.doc(id).delete();
-                    showToast('🗑️ Veículo excluído com sucesso!', 'info');
-                } catch (error) {
-                    console.error('Erro ao excluir veículo:', error);
-                    showToast('❌ Erro ao excluir veículo.', 'error');
-                }
+                try { await colecoes.veiculos.doc(id).delete();
+                    showToast('🗑️ Veículo excluído com sucesso!', 'info'); } catch (error) { console.error(
+                        'Erro ao excluir veículo:', error);
+                    showToast('❌ Erro ao excluir veículo.', 'error'); }
             };
 
-            // ===================== LOCATÁRIOS =====================
+            // ===================== LOCATÁRIOS (admin only) =====================
             const formLocatario = document.getElementById('form-locatario');
             const inputCPF = document.getElementById('l-cpf');
             const inputFone = document.getElementById('l-fone');
             const inputCEP = document.getElementById('l-cep');
-
             inputCPF.addEventListener('input', function() { this.value = aplicarMascaraCPF(this.value); });
             inputFone.addEventListener('input', function() { this.value = aplicarMascaraTelefone(this.value); });
             inputCEP.addEventListener('input', function() { this.value = aplicarMascaraCEP(this.value); });
-
             const btnSubmitLocatario = document.getElementById('btn-submit-locatario');
             const btnCancelLocatario = document.getElementById('btn-cancel-locatario');
             const btnCancelEdicaoLocatario = document.getElementById('btn-cancel-edicao-locatario');
@@ -2474,14 +2262,11 @@
                 editBannerLocatario.classList.remove('show');
                 locatFormTitle.textContent = 'Novo Locatário';
             }
-
             btnCancelLocatario.addEventListener('click', resetarFormLocatario);
-            btnCancelEdicaoLocatario.addEventListener('click', function() {
-                resetarFormLocatario();
-                showToast('📋 Edição cancelada.', 'info');
-            });
-
+            btnCancelEdicaoLocatario.addEventListener('click', function() { resetarFormLocatario();
+                showToast('📋 Edição cancelada.', 'info'); });
             formLocatario.addEventListener('submit', async function(e) {
+                if (!isAdmin()) return;
                 e.preventDefault();
                 const dadosLocatario = {
                     nome: document.getElementById('l-nome').value.trim(),
@@ -2495,64 +2280,39 @@
                     cidade: document.getElementById('l-cidade').value.trim(),
                     dataAtualizacao: new Date().toISOString()
                 };
-
                 if (editandoLocatarioId) {
-                    try {
-                        await colecoes.locatarios.doc(editandoLocatarioId).update(dadosLocatario);
+                    try { await colecoes.locatarios.doc(editandoLocatarioId).update(dadosLocatario);
                         resetarFormLocatario();
                         showToast('✅ Locatário atualizado com sucesso!', 'success');
-                        await syncLocacoesLocatario(editandoLocatarioId);
-                    } catch (error) {
-                        console.error('Erro ao atualizar locatário:', error);
-                        showToast('❌ Erro ao atualizar locatário.', 'error');
-                    }
+                        await syncLocacoesLocatario(editandoLocatarioId); } catch (error) { console.error(
+                            'Erro ao atualizar locatário:', error);
+                        showToast('❌ Erro ao atualizar locatário.', 'error'); }
                 } else {
-                    const novoLocatario = {
-                        ...dadosLocatario,
-                        dataCadastro: new Date().toISOString()
-                    };
-                    try {
-                        const docRef = await colecoes.locatarios.add(novoLocatario);
+                    const novoLocatario = { ...dadosLocatario, dataCadastro: new Date().toISOString() };
+                    try { const docRef = await colecoes.locatarios.add(novoLocatario);
                         resetarFormLocatario();
                         showToast('✅ Locatário cadastrado com sucesso!', 'success');
-                        await syncLocacoesLocatario(docRef.id);
-                    } catch (error) {
-                        console.error('Erro ao cadastrar locatário:', error);
-                        showToast('❌ Erro ao cadastrar locatário.', 'error');
-                    }
+                        await syncLocacoesLocatario(docRef.id); } catch (error) { console.error(
+                            'Erro ao cadastrar locatário:', error);
+                        showToast('❌ Erro ao cadastrar locatário.', 'error'); }
                 }
             });
 
             function atualizarTabelaLocatarios() {
+                if (!isAdmin()) return;
                 const tbody = document.getElementById('tbody-locatarios');
-                if (locatarios.length === 0) {
-                    tbody.innerHTML =
-                        '<tr><td colspan="7" class="empty-state"><span class="icon">👥</span><br>Nenhum locatário cadastrado</td></tr>';
-                    return;
-                }
+                if (locatarios.length === 0) { tbody.innerHTML =
+                        '<tr><td colspan="7" class="empty-state"><span class="icon">👥</span><br>Nenhum locatário cadastrado</td></tr>'; return; }
                 tbody.innerHTML = locatarios.map(l => `
-                    <tr>
-                        <td><strong>${l.nome}</strong></td>
-                        <td>${l.cpf}</td>
-                        <td>${l.rg}</td>
-                        <td>${l.cnh}</td>
-                        <td>${l.fone}</td>
-                        <td>${l.cidade}</td>
-                        <td>
-                            <button class="btn-edit" onclick="window._editarLocatario('${l.id}')" title="Editar Locatário">✏️</button>
-                            <button class="btn-danger" onclick="window._excluirLocatario('${l.id}')" title="Excluir">🗑️</button>
-                        </td>
-                    </tr>
+                    <tr><td><strong>${l.nome}</strong></td><td>${l.cpf}</td><td>${l.rg}</td><td>${l.cnh}</td><td>${l.fone}</td><td>${l.cidade}</td>
+                        <td><button class="btn-edit" onclick="window._editarLocatario('${l.id}')" title="Editar Locatário">✏️</button><button class="btn-danger" onclick="window._excluirLocatario('${l.id}')" title="Excluir">🗑️</button></td></tr>
                 `).join('');
                 initScrollButtons();
             }
-
             window._editarLocatario = function(id) {
+                if (!isAdmin()) return;
                 const locatario = locatarios.find(l => l.id === id);
-                if (!locatario) {
-                    showToast('❌ Locatário não encontrado.', 'error');
-                    return;
-                }
+                if (!locatario) { showToast('❌ Locatário não encontrado.', 'error'); return; }
                 editandoLocatarioId = id;
                 document.getElementById('l-nome').value = locatario.nome || '';
                 document.getElementById('l-cpf').value = locatario.cpf || '';
@@ -2563,7 +2323,6 @@
                 document.getElementById('l-endereco').value = locatario.endereco || '';
                 document.getElementById('l-bairro').value = locatario.bairro || '';
                 document.getElementById('l-cidade').value = locatario.cidade || '';
-
                 btnSubmitLocatario.textContent = '💾 Atualizar Locatário';
                 btnCancelEdicaoLocatario.style.display = 'inline-block';
                 editBannerLocatario.classList.add('show');
@@ -2573,27 +2332,21 @@
                 document.getElementById('card-form-locatario').scrollIntoView({ behavior: 'smooth', block: 'start' });
                 showToast('✏️ Modo de edição ativado.', 'info');
             };
-
             window._excluirLocatario = async function(id) {
+                if (!isAdmin()) return;
                 if (!confirm('Tem certeza que deseja excluir este locatário?')) return;
                 const emLocacao = locacoes.some(l => l.locatarioId === id);
-                if (emLocacao) {
-                    showToast(
-                        '⚠️ Este locatário está vinculado a uma locação ativa. Remova a locação primeiro.',
-                        'error');
-                    return;
-                }
+                if (emLocacao) { showToast(
+                        '⚠️ Este locatário está vinculado a uma locação ativa. Remova a locação primeiro.', 'error');
+                    return; }
                 if (editandoLocatarioId === id) resetarFormLocatario();
-                try {
-                    await colecoes.locatarios.doc(id).delete();
-                    showToast('🗑️ Locatário excluído com sucesso!', 'info');
-                } catch (error) {
-                    console.error('Erro ao excluir locatário:', error);
-                    showToast('❌ Erro ao excluir locatário.', 'error');
-                }
+                try { await colecoes.locatarios.doc(id).delete();
+                    showToast('🗑️ Locatário excluído com sucesso!', 'info'); } catch (error) { console.error(
+                        'Erro ao excluir locatário:', error);
+                    showToast('❌ Erro ao excluir locatário.', 'error'); }
             };
 
-            // ===================== LOCAÇÕES =====================
+            // ===================== LOCAÇÕES (admin only) =====================
             const formLocacao = document.getElementById('form-locacao');
             const selectFormaCaucaoLoc = document.getElementById('loc-forma-caucao');
             const grupoParcelasLoc = document.getElementById('loc-grupo-parcelas');
@@ -2602,91 +2355,61 @@
             const btnCancelEdicaoLocacao = document.getElementById('btn-cancel-edicao-locacao');
             const editBanner = document.getElementById('edit-banner');
             const locFormTitle = document.getElementById('loc-form-title');
-
             const divValorParcela = document.createElement('div');
             divValorParcela.id = 'loc-valor-parcela-info';
             divValorParcela.style.cssText =
-                'margin-top: 8px; font-size: 14px; color: var(--text-muted); display: none; padding: 8px 12px; background: var(--input-bg); border-radius: 6px; border-left: 3px solid var(--primary);';
+                'margin-top:8px;font-size:14px;color:var(--text-muted);display:none;padding:8px 12px;background:var(--input-bg);border-radius:6px;border-left:3px solid var(--primary);';
             document.getElementById('loc-grupo-parcelas').appendChild(divValorParcela);
-
             selectFormaCaucaoLoc.addEventListener('change', function() {
                 const forma = this.value;
-                grupoParcelasLoc.style.display = (forma === 'parcelado' || forma === 'entrada_parcelado') ?
-                    'block' : 'none';
+                grupoParcelasLoc.style.display = (forma === 'parcelado' || forma === 'entrada_parcelado') ? 'block' :
+                    'none';
                 grupoEntradaCaucaoLoc.style.display = forma === 'entrada_parcelado' ? 'block' : 'none';
-                if (forma === 'avista') {
-                    document.getElementById('loc-parcelas').value = '1';
+                if (forma === 'avista') { document.getElementById('loc-parcelas').value = '1';
                     document.getElementById('loc-entrada-caucao').value = '';
-                    divValorParcela.style.display = 'none';
-                }
-                if (forma === 'parcelado') {
-                    document.getElementById('loc-entrada-caucao').value = '';
-                    atualizarValorParcela();
-                }
-                if (forma === 'entrada_parcelado') {
-                    atualizarValorParcela();
-                }
+                    divValorParcela.style.display = 'none'; }
+                if (forma === 'parcelado') { document.getElementById('loc-entrada-caucao').value = '';
+                    atualizarValorParcela(); }
+                if (forma === 'entrada_parcelado') { atualizarValorParcela(); }
             });
 
             function atualizarValorParcela() {
                 const forma = selectFormaCaucaoLoc.value;
-                if (forma !== 'parcelado' && forma !== 'entrada_parcelado') {
-                    divValorParcela.style.display = 'none';
-                    return;
-                }
+                if (forma !== 'parcelado' && forma !== 'entrada_parcelado') { divValorParcela.style.display =
+                    'none'; return; }
                 const veiculoId = document.getElementById('loc-veiculo').value;
                 const veiculo = veiculos.find(v => v.id === veiculoId);
-                if (!veiculo) {
-                    divValorParcela.style.display = 'none';
-                    return;
-                }
+                if (!veiculo) { divValorParcela.style.display = 'none'; return; }
                 const valorCaucao = parseFloat(veiculo.caucao) || 0;
                 const parcelas = parseInt(document.getElementById('loc-parcelas').value) || 1;
                 const entrada = parseMoedaBR(document.getElementById('loc-entrada-caucao').value);
-
-                let valorParcela = 0;
                 let textoParcelas = '';
-                if (forma === 'parcelado') {
-                    if (parcelas > 0) {
-                        valorParcela = valorCaucao / parcelas;
-                        textoParcelas = `${parcelas}x de ${formatarMoeda(valorParcela)}`;
-                    } else {
-                        textoParcelas = 'Número de parcelas inválido';
-                    }
-                } else if (forma === 'entrada_parcelado') {
-                    const valorRestante = valorCaucao - entrada;
-                    if (parcelas > 0 && valorRestante > 0) {
-                        valorParcela = valorRestante / parcelas;
-                        textoParcelas =
-                            `Entrada ${formatarMoeda(entrada)} + ${parcelas}x de ${formatarMoeda(valorParcela)} (Total: ${formatarMoeda(valorCaucao)})`;
-                    } else if (parcelas > 0 && valorRestante <= 0) {
-                        textoParcelas = `Entrada ${formatarMoeda(entrada)} já cobre o valor total do caução.`;
-                    } else {
-                        textoParcelas = 'Número de parcelas inválido';
-                    }
-                }
+                if (forma === 'parcelado') { textoParcelas = parcelas > 0 ? `${parcelas}x de ${formatarMoeda(valorCaucao / parcelas)}` :
+                        'Número de parcelas inválido'; } else if (forma === 'entrada_parcelado') { const valorRestante =
+                        valorCaucao - entrada; if (parcelas > 0 && valorRestante > 0) textoParcelas =
+                        `Entrada ${formatarMoeda(entrada)} + ${parcelas}x de ${formatarMoeda(valorRestante / parcelas)} (Total: ${formatarMoeda(valorCaucao)})`;
+                    else textoParcelas = `Entrada ${formatarMoeda(entrada)} já cobre o valor total do caução.`; }
                 divValorParcela.textContent = `💡 Valor de cada parcela: ${textoParcelas}`;
                 divValorParcela.style.display = 'block';
             }
-
             document.getElementById('loc-veiculo').addEventListener('change', atualizarValorParcela);
             document.getElementById('loc-parcelas').addEventListener('input', atualizarValorParcela);
             document.getElementById('loc-entrada-caucao').addEventListener('input', atualizarValorParcela);
 
             function atualizarSelectsLocacao() {
+                if (!isAdmin()) return;
                 const selectVeiculo = document.getElementById('loc-veiculo');
                 const selectLocatario = document.getElementById('loc-locatario');
                 const veiculosLocadosIds = locacoes.filter(l => l.id !== editandoLocacaoId).map(l => l.veiculoId);
                 const veiculosDisponiveis = veiculos.filter(v => !veiculosLocadosIds.includes(v.id));
-                selectVeiculo.innerHTML = '<option value="">Selecione um veículo...</option>' +
-                    veiculosDisponiveis.map(v =>
-                        `<option value="${v.id}">${v.marca} ${v.modelo} - Placa: ${v.placa} (Semanal: ${formatarMoeda(v.valorSemanal)} | Caução: ${formatarMoeda(v.caucao)})</option>`
-                    ).join('');
+                selectVeiculo.innerHTML = '<option value="">Selecione um veículo...</option>' + veiculosDisponiveis.map(
+                    v =>
+                    `<option value="${v.id}">${v.marca} ${v.modelo} - Placa: ${v.placa} (Semanal: ${formatarMoeda(v.valorSemanal)} | Caução: ${formatarMoeda(v.caucao)})</option>`
+                ).join('');
                 const locatariosLocadosIds = locacoes.filter(l => l.id !== editandoLocacaoId).map(l => l.locatarioId);
                 const locatariosDisponiveis = locatarios.filter(l => !locatariosLocadosIds.includes(l.id));
-                selectLocatario.innerHTML = '<option value="">Selecione um locatário...</option>' +
-                    locatariosDisponiveis.map(l =>
-                        `<option value="${l.id}">${l.nome} - CPF: ${l.cpf}</option>`).join('');
+                selectLocatario.innerHTML = '<option value="">Selecione um locatário...</option>' + locatariosDisponiveis
+                    .map(l => `<option value="${l.id}">${l.nome} - CPF: ${l.cpf}</option>`).join('');
             }
 
             function resetarFormLocacao() {
@@ -2704,19 +2427,13 @@
                 editBanner.classList.remove('show');
                 locFormTitle.textContent = 'Nova Locação';
             }
-
-            btnCancelEdicaoLocacao.addEventListener('click', function() {
-                resetarFormLocacao();
+            btnCancelEdicaoLocacao.addEventListener('click', function() { resetarFormLocacao();
                 atualizarSelectsLocacao();
-                showToast('📋 Edição cancelada.', 'info');
-            });
-
+                showToast('📋 Edição cancelada.', 'info'); });
             window._editarLocacao = function(id) {
+                if (!isAdmin()) return;
                 const locacao = locacoes.find(l => l.id === id);
-                if (!locacao) {
-                    showToast('❌ Locação não encontrada.', 'error');
-                    return;
-                }
+                if (!locacao) { showToast('❌ Locação não encontrada.', 'error'); return; }
                 editandoLocacaoId = id;
                 atualizarSelectsLocacao();
                 document.getElementById('loc-veiculo').value = locacao.veiculoId;
@@ -2725,15 +2442,11 @@
                 document.getElementById('loc-data-fim').value = locacao.dataFim;
                 selectFormaCaucaoLoc.value = locacao.formaCaucao;
                 selectFormaCaucaoLoc.dispatchEvent(new Event('change'));
-                if (locacao.valorEntradaCaucao) {
-                    document.getElementById('loc-entrada-caucao').value = formatarMoeda(locacao.valorEntradaCaucao);
-                }
-                if (locacao.parcelasCaucao) {
-                    document.getElementById('loc-parcelas').value = locacao.parcelasCaucao;
-                }
+                if (locacao.valorEntradaCaucao) document.getElementById('loc-entrada-caucao').value = formatarMoeda(
+                    locacao.valorEntradaCaucao);
+                if (locacao.parcelasCaucao) document.getElementById('loc-parcelas').value = locacao.parcelasCaucao;
                 const docInputs = document.querySelectorAll('#documentos-locatario-grid .doc-input');
                 docInputs.forEach(input => { input.value = ''; });
-
                 btnSubmitLocacao.textContent = '💾 Atualizar Locação';
                 btnCancelEdicaoLocacao.style.display = 'inline-block';
                 editBanner.classList.add('show');
@@ -2744,116 +2457,57 @@
                 showToast('✏️ Modo de edição ativado.', 'info');
                 setTimeout(atualizarValorParcela, 100);
             };
-
             document.getElementById('loc-data-inicio').addEventListener('change', function() {
                 const dataInicio = new Date(this.value);
-                if (!isNaN(dataInicio)) {
-                    const dataFim = new Date(dataInicio);
+                if (!isNaN(dataInicio)) { const dataFim = new Date(dataInicio);
                     dataFim.setMonth(dataFim.getMonth() + 6);
-                    const year = dataFim.getFullYear();
-                    const month = String(dataFim.getMonth() + 1).padStart(2, '0');
-                    const day = String(dataFim.getDate()).padStart(2, '0');
-                    document.getElementById('loc-data-fim').value = `${year}-${month}-${day}`;
-                }
+                    document.getElementById('loc-data-fim').value =
+                        `${dataFim.getFullYear()}-${String(dataFim.getMonth() + 1).padStart(2, '0')}-${String(dataFim.getDate()).padStart(2, '0')}`; }
             });
-
             async function uploadDocumentosLocacao(docInputs) {
                 const documentos = [];
-                for (const input of docInputs) {
-                    if (input.files && input.files[0]) {
-                        const file = input.files[0];
-                        if (file.size > 10 * 1024 * 1024) {
-                            console.warn('Arquivo muito grande ignorado:', file.name);
-                            continue;
-                        }
-                        try {
-                            const storageRef = storage.ref(
-                                `documentos/locacoes/${Date.now()}_${file.name}`);
-                            const uploadTask = await storageRef.put(file);
-                            const url = await uploadTask.ref.getDownloadURL();
-                            documentos.push({
-                                nome: file.name,
-                                url: url,
-                                tipo: file.type,
-                                tamanho: file.size
-                            });
-                        } catch (error) {
-                            console.error('Erro upload documento:', file.name, error);
-                            throw new Error(`Erro ao enviar ${file.name}`);
-                        }
-                    }
-                }
+                for (const input of docInputs) { if (input.files && input.files[0]) { const file = input.files[0]; if (file
+                            .size > 10 * 1024 * 1024) continue; try { const storageRef = storage.ref(
+                            `documentos/locacoes/${Date.now()}_${file.name}`); const uploadTask = await storageRef.put(
+                            file); const url = await uploadTask.ref.getDownloadURL();
+                        documentos.push({ nome: file.name, url: url, tipo: file.type, tamanho: file.size }); } catch (
+                        error) { throw new Error(`Erro ao enviar ${file.name}`); } } }
                 return documentos;
             }
-
             formLocacao.addEventListener('submit', async function(e) {
+                if (!isAdmin()) return;
                 e.preventDefault();
                 const veiculoId = document.getElementById('loc-veiculo').value;
                 const locatarioId = document.getElementById('loc-locatario').value;
                 const dataInicio = document.getElementById('loc-data-inicio').value;
                 const dataFim = document.getElementById('loc-data-fim').value;
                 const formaCaucao = selectFormaCaucaoLoc.value;
-
-                if (!veiculoId || !locatarioId || !dataInicio || !dataFim || !formaCaucao) {
-                    showToast('⚠️ Preencha todos os campos obrigatórios.', 'error');
-                    return;
-                }
-                if (new Date(dataFim) <= new Date(dataInicio)) {
-                    showToast('⚠️ A Data Fim do Contrato deve ser posterior à Data Início.', 'error');
-                    return;
-                }
-
+                if (!veiculoId || !locatarioId || !dataInicio || !dataFim || !formaCaucao) { showToast(
+                        '⚠️ Preencha todos os campos obrigatórios.', 'error'); return; }
+                if (new Date(dataFim) <= new Date(dataInicio)) { showToast(
+                        '⚠️ A Data Fim do Contrato deve ser posterior à Data Início.', 'error'); return; }
                 const veiculo = veiculos.find(v => v.id === veiculoId);
                 const locatario = locatarios.find(l => l.id === locatarioId);
-                if (!veiculo || !locatario) {
-                    showToast('❌ Veículo ou locatário não encontrado.', 'error');
-                    return;
-                }
-
-                const parcelas = (formaCaucao === 'parcelado' || formaCaucao === 'entrada_parcelado') ?
-                    (parseInt(document.getElementById('loc-parcelas').value) || 1) : 1;
-                if (parcelas > 20) {
-                    showToast('⚠️ O número máximo de parcelas é 20.', 'error');
-                    return;
-                }
-                const valorEntradaCaucao = formaCaucao === 'entrada_parcelado' ?
-                    parseMoedaBR(document.getElementById('loc-entrada-caucao').value) : 0;
-
+                if (!veiculo || !locatario) { showToast('❌ Veículo ou locatário não encontrado.', 'error'); return; }
+                const parcelas = (formaCaucao === 'parcelado' || formaCaucao === 'entrada_parcelado') ? (parseInt(document
+                    .getElementById('loc-parcelas').value) || 1) : 1;
+                if (parcelas > 20) { showToast('⚠️ O número máximo de parcelas é 20.', 'error'); return; }
+                const valorEntradaCaucao = formaCaucao === 'entrada_parcelado' ? parseMoedaBR(document.getElementById(
+                    'loc-entrada-caucao').value) : 0;
                 const docInputs = document.querySelectorAll('#documentos-locatario-grid .doc-input');
                 let documentosLocatario = [];
-                try {
-                    documentosLocatario = await uploadDocumentosLocacao(docInputs);
-                } catch (error) {
-                    showToast('⚠️ Erro ao processar documentos: ' + error.message, 'error');
-                    return;
-                }
-
+                try { documentosLocatario = await uploadDocumentosLocacao(docInputs); } catch (error) { showToast(
+                        '⚠️ Erro ao processar documentos: ' + error.message, 'error'); return; }
                 if (editandoLocacaoId) {
                     const locacaoAtual = locacoes.find(l => l.id === editandoLocacaoId);
                     const docsFinais = documentosLocatario.length > 0 ? documentosLocatario : (locacaoAtual
                         ?.documentosLocatario || []);
-
                     await removerEntradasFluxoLocacao(locacaoAtual);
-
-                    const updateData = {
-                        veiculoId: veiculoId,
-                        locatarioId: locatarioId,
-                        veiculoPlaca: veiculo.placa,
-                        veiculoNome: `${veiculo.marca} ${veiculo.modelo}`,
-                        locatarioNome: locatario.nome,
-                        locatarioCPF: locatario.cpf,
-                        valorSemanal: veiculo.valorSemanal,
-                        caucao: veiculo.caucao,
-                        formaCaucao: formaCaucao,
-                        parcelasCaucao: parcelas,
-                        valorEntradaCaucao: valorEntradaCaucao,
-                        dataInicio: dataInicio,
-                        dataFim: dataFim,
-                        documentosLocatario: docsFinais,
-                        status: 'ativa',
-                        dataAtualizacao: new Date().toISOString()
-                    };
-
+                    const updateData = { veiculoId, locatarioId, veiculoPlaca: veiculo.placa, veiculoNome: `${veiculo.marca} ${veiculo.modelo}`,
+                        locatarioNome: locatario.nome, locatarioCPF: locatario.cpf, valorSemanal: veiculo
+                        .valorSemanal, caucao: veiculo.caucao, formaCaucao, parcelasCaucao: parcelas,
+                        valorEntradaCaucao, dataInicio, dataFim, documentosLocatario: docsFinais, status: 'ativa',
+                        dataAtualizacao: new Date().toISOString() };
                     try {
                         await colecoes.locacoes.doc(editandoLocacaoId).update(updateData);
                         const fluxoCaixaIds = await criarEntradasFluxoLocacao({ ...updateData, id: editandoLocacaoId });
@@ -2861,31 +2515,14 @@
                         resetarFormLocacao();
                         atualizarSelectsLocacao();
                         showToast('✅ Locação atualizada com sucesso!', 'success');
-                    } catch (error) {
-                        console.error('Erro ao atualizar locação:', error);
-                        showToast('❌ Erro ao atualizar locação.', 'error');
-                    }
+                    } catch (error) { console.error('Erro ao atualizar locação:', error);
+                        showToast('❌ Erro ao atualizar locação.', 'error'); }
                 } else {
-                    const novaLocacao = {
-                        veiculoId: veiculoId,
-                        locatarioId: locatarioId,
-                        veiculoPlaca: veiculo.placa,
-                        veiculoNome: `${veiculo.marca} ${veiculo.modelo}`,
-                        locatarioNome: locatario.nome,
-                        locatarioCPF: locatario.cpf,
-                        valorSemanal: veiculo.valorSemanal,
-                        caucao: veiculo.caucao,
-                        formaCaucao: formaCaucao,
-                        parcelasCaucao: parcelas,
-                        valorEntradaCaucao: valorEntradaCaucao,
-                        dataInicio: dataInicio,
-                        dataFim: dataFim,
-                        documentosLocatario: documentosLocatario,
-                        status: 'ativa',
-                        dataCriacao: new Date().toISOString(),
-                        dataAtualizacao: new Date().toISOString()
-                    };
-
+                    const novaLocacao = { veiculoId, locatarioId, veiculoPlaca: veiculo.placa, veiculoNome: `${veiculo.marca} ${veiculo.modelo}`,
+                        locatarioNome: locatario.nome, locatarioCPF: locatario.cpf, valorSemanal: veiculo
+                        .valorSemanal, caucao: veiculo.caucao, formaCaucao, parcelasCaucao: parcelas,
+                        valorEntradaCaucao, dataInicio, dataFim, documentosLocatario, status: 'ativa',
+                        dataCriacao: new Date().toISOString(), dataAtualizacao: new Date().toISOString() };
                     try {
                         const docRef = await colecoes.locacoes.add(novaLocacao);
                         const fluxoCaixaIds = await criarEntradasFluxoLocacao({ ...novaLocacao, id: docRef.id });
@@ -2896,29 +2533,23 @@
                         document.getElementById('loc-parcelas').value = '2';
                         document.getElementById('loc-entrada-caucao').value = '';
                         divValorParcela.style.display = 'none';
-                        const docInputsReset = document.querySelectorAll('#documentos-locatario-grid .doc-input');
-                        docInputsReset.forEach(input => { input.value = ''; });
+                        document.querySelectorAll('#documentos-locatario-grid .doc-input').forEach(i => i.value = '');
                         atualizarSelectsLocacao();
                         showToast('✅ Locação registrada com sucesso!', 'success');
-                    } catch (error) {
-                        console.error('Erro ao registrar locação:', error);
-                        showToast('❌ Erro ao registrar locação.', 'error');
-                    }
+                    } catch (error) { console.error('Erro ao registrar locação:', error);
+                        showToast('❌ Erro ao registrar locação.', 'error'); }
                 }
                 initScrollButtons();
             });
 
             function atualizarTabelaLocacoes() {
+                if (!isAdmin()) return;
                 const tbody = document.getElementById('tbody-locacoes');
-                let locacoesFiltradas = locacoes;
+                let locacoesFiltradas = getLocacoesPermitidas();
                 if (termoBuscaLocacoes.trim() !== '') {
                     const termoSanitizado = sanitizarParaBusca(termoBuscaLocacoes);
-                    locacoesFiltradas = locacoes.filter(l => {
-                        const placaSanitizada = sanitizarParaBusca(l.veiculoPlaca);
-                        const cpfSanitizado = sanitizarParaBusca(l.locatarioCPF);
-                        return placaSanitizada.includes(termoSanitizado) || cpfSanitizado.includes(
-                            termoSanitizado);
-                    });
+                    locacoesFiltradas = locacoesFiltradas.filter(l => sanitizarParaBusca(l.veiculoPlaca).includes(
+                        termoSanitizado) || sanitizarParaBusca(l.locatarioCPF).includes(termoSanitizado));
                 }
                 atualizarContadorBusca(locacoesFiltradas.length);
                 if (locacoesFiltradas.length === 0) {
@@ -2939,24 +2570,7 @@
                     let docsHtml = numDocs > 0 ?
                         `<span class="badge badge-info" title="${numDocs} documento(s)">📎 ${numDocs}</span>` :
                         '<span style="color:var(--text-muted);">—</span>';
-                    return `
-                    <tr>
-                        <td>${l.veiculoNome}</td>
-                        <td><strong>${l.veiculoPlaca}</strong></td>
-                        <td>${l.locatarioNome}</td>
-                        <td><strong>${l.locatarioCPF}</strong></td>
-                        <td>${new Date(l.dataInicio).toLocaleDateString('pt-BR')}</td>
-                        <td>${new Date(l.dataFim).toLocaleDateString('pt-BR')}</td>
-                        <td class="highlight-valor">${formatarMoeda(l.valorSemanal)}</td>
-                        <td>${caucaoHtml}</td>
-                        <td><span class="badge badge-info">Ativa</span></td>
-                        <td>${docsHtml}</td>
-                        <td>
-                            <button class="btn-edit" onclick="window._editarLocacao('${l.id}')" title="Editar Locação">✏️</button>
-                            <button class="btn-danger" onclick="window._excluirLocacao('${l.id}')" title="Encerrar Locação">🗑️</button>
-                        </td>
-                    </tr>
-                `;
+                    return `<tr><td>${l.veiculoNome}</td><td><strong>${l.veiculoPlaca}</strong></td><td>${l.locatarioNome}</td><td><strong>${l.locatarioCPF}</strong></td><td>${new Date(l.dataInicio).toLocaleDateString('pt-BR')}</td><td>${new Date(l.dataFim).toLocaleDateString('pt-BR')}</td><td class="highlight-valor">${formatarMoeda(l.valorSemanal)}</td><td>${caucaoHtml}</td><td><span class="badge badge-info">Ativa</span></td><td>${docsHtml}</td><td><button class="btn-edit" onclick="window._editarLocacao('${l.id}')" title="Editar Locação">✏️</button><button class="btn-danger" onclick="window._excluirLocacao('${l.id}')" title="Encerrar Locação">🗑️</button></td></tr>`;
                 }).join('');
                 initScrollButtons();
             }
@@ -2973,141 +2587,90 @@
                         `🔍 Encontradas: <strong class="highlight-count">${totalFiltrado}</strong> de ${locacoes.length} locações`;
                     btnLimparFiltro.style.display = 'flex';
                     clearBtn.classList.add('visible');
-                } else {
-                    resultsInfo.classList.remove('active-filter');
+                } else { resultsInfo.classList.remove('active-filter');
                     resultsInfo.innerHTML =
-                        `Total: <strong class="highlight-count">${totalFiltrado}</strong> locações`;
+                    `Total: <strong class="highlight-count">${totalFiltrado}</strong> locações`;
                     btnLimparFiltro.style.display = 'none';
-                    clearBtn.classList.remove('visible');
-                }
+                    clearBtn.classList.remove('visible'); }
             }
 
-            function atualizarUIBuscaLocacoes() {
-                atualizarTabelaLocacoes();
-                const inputBusca = document.getElementById('input-busca-locacoes');
-                const clearBtn = document.getElementById('clear-search-btn');
-                if (termoBuscaLocacoes.trim() !== '') {
-                    clearBtn.classList.add('visible');
-                } else {
-                    clearBtn.classList.remove('visible');
-                    inputBusca.value = '';
-                }
-                initScrollButtons();
-            }
-
+            function atualizarUIBuscaLocacoes() { atualizarTabelaLocacoes(); const inputBusca = document.getElementById(
+                    'input-busca-locacoes'); const clearBtn = document.getElementById('clear-search-btn'); if (
+                    termoBuscaLocacoes.trim() !== '') { clearBtn.classList.add('visible'); } else { clearBtn.classList
+                    .remove('visible');
+                inputBusca.value = ''; }
+                initScrollButtons(); }
             window._excluirLocacao = async function(id) {
+                if (!isAdmin()) return;
                 const locacao = locacoes.find(l => l.id === id);
                 if (!locacao) return;
-                if (!confirm('Deseja encerrar esta locação? As transações do Fluxo de Caixa serão removidas.'))
-                    return;
+                if (!confirm('Deseja encerrar esta locação? As transações do Fluxo de Caixa serão removidas.')) return;
                 await removerEntradasFluxoLocacao(locacao);
-                if (editandoLocacaoId === id) {
-                    resetarFormLocacao();
-                    atualizarSelectsLocacao();
-                }
-                try {
-                    await colecoes.locacoes.doc(id).delete();
-                    showToast('✅ Locação encerrada com sucesso!', 'info');
-                } catch (error) {
-                    console.error('Erro ao encerrar locação:', error);
-                    showToast('❌ Erro ao encerrar locação.', 'error');
-                }
+                if (editandoLocacaoId === id) { resetarFormLocacao();
+                    atualizarSelectsLocacao(); }
+                try { await colecoes.locacoes.doc(id).delete();
+                    showToast('✅ Locação encerrada com sucesso!', 'info'); } catch (error) { console.error(
+                        'Erro ao encerrar locação:', error);
+                    showToast('❌ Erro ao encerrar locação.', 'error'); }
             };
-
             const inputBuscaLocacoes = document.getElementById('input-busca-locacoes');
             const clearSearchBtn = document.getElementById('clear-search-btn');
             const btnLimparFiltroLocacoes = document.getElementById('btn-limpar-filtro-locacoes');
-
-            inputBuscaLocacoes.addEventListener('input', function() {
-                termoBuscaLocacoes = this.value;
-                atualizarUIBuscaLocacoes();
-            });
-            inputBuscaLocacoes.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape') {
-                    termoBuscaLocacoes = '';
+            inputBuscaLocacoes.addEventListener('input', function() { termoBuscaLocacoes = this.value;
+                atualizarUIBuscaLocacoes(); });
+            inputBuscaLocacoes.addEventListener('keydown', function(e) { if (e.key === 'Escape') { termoBuscaLocacoes =
+                        '';
                     this.value = '';
                     atualizarUIBuscaLocacoes();
-                    this.blur();
-                }
-            });
-            clearSearchBtn.addEventListener('click', function() {
-                termoBuscaLocacoes = '';
+                    this.blur(); } });
+            clearSearchBtn.addEventListener('click', function() { termoBuscaLocacoes = '';
                 inputBuscaLocacoes.value = '';
                 atualizarUIBuscaLocacoes();
-                inputBuscaLocacoes.focus();
-            });
-            btnLimparFiltroLocacoes.addEventListener('click', function() {
-                termoBuscaLocacoes = '';
+                inputBuscaLocacoes.focus(); });
+            btnLimparFiltroLocacoes.addEventListener('click', function() { termoBuscaLocacoes = '';
                 inputBuscaLocacoes.value = '';
                 atualizarUIBuscaLocacoes();
-                inputBuscaLocacoes.focus();
-            });
+                inputBuscaLocacoes.focus(); });
 
-            // ===================== FLUXO DE CAIXA =====================
+            // ===================== FLUXO DE CAIXA (admin only) =====================
             function atualizarResumoFluxoCaixa() {
-                const totalEntradas = fluxoCaixa.filter(t => t.tipo === 'entrada').reduce((sum, t) => sum + (parseFloat(
-                    t.valor) || 0), 0);
+                if (!isAdmin()) return;
+                const totalEntradas = fluxoCaixa.filter(t => t.tipo === 'entrada').reduce((sum, t) => sum + (parseFloat(t
+                    .valor) || 0), 0);
                 const totalSaidas = fluxoCaixa.filter(t => t.tipo === 'saida').reduce((sum, t) => sum + (parseFloat(t
                     .valor) || 0), 0);
                 const saldoAtual = totalEntradas - totalSaidas;
                 document.getElementById('stat-total-entradas').textContent = formatarMoeda(totalEntradas);
                 document.getElementById('stat-total-saidas').textContent = formatarMoeda(totalSaidas);
                 document.getElementById('stat-saldo-atual').textContent = formatarMoeda(saldoAtual);
-                const saldoCard = document.getElementById('stat-saldo-card');
-                saldoCard.classList.toggle('saldo-negativo', saldoAtual < 0);
+                document.getElementById('stat-saldo-card').classList.toggle('saldo-negativo', saldoAtual < 0);
             }
 
             function atualizarTabelaFluxoCaixa() {
+                if (!isAdmin()) return;
                 const tbody = document.getElementById('tbody-fluxo');
                 let transacoesFiltradas = fluxoCaixa;
                 if (termoBuscaFluxo.trim() !== '') {
                     const termoSanitizado = sanitizarParaBusca(termoBuscaFluxo);
-                    transacoesFiltradas = fluxoCaixa.filter(t => {
-                        return sanitizarParaBusca(t.descricao).includes(termoSanitizado) ||
-                            sanitizarParaBusca(t.categoria || '').includes(termoSanitizado) ||
-                            sanitizarParaBusca(t.observacao || '').includes(termoSanitizado);
-                    });
+                    transacoesFiltradas = fluxoCaixa.filter(t => sanitizarParaBusca(t.descricao).includes(
+                        termoSanitizado) || sanitizarParaBusca(t.categoria || '').includes(termoSanitizado) ||
+                        sanitizarParaBusca(t.observacao || '').includes(termoSanitizado));
                 }
                 transacoesFiltradas.sort((a, b) => new Date(b.data) - new Date(a.data));
                 atualizarContadorBuscaFluxo(transacoesFiltradas.length);
-                if (transacoesFiltradas.length === 0) {
-                    tbody.innerHTML = termoBuscaFluxo.trim() !== '' ?
+                if (transacoesFiltradas.length === 0) { tbody.innerHTML = termoBuscaFluxo.trim() !== '' ?
                         '<tr><td colspan="7" class="empty-state"><span class="icon">🔍</span><br>Nenhuma transação encontrada.</td></tr>' :
-                        '<tr><td colspan="7" class="empty-state"><span class="icon">💰</span><br>Nenhuma transação registrada</td></tr>';
-                    return;
-                }
-                const categoriasLabels = {
-                    'locacao': 'Locação',
-                    'manutencao': 'Manutenção',
-                    'combustivel': 'Combustível',
-                    'imposto': 'Imposto / Taxa',
-                    'multa': 'Multa',
-                    'seguro': 'Seguro',
-                    'outros': 'Outros',
-                    '': 'Geral'
-                };
+                        '<tr><td colspan="7" class="empty-state"><span class="icon">💰</span><br>Nenhuma transação registrada</td></tr>'; return; }
+                const categoriasLabels = { 'locacao': 'Locação', 'manutencao': 'Manutenção', 'combustivel': 'Combustível',
+                    'imposto': 'Imposto / Taxa', 'multa': 'Multa', 'seguro': 'Seguro', 'outros': 'Outros',
+                    '': 'Geral' };
                 tbody.innerHTML = transacoesFiltradas.map(t => {
-                    const tipoBadge = t.tipo === 'entrada' ?
-                        '<span class="badge badge-entrada">📥 Entrada</span>' :
+                    const tipoBadge = t.tipo === 'entrada' ? '<span class="badge badge-entrada">📥 Entrada</span>' :
                         '<span class="badge badge-saida">📤 Saída</span>';
                     const valorClass = t.tipo === 'entrada' ? 'highlight-entrada' : 'highlight-saida';
                     const categoriaLabel = categoriasLabels[t.categoria] || (t.categoria || 'Geral');
-                    const dataFormatada = t.data ? new Date(t.data + 'T00:00:00')
-                        .toLocaleDateString('pt-BR') : '—';
-                    return `
-                    <tr>
-                        <td>${dataFormatada}</td>
-                        <td>${t.descricao}</td>
-                        <td>${categoriaLabel}</td>
-                        <td>${tipoBadge}</td>
-                        <td class="${valorClass}" style="font-weight:700;font-size:15px;">${formatarMoeda(t.valor)}</td>
-                        <td>${t.observacao || '<span style="color:var(--text-muted);">—</span>'}</td>
-                        <td>
-                            <button class="btn-edit" onclick="window._editarFluxo('${t.id}')" title="Editar Transação">✏️</button>
-                            <button class="btn-danger" onclick="window._excluirFluxo('${t.id}')" title="Excluir">🗑️</button>
-                        </td>
-                    </tr>
-                `;
+                    const dataFormatada = t.data ? new Date(t.data + 'T00:00:00').toLocaleDateString('pt-BR') : '—';
+                    return `<tr><td>${dataFormatada}</td><td>${t.descricao}</td><td>${categoriaLabel}</td><td>${tipoBadge}</td><td class="${valorClass}" style="font-weight:700;font-size:15px;">${formatarMoeda(t.valor)}</td><td>${t.observacao || '<span style="color:var(--text-muted);">—</span>'}</td><td><button class="btn-edit" onclick="window._editarFluxo('${t.id}')" title="Editar Transação">✏️</button><button class="btn-danger" onclick="window._excluirFluxo('${t.id}')" title="Excluir">🗑️</button></td></tr>`;
                 }).join('');
                 initScrollButtons();
             }
@@ -3118,41 +2681,29 @@
                 const btnLimparFiltro = document.getElementById('btn-limpar-filtro-fluxo');
                 const clearBtn = document.getElementById('clear-search-btn-fluxo');
                 if (countNum) countNum.textContent = totalFiltrado;
-                if (termoBuscaFluxo.trim() !== '') {
-                    resultsInfo.classList.add('active-filter');
+                if (termoBuscaFluxo.trim() !== '') { resultsInfo.classList.add('active-filter');
                     resultsInfo.innerHTML =
                         `🔍 Encontradas: <strong class="highlight-count">${totalFiltrado}</strong> de ${fluxoCaixa.length} transações`;
                     btnLimparFiltro.style.display = 'flex';
-                    clearBtn.classList.add('visible');
-                } else {
-                    resultsInfo.classList.remove('active-filter');
+                    clearBtn.classList.add('visible'); } else { resultsInfo.classList.remove('active-filter');
                     resultsInfo.innerHTML =
                         `Total: <strong class="highlight-count">${totalFiltrado}</strong> transações`;
                     btnLimparFiltro.style.display = 'none';
-                    clearBtn.classList.remove('visible');
-                }
+                    clearBtn.classList.remove('visible'); }
             }
 
-            function atualizarUIBuscaFluxo() {
-                atualizarTabelaFluxoCaixa();
-                const inputBusca = document.getElementById('input-busca-fluxo');
-                const clearBtn = document.getElementById('clear-search-btn-fluxo');
-                if (termoBuscaFluxo.trim() !== '') {
-                    clearBtn.classList.add('visible');
-                } else {
-                    clearBtn.classList.remove('visible');
-                    inputBusca.value = '';
-                }
-                initScrollButtons();
-            }
-
+            function atualizarUIBuscaFluxo() { atualizarTabelaFluxoCaixa(); const inputBusca = document.getElementById(
+                    'input-busca-fluxo'); const clearBtn = document.getElementById('clear-search-btn-fluxo'); if (
+                    termoBuscaFluxo.trim() !== '') { clearBtn.classList.add('visible'); } else { clearBtn.classList.remove(
+                    'visible');
+                inputBusca.value = ''; }
+                initScrollButtons(); }
             const formFluxo = document.getElementById('form-fluxo');
             const btnSubmitFluxo = document.getElementById('btn-submit-fluxo');
             const btnCancelFluxo = document.getElementById('btn-cancel-fluxo');
             const btnCancelEdicaoFluxo = document.getElementById('btn-cancel-edicao-fluxo');
             const editBannerFluxo = document.getElementById('edit-banner-fluxo');
             const fluxoFormTitle = document.getElementById('fluxo-form-title');
-
             document.getElementById('f-data').value = new Date().toISOString().split('T')[0];
 
             function resetarFormFluxo() {
@@ -3165,66 +2716,37 @@
                 editBannerFluxo.classList.remove('show');
                 fluxoFormTitle.textContent = 'Nova Transação';
             }
-
             btnCancelFluxo.addEventListener('click', resetarFormFluxo);
-            btnCancelEdicaoFluxo.addEventListener('click', function() {
-                resetarFormFluxo();
-                showToast('📋 Edição cancelada.', 'info');
-            });
-
+            btnCancelEdicaoFluxo.addEventListener('click', function() { resetarFormFluxo();
+                showToast('📋 Edição cancelada.', 'info'); });
             formFluxo.addEventListener('submit', async function(e) {
+                if (!isAdmin()) return;
                 e.preventDefault();
-                const dadosFluxo = {
-                    descricao: document.getElementById('f-descricao').value.trim(),
-                    valor: parseMoedaBR(document.getElementById('f-valor').value),
-                    tipo: document.getElementById('f-tipo').value,
-                    data: document.getElementById('f-data').value,
-                    categoria: document.getElementById('f-categoria').value,
-                    observacao: document.getElementById('f-observacao').value.trim(),
-                    dataAtualizacao: new Date().toISOString()
-                };
-
-                if (!dadosFluxo.descricao || !dadosFluxo.valor || !dadosFluxo.tipo || !dadosFluxo.data) {
-                    showToast('⚠️ Preencha todos os campos obrigatórios.', 'error');
-                    return;
-                }
-                if (dadosFluxo.valor <= 0) {
-                    showToast('⚠️ O valor deve ser maior que zero.', 'error');
-                    return;
-                }
-
-                if (editandoFluxoId) {
-                    try {
-                        await colecoes.fluxocaixa.doc(editandoFluxoId).update(dadosFluxo);
+                const dadosFluxo = { descricao: document.getElementById('f-descricao').value.trim(), valor: parseMoedaBR(
+                        document.getElementById('f-valor').value), tipo: document.getElementById('f-tipo').value,
+                    data: document.getElementById('f-data').value, categoria: document.getElementById('f-categoria')
+                        .value, observacao: document.getElementById('f-observacao').value.trim(),
+                    dataAtualizacao: new Date().toISOString() };
+                if (!dadosFluxo.descricao || !dadosFluxo.valor || !dadosFluxo.tipo || !dadosFluxo.data) { showToast(
+                        '⚠️ Preencha todos os campos obrigatórios.', 'error'); return; }
+                if (dadosFluxo.valor <= 0) { showToast('⚠️ O valor deve ser maior que zero.', 'error'); return; }
+                if (editandoFluxoId) { try { await colecoes.fluxocaixa.doc(editandoFluxoId).update(dadosFluxo);
                         resetarFormFluxo();
-                        showToast('✅ Transação atualizada com sucesso!', 'success');
-                    } catch (error) {
-                        console.error('Erro ao atualizar transação:', error);
-                        showToast('❌ Erro ao atualizar transação.', 'error');
-                    }
-                } else {
-                    const novaTransacao = {
-                        ...dadosFluxo,
-                        dataCriacao: new Date().toISOString()
-                    };
-                    try {
-                        await colecoes.fluxocaixa.add(novaTransacao);
-                        resetarFormFluxo();
-                        showToast('✅ Transação registrada com sucesso!', 'success');
-                    } catch (error) {
-                        console.error('Erro ao registrar transação:', error);
-                        showToast('❌ Erro ao registrar transação.', 'error');
-                    }
-                }
+                        showToast('✅ Transação atualizada com sucesso!', 'success'); } catch (error) { console.error(
+                            'Erro ao atualizar transação:', error);
+                        showToast('❌ Erro ao atualizar transação.', 'error'); } } else { const novaTransacao = { ...
+                        dadosFluxo, dataCriacao: new Date().toISOString() }; try { await colecoes.fluxocaixa.add(
+                        novaTransacao);
+                    resetarFormFluxo();
+                    showToast('✅ Transação registrada com sucesso!', 'success'); } catch (error) { console.error(
+                        'Erro ao registrar transação:', error);
+                    showToast('❌ Erro ao registrar transação.', 'error'); } }
                 initScrollButtons();
             });
-
             window._editarFluxo = function(id) {
+                if (!isAdmin()) return;
                 const transacao = fluxoCaixa.find(f => f.id === id);
-                if (!transacao) {
-                    showToast('❌ Transação não encontrada.', 'error');
-                    return;
-                }
+                if (!transacao) { showToast('❌ Transação não encontrada.', 'error'); return; }
                 editandoFluxoId = id;
                 document.getElementById('f-descricao').value = transacao.descricao || '';
                 document.getElementById('f-valor').value = formatarMoeda(transacao.valor || 0);
@@ -3241,167 +2763,186 @@
                 document.getElementById('card-form-fluxo').scrollIntoView({ behavior: 'smooth', block: 'start' });
                 showToast('✏️ Modo de edição ativado.', 'info');
             };
-
             window._excluirFluxo = async function(id) {
+                if (!isAdmin()) return;
                 if (!confirm('Tem certeza que deseja excluir esta transação?')) return;
                 if (editandoFluxoId === id) resetarFormFluxo();
-                try {
-                    await colecoes.fluxocaixa.doc(id).delete();
-                    showToast('🗑️ Transação excluída com sucesso!', 'info');
-                } catch (error) {
-                    console.error('Erro ao excluir transação:', error);
-                    showToast('❌ Erro ao excluir transação.', 'error');
-                }
+                try { await colecoes.fluxocaixa.doc(id).delete();
+                    showToast('🗑️ Transação excluída com sucesso!', 'info'); } catch (error) { console.error(
+                        'Erro ao excluir transação:', error);
+                    showToast('❌ Erro ao excluir transação.', 'error'); }
             };
-
             const inputBuscaFluxo = document.getElementById('input-busca-fluxo');
             const clearSearchBtnFluxo = document.getElementById('clear-search-btn-fluxo');
             const btnLimparFiltroFluxo = document.getElementById('btn-limpar-filtro-fluxo');
-
-            inputBuscaFluxo.addEventListener('input', function() {
-                termoBuscaFluxo = this.value;
-                atualizarUIBuscaFluxo();
-            });
-            inputBuscaFluxo.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape') {
-                    termoBuscaFluxo = '';
+            inputBuscaFluxo.addEventListener('input', function() { termoBuscaFluxo = this.value;
+                atualizarUIBuscaFluxo(); });
+            inputBuscaFluxo.addEventListener('keydown', function(e) { if (e.key === 'Escape') { termoBuscaFluxo = '';
                     this.value = '';
                     atualizarUIBuscaFluxo();
-                    this.blur();
+                    this.blur(); } });
+            clearSearchBtnFluxo.addEventListener('click', function() { termoBuscaFluxo = '';
+                inputBuscaFluxo.value = '';
+                atualizarUIBuscaFluxo();
+                inputBuscaFluxo.focus(); });
+            btnLimparFiltroFluxo.addEventListener('click', function() { termoBuscaFluxo = '';
+                inputBuscaFluxo.value = '';
+                atualizarUIBuscaFluxo();
+                inputBuscaFluxo.focus(); });
+
+            // ===================== GERENCIAMENTO DE USUÁRIOS (admin only) =====================
+            const formUsuario = document.getElementById('form-usuario');
+            const btnSubmitUsuario = document.getElementById('btn-submit-usuario');
+            const btnCancelUsuario = document.getElementById('btn-cancel-usuario');
+            const btnCancelEdicaoUsuario = document.getElementById('btn-cancel-edicao-usuario');
+            const editBannerUsuario = document.getElementById('edit-banner-usuario');
+            const usuarioFormTitle = document.getElementById('usuario-form-title');
+
+            function resetarFormUsuario() {
+                formUsuario.reset();
+                editandoUsuarioId = null;
+                btnSubmitUsuario.textContent = '💾 Salvar Usuário';
+                btnCancelEdicaoUsuario.style.display = 'none';
+                editBannerUsuario.classList.remove('show');
+                usuarioFormTitle.textContent = 'Novo Usuário';
+                atualizarPermissoesUsuarioGrid();
+            }
+            btnCancelUsuario.addEventListener('click', resetarFormUsuario);
+            btnCancelEdicaoUsuario.addEventListener('click', function() { resetarFormUsuario();
+                showToast('📋 Edição cancelada.', 'info'); });
+
+            formUsuario.addEventListener('submit', async function(e) {
+                if (!isAdmin()) return;
+                e.preventDefault();
+                const nome = document.getElementById('u-nome').value.trim();
+                const login = document.getElementById('u-login').value.trim();
+                const senha = document.getElementById('u-senha').value;
+                if (!nome || !login || !senha) { showToast('⚠️ Preencha todos os campos.', 'error'); return; }
+                const checksVeiculos = document.querySelectorAll('.perm-usuario-check');
+                const veiculosPermitidos = [];
+                checksVeiculos.forEach(ch => { if (ch.checked) veiculosPermitidos.push(ch.value); });
+                if (editandoUsuarioId) {
+                    const updateData = { nome, usuario: login, senha, veiculosPermitidos, dataAtualizacao: new Date()
+                            .toISOString() };
+                    try {
+                        await colecoes.usuarios.doc(editandoUsuarioId).update(updateData);
+                        resetarFormUsuario();
+                        showToast('✅ Usuário atualizado com sucesso!', 'success');
+                    } catch (error) { console.error('Erro ao atualizar usuário:', error);
+                        showToast('❌ Erro ao atualizar usuário.', 'error'); }
+                } else {
+                    const existe = usuarios.some(u => u.usuario === login);
+                    if (existe) { showToast('⚠️ Já existe um usuário com este login.', 'error'); return; }
+                    const novoUsuario = { nome, usuario: login, senha, role: 'usuario', veiculosPermitidos,
+                        dataCriacao: new Date().toISOString(), dataAtualizacao: new Date().toISOString() };
+                    try {
+                        await colecoes.usuarios.add(novoUsuario);
+                        resetarFormUsuario();
+                        showToast('✅ Usuário criado com sucesso!', 'success');
+                    } catch (error) { console.error('Erro ao criar usuário:', error);
+                        showToast('❌ Erro ao criar usuário.', 'error'); }
                 }
             });
-            clearSearchBtnFluxo.addEventListener('click', function() {
-                termoBuscaFluxo = '';
-                inputBuscaFluxo.value = '';
-                atualizarUIBuscaFluxo();
-                inputBuscaFluxo.focus();
-            });
-            btnLimparFiltroFluxo.addEventListener('click', function() {
-                termoBuscaFluxo = '';
-                inputBuscaFluxo.value = '';
-                atualizarUIBuscaFluxo();
-                inputBuscaFluxo.focus();
-            });
+
+            function atualizarTabelaUsuarios() {
+                if (!isAdmin()) return;
+                const tbody = document.getElementById('tbody-usuarios');
+                const usuariosFiltrados = usuarios;
+                if (usuariosFiltrados.length === 0) { tbody.innerHTML =
+                        '<tr><td colspan="6" class="empty-state"><span class="icon">👤</span><br>Nenhum usuário cadastrado</td></tr>'; return; }
+                tbody.innerHTML = usuariosFiltrados.map(u => {
+                    const numVeiculos = (u.veiculosPermitidos || []).length;
+                    const roleBadge = u.role === 'admin' ?
+                        '<span class="badge badge-warning">👑 Admin</span>' :
+                        '<span class="badge badge-info">👤 Usuário</span>';
+                    const veiculosTexto = u.role === 'admin' ? '<span style="color:var(--text-muted);">Todos</span>' :
+                        (numVeiculos > 0 ? `<span class="badge badge-success">${numVeiculos} veículo(s)</span>` :
+                            '<span style="color:var(--danger);">Nenhum</span>');
+                    const dataCriacao = u.dataCriacao ? new Date(u.dataCriacao).toLocaleDateString('pt-BR') : '—';
+                    const acoesHtml = u.role !== 'admin' ?
+                        `<button class="btn-edit" onclick="window._editarUsuario('${u.id}')" title="Editar Usuário">✏️</button><button class="btn-danger" onclick="window._excluirUsuario('${u.id}')" title="Excluir">🗑️</button>` :
+                        '<span style="color:var(--text-muted);font-size:11px;">Protegido</span>';
+                    return `<tr><td><strong>${u.nome}</strong></td><td>${u.usuario}</td><td>${roleBadge}</td><td>${veiculosTexto}</td><td>${dataCriacao}</td><td>${acoesHtml}</td></tr>`;
+                }).join('');
+                initScrollButtons();
+            }
+
+            window._editarUsuario = function(id) {
+                if (!isAdmin()) return;
+                const usuario = usuarios.find(u => u.id === id);
+                if (!usuario || usuario.role === 'admin') { showToast('⚠️ Não é possível editar o administrador.',
+                        'error'); return; }
+                editandoUsuarioId = id;
+                document.getElementById('u-nome').value = usuario.nome || '';
+                document.getElementById('u-login').value = usuario.usuario || '';
+                document.getElementById('u-senha').value = usuario.senha || '';
+                btnSubmitUsuario.textContent = '💾 Atualizar Usuário';
+                btnCancelEdicaoUsuario.style.display = 'inline-block';
+                editBannerUsuario.classList.add('show');
+                document.getElementById('edit-banner-usuario-text').textContent =
+                    `Editando usuário: ${usuario.nome} (${usuario.usuario})`;
+                usuarioFormTitle.textContent = 'Editar Usuário';
+                document.getElementById('card-form-usuario').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                atualizarPermissoesUsuarioGrid();
+                showToast('✏️ Modo de edição ativado.', 'info');
+            };
+
+            window._excluirUsuario = async function(id) {
+                if (!isAdmin()) return;
+                const usuario = usuarios.find(u => u.id === id);
+                if (!usuario || usuario.role === 'admin') { showToast('⚠️ Não é possível excluir o administrador.',
+                        'error'); return; }
+                if (!confirm(`Tem certeza que deseja excluir o usuário "${usuario.nome}"?`)) return;
+                if (editandoUsuarioId === id) resetarFormUsuario();
+                try { await colecoes.usuarios.doc(id).delete();
+                    showToast('🗑️ Usuário excluído com sucesso!', 'info'); } catch (error) { console.error(
+                        'Erro ao excluir usuário:', error);
+                    showToast('❌ Erro ao excluir usuário.', 'error'); }
+            };
 
             // ===================== JANELA FILTRO =====================
             function abrirJanelaFiltro() {
-                const popupHTML = `<!DOCTYPE html>
-                <html lang="pt-BR">
-                <head>
-                    <meta charset="UTF-8">
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <title>Filtro de Locações - PAIZÃO RENT CAR</title>
-                    <style>
-                        * { margin:0; padding:0; box-sizing:border-box; }
-                        body { font-family:'Inter','Segoe UI',system-ui,sans-serif; background:#0c0f16; color:#e0e0e0; padding:20px; min-height:100vh; display:flex; flex-direction:column; }
-                        .aviso-fechar { background:rgba(231,76,60,0.2); border:1px solid rgba(231,76,60,0.5); color:#ff6b6b; padding:12px 18px; border-radius:10px; font-size:14px; font-weight:600; text-align:center; margin-bottom:16px; }
-                        .header-popup { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:12px; }
-                        .header-popup h2 { color:#fff; font-size:20px; }
-                        .btn-fechar-popup { background:#e74c3c; color:#fff; border:none; padding:12px 24px; border-radius:10px; cursor:pointer; font-size:15px; font-weight:700; }
-                        .search-input-wrapper { flex:1; min-width:250px; position:relative; }
-                        .search-input-wrapper input { width:100%; padding:12px 16px 12px 44px; background:#1a1d28; border:1px solid #1e2230; border-radius:10px; color:#fff; font-size:15px; outline:none; }
-                        .search-input-wrapper input:focus { border-color:#e6a817; }
-                        .clear-btn { position:absolute; right:10px; top:50%; transform:translateY(-50%); background:transparent; border:none; color:#9a9da8; font-size:18px; cursor:pointer; display:none; }
-                        .clear-btn.visible { display:block; }
-                        .btn-editar { background:#2d5fcf; color:#fff; border:none; padding:4px 12px; border-radius:6px; cursor:pointer; font-size:12px; font-weight:600; }
-                        table { width:100%; border-collapse:collapse; font-size:13px; min-width:750px; }
-                        table thead { background:#1a1d28; }
-                        table th { padding:12px 14px; text-align:left; color:#9a9da8; text-transform:uppercase; font-size:10px; border-bottom:1px solid #1e2230; }
-                        table td { padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.03); color:#d0d3db; }
-                        .badge { display:inline-block; padding:4px 10px; border-radius:20px; font-size:11px; font-weight:600; }
-                        .badge-success { background:rgba(39,174,96,0.2); color:#2ecc71; }
-                        .badge-warning { background:rgba(243,156,18,0.2); color:#f39c12; }
-                        .badge-info { background:rgba(45,95,207,0.2); color:#5b8def; }
-                        .highlight-valor { color:#e6a817; font-weight:700; }
-                    </style>
-                </head>
-                <body>
-                    <div class="aviso-fechar">⚠️ Para fechar, use o <strong>BOTÃO FECHAR</strong> abaixo.</div>
-                    <div class="header-popup"><h2>🔍 Filtro de Locações</h2><button class="btn-fechar-popup" id="btn-fechar-popup">✕ FECHAR</button></div>
-                    <div style="display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap;">
-                        <div class="search-input-wrapper"><span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);">🔍</span><input type="text" id="popup-busca" placeholder="Pesquisar por PLACA ou CPF..." autocomplete="off"><button class="clear-btn" id="popup-clear-btn">✕</button></div>
-                        <span id="popup-results-info" style="font-size:13px;color:#9a9da8;">Total: <span id="popup-count" style="color:#e6a817;font-weight:700;">0</span> locações</span>
-                        <button id="popup-btn-limpar" style="display:none;background:transparent;border:1px solid #1e2230;color:#9a9da8;padding:8px 16px;border-radius:8px;cursor:pointer;">🧹 Limpar</button>
-                    </div>
-                    <div style="overflow-x:auto;border-radius:10px;border:1px solid #1e2230;flex:1;">
-                        <table><thead><tr><th>Veículo</th><th>Placa</th><th>Locatário</th><th>CPF</th><th>Data Início</th><th>Data Fim</th><th>Valor Semanal</th><th>Caução</th><th>Status</th><th>Ações</th></tr></thead><tbody id="popup-tbody"></tbody></table>
-                    </div>
-                    <script>
-                        const STORAGE_KEY='paizao_locacoes';
-                        function getLocacoes(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY))||[]}catch(e){return[]}}
-                        function formatarMoeda(v){return 'R$ '+parseFloat(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}
-                        function sanitizar(s){return(s||'').replace(/[^a-zA-Z0-9]/g,'').toLowerCase()}
-                        const inputBusca=document.getElementById('popup-busca'),clearBtn=document.getElementById('popup-clear-btn'),btnLimpar=document.getElementById('popup-btn-limpar'),tbody=document.getElementById('popup-tbody'),countSpan=document.getElementById('popup-count'),resultsInfo=document.getElementById('popup-results-info'),btnFechar=document.getElementById('btn-fechar-popup');
-                        let fechamentoPermitido=false;
-                        btnFechar.addEventListener('click',function(){fechamentoPermitido=true;window.close()});
-                        window.addEventListener('beforeunload',function(e){if(!fechamentoPermitido){e.preventDefault();e.returnValue='⚠️ Use o botão FECHAR para fechar esta janela.';return e.returnValue}});
-                        function renderizar(termo){const locacoes=getLocacoes();let filtradas=locacoes;const ts=sanitizar(termo);if(termo.trim()!==''){filtradas=locacoes.filter(l=>sanitizar(l.veiculoPlaca).includes(ts)||sanitizar(l.locatarioCPF).includes(ts));resultsInfo.innerHTML='🔍 Encontradas: <span style="color:#e6a817;font-weight:700;">'+filtradas.length+'</span> de '+locacoes.length;btnLimpar.style.display='flex';clearBtn.classList.add('visible')}else{resultsInfo.innerHTML='Total: <span style="color:#e6a817;font-weight:700;">'+filtradas.length+'</span> locações';btnLimpar.style.display='none';clearBtn.classList.remove('visible')}countSpan.textContent=filtradas.length;if(filtradas.length===0){tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:40px;">🔍 Nenhuma locação encontrada.</td></tr>';return}tbody.innerHTML=filtradas.map(l=>{let caucaoHtml=formatarMoeda(l.caucao);if(l.formaCaucao==='parcelado')caucaoHtml+=' <span class="badge badge-warning">'+(l.parcelasCaucao||'?')+'x</span>';else if(l.formaCaucao==='entrada_parcelado')caucaoHtml+=' <span class="badge badge-info">Entrada '+formatarMoeda(l.valorEntradaCaucao||0)+' + '+(l.parcelasCaucao||'?')+'x</span>';else caucaoHtml+=' <span class="badge badge-success">À vista</span>';return '<tr><td>'+l.veiculoNome+'</td><td><strong>'+l.veiculoPlaca+'</strong></td><td>'+l.locatarioNome+'</td><td>'+l.locatarioCPF+'</td><td>'+new Date(l.dataInicio).toLocaleDateString('pt-BR')+'</td><td>'+new Date(l.dataFim).toLocaleDateString('pt-BR')+'</td><td class="highlight-valor">'+formatarMoeda(l.valorSemanal)+'</td><td>'+caucaoHtml+'</td><td><span class="badge badge-info">Ativa</span></td><td><button class="btn-editar" onclick="window.editarLocacaoDaJanelaFiltro('+l.id+')">✏️ Editar</button></td></tr>'}).join('')}
-                        inputBusca.addEventListener('input',function(){renderizar(this.value)});
-                        clearBtn.addEventListener('click',function(){inputBusca.value='';renderizar('');inputBusca.focus()});
-                        btnLimpar.addEventListener('click',function(){inputBusca.value='';renderizar('');inputBusca.focus()});
-                        setInterval(()=>{renderizar(inputBusca.value)},2000);
-                        inputBusca.focus();renderizar('');
-                    <\/script>
-                </body>
-                </html>`;
-
+                const popupHTML = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Filtro de Locações - PAIZÃO RENT CAR</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Inter','Segoe UI',system-ui,sans-serif;background:#0c0f16;color:#e0e0e0;padding:20px;min-height:100vh;display:flex;flex-direction:column}.aviso-fechar{background:rgba(231,76,60,0.2);border:1px solid rgba(231,76,60,0.5);color:#ff6b6b;padding:12px 18px;border-radius:10px;font-size:14px;font-weight:600;text-align:center;margin-bottom:16px}.header-popup{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px}.header-popup h2{color:#fff;font-size:20px}.btn-fechar-popup{background:#e74c3c;color:#fff;border:none;padding:12px 24px;border-radius:10px;cursor:pointer;font-size:15px;font-weight:700}.search-input-wrapper{flex:1;min-width:250px;position:relative}.search-input-wrapper input{width:100%;padding:12px 16px 12px 44px;background:#1a1d28;border:1px solid #1e2230;border-radius:10px;color:#fff;font-size:15px;outline:none}.search-input-wrapper input:focus{border-color:#e6a817}.clear-btn{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:transparent;border:none;color:#9a9da8;font-size:18px;cursor:pointer;display:none}.clear-btn.visible{display:block}.btn-editar{background:#2d5fcf;color:#fff;border:none;padding:4px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600}table{width:100%;border-collapse:collapse;font-size:13px;min-width:750px}table thead{background:#1a1d28}table th{padding:12px 14px;text-align:left;color:#9a9da8;text-transform:uppercase;font-size:10px;border-bottom:1px solid #1e2230}table td{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.03);color:#d0d3db}.badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600}.badge-success{background:rgba(39,174,96,0.2);color:#2ecc71}.badge-warning{background:rgba(243,156,18,0.2);color:#f39c12}.badge-info{background:rgba(45,95,207,0.2);color:#5b8def}.highlight-valor{color:#e6a817;font-weight:700}</style></head><body><div class="aviso-fechar">⚠️ Para fechar, use o <strong>BOTÃO FECHAR</strong> abaixo.</div><div class="header-popup"><h2>🔍 Filtro de Locações</h2><button class="btn-fechar-popup" id="btn-fechar-popup">✕ FECHAR</button></div><div style="display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap;"><div class="search-input-wrapper"><span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);">🔍</span><input type="text" id="popup-busca" placeholder="Pesquisar por PLACA ou CPF..." autocomplete="off"><button class="clear-btn" id="popup-clear-btn">✕</button></div><span id="popup-results-info" style="font-size:13px;color:#9a9da8;">Total: <span id="popup-count" style="color:#e6a817;font-weight:700;">0</span> locações</span><button id="popup-btn-limpar" style="display:none;background:transparent;border:1px solid #1e2230;color:#9a9da8;padding:8px 16px;border-radius:8px;cursor:pointer;">🧹 Limpar</button></div><div style="overflow-x:auto;border-radius:10px;border:1px solid #1e2230;flex:1;"><table><thead><tr><th>Veículo</th><th>Placa</th><th>Locatário</th><th>CPF</th><th>Data Início</th><th>Data Fim</th><th>Valor Semanal</th><th>Caução</th><th>Status</th><th>Ações</th></tr></thead><tbody id="popup-tbody"></tbody></table></div><script>
+                const STORAGE_KEY='paizao_locacoes';function getLocacoes(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY))||[]}catch(e){return[]}}function formatarMoeda(v){return 'R$ '+parseFloat(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}function sanitizar(s){return(s||'').replace(/[^a-zA-Z0-9]/g,'').toLowerCase()}const inputBusca=document.getElementById('popup-busca'),clearBtn=document.getElementById('popup-clear-btn'),btnLimpar=document.getElementById('popup-btn-limpar'),tbody=document.getElementById('popup-tbody'),countSpan=document.getElementById('popup-count'),resultsInfo=document.getElementById('popup-results-info'),btnFechar=document.getElementById('btn-fechar-popup');let fechamentoPermitido=false;btnFechar.addEventListener('click',function(){fechamentoPermitido=true;window.close()});window.addEventListener('beforeunload',function(e){if(!fechamentoPermitido){e.preventDefault();e.returnValue='⚠️ Use o botão FECHAR para fechar esta janela.';return e.returnValue}});function renderizar(termo){const locacoes=getLocacoes();let filtradas=locacoes;const ts=sanitizar(termo);if(termo.trim()!==''){filtradas=locacoes.filter(l=>sanitizar(l.veiculoPlaca).includes(ts)||sanitizar(l.locatarioCPF).includes(ts));resultsInfo.innerHTML='🔍 Encontradas: <span style="color:#e6a817;font-weight:700;">'+filtradas.length+'</span> de '+locacoes.length;btnLimpar.style.display='flex';clearBtn.classList.add('visible')}else{resultsInfo.innerHTML='Total: <span style="color:#e6a817;font-weight:700;">'+filtradas.length+'</span> locações';btnLimpar.style.display='none';clearBtn.classList.remove('visible')}countSpan.textContent=filtradas.length;if(filtradas.length===0){tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:40px;">🔍 Nenhuma locação encontrada.</td></tr>';return}tbody.innerHTML=filtradas.map(l=>{let caucaoHtml=formatarMoeda(l.caucao);if(l.formaCaucao==='parcelado')caucaoHtml+=' <span class="badge badge-warning">'+(l.parcelasCaucao||'?')+'x</span>';else if(l.formaCaucao==='entrada_parcelado')caucaoHtml+=' <span class="badge badge-info">Entrada '+formatarMoeda(l.valorEntradaCaucao||0)+' + '+(l.parcelasCaucao||'?')+'x</span>';else caucaoHtml+=' <span class="badge badge-success">À vista</span>';return '<tr><td>'+l.veiculoNome+'</td><td><strong>'+l.veiculoPlaca+'</strong></td><td>'+l.locatarioNome+'</td><td>'+l.locatarioCPF+'</td><td>'+new Date(l.dataInicio).toLocaleDateString('pt-BR')+'</td><td>'+new Date(l.dataFim).toLocaleDateString('pt-BR')+'</td><td class="highlight-valor">'+formatarMoeda(l.valorSemanal)+'</td><td>'+caucaoHtml+'</td><td><span class="badge badge-info">Ativa</span></td><td><button class="btn-editar" onclick="window.editarLocacaoDaJanelaFiltro('+l.id+')">✏️ Editar</button></td></tr>'}).join('')}inputBusca.addEventListener('input',function(){renderizar(this.value)});clearBtn.addEventListener('click',function(){inputBusca.value='';renderizar('');inputBusca.focus()});btnLimpar.addEventListener('click',function(){inputBusca.value='';renderizar('');inputBusca.focus()});setInterval(()=>{renderizar(inputBusca.value)},2000);inputBusca.focus();renderizar('');
+                <\/script></body></html>`;
                 const janela = window.open('', 'FiltroLocacoes',
                     `width=${screen.availWidth},height=${screen.availHeight},left=0,top=0,scrollbars=yes,resizable=yes`);
-                if (janela) {
-                    janela.document.write(popupHTML);
+                if (janela) { janela.document.write(popupHTML);
                     janela.document.close();
-                    janela.focus();
-                } else {
-                    showToast('⚠️ Pop-up bloqueado! Permita pop-ups para abrir o filtro.', 'error');
-                }
+                    janela.focus(); } else { showToast('⚠️ Pop-up bloqueado! Permita pop-ups para abrir o filtro.',
+                    'error'); }
             }
-
-            document.getElementById('btn-filtro-locacoes-nav').addEventListener('click', function(e) {
-                e.preventDefault();
-                abrirJanelaFiltro();
-            });
+            document.getElementById('btn-filtro-locacoes-nav').addEventListener('click', function(e) { e.preventDefault();
+                abrirJanelaFiltro(); });
 
             function abrirJanelaSeguro() {
                 const janela = window.open('', 'SEGURO',
                     `width=${screen.availWidth},height=${screen.availHeight},left=0,top=0,scrollbars=yes,resizable=yes`);
-                if (janela) {
-                    janela.document.write(
-                        '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>SEGURO</title></head><body style="background:#0c0f16;"></body></html>');
+                if (janela) { janela.document.write(
+                        '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>SEGURO</title></head><body style="background:#0c0f16;"></body></html>'
+                        );
                     janela.document.close();
                     janela.focus();
-                    showToast('🪟 Janela SEGURO aberta!', 'success');
-                } else {
-                    showToast('⚠️ Pop-up bloqueado!', 'error');
-                }
+                    showToast('🪟 Janela SEGURO aberta!', 'success'); } else { showToast('⚠️ Pop-up bloqueado!',
+                        'error'); }
             }
-
-            document.getElementById('btn-menu-nav').addEventListener('click', function(e) {
-                e.preventDefault();
-                abrirJanelaSeguro();
-            });
-
-            window.editarLocacaoDaJanelaFiltro = function(locacaoId) {
-                if (window.opener && window.opener._editarLocacao) {
+            document.getElementById('btn-menu-nav').addEventListener('click', function(e) { e.preventDefault();
+                abrirJanelaSeguro(); });
+            window.editarLocacaoDaJanelaFiltro = function(locacaoId) { if (window.opener && window.opener._editarLocacao) {
                     window.opener._editarLocacao(locacaoId);
-                    window.opener.focus();
-                }
-                try { window.close(); } catch (e) {}
-            };
+                    window.opener.focus(); } try { window.close(); } catch (e) {} };
 
             // ===================== INICIALIZAÇÃO =====================
-            document.getElementById('mobile-menu-toggle')?.addEventListener('click', function() {
-                const nav = document.getElementById('top-nav');
-                if (nav) nav.classList.toggle('open');
-            });
-
+            document.getElementById('mobile-menu-toggle')?.addEventListener('click', function() { document.getElementById(
+                    'top-nav').classList.toggle('open'); });
             loginScreen.style.display = 'flex';
             appScreen.classList.remove('active');
             atualizarIndicadorSync(navigator.onLine);
-
-            console.log('🚗 PAIZÃO RENT CAR - Firebase integrado!');
-            console.log('🔥 Firestore: veiculos, locatarios, locacoes, fluxocaixa');
-            console.log('📦 Storage: documentos/veiculos, documentos/locacoes');
-            console.log('🔄 Dados sincronizados em tempo real entre abas!');
+            garantirAdminPadrao();
+            console.log('🚗 PAIZÃO RENT CAR - Sistema Multi-Usuário com Firebase!');
+            console.log('👤 Admin: SERGIO / 080888');
+            console.log('🔐 Usuários comuns: acesso restrito aos veículos vinculados');
+            console.log('📄 Usuários podem visualizar e baixar documentos, sem editar');
         })();
     </script>
 </body>

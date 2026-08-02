@@ -1,0 +1,3385 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PAIZÃO RENT CAR - Sistema de Locação</title>
+    <style>
+        :root {
+            --bg-dark: #0c0f16;
+            --bg-card: #141822;
+            --bg-sidebar: #0e1119;
+            --primary: #e6a817;
+            --primary-dark: #c48e0f;
+            --accent: #2d5fcf;
+            --text: #e0e0e0;
+            --text-muted: #9a9da8;
+            --border: #1e2230;
+            --input-bg: #1a1d28;
+            --danger: #e74c3c;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            --header-height: 68px;
+            --fluxo-entrada: #27ae60;
+            --fluxo-saida: #e74c3c;
+            --fluxo-saldo: #e6a817;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        #login-screen {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: radial-gradient(ellipse at center, #141822 0%, #0a0c12 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        #login-screen::before {
+            content: '';
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(230, 168, 23, 0.06) 0%, transparent 70%);
+            top: -100px;
+            right: -150px;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        #login-screen::after {
+            content: '';
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(45, 95, 207, 0.05) 0%, transparent 70%);
+            bottom: -120px;
+            left: -100px;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        .login-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 48px 40px;
+            width: 420px;
+            max-width: 95vw;
+            box-shadow: var(--shadow);
+            position: relative;
+            z-index: 1;
+            animation: fadeInUp 0.6s ease;
+        }
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .login-logo {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .login-logo .icon {
+            font-size: 48px;
+            margin-bottom: 8px;
+        }
+        .login-logo h1 {
+            font-size: 26px;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: -0.5px;
+        }
+        .login-logo h1 span {
+            color: var(--primary);
+        }
+        .login-logo p {
+            color: var(--text-muted);
+            font-size: 13px;
+            margin-top: 4px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 14px 16px;
+            padding-left: 44px;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 15px;
+            transition: all 0.3s;
+            outline: none;
+        }
+        .form-group input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(230, 168, 23, 0.1);
+        }
+        .form-group .input-icon {
+            position: absolute;
+            left: 14px;
+            bottom: 14px;
+            font-size: 18px;
+            color: var(--text-muted);
+            pointer-events: none;
+            transition: color 0.3s;
+        }
+        .form-group input:focus~.input-icon,
+        .form-group input:focus+.input-icon {
+            color: var(--primary);
+        }
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            letter-spacing: 0.5px;
+            transition: all 0.3s;
+            text-transform: uppercase;
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: #1a1a1a;
+            box-shadow: 0 4px 16px rgba(230, 168, 23, 0.3);
+        }
+        .btn-primary:hover {
+            background: #f0b822;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 22px rgba(230, 168, 23, 0.4);
+        }
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+        .login-error {
+            background: rgba(231, 76, 60, 0.15);
+            border: 1px solid rgba(231, 76, 60, 0.4);
+            color: #e74c3c;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            text-align: center;
+            margin-bottom: 16px;
+            display: none;
+            animation: shake 0.4s ease;
+        }
+        @keyframes shake {
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+            25% {
+                transform: translateX(-6px);
+            }
+            50% {
+                transform: translateX(6px);
+            }
+            75% {
+                transform: translateX(-4px);
+            }
+        }
+        .login-error.show {
+            display: block;
+        }
+
+        #app-screen {
+            display: none;
+            min-height: 100vh;
+            flex-direction: column;
+        }
+        #app-screen.active {
+            display: flex;
+        }
+
+        .top-header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: var(--bg-sidebar);
+            border-bottom: 1px solid var(--border);
+            height: var(--header-height);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 28px;
+            box-shadow: 0 2px 16px rgba(0, 0, 0, 0.3);
+            flex-shrink: 0;
+        }
+        .top-header .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+        .top-header .brand .brand-icon {
+            font-size: 28px;
+        }
+        .top-header .brand .brand-text h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1.1;
+        }
+        .top-header .brand .brand-text h2 span {
+            color: var(--primary);
+        }
+        .top-header .brand .brand-text small {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .top-nav {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex: 1;
+            justify-content: center;
+            padding: 0 20px;
+            flex-wrap: wrap;
+        }
+        .top-nav button {
+            background: transparent;
+            border: none;
+            color: #b0b3bc;
+            font-size: 14px;
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+        .top-nav button:hover {
+            background: rgba(255, 255, 255, 0.04);
+            color: #fff;
+        }
+        .top-nav button.active {
+            background: rgba(230, 168, 23, 0.12);
+            color: var(--primary);
+            font-weight: 600;
+        }
+        .top-nav button .nav-icon {
+            font-size: 18px;
+        }
+
+        #btn-filtro-locacoes-nav {
+            border: 1px dashed var(--border);
+            margin-left: 4px;
+        }
+        #btn-filtro-locacoes-nav:hover {
+            border-color: var(--primary);
+            background: rgba(230, 168, 23, 0.08);
+            color: var(--primary);
+        }
+
+        #btn-menu-nav {
+            border: 2px solid var(--primary);
+            background: rgba(230, 168, 23, 0.08);
+            color: var(--primary);
+            font-weight: 700;
+            letter-spacing: 1px;
+            animation: pulseMenu 2.5s infinite;
+            margin-left: 4px;
+        }
+        #btn-menu-nav:hover {
+            background: rgba(230, 168, 23, 0.2);
+            color: #fff;
+            border-color: #f0b822;
+            box-shadow: 0 0 18px rgba(230, 168, 23, 0.35);
+            animation: none;
+        }
+        @keyframes pulseMenu {
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(230, 168, 23, 0.4);
+            }
+            50% {
+                box-shadow: 0 0 0 10px rgba(230, 168, 23, 0);
+            }
+        }
+
+        .top-user {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+        .top-user .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+            color: #1a1a1a;
+        }
+        .top-user .user-info {
+            text-align: right;
+            line-height: 1.2;
+        }
+        .top-user .user-info .user-name {
+            font-weight: 600;
+            font-size: 13px;
+            color: #fff;
+        }
+        .top-user .user-info .user-role {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .top-user .btn-logout {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: #e74c3c;
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .top-user .btn-logout:hover {
+            background: rgba(231, 76, 60, 0.1);
+            border-color: #e74c3c;
+        }
+
+        .mobile-menu-toggle {
+            display: none;
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-size: 26px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+        .mobile-menu-toggle:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 28px 32px;
+            background: var(--bg-dark);
+            min-height: calc(100vh - var(--header-height));
+        }
+
+        .page {
+            display: none;
+            animation: fadeIn 0.35s ease;
+        }
+        .page.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .page-header {
+            margin-bottom: 28px;
+        }
+        .page-header h2 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+        .page-header p {
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+        .card-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--border);
+        }
+        .card-title .icon {
+            font-size: 20px;
+        }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+        }
+        .grid-4 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 16px;
+        }
+        @media (max-width: 1200px) {
+            .grid-3 {
+                grid-template-columns: 1fr 1fr;
+            }
+            .grid-4 {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        @media (max-width: 768px) {
+            .grid-2,
+            .grid-3,
+            .grid-4 {
+                grid-template-columns: 1fr;
+            }
+            .top-header {
+                padding: 0 16px;
+                flex-wrap: wrap;
+                height: auto;
+                min-height: var(--header-height);
+            }
+            .top-nav {
+                order: 3;
+                flex: 1 1 100%;
+                justify-content: flex-start;
+                padding: 8px 0 12px 0;
+                gap: 4px;
+                overflow-x: auto;
+                flex-wrap: nowrap;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+            }
+            .top-nav::-webkit-scrollbar {
+                display: none;
+            }
+            .top-nav button {
+                font-size: 13px;
+                padding: 6px 12px;
+                flex-shrink: 0;
+            }
+            .top-user .user-info {
+                display: none;
+            }
+            .top-user .btn-logout {
+                padding: 4px 10px;
+                font-size: 11px;
+            }
+            .mobile-menu-toggle {
+                display: block;
+            }
+            .main-content {
+                padding: 16px;
+            }
+        }
+        @media (max-width: 480px) {
+            .top-header .brand .brand-text small {
+                display: none;
+            }
+            .top-header .brand .brand-text h2 {
+                font-size: 15px;
+            }
+            .top-nav button {
+                font-size: 12px;
+                padding: 4px 10px;
+            }
+        }
+
+        .form-group-app {
+            margin-bottom: 16px;
+        }
+        .form-group-app label {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+        }
+        .form-group-app input,
+        .form-group-app select {
+            width: 100%;
+            padding: 11px 14px;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+        .form-group-app input:focus,
+        .form-group-app select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(230, 168, 23, 0.08);
+        }
+        .form-group-app select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239a9da8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            padding-right: 36px;
+        }
+        .form-group-app input[type="file"] {
+            padding: 10px;
+            cursor: pointer;
+            background: var(--input-bg);
+        }
+        .form-group-app input[type="file"]::file-selector-button {
+            background: var(--primary);
+            color: #1a1a1a;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-right: 12px;
+            font-family: inherit;
+            transition: background 0.2s;
+        }
+        .form-group-app input[type="file"]::file-selector-button:hover {
+            background: #f0b822;
+        }
+        .btn-app {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: inherit;
+            letter-spacing: 0.3px;
+        }
+        .btn-save {
+            background: var(--success);
+            color: #fff;
+        }
+        .btn-save:hover {
+            background: #2ecc71;
+            box-shadow: 0 4px 14px rgba(39, 174, 96, 0.3);
+        }
+        .btn-cancel {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: #fff;
+        }
+        .btn-cancel:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+        .btn-danger {
+            background: var(--danger);
+            color: #fff;
+            font-size: 12px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            border: none;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+        .btn-edit {
+            background: var(--accent);
+            color: #fff;
+            font-size: 12px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            border: none;
+            font-family: inherit;
+            transition: all 0.2s;
+            margin-right: 4px;
+        }
+        .btn-edit:hover {
+            background: #3b6fd4;
+        }
+        .btn-pdf {
+            background: var(--accent);
+            color: #fff;
+            font-size: 11px;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            border: none;
+            font-family: inherit;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.2s;
+        }
+        .btn-pdf:hover {
+            background: #3b6fd4;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            position: relative;
+            scrollbar-width: thin;
+            scrollbar-color: #3a3f50 var(--input-bg);
+            scroll-behavior: smooth;
+        }
+        .table-wrapper::-webkit-scrollbar {
+            height: 8px;
+            width: 8px;
+        }
+        .table-wrapper::-webkit-scrollbar-track {
+            background: var(--input-bg);
+            border-radius: 4px;
+        }
+        .table-wrapper::-webkit-scrollbar-thumb {
+            background: #3a3f50;
+            border-radius: 4px;
+            border: 2px solid var(--input-bg);
+        }
+        .table-wrapper::-webkit-scrollbar-thumb:hover {
+            background: #4a4f60;
+        }
+        .table-wrapper::-webkit-scrollbar-corner {
+            background: var(--input-bg);
+        }
+        .scroll-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 10;
+            background: rgba(20, 24, 34, 0.9);
+            border: 1px solid var(--border);
+            color: #fff;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            opacity: 0;
+            pointer-events: none;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+        }
+        .scroll-btn.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .scroll-btn:hover {
+            background: rgba(30, 34, 48, 1);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+        .scroll-btn-left {
+            left: 8px;
+        }
+        .scroll-btn-right {
+            right: 8px;
+        }
+        .table-wrapper:hover .scroll-btn.visible {
+            opacity: 0.85;
+        }
+        .table-wrapper:hover .scroll-btn.visible:hover {
+            opacity: 1;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            min-width: 100%;
+        }
+        table thead {
+            background: var(--input-bg);
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+        table th {
+            padding: 12px 14px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-size: 10px;
+            letter-spacing: 1px;
+            white-space: nowrap;
+            border-bottom: 1px solid var(--border);
+        }
+        table td {
+            padding: 10px 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            white-space: nowrap;
+            color: #d0d3db;
+        }
+        table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.015);
+        }
+        table tbody tr:last-child td {
+            border-bottom: none;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        .badge-success {
+            background: rgba(39, 174, 96, 0.2);
+            color: #2ecc71;
+        }
+        .badge-warning {
+            background: rgba(243, 156, 18, 0.2);
+            color: #f39c12;
+        }
+        .badge-info {
+            background: rgba(45, 95, 207, 0.2);
+            color: #5b8def;
+        }
+        .badge-danger {
+            background: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+        }
+        .badge-entrada {
+            background: rgba(39, 174, 96, 0.2);
+            color: #2ecc71;
+        }
+        .badge-saida {
+            background: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+        }
+        .badge-opcional {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            margin: 1px 2px;
+            background: rgba(230, 168, 23, 0.15);
+            color: var(--primary);
+            white-space: nowrap;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+        .empty-state .icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+        .highlight-valor {
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 15px;
+        }
+        .highlight-entrada {
+            color: var(--fluxo-entrada);
+            font-weight: 700;
+        }
+        .highlight-saida {
+            color: var(--fluxo-saida);
+            font-weight: 700;
+        }
+        .highlight-saldo {
+            color: var(--fluxo-saldo);
+            font-weight: 700;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        @media (max-width: 1200px) {
+            .stats-row {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        @media (max-width: 768px) {
+            .stats-row {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px;
+            text-align: center;
+        }
+        .stat-card .stat-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+        .stat-card .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #fff;
+        }
+        .stat-card .stat-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 4px;
+        }
+        .stat-card.entrada-card {
+            border-left: 3px solid var(--fluxo-entrada);
+        }
+        .stat-card.entrada-card .stat-value {
+            color: var(--fluxo-entrada);
+        }
+        .stat-card.saida-card {
+            border-left: 3px solid var(--fluxo-saida);
+        }
+        .stat-card.saida-card .stat-value {
+            color: var(--fluxo-saida);
+        }
+        .stat-card.saldo-card {
+            border-left: 3px solid var(--fluxo-saldo);
+        }
+        .stat-card.saldo-card .stat-value {
+            color: var(--fluxo-saldo);
+        }
+        .stat-card.saldo-card.saldo-negativo .stat-value {
+            color: var(--fluxo-saida);
+        }
+
+        .opcionais-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+            padding-top: 2px;
+        }
+        .opcionais-group label {
+            display: flex !important;
+            align-items: center;
+            gap: 7px;
+            cursor: pointer;
+            color: #d0d3db !important;
+            font-size: 13px !important;
+            font-weight: 400 !important;
+            text-transform: none !important;
+            letter-spacing: 0 !important;
+            user-select: none;
+            padding: 8px 14px;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        .opcionais-group label:hover {
+            border-color: #555;
+            background: #1f2330;
+        }
+        .opcionais-group label:has(input:checked) {
+            border-color: var(--primary);
+            background: rgba(230, 168, 23, 0.1);
+            color: #fff !important;
+        }
+        .opcionais-group input[type="checkbox"] {
+            width: 16px !important;
+            height: 16px;
+            accent-color: var(--primary);
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .documentos-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 8px;
+        }
+        @media (max-width: 768px) {
+            .documentos-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .documentos-grid .form-group-app {
+            margin-bottom: 8px;
+        }
+        .documentos-grid .form-group-app input[type="file"] {
+            font-size: 12px;
+            padding: 8px;
+        }
+        .documentos-grid .form-group-app label {
+            font-size: 10px;
+        }
+
+        .edit-banner {
+            background: rgba(45, 95, 207, 0.15);
+            border: 1px solid rgba(45, 95, 207, 0.4);
+            color: #5b8def;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: none;
+            align-items: center;
+            gap: 8px;
+        }
+        .edit-banner.show {
+            display: flex;
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            padding: 14px 20px;
+            border-radius: 10px;
+            color: #fff;
+            font-weight: 600;
+            font-size: 14px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+            animation: slideInRight 0.4s ease, fadeOutRight 0.4s ease 2.8s forwards;
+            max-width: 400px;
+        }
+        @keyframes slideInRight {
+            from {
+                transform: translateX(120%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        @keyframes fadeOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(120%);
+                opacity: 0;
+            }
+        }
+        .toast-success {
+            background: #27ae60;
+        }
+        .toast-error {
+            background: #e74c3c;
+        }
+        .toast-info {
+            background: #2d5fcf;
+        }
+
+        .search-bar-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+        }
+        .search-input-wrapper {
+            flex: 1;
+            min-width: 280px;
+            position: relative;
+        }
+        .search-input-wrapper .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 18px;
+            color: var(--text-muted);
+            pointer-events: none;
+            z-index: 2;
+            transition: color 0.3s;
+        }
+        .search-input-wrapper input {
+            width: 100%;
+            padding: 12px 16px;
+            padding-left: 44px;
+            padding-right: 42px;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 15px;
+            outline: none;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+        .search-input-wrapper input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(230, 168, 23, 0.1);
+        }
+        .search-input-wrapper input:focus~.search-icon {
+            color: var(--primary);
+        }
+        .search-input-wrapper .clear-search-btn {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 18px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 50%;
+            transition: all 0.2s;
+            display: none;
+            line-height: 1;
+            z-index: 2;
+        }
+        .search-input-wrapper .clear-search-btn.visible {
+            display: block;
+        }
+        .search-input-wrapper .clear-search-btn:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .search-results-info {
+            font-size: 13px;
+            color: var(--text-muted);
+            white-space: nowrap;
+            padding: 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .search-results-info .highlight-count {
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 15px;
+        }
+        .search-results-info.active-filter {
+            color: #fff;
+            background: rgba(230, 168, 23, 0.1);
+            padding: 8px 14px;
+            border-radius: 20px;
+            border: 1px solid rgba(230, 168, 23, 0.3);
+        }
+        .btn-limpar-filtro {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-family: inherit;
+            transition: all 0.2s;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-limpar-filtro:hover {
+            border-color: var(--danger);
+            color: var(--danger);
+            background: rgba(231, 76, 60, 0.05);
+        }
+        @media (max-width: 600px) {
+            .search-bar-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .search-input-wrapper {
+                min-width: 100%;
+            }
+            .search-results-info {
+                text-align: center;
+                justify-content: center;
+            }
+            .btn-limpar-filtro {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="login-screen">
+        <div class="login-container">
+            <div class="login-logo">
+                <div class="icon">🚗</div>
+                <h1>PAIZÃO <span>RENT CAR</span></h1>
+                <p>Sistema de Locação de Veículos</p>
+            </div>
+            <div class="login-error" id="login-error">Usuário ou senha inválidos!</div>
+            <form id="login-form" autocomplete="off">
+                <div class="form-group">
+                    <label for="login-user">Usuário</label>
+                    <input type="text" id="login-user" placeholder="Digite o usuário" autocomplete="off">
+                    <span class="input-icon" style="position:absolute; left:14px; bottom:14px;">👤</span>
+                </div>
+                <div class="form-group">
+                    <label for="login-pass">Senha</label>
+                    <input type="password" id="login-pass" placeholder="Digite a senha" autocomplete="off">
+                    <span class="input-icon" style="position:absolute; left:14px; bottom:14px;">🔒</span>
+                </div>
+                <button type="submit" class="btn btn-primary">🔐 Entrar no Sistema</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="app-screen">
+        <header class="top-header">
+            <div class="brand">
+                <div class="brand-icon">🚗</div>
+                <div class="brand-text">
+                    <h2>PAIZÃO <span>RENT CAR</span></h2>
+                    <small>Gestão de Frotas</small>
+                </div>
+            </div>
+
+            <nav class="top-nav" id="top-nav">
+                <button class="active" data-page="dashboard">
+                    <span class="nav-icon">📊</span> Dashboard
+                </button>
+                <button data-page="veiculos">
+                    <span class="nav-icon">🚙</span> Veículos
+                </button>
+                <button data-page="locatarios">
+                    <span class="nav-icon">👥</span> Locatários
+                </button>
+                <button data-page="locacoes">
+                    <span class="nav-icon">📋</span> Locações
+                </button>
+                <button data-page="fluxocaixa" style="border:1px solid var(--border);">
+                    <span class="nav-icon">💰</span> Fluxo de Caixa
+                </button>
+                <button id="btn-filtro-locacoes-nav" title="Abrir filtro de locações em janela separada">
+                    <span class="nav-icon">🔍</span> Filtro
+                </button>
+                <button id="btn-menu-nav" title="Abrir o sistema completo na janela SEGURO (sem login)">
+                    <span class="nav-icon">🪟</span> SEGURO
+                </button>
+            </nav>
+
+            <div class="top-user">
+                <div class="user-avatar">S</div>
+                <div class="user-info">
+                    <div class="user-name">SERGIO</div>
+                    <div class="user-role">Administrador</div>
+                </div>
+                <button class="btn-logout" id="btn-logout" title="Sair">🚪</button>
+                <button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="Menu">☰</button>
+            </div>
+        </header>
+
+        <main class="main-content" id="main-content">
+            <div class="page active" id="page-dashboard">
+                <div class="page-header">
+                    <h2>📊 Dashboard</h2>
+                    <p>Visão geral do sistema PAIZÃO RENT CAR</p>
+                </div>
+                <div class="stats-row" id="stats-row">
+                    <div class="stat-card">
+                        <div class="stat-icon">🚙</div>
+                        <div class="stat-value" id="stat-veiculos">0</div>
+                        <div class="stat-label">Veículos Cadastrados</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">👥</div>
+                        <div class="stat-value" id="stat-locatarios">0</div>
+                        <div class="stat-label">Locatários</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📋</div>
+                        <div class="stat-value" id="stat-locacoes">0</div>
+                        <div class="stat-label">Locações Ativas</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">💰</div>
+                        <div class="stat-value" id="stat-receita">R$ 0</div>
+                        <div class="stat-label">Receita Semanal Estimada</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🔒</div>
+                        <div class="stat-value" id="stat-receita-caucao">R$ 0</div>
+                        <div class="stat-label">Receita Caução Estimada</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title"><span class="icon">🕐</span> Últimos Cadastros</div>
+                    <div id="ultimos-cadastros" style="color:var(--text-muted); font-size:13px;">
+                        Nenhum cadastro realizado ainda.
+                    </div>
+                </div>
+            </div>
+
+            <div class="page" id="page-veiculos">
+                <div class="page-header">
+                    <h2>🚙 Cadastro de Veículos</h2>
+                    <p>Gerencie a frota de veículos com todos os dados, valores e documentos</p>
+                </div>
+                <div class="card" id="card-form-veiculo">
+                    <div class="card-title"><span class="icon">📝</span> <span id="veic-form-title">Novo Veículo</span></div>
+                    <div class="edit-banner" id="edit-banner-veiculo">
+                        ✏️ <span id="edit-banner-veiculo-text">Você está editando um veículo existente.</span>
+                    </div>
+                    <form id="form-veiculo" autocomplete="off">
+                        <div class="grid-3">
+                            <div class="form-group-app">
+                                <label>Marca / Fabricante</label>
+                                <input type="text" id="v-marca" placeholder="Ex: Volkswagen" required>
+                            </div>
+                            <div class="form-group-app">
+                                <label>Modelo do Veículo</label>
+                                <input type="text" id="v-modelo" placeholder="Ex: Gol 1.6" required>
+                            </div>
+                            <div class="form-group-app">
+                                <label>Cor</label>
+                                <input type="text" id="v-cor" placeholder="Ex: Branco" required>
+                            </div>
+                            <div class="form-group-app">
+                                <label>Potência do Motor</label>
+                                <input type="text" id="v-potencia" placeholder="Ex: 1.6, 2.0, 1.0 Turbo" required>
+                            </div>
+                            <div class="form-group-app">
+                                <label>Placa</label>
+                                <input type="text" id="v-placa" placeholder="Ex: ABC-1234" required maxlength="8">
+                            </div>
+                            <div class="form-group-app">
+                                <label>KM Atual</label>
+                                <input type="number" id="v-km" placeholder="Ex: 45000" required>
+                            </div>
+                            <div class="form-group-app">
+                                <label>RENAVAN</label>
+                                <input type="text" id="v-renavan" placeholder="11 dígitos" required maxlength="11">
+                            </div>
+                            <div class="form-group-app">
+                                <label>Chassi</label>
+                                <input type="text" id="v-chassi" placeholder="17 caracteres" required maxlength="17">
+                            </div>
+                            <div class="form-group-app">
+                                <label>Valor Locação Semanal (R$)</label>
+                                <input type="text" id="v-valor-semanal" placeholder="R$ 0,00" required oninput="formatarMoedaInput(this)" onblur="formatarMoedaInputBlur(this)">
+                            </div>
+                            <div class="form-group-app">
+                                <label>Valor do Caução (R$)</label>
+                                <input type="text" id="v-caucao" placeholder="R$ 0,00" required oninput="formatarMoedaInput(this)" onblur="formatarMoedaInputBlur(this)">
+                            </div>
+                            <div class="form-group-app">
+                                <label>Anexar Documento (PDF)</label>
+                                <input type="file" id="v-documento" accept=".pdf">
+                                <small style="color:var(--text-muted); font-size:10px;">Arquivo PDF do documento do veículo</small>
+                            </div>
+                        </div>
+                        <div class="form-group-app" style="margin-top:4px;">
+                            <label>Opcionais do Veículo</label>
+                            <div class="opcionais-group">
+                                <label><input type="checkbox" id="v-op-ar"> ❄️ Ar Condicionado</label>
+                                <label><input type="checkbox" id="v-op-vidros"> 🪟 Vidros Elétricos</label>
+                                <label><input type="checkbox" id="v-op-multimidia"> 📺 Multimídia</label>
+                                <label><input type="checkbox" id="v-op-rodas"> 🛞 Rodas de Liga Leve</label>
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:12px; margin-top:8px;">
+                            <button type="submit" class="btn-app btn-save" id="btn-submit-veiculo">💾 Salvar Veículo</button>
+                            <button type="button" class="btn-app btn-cancel" id="btn-cancel-veiculo">Limpar</button>
+                            <button type="button" class="btn-app btn-cancel" id="btn-cancel-edicao-veiculo" style="display:none;">❌ Cancelar Edição</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card">
+                    <div class="card-title"><span class="icon">📋</span> Veículos Cadastrados</div>
+                    <div class="table-wrapper" id="table-wrapper-veiculos">
+                        <button class="scroll-btn scroll-btn-left" aria-label="Rolar para esquerda">◀</button>
+                        <button class="scroll-btn scroll-btn-right" aria-label="Rolar para direita">▶</button>
+                        <table id="tabela-veiculos">
+                            <thead>
+                                <tr>
+                                    <th>Marca</th><th>Modelo</th><th>Cor</th><th>Potência</th><th>Placa</th><th>KM</th><th>RENAVAN</th><th>Chassi</th><th>Valor Semanal</th><th>Caução</th><th>Opcionais</th><th>Documento</th><th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-veiculos">
+                                <tr><td colspan="13" class="empty-state"><span class="icon">🚙</span><br>Nenhum veículo cadastrado</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page" id="page-locatarios">
+                <div class="page-header">
+                    <h2>👥 Cadastro de Locatários</h2>
+                    <p>Gerencie os dados pessoais dos locatários</p>
+                </div>
+                <div class="card" id="card-form-locatario">
+                    <div class="card-title"><span class="icon">📝</span> <span id="locat-form-title">Novo Locatário</span></div>
+                    <div class="edit-banner" id="edit-banner-locatario">
+                        ✏️ <span id="edit-banner-locatario-text">Você está editando um locatário existente.</span>
+                    </div>
+                    <form id="form-locatario" autocomplete="off">
+                        <div class="grid-3">
+                            <div class="form-group-app">
+                                <label>Nome Completo</label>
+                                <input type="text" id="l-nome" placeholder="Nome do locatário" required>
+                            </div>
+                            <div class="form-group-app">
+                                <label>CPF</label>
+                                <input type="text" id="l-cpf" placeholder="000.000.000-00" required maxlength="14">
+                            </div>
+                            <div class="form-group-app">
+                                <label>RG</label>
+                                <input type="text" id="l-rg" placeholder="Número do RG" required>
+                            </div>
+                            <div class="form-group-app">
+                                <label>CNH</label>
+                                <input type="text" id="l-cnh" placeholder="Número da CNH" required>
+                            </div>
+                            <div class="form-group-app">
+                                <label>Telefone</label>
+                                <input type="text" id="l-fone" placeholder="(00) 00000-0000" required maxlength="15">
+                            </div>
+                            <div class="form-group-app">
+                                <label>CEP</label>
+                                <input type="text" id="l-cep" placeholder="00000-000" required maxlength="9">
+                            </div>
+                            <div class="form-group-app">
+                                <label>Endereço</label>
+                                <input type="text" id="l-endereco" placeholder="Rua, número" required>
+                            </div>
+                            <div class="form-group-app">
+                                <label>Bairro</label>
+                                <input type="text" id="l-bairro" placeholder="Bairro" required>
+                            </div>
+                            <div class="form-group-app">
+                                <label>Cidade</label>
+                                <input type="text" id="l-cidade" placeholder="Cidade" required>
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:12px; margin-top:8px;">
+                            <button type="submit" class="btn-app btn-save" id="btn-submit-locatario">💾 Salvar Locatário</button>
+                            <button type="button" class="btn-app btn-cancel" id="btn-cancel-locatario">Limpar</button>
+                            <button type="button" class="btn-app btn-cancel" id="btn-cancel-edicao-locatario" style="display:none;">❌ Cancelar Edição</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card">
+                    <div class="card-title"><span class="icon">📋</span> Locatários Cadastrados</div>
+                    <div class="table-wrapper" id="table-wrapper-locatarios">
+                        <button class="scroll-btn scroll-btn-left" aria-label="Rolar para esquerda">◀</button>
+                        <button class="scroll-btn scroll-btn-right" aria-label="Rolar para direita">▶</button>
+                        <table id="tabela-locatarios">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th><th>CPF</th><th>RG</th><th>CNH</th><th>Telefone</th><th>Cidade</th><th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-locatarios">
+                                <tr><td colspan="7" class="empty-state"><span class="icon">👥</span><br>Nenhum locatário cadastrado</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page" id="page-locacoes">
+                <div class="page-header">
+                    <h2>📋 Locações</h2>
+                    <p>Vincule locatários a veículos e gerencie as locações</p>
+                </div>
+                <div class="card" id="card-form-locacao">
+                    <div class="card-title"><span class="icon">🔗</span> <span id="loc-form-title">Nova Locação</span></div>
+                    <div class="edit-banner" id="edit-banner">
+                        ✏️ <span id="edit-banner-text">Você está editando uma locação existente.</span>
+                    </div>
+                    <form id="form-locacao" autocomplete="off">
+                        <div class="grid-2">
+                            <div class="form-group-app">
+                                <label>Veículo</label>
+                                <select id="loc-veiculo" required>
+                                    <option value="">Selecione um veículo...</option>
+                                </select>
+                            </div>
+                            <div class="form-group-app">
+                                <label>Locatário</label>
+                                <select id="loc-locatario" required>
+                                    <option value="">Selecione um locatário...</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="grid-2">
+                            <div class="form-group-app">
+                                <label>Data Início</label>
+                                <input type="date" id="loc-data-inicio" required>
+                            </div>
+                            <div class="form-group-app">
+                                <label>Data Fim do Contrato</label>
+                                <input type="date" id="loc-data-fim" required>
+                            </div>
+                        </div>
+                        <div class="card-title" style="margin-top:20px;"><span class="icon">💳</span> Pagamento do Caução</div>
+                        <div class="grid-3">
+                            <div class="form-group-app">
+                                <label>Forma Pagamento Caução</label>
+                                <select id="loc-forma-caucao" required>
+                                    <option value="">Selecione...</option>
+                                    <option value="avista">À Vista</option>
+                                    <option value="parcelado">Parcelado na Semana</option>
+                                    <option value="entrada_parcelado">Caução com Entrada e Parcelamento</option>
+                                </select>
+                            </div>
+                            <div class="form-group-app" id="loc-grupo-entrada-caucao" style="display:none;">
+                                <label>Valor da Entrada do Caução (R$)</label>
+                                <input type="text" id="loc-entrada-caucao" placeholder="R$ 0,00" step="0.01" min="0" oninput="formatarMoedaInput(this)" onblur="formatarMoedaInputBlur(this)">
+                            </div>
+                            <div class="form-group-app" id="loc-grupo-parcelas" style="display:none;">
+                                <label>Nº de Parcelas (na semana)</label>
+                                <input type="number" id="loc-parcelas" placeholder="Ex: 4" min="1" max="20" value="2">
+                            </div>
+                        </div>
+                        <div class="card-title" style="margin-top:20px;"><span class="icon">📎</span> Documentos do Locatário (até 8 anexos)</div>
+                        <div class="documentos-grid" id="documentos-locatario-grid">
+                            <div class="form-group-app"><label>CPF</label><input type="file" accept=".pdf,.jpg,.jpeg,.png" class="doc-input"></div>
+                            <div class="form-group-app"><label>CONTRATO</label><input type="file" accept=".pdf,.jpg,.jpeg,.png" class="doc-input"></div>
+                            <div class="form-group-app"><label>RG</label><input type="file" accept=".pdf,.jpg,.jpeg,.png" class="doc-input"></div>
+                            <div class="form-group-app"><label>TERMO</label><input type="file" accept=".pdf,.jpg,.jpeg,.png" class="doc-input"></div>
+                            <div class="form-group-app"><label>CNH</label><input type="file" accept=".pdf,.jpg,.jpeg,.png" class="doc-input"></div>
+                            <div class="form-group-app"><label>PROMISSORIA</label><input type="file" accept=".pdf,.jpg,.jpeg,.png" class="doc-input"></div>
+                            <div class="form-group-app"><label>DOC CARRO</label><input type="file" accept=".pdf,.jpg,.jpeg,.png" class="doc-input"></div>
+                            <div class="form-group-app"><label>COMPR ENDEREÇO</label><input type="file" accept=".pdf,.jpg,.jpeg,.png" class="doc-input"></div>
+                        </div>
+                        <div style="display:flex; gap:12px; margin-top:16px;">
+                            <button type="submit" class="btn-app btn-save" id="btn-submit-locacao">✅ Confirmar Locação</button>
+                            <button type="button" class="btn-app btn-cancel" id="btn-cancel-edicao-locacao" style="display:none;">❌ Cancelar Edição</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card">
+                    <div class="card-title"><span class="icon">📋</span> Locações Ativas</div>
+                    <div class="search-bar-container" id="search-bar-locacoes">
+                        <div class="search-input-wrapper">
+                            <span class="search-icon">🔍</span>
+                            <input type="text" id="input-busca-locacoes" placeholder="Pesquisar por PLACA do veículo ou CPF do locatário..." autocomplete="off">
+                            <button class="clear-search-btn" id="clear-search-btn" title="Limpar pesquisa" type="button">✕</button>
+                        </div>
+                        <div class="search-results-info" id="search-results-info">
+                            <span id="search-count-text">Total: <strong class="highlight-count" id="search-count-num">0</strong> locações</span>
+                        </div>
+                        <button class="btn-limpar-filtro" id="btn-limpar-filtro-locacoes" style="display:none;" type="button">
+                            🧹 Limpar Filtro
+                        </button>
+                    </div>
+                    <div class="table-wrapper" id="table-wrapper-locacoes">
+                        <button class="scroll-btn scroll-btn-left" aria-label="Rolar para esquerda">◀</button>
+                        <button class="scroll-btn scroll-btn-right" aria-label="Rolar para direita">▶</button>
+                        <table id="tabela-locacoes">
+                            <thead>
+                                <tr>
+                                    <th>Veículo</th><th>Placa</th><th>Locatário</th><th>CPF</th><th>Data Início</th><th>Data Fim</th><th>Valor Semanal</th><th>Caução</th><th>Status</th><th>Docs</th><th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-locacoes">
+                                <tr><td colspan="11" class="empty-state"><span class="icon">📋</span><br>Nenhuma locação ativa</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page" id="page-fluxocaixa">
+                <div class="page-header">
+                    <h2>💰 Fluxo de Caixa</h2>
+                    <p>Registre entradas e saídas financeiras e acompanhe o saldo</p>
+                </div>
+                <div class="stats-row" id="stats-row-fluxo">
+                    <div class="stat-card entrada-card">
+                        <div class="stat-icon">📥</div>
+                        <div class="stat-value" id="stat-total-entradas">R$ 0,00</div>
+                        <div class="stat-label">Total de Entradas</div>
+                    </div>
+                    <div class="stat-card saida-card">
+                        <div class="stat-icon">📤</div>
+                        <div class="stat-value" id="stat-total-saidas">R$ 0,00</div>
+                        <div class="stat-label">Total de Saídas</div>
+                    </div>
+                    <div class="stat-card saldo-card" id="stat-saldo-card">
+                        <div class="stat-icon">💵</div>
+                        <div class="stat-value" id="stat-saldo-atual">R$ 0,00</div>
+                        <div class="stat-label">Saldo Atual</div>
+                    </div>
+                </div>
+                <div class="card" id="card-form-fluxo">
+                    <div class="card-title"><span class="icon">📝</span> <span id="fluxo-form-title">Nova Transação</span></div>
+                    <div class="edit-banner" id="edit-banner-fluxo">
+                        ✏️ <span id="edit-banner-fluxo-text">Você está editando uma transação existente.</span>
+                    </div>
+                    <form id="form-fluxo" autocomplete="off">
+                        <div class="grid-3">
+                            <div class="form-group-app">
+                                <label>Descrição da Transação</label>
+                                <input type="text" id="f-descricao" placeholder="Ex: Pagamento de aluguel, Abastecimento, etc." required>
+                            </div>
+                            <div class="form-group-app">
+                                <label>Valor (R$)</label>
+                                <input type="text" id="f-valor" placeholder="R$ 0,00" step="0.01" min="0.01" required oninput="formatarMoedaInput(this)" onblur="formatarMoedaInputBlur(this)">
+                            </div>
+                            <div class="form-group-app">
+                                <label>Tipo de Transação</label>
+                                <select id="f-tipo" required>
+                                    <option value="">Selecione o tipo...</option>
+                                    <option value="entrada">📥 Entrada (Receita)</option>
+                                    <option value="saida">📤 Saída (Despesa)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="grid-3">
+                            <div class="form-group-app">
+                                <label>Data da Transação</label>
+                                <input type="date" id="f-data" required>
+                            </div>
+                            <div class="form-group-app">
+                                <label>Categoria (opcional)</label>
+                                <select id="f-categoria">
+                                    <option value="">Geral / Outros</option>
+                                    <option value="locacao">Locação de Veículo</option>
+                                    <option value="manutencao">Manutenção</option>
+                                    <option value="combustivel">Combustível</option>
+                                    <option value="imposto">Imposto / Taxa</option>
+                                    <option value="multa">Multa</option>
+                                    <option value="seguro">Seguro</option>
+                                    <option value="outros">Outros</option>
+                                </select>
+                            </div>
+                            <div class="form-group-app">
+                                <label>Observação (opcional)</label>
+                                <input type="text" id="f-observacao" placeholder="Observações adicionais...">
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:12px; margin-top:8px;">
+                            <button type="submit" class="btn-app btn-save" id="btn-submit-fluxo">💾 Registrar Transação</button>
+                            <button type="button" class="btn-app btn-cancel" id="btn-cancel-fluxo">Limpar</button>
+                            <button type="button" class="btn-app btn-cancel" id="btn-cancel-edicao-fluxo" style="display:none;">❌ Cancelar Edição</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card">
+                    <div class="card-title"><span class="icon">📋</span> Transações Registradas</div>
+                    <div class="search-bar-container" id="search-bar-fluxo">
+                        <div class="search-input-wrapper">
+                            <span class="search-icon">🔍</span>
+                            <input type="text" id="input-busca-fluxo" placeholder="Pesquisar por descrição ou categoria..." autocomplete="off">
+                            <button class="clear-search-btn" id="clear-search-btn-fluxo" title="Limpar pesquisa" type="button">✕</button>
+                        </div>
+                        <div class="search-results-info" id="search-results-info-fluxo">
+                            <span id="search-count-text-fluxo">Total: <strong class="highlight-count" id="search-count-num-fluxo">0</strong> transações</span>
+                        </div>
+                        <button class="btn-limpar-filtro" id="btn-limpar-filtro-fluxo" style="display:none;" type="button">
+                            🧹 Limpar Filtro
+                        </button>
+                    </div>
+                    <div class="table-wrapper" id="table-wrapper-fluxo">
+                        <button class="scroll-btn scroll-btn-left" aria-label="Rolar para esquerda">◀</button>
+                        <button class="scroll-btn scroll-btn-right" aria-label="Rolar para direita">▶</button>
+                        <table id="tabela-fluxo">
+                            <thead>
+                                <tr>
+                                    <th>Data</th><th>Descrição</th><th>Categoria</th><th>Tipo</th><th>Valor</th><th>Observação</th><th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-fluxo">
+                                <tr><td colspan="7" class="empty-state"><span class="icon">💰</span><br>Nenhuma transação registrada</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        (function() {
+            const CREDENCIAIS = { usuario: 'SERGIO', senha: '080888' };
+            const STORAGE_KEYS = {
+                veiculos: 'paizao_veiculos',
+                locatarios: 'paizao_locatarios',
+                locacoes: 'paizao_locacoes',
+                fluxocaixa: 'paizao_fluxocaixa'
+            };
+
+            function getStorage(key) {
+                try { return JSON.parse(localStorage.getItem(key)) || []; } catch (e) { return []; }
+            }
+
+            function setStorage(key, data) {
+                localStorage.setItem(key, JSON.stringify(data));
+            }
+
+            let veiculos = getStorage(STORAGE_KEYS.veiculos);
+            let locatarios = getStorage(STORAGE_KEYS.locatarios);
+            let locacoes = getStorage(STORAGE_KEYS.locacoes);
+            let fluxoCaixa = getStorage(STORAGE_KEYS.fluxocaixa);
+
+            let editandoVeiculoId = null;
+            let editandoLocatarioId = null;
+            let editandoLocacaoId = null;
+            let editandoFluxoId = null;
+            let termoBuscaLocacoes = '';
+            let termoBuscaFluxo = '';
+
+            // Função para editar locação a partir da janela filtro
+            window.editarLocacaoDaJanelaFiltro = function(locacaoId) {
+                // Fecha a janela do filtro
+                try {
+                    if (window.opener) {
+                        window.close();
+                    }
+                } catch (e) {}
+
+                // Chama a função de edição na janela principal
+                if (window.opener && window.opener._editarLocacao) {
+                    window.opener._editarLocacao(locacaoId);
+                    window.opener.focus();
+                } else {
+                    // Fallback: tenta encontrar a janela pai
+                    if (window.parent && window.parent._editarLocacao) {
+                        window.parent._editarLocacao(locacaoId);
+                        window.parent.focus();
+                    } else {
+                        alert('⚠️ Não foi possível encontrar a janela principal. Verifique se o sistema está aberto.');
+                    }
+                }
+            };
+
+            // ----------------------------------------------------------------
+            // FUNÇÕES DE INTEGRAÇÃO: LOCAÇÃO -> FLUXO DE CAIXA
+            // ----------------------------------------------------------------
+
+            function removerEntradasFluxoLocacao(locacao) {
+                if (!locacao || !locacao.fluxoCaixaIds || locacao.fluxoCaixaIds.length === 0) return;
+                const idsParaRemover = new Set(locacao.fluxoCaixaIds);
+                fluxoCaixa = fluxoCaixa.filter(t => !idsParaRemover.has(t.id));
+                setStorage(STORAGE_KEYS.fluxocaixa, fluxoCaixa);
+            }
+
+            function criarEntradasFluxoLocacao(locacao) {
+                const idsCriados = [];
+                const dataTransacao = locacao.dataInicio || new Date().toISOString().split('T')[0];
+                const descricaoBase = `${locacao.veiculoNome || 'Veículo'} (${locacao.veiculoPlaca || 'sem placa'}) - ${locacao.locatarioNome || 'Locatário'}`;
+
+                // 1) Entrada referente ao valor semanal da locação (sempre)
+                const entradaSemanal = {
+                    id: Date.now(),
+                    descricao: `Locação: ${descricaoBase}`,
+                    valor: parseFloat(locacao.valorSemanal) || 0,
+                    tipo: 'entrada',
+                    data: dataTransacao,
+                    categoria: 'locacao',
+                    observacao: `Locação semanal - Contrato de ${new Date(locacao.dataInicio).toLocaleDateString('pt-BR')} até ${new Date(locacao.dataFim).toLocaleDateString('pt-BR')}`,
+                    dataCriacao: new Date().toISOString()
+                };
+                fluxoCaixa.push(entradaSemanal);
+                idsCriados.push(entradaSemanal.id);
+
+                // 2) Entrada referente ao caução 
+                const valorCaucaoTotal = parseFloat(locacao.caucao) || 0;
+
+                if (locacao.formaCaucao === 'avista') {
+                    if (valorCaucaoTotal > 0) {
+                        const entradaCaucaoAvista = {
+                            id: Date.now() + 1,
+                            descricao: `Caução (À Vista): ${descricaoBase}`,
+                            valor: valorCaucaoTotal,
+                            tipo: 'entrada',
+                            data: dataTransacao,
+                            categoria: 'locacao',
+                            observacao: 'Caução pago integralmente à vista',
+                            dataCriacao: new Date().toISOString()
+                        };
+                        fluxoCaixa.push(entradaCaucaoAvista);
+                        idsCriados.push(entradaCaucaoAvista.id);
+                    }
+                } else if (locacao.formaCaucao === 'entrada_parcelado') {
+                    const valorEntrada = parseFloat(locacao.valorEntradaCaucao || 0);
+                    if (valorEntrada > 0) {
+                        const obsCaucao = `Caução (Entrada) - ${locacao.parcelasCaucao || '?'} parcelas restantes`;
+                        const entradaCaucao = {
+                            id: Date.now() + 2,
+                            descricao: `Caução Entrada: ${descricaoBase}`,
+                            valor: valorEntrada,
+                            tipo: 'entrada',
+                            data: dataTransacao,
+                            categoria: 'locacao',
+                            observacao: obsCaucao,
+                            dataCriacao: new Date().toISOString()
+                        };
+                        fluxoCaixa.push(entradaCaucao);
+                        idsCriados.push(entradaCaucao.id);
+                    }
+                }
+
+                setStorage(STORAGE_KEYS.fluxocaixa, fluxoCaixa);
+                return idsCriados;
+            }
+
+            function atualizarDescricaoFluxoLocacao(locacao) {
+                if (!locacao || !locacao.fluxoCaixaIds || locacao.fluxoCaixaIds.length === 0) return;
+                const descricaoBase = `${locacao.veiculoNome || 'Veículo'} (${locacao.veiculoPlaca || 'sem placa'}) - ${locacao.locatarioNome || 'Locatário'}`;
+                let alterou = false;
+                fluxoCaixa.forEach(t => {
+                    if (locacao.fluxoCaixaIds.includes(t.id)) {
+                        if (t.descricao.startsWith('Locação:')) {
+                            t.descricao = `Locação: ${descricaoBase}`;
+                            t.observacao = `Locação semanal - Contrato de ${new Date(locacao.dataInicio).toLocaleDateString('pt-BR')} até ${new Date(locacao.dataFim).toLocaleDateString('pt-BR')}`;
+                            alterou = true;
+                        } else if (t.descricao.startsWith('Caução Entrada:') || t.descricao.startsWith('Caução (À Vista):')) {
+                            t.descricao = t.descricao.replace(/:.*/, `: ${descricaoBase}`);
+                            alterou = true;
+                        }
+                    }
+                });
+                if (alterou) {
+                    setStorage(STORAGE_KEYS.fluxocaixa, fluxoCaixa);
+                    atualizarResumoFluxoCaixa();
+                    atualizarTabelaFluxoCaixa();
+                }
+            }
+
+            // ----------------------------------------------------------------
+            // FIM DAS FUNÇÕES DE INTEGRAÇÃO
+            // ----------------------------------------------------------------
+
+            function syncLocacoesVeiculo(veiculoId) {
+                const veiculo = veiculos.find(v => v.id === veiculoId);
+                if (!veiculo) return;
+                let alterou = false;
+                locacoes.forEach(loc => {
+                    if (loc.veiculoId === veiculoId) {
+                        loc.veiculoPlaca = veiculo.placa;
+                        loc.veiculoNome = `${veiculo.marca} ${veiculo.modelo}`;
+                        loc.valorSemanal = veiculo.valorSemanal;
+                        loc.caucao = veiculo.caucao;
+                        loc.dataAtualizacao = new Date().toISOString();
+                        alterou = true;
+                        atualizarDescricaoFluxoLocacao(loc);
+                    }
+                });
+                if (alterou) {
+                    setStorage(STORAGE_KEYS.locacoes, locacoes);
+                    atualizarTabelaLocacoes();
+                    atualizarDashboard();
+                    atualizarSelectsLocacao();
+                }
+            }
+
+            function syncLocacoesLocatario(locatarioId) {
+                const locatario = locatarios.find(l => l.id === locatarioId);
+                if (!locatario) return;
+                let alterou = false;
+                locacoes.forEach(loc => {
+                    if (loc.locatarioId === locatarioId) {
+                        loc.locatarioNome = locatario.nome;
+                        loc.locatarioCPF = locatario.cpf;
+                        loc.dataAtualizacao = new Date().toISOString();
+                        alterou = true;
+                        atualizarDescricaoFluxoLocacao(loc);
+                    }
+                });
+                if (alterou) {
+                    setStorage(STORAGE_KEYS.locacoes, locacoes);
+                    atualizarTabelaLocacoes();
+                    atualizarDashboard();
+                    atualizarSelectsLocacao();
+                }
+            }
+
+            const loginScreen = document.getElementById('login-screen');
+            const appScreen = document.getElementById('app-screen');
+            const loginForm = document.getElementById('login-form');
+            const loginError = document.getElementById('login-error');
+            const btnLogout = document.getElementById('btn-logout');
+            const navButtons = document.querySelectorAll('.top-nav button[data-page]');
+            const pages = document.querySelectorAll('.page');
+
+            function showToast(msg, type = 'success') {
+                const toast = document.createElement('div');
+                toast.className = `toast toast-${type}`;
+                toast.textContent = msg;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3200);
+            }
+
+            window.formatarMoedaInput = function(input) {
+                let valor = input.value.replace(/\D/g, '');
+                if (valor === '') {
+                    input.value = '';
+                    return;
+                }
+                valor = (parseInt(valor, 10) / 100).toFixed(2);
+                input.value = 'R$ ' + valor.replace('.', ',');
+            };
+
+            window.formatarMoedaInputBlur = function(input) {
+                if (input.value === '' || input.value === 'R$ ') {
+                    input.value = '';
+                } else if (!input.value.includes(',')) {
+                    let valor = input.value.replace(/\D/g, '');
+                    if (valor === '') {
+                        input.value = '';
+                        return;
+                    }
+                    valor = (parseInt(valor, 10) / 100).toFixed(2);
+                    input.value = 'R$ ' + valor.replace('.', ',');
+                }
+            };
+
+            function parseMoedaBR(valorString) {
+                if (!valorString) return 0;
+                let limpo = valorString.replace(/[^\d,]/g, '').replace(',', '.');
+                return parseFloat(limpo) || 0;
+            }
+
+            function formatarMoeda(valor) {
+                return 'R$ ' + parseFloat(valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2,
+                    maximumFractionDigits: 2 });
+            }
+
+            function aplicarMascaraCPF(valor) {
+                valor = valor.replace(/\D/g, '').substring(0, 11);
+                return valor.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+            }
+
+            function aplicarMascaraTelefone(valor) {
+                valor = valor.replace(/\D/g, '').substring(0, 11);
+                if (valor.length <= 10) return valor.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
+                return valor.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$4');
+            }
+
+            function aplicarMascaraCEP(valor) {
+                valor = valor.replace(/\D/g, '').substring(0, 8);
+                return valor.replace(/(\d{5})(\d{3})/, '$1-$2');
+            }
+
+            function aplicarMascaraPlaca(valor) {
+                valor = valor.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 7);
+                if (valor.length >= 4) valor = valor.substring(0, 3) + '-' + valor.substring(3);
+                return valor;
+            }
+
+            function sanitizarParaBusca(str) {
+                if (!str) return '';
+                return str.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+            }
+
+            function navegarPara(pageName) {
+                pages.forEach(p => p.classList.remove('active'));
+                const targetPage = document.getElementById('page-' + pageName);
+                if (targetPage) targetPage.classList.add('active');
+                navButtons.forEach(b => b.classList.remove('active'));
+                const activeBtn = document.querySelector(`.top-nav button[data-page="${pageName}"]`);
+                if (activeBtn) activeBtn.classList.add('active');
+
+                if (pageName === 'dashboard') atualizarDashboard();
+                if (pageName === 'veiculos') { atualizarTabelaVeiculos();
+                    initScrollButtons(); }
+                if (pageName === 'locatarios') { atualizarTabelaLocatarios();
+                    initScrollButtons(); }
+                if (pageName === 'locacoes') {
+                    atualizarSelectsLocacao();
+                    atualizarTabelaLocacoes();
+                    initScrollButtons();
+                    if (termoBuscaLocacoes) {
+                        document.getElementById('input-busca-locacoes').value = termoBuscaLocacoes;
+                        atualizarUIBuscaLocacoes();
+                    }
+                }
+                if (pageName === 'fluxocaixa') {
+                    atualizarResumoFluxoCaixa();
+                    atualizarTabelaFluxoCaixa();
+                    initScrollButtons();
+                    if (termoBuscaFluxo) {
+                        document.getElementById('input-busca-fluxo').value = termoBuscaFluxo;
+                        atualizarUIBuscaFluxo();
+                    }
+                }
+            }
+
+            navButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const page = btn.getAttribute('data-page');
+                    navegarPara(page);
+                });
+            });
+
+            loginForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const user = document.getElementById('login-user').value.trim();
+                const pass = document.getElementById('login-pass').value.trim();
+                if (user === CREDENCIAIS.usuario && pass === CREDENCIAIS.senha) {
+                    loginError.classList.remove('show');
+                    loginScreen.style.display = 'none';
+                    appScreen.classList.add('active');
+                    navegarPara('dashboard');
+                    initScrollButtons();
+                    showToast('✅ Bem-vindo, SERGIO!', 'success');
+                } else {
+                    loginError.classList.add('show');
+                    document.getElementById('login-pass').value = '';
+                    document.getElementById('login-pass').focus();
+                    setTimeout(() => loginError.classList.remove('show'), 3000);
+                }
+            });
+
+            btnLogout.addEventListener('click', () => {
+                if (confirm('Deseja realmente sair do sistema?')) {
+                    appScreen.classList.remove('active');
+                    loginScreen.style.display = 'flex';
+                    document.getElementById('login-pass').value = '';
+                    document.getElementById('login-user').value = '';
+                    loginError.classList.remove('show');
+                    termoBuscaLocacoes = '';
+                    document.getElementById('input-busca-locacoes').value = '';
+                    atualizarUIBuscaLocacoes();
+                    termoBuscaFluxo = '';
+                    document.getElementById('input-busca-fluxo').value = '';
+                    atualizarUIBuscaFluxo();
+                    showToast('👋 Logout realizado com sucesso!', 'info');
+                }
+            });
+
+            function initScrollButtons() {
+                const wrappers = document.querySelectorAll('.table-wrapper');
+                wrappers.forEach(wrapper => {
+                    const btnLeft = wrapper.querySelector('.scroll-btn-left');
+                    const btnRight = wrapper.querySelector('.scroll-btn-right');
+                    if (!btnLeft || !btnRight) return;
+
+                    function updateScrollButtons() {
+                        const tolerance = 2;
+                        const canScrollLeft = wrapper.scrollLeft > tolerance;
+                        const canScrollRight = wrapper.scrollLeft < (wrapper.scrollWidth - wrapper
+                            .clientWidth - tolerance);
+                        btnLeft.classList.toggle('visible', canScrollLeft);
+                        btnRight.classList.toggle('visible', canScrollRight);
+                    }
+
+                    btnLeft.addEventListener('click', () => {
+                        wrapper.scrollBy({ left: -300, behavior: 'smooth' });
+                    });
+                    btnRight.addEventListener('click', () => {
+                        wrapper.scrollBy({ left: 300, behavior: 'smooth' });
+                    });
+
+                    wrapper.addEventListener('scroll', updateScrollButtons);
+                    window.addEventListener('resize', updateScrollButtons);
+                    updateScrollButtons();
+                    setTimeout(updateScrollButtons, 100);
+                });
+            }
+
+            function atualizarDashboard() {
+                document.getElementById('stat-veiculos').textContent = veiculos.length;
+                document.getElementById('stat-locatarios').textContent = locatarios.length;
+                document.getElementById('stat-locacoes').textContent = locacoes.length;
+                const receitaTotal = locacoes.reduce((sum, loc) => sum + (parseFloat(loc.valorSemanal) || 0), 0);
+                document.getElementById('stat-receita').textContent = formatarMoeda(receitaTotal);
+                const receitaCaucao = locacoes.reduce((sum, loc) => sum + (parseFloat(loc.caucao) || 0), 0);
+                document.getElementById('stat-receita-caucao').textContent = formatarMoeda(receitaCaucao);
+
+                const ultimosDiv = document.getElementById('ultimos-cadastros');
+                let html = '';
+                if (veiculos.length === 0 && locatarios.length === 0) {
+                    html = '<span style="color:var(--text-muted);">Nenhum cadastro realizado ainda.</span>';
+                } else {
+                    const ultimosVeiculos = veiculos.slice(-3).reverse();
+                    const ultimosLocatarios = locatarios.slice(-3).reverse();
+                    if (ultimosVeiculos.length > 0) {
+                        html += '<strong style="color:#fff;">🚙 Últimos Veículos:</strong><br>';
+                        ultimosVeiculos.forEach(v => {
+                            html +=
+                                `• ${v.marca} ${v.modelo} - Placa: ${v.placa} - KM: ${v.km} - Semanal: ${formatarMoeda(v.valorSemanal)}<br>`;
+                        });
+                    }
+                    if (ultimosLocatarios.length > 0) {
+                        html += '<br><strong style="color:#fff;">👥 Últimos Locatários:</strong><br>';
+                        ultimosLocatarios.forEach(l => {
+                            html += `• ${l.nome} - CPF: ${l.cpf}<br>`;
+                        });
+                    }
+                }
+                ultimosDiv.innerHTML = html || '<span style="color:var(--text-muted);">Nenhum cadastro.</span>';
+            }
+
+            const formVeiculo = document.getElementById('form-veiculo');
+            const inputPlaca = document.getElementById('v-placa');
+            inputPlaca.addEventListener('input', function() {
+                this.value = aplicarMascaraPlaca(this.value);
+            });
+
+            const btnSubmitVeiculo = document.getElementById('btn-submit-veiculo');
+            const btnCancelVeiculo = document.getElementById('btn-cancel-veiculo');
+            const btnCancelEdicaoVeiculo = document.getElementById('btn-cancel-edicao-veiculo');
+            const editBannerVeiculo = document.getElementById('edit-banner-veiculo');
+            const veicFormTitle = document.getElementById('veic-form-title');
+
+            function formatarOpcionais(opcionais) {
+                if (!opcionais) return '<span style="color:var(--text-muted);">—</span>';
+                const badges = [];
+                if (opcionais.ar) badges.push('<span class="badge-opcional">❄️ Ar</span>');
+                if (opcionais.vidros) badges.push('<span class="badge-opcional">🪟 Vidros El.</span>');
+                if (opcionais.multimidia) badges.push('<span class="badge-opcional">📺 Multimídia</span>');
+                if (opcionais.rodas) badges.push('<span class="badge-opcional">🛞 Rodas Liga</span>');
+                return badges.length > 0 ? badges.join(' ') : '<span style="color:var(--text-muted);">—</span>';
+            }
+
+            function resetarFormVeiculo() {
+                formVeiculo.reset();
+                document.getElementById('v-op-ar').checked = false;
+                document.getElementById('v-op-vidros').checked = false;
+                document.getElementById('v-op-multimidia').checked = false;
+                document.getElementById('v-op-rodas').checked = false;
+                document.getElementById('v-documento').value = '';
+                document.getElementById('v-valor-semanal').value = '';
+                document.getElementById('v-caucao').value = '';
+                editandoVeiculoId = null;
+                btnSubmitVeiculo.textContent = '💾 Salvar Veículo';
+                btnCancelEdicaoVeiculo.style.display = 'none';
+                editBannerVeiculo.classList.remove('show');
+                veicFormTitle.textContent = 'Novo Veículo';
+            }
+
+            btnCancelVeiculo.addEventListener('click', resetarFormVeiculo);
+            btnCancelEdicaoVeiculo.addEventListener('click', function() {
+                resetarFormVeiculo();
+                showToast('📋 Edição cancelada. Formulário limpo.', 'info');
+            });
+
+            formVeiculo.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const documentoInput = document.getElementById('v-documento');
+                const documentoFile = documentoInput.files[0];
+
+                const opcionais = {
+                    ar: document.getElementById('v-op-ar').checked,
+                    vidros: document.getElementById('v-op-vidros').checked,
+                    multimidia: document.getElementById('v-op-multimidia').checked,
+                    rodas: document.getElementById('v-op-rodas').checked
+                };
+
+                function salvarVeiculo(docBase64 = null, docNome = null) {
+                    const dadosVeiculo = {
+                        marca: document.getElementById('v-marca').value.trim(),
+                        modelo: document.getElementById('v-modelo').value.trim(),
+                        cor: document.getElementById('v-cor').value.trim(),
+                        potencia: document.getElementById('v-potencia').value.trim(),
+                        placa: document.getElementById('v-placa').value.trim(),
+                        km: parseInt(document.getElementById('v-km').value) || 0,
+                        renavan: document.getElementById('v-renavan').value.trim(),
+                        chassi: document.getElementById('v-chassi').value.trim(),
+                        valorSemanal: parseMoedaBR(document.getElementById('v-valor-semanal').value),
+                        caucao: parseMoedaBR(document.getElementById('v-caucao').value),
+                        opcionais: opcionais,
+                        dataAtualizacao: new Date().toISOString()
+                    };
+
+                    if (editandoVeiculoId) {
+                        const index = veiculos.findIndex(v => v.id === editandoVeiculoId);
+                        if (index === -1) {
+                            showToast('❌ Veículo não encontrado para edição.', 'error');
+                            resetarFormVeiculo();
+                            return;
+                        }
+                        if (docBase64) {
+                            dadosVeiculo.documentoBase64 = docBase64;
+                            dadosVeiculo.documentoNome = docNome;
+                        } else {
+                            dadosVeiculo.documentoBase64 = veiculos[index].documentoBase64 || null;
+                            dadosVeiculo.documentoNome = veiculos[index].documentoNome || null;
+                        }
+                        veiculos[index] = { ...veiculos[index], ...dadosVeiculo };
+                        setStorage(STORAGE_KEYS.veiculos, veiculos);
+                        syncLocacoesVeiculo(editandoVeiculoId);
+                        resetarFormVeiculo();
+                        atualizarTabelaVeiculos();
+                        atualizarDashboard();
+                        atualizarSelectsLocacao();
+                        initScrollButtons();
+                        showToast('✅ Veículo atualizado com sucesso!', 'success');
+                    } else {
+                        const novoVeiculo = {
+                            ...dadosVeiculo,
+                            id: Date.now(),
+                            documentoBase64: docBase64,
+                            documentoNome: docNome,
+                            dataCadastro: new Date().toISOString()
+                        };
+                        veiculos.push(novoVeiculo);
+                        setStorage(STORAGE_KEYS.veiculos, veiculos);
+                        syncLocacoesVeiculo(novoVeiculo.id);
+                        resetarFormVeiculo();
+                        atualizarTabelaVeiculos();
+                        atualizarDashboard();
+                        atualizarSelectsLocacao();
+                        initScrollButtons();
+                        showToast('✅ Veículo cadastrado com sucesso!', 'success');
+                    }
+                }
+
+                if (documentoFile) {
+                    if (documentoFile.size > 8 * 1024 * 1024) {
+                        showToast('⚠️ Arquivo PDF muito grande! Limite de 8MB.', 'error');
+                        return;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = function(ev) {
+                        salvarVeiculo(ev.target.result, documentoFile.name);
+                    };
+                    reader.onerror = function() {
+                        showToast('❌ Erro ao ler o arquivo PDF.', 'error');
+                    };
+                    reader.readAsDataURL(documentoFile);
+                } else {
+                    salvarVeiculo(null, null);
+                }
+            });
+
+            function atualizarTabelaVeiculos() {
+                const tbody = document.getElementById('tbody-veiculos');
+                if (veiculos.length === 0) {
+                    tbody.innerHTML =
+                        '<tr><td colspan="13" class="empty-state"><span class="icon">🚙</span><br>Nenhum veículo cadastrado</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = veiculos.map(v => `
+                    <tr>
+                        <td>${v.marca}</td>
+                        <td>${v.modelo}</td>
+                        <td>${v.cor}</td>
+                        <td><strong>${v.potencia || '—'}</strong></td>
+                        <td><strong>${v.placa}</strong></td>
+                        <td>${(v.km || 0).toLocaleString('pt-BR')}</td>
+                        <td>${v.renavan}</td>
+                        <td><small>${v.chassi}</small></td>
+                        <td class="highlight-valor">${formatarMoeda(v.valorSemanal)}</td>
+                        <td class="highlight-valor">${formatarMoeda(v.caucao)}</td>
+                        <td>${formatarOpcionais(v.opcionais)}</td>
+                        <td>${v.documentoBase64 ? `<a href="${v.documentoBase64}" download="${v.documentoNome || 'documento.pdf'}" class="btn-pdf" title="Baixar PDF">📄 Ver PDF</a>` : '<span style="color:var(--text-muted);">—</span>'}</td>
+                        <td>
+                            <button class="btn-edit" onclick="window._editarVeiculo(${v.id})" title="Editar Veículo">✏️</button>
+                            <button class="btn-danger" onclick="window._excluirVeiculo(${v.id})" title="Excluir">🗑️</button>
+                        </td>
+                    </tr>
+                `).join('');
+                initScrollButtons();
+            }
+
+            window._editarVeiculo = function(id) {
+                const veiculo = veiculos.find(v => v.id === id);
+                if (!veiculo) {
+                    showToast('❌ Veículo não encontrado.', 'error');
+                    return;
+                }
+                editandoVeiculoId = id;
+                document.getElementById('v-marca').value = veiculo.marca || '';
+                document.getElementById('v-modelo').value = veiculo.modelo || '';
+                document.getElementById('v-cor').value = veiculo.cor || '';
+                document.getElementById('v-potencia').value = veiculo.potencia || '';
+                document.getElementById('v-placa').value = veiculo.placa || '';
+                document.getElementById('v-km').value = veiculo.km || '';
+                document.getElementById('v-renavan').value = veiculo.renavan || '';
+                document.getElementById('v-chassi').value = veiculo.chassi || '';
+                document.getElementById('v-valor-semanal').value = formatarMoeda(veiculo.valorSemanal || 0);
+                document.getElementById('v-caucao').value = formatarMoeda(veiculo.caucao || 0);
+                document.getElementById('v-op-ar').checked = veiculo.opcionais?.ar || false;
+                document.getElementById('v-op-vidros').checked = veiculo.opcionais?.vidros || false;
+                document.getElementById('v-op-multimidia').checked = veiculo.opcionais?.multimidia || false;
+                document.getElementById('v-op-rodas').checked = veiculo.opcionais?.rodas || false;
+                document.getElementById('v-documento').value = '';
+
+                btnSubmitVeiculo.textContent = '💾 Atualizar Veículo';
+                btnCancelEdicaoVeiculo.style.display = 'inline-block';
+                editBannerVeiculo.classList.add('show');
+                document.getElementById('edit-banner-veiculo-text').textContent =
+                    `Editando veículo: ${veiculo.marca} ${veiculo.modelo} - Placa: ${veiculo.placa}`;
+                veicFormTitle.textContent = 'Editar Veículo';
+                document.getElementById('card-form-veiculo').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                showToast('✏️ Modo de edição ativado.', 'info');
+            };
+
+            window._excluirVeiculo = function(id) {
+                if (!confirm('Tem certeza que deseja excluir este veículo?')) return;
+                const emLocacao = locacoes.some(l => l.veiculoId === id);
+                if (emLocacao) {
+                    showToast('⚠️ Este veículo está vinculado a uma locação ativa. Remova a locação primeiro.',
+                        'error');
+                    return;
+                }
+                if (editandoVeiculoId === id) resetarFormVeiculo();
+                veiculos = veiculos.filter(v => v.id !== id);
+                setStorage(STORAGE_KEYS.veiculos, veiculos);
+                atualizarTabelaVeiculos();
+                atualizarDashboard();
+                atualizarSelectsLocacao();
+                showToast('🗑️ Veículo excluído com sucesso!', 'info');
+            };
+
+            const formLocatario = document.getElementById('form-locatario');
+            const inputCPF = document.getElementById('l-cpf');
+            const inputFone = document.getElementById('l-fone');
+            const inputCEP = document.getElementById('l-cep');
+
+            inputCPF.addEventListener('input', function() { this.value = aplicarMascaraCPF(this.value); });
+            inputFone.addEventListener('input', function() { this.value = aplicarMascaraTelefone(this.value); });
+            inputCEP.addEventListener('input', function() { this.value = aplicarMascaraCEP(this.value); });
+
+            const btnSubmitLocatario = document.getElementById('btn-submit-locatario');
+            const btnCancelLocatario = document.getElementById('btn-cancel-locatario');
+            const btnCancelEdicaoLocatario = document.getElementById('btn-cancel-edicao-locatario');
+            const editBannerLocatario = document.getElementById('edit-banner-locatario');
+            const locatFormTitle = document.getElementById('locat-form-title');
+
+            function resetarFormLocatario() {
+                formLocatario.reset();
+                editandoLocatarioId = null;
+                btnSubmitLocatario.textContent = '💾 Salvar Locatário';
+                btnCancelEdicaoLocatario.style.display = 'none';
+                editBannerLocatario.classList.remove('show');
+                locatFormTitle.textContent = 'Novo Locatário';
+            }
+
+            btnCancelLocatario.addEventListener('click', resetarFormLocatario);
+            btnCancelEdicaoLocatario.addEventListener('click', function() {
+                resetarFormLocatario();
+                showToast('📋 Edição cancelada.', 'info');
+            });
+
+            formLocatario.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const dadosLocatario = {
+                    nome: document.getElementById('l-nome').value.trim(),
+                    cpf: document.getElementById('l-cpf').value.trim(),
+                    rg: document.getElementById('l-rg').value.trim(),
+                    cnh: document.getElementById('l-cnh').value.trim(),
+                    fone: document.getElementById('l-fone').value.trim(),
+                    cep: document.getElementById('l-cep').value.trim(),
+                    endereco: document.getElementById('l-endereco').value.trim(),
+                    bairro: document.getElementById('l-bairro').value.trim(),
+                    cidade: document.getElementById('l-cidade').value.trim(),
+                    dataAtualizacao: new Date().toISOString()
+                };
+
+                if (editandoLocatarioId) {
+                    const index = locatarios.findIndex(l => l.id === editandoLocatarioId);
+                    if (index === -1) {
+                        showToast('❌ Locatário não encontrado para edição.', 'error');
+                        resetarFormLocatario();
+                        return;
+                    }
+                    locatarios[index] = { ...locatarios[index], ...dadosLocatario };
+                    setStorage(STORAGE_KEYS.locatarios, locatarios);
+                    syncLocacoesLocatario(editandoLocatarioId);
+                    resetarFormLocatario();
+                    atualizarTabelaLocatarios();
+                    atualizarDashboard();
+                    atualizarSelectsLocacao();
+                    showToast('✅ Locatário atualizado com sucesso!', 'success');
+                } else {
+                    const novoLocatario = {
+                        ...dadosLocatario,
+                        id: Date.now(),
+                        dataCadastro: new Date().toISOString()
+                    };
+                    locatarios.push(novoLocatario);
+                    setStorage(STORAGE_KEYS.locatarios, locatarios);
+                    syncLocacoesLocatario(novoLocatario.id);
+                    resetarFormLocatario();
+                    atualizarTabelaLocatarios();
+                    atualizarDashboard();
+                    atualizarSelectsLocacao();
+                    showToast('✅ Locatário cadastrado com sucesso!', 'success');
+                }
+            });
+
+            function atualizarTabelaLocatarios() {
+                const tbody = document.getElementById('tbody-locatarios');
+                if (locatarios.length === 0) {
+                    tbody.innerHTML =
+                        '<tr><td colspan="7" class="empty-state"><span class="icon">👥</span><br>Nenhum locatário cadastrado</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = locatarios.map(l => `
+                    <tr>
+                        <td><strong>${l.nome}</strong></td>
+                        <td>${l.cpf}</td>
+                        <td>${l.rg}</td>
+                        <td>${l.cnh}</td>
+                        <td>${l.fone}</td>
+                        <td>${l.cidade}</td>
+                        <td>
+                            <button class="btn-edit" onclick="window._editarLocatario(${l.id})" title="Editar Locatário">✏️</button>
+                            <button class="btn-danger" onclick="window._excluirLocatario(${l.id})" title="Excluir">🗑️</button>
+                        </td>
+                    </tr>
+                `).join('');
+                initScrollButtons();
+            }
+
+            window._editarLocatario = function(id) {
+                const locatario = locatarios.find(l => l.id === id);
+                if (!locatario) {
+                    showToast('❌ Locatário não encontrado.', 'error');
+                    return;
+                }
+                editandoLocatarioId = id;
+                document.getElementById('l-nome').value = locatario.nome || '';
+                document.getElementById('l-cpf').value = locatario.cpf || '';
+                document.getElementById('l-rg').value = locatario.rg || '';
+                document.getElementById('l-cnh').value = locatario.cnh || '';
+                document.getElementById('l-fone').value = locatario.fone || '';
+                document.getElementById('l-cep').value = locatario.cep || '';
+                document.getElementById('l-endereco').value = locatario.endereco || '';
+                document.getElementById('l-bairro').value = locatario.bairro || '';
+                document.getElementById('l-cidade').value = locatario.cidade || '';
+
+                btnSubmitLocatario.textContent = '💾 Atualizar Locatário';
+                btnCancelEdicaoLocatario.style.display = 'inline-block';
+                editBannerLocatario.classList.add('show');
+                document.getElementById('edit-banner-locatario-text').textContent =
+                    `Editando locatário: ${locatario.nome} - CPF: ${locatario.cpf}`;
+                locatFormTitle.textContent = 'Editar Locatário';
+                document.getElementById('card-form-locatario').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                showToast('✏️ Modo de edição ativado.', 'info');
+            };
+
+            window._excluirLocatario = function(id) {
+                if (!confirm('Tem certeza que deseja excluir este locatário?')) return;
+                const emLocacao = locacoes.some(l => l.locatarioId === id);
+                if (emLocacao) {
+                    showToast(
+                        '⚠️ Este locatário está vinculado a uma locação ativa. Remova a locação primeiro.',
+                        'error');
+                    return;
+                }
+                if (editandoLocatarioId === id) resetarFormLocatario();
+                locatarios = locatarios.filter(l => l.id !== id);
+                setStorage(STORAGE_KEYS.locatarios, locatarios);
+                atualizarTabelaLocatarios();
+                atualizarDashboard();
+                atualizarSelectsLocacao();
+                showToast('🗑️ Locatário excluído com sucesso!', 'info');
+            };
+
+            const formLocacao = document.getElementById('form-locacao');
+            const selectFormaCaucaoLoc = document.getElementById('loc-forma-caucao');
+            const grupoParcelasLoc = document.getElementById('loc-grupo-parcelas');
+            const grupoEntradaCaucaoLoc = document.getElementById('loc-grupo-entrada-caucao');
+            const btnSubmitLocacao = document.getElementById('btn-submit-locacao');
+            const btnCancelEdicaoLocacao = document.getElementById('btn-cancel-edicao-locacao');
+            const editBanner = document.getElementById('edit-banner');
+            const locFormTitle = document.getElementById('loc-form-title');
+
+            const divValorParcela = document.createElement('div');
+            divValorParcela.id = 'loc-valor-parcela-info';
+            divValorParcela.style.cssText = 'margin-top: 8px; font-size: 14px; color: var(--text-muted); display: none; padding: 8px 12px; background: var(--input-bg); border-radius: 6px; border-left: 3px solid var(--primary);';
+            document.getElementById('loc-grupo-parcelas').appendChild(divValorParcela);
+
+            selectFormaCaucaoLoc.addEventListener('change', function() {
+                const forma = this.value;
+                grupoParcelasLoc.style.display = (forma === 'parcelado' || forma === 'entrada_parcelado') ?
+                    'block' : 'none';
+                grupoEntradaCaucaoLoc.style.display = forma === 'entrada_parcelado' ? 'block' : 'none';
+                if (forma === 'avista') {
+                    document.getElementById('loc-parcelas').value = '1';
+                    document.getElementById('loc-entrada-caucao').value = '';
+                    divValorParcela.style.display = 'none';
+                }
+                if (forma === 'parcelado') {
+                    document.getElementById('loc-entrada-caucao').value = '';
+                    atualizarValorParcela();
+                }
+                if (forma === 'entrada_parcelado') {
+                    atualizarValorParcela();
+                }
+            });
+
+            function atualizarValorParcela() {
+                const forma = selectFormaCaucaoLoc.value;
+                if (forma !== 'parcelado' && forma !== 'entrada_parcelado') {
+                    divValorParcela.style.display = 'none';
+                    return;
+                }
+
+                const veiculoId = parseInt(document.getElementById('loc-veiculo').value);
+                const veiculo = veiculos.find(v => v.id === veiculoId);
+                if (!veiculo) {
+                    divValorParcela.style.display = 'none';
+                    return;
+                }
+
+                const valorCaucao = parseFloat(veiculo.caucao) || 0;
+                const parcelas = parseInt(document.getElementById('loc-parcelas').value) || 1;
+                const entrada = parseMoedaBR(document.getElementById('loc-entrada-caucao').value);
+
+                let valorParcela = 0;
+                let textoParcelas = '';
+                if (forma === 'parcelado') {
+                    if (parcelas > 0) {
+                        valorParcela = valorCaucao / parcelas;
+                        textoParcelas = `${parcelas}x de ${formatarMoeda(valorParcela)}`;
+                    } else {
+                        textoParcelas = 'Número de parcelas inválido';
+                    }
+                } else if (forma === 'entrada_parcelado') {
+                    const valorRestante = valorCaucao - entrada;
+                    if (parcelas > 0 && valorRestante > 0) {
+                        valorParcela = valorRestante / parcelas;
+                        textoParcelas =
+                            `Entrada ${formatarMoeda(entrada)} + ${parcelas}x de ${formatarMoeda(valorParcela)} (Total: ${formatarMoeda(valorCaucao)})`;
+                    } else if (parcelas > 0 && valorRestante <= 0) {
+                        textoParcelas = `Entrada ${formatarMoeda(entrada)} já cobre o valor total do caução.`;
+                    } else {
+                        textoParcelas = 'Número de parcelas inválido';
+                    }
+                }
+
+                divValorParcela.textContent = `💡 Valor de cada parcela: ${textoParcelas}`;
+                divValorParcela.style.display = 'block';
+            }
+
+            document.getElementById('loc-veiculo').addEventListener('change', atualizarValorParcela);
+            document.getElementById('loc-parcelas').addEventListener('input', atualizarValorParcela);
+            document.getElementById('loc-entrada-caucao').addEventListener('input', atualizarValorParcela);
+
+            function atualizarSelectsLocacao() {
+                const selectVeiculo = document.getElementById('loc-veiculo');
+                const selectLocatario = document.getElementById('loc-locatario');
+                const veiculosLocadosIds = locacoes.filter(l => l.id !== editandoLocacaoId).map(l => l.veiculoId);
+                const veiculosDisponiveis = veiculos.filter(v => !veiculosLocadosIds.includes(v.id));
+                selectVeiculo.innerHTML = '<option value="">Selecione um veículo...</option>' +
+                    veiculosDisponiveis.map(v =>
+                        `<option value="${v.id}">${v.marca} ${v.modelo} - Placa: ${v.placa} (Semanal: ${formatarMoeda(v.valorSemanal)} | Caução: ${formatarMoeda(v.caucao)})</option>`
+                    ).join('');
+                const locatariosLocadosIds = locacoes.filter(l => l.id !== editandoLocacaoId).map(l => l.locatarioId);
+                const locatariosDisponiveis = locatarios.filter(l => !locatariosLocadosIds.includes(l.id));
+                selectLocatario.innerHTML = '<option value="">Selecione um locatário...</option>' +
+                    locatariosDisponiveis.map(l =>
+                        `<option value="${l.id}">${l.nome} - CPF: ${l.cpf}</option>`).join('');
+            }
+
+            function resetarFormLocacao() {
+                formLocacao.reset();
+                grupoParcelasLoc.style.display = 'none';
+                grupoEntradaCaucaoLoc.style.display = 'none';
+                document.getElementById('loc-parcelas').value = '2';
+                document.getElementById('loc-entrada-caucao').value = '';
+                divValorParcela.style.display = 'none';
+                const docInputs = document.querySelectorAll('#documentos-locatario-grid .doc-input');
+                docInputs.forEach(input => { input.value = ''; });
+                editandoLocacaoId = null;
+                btnSubmitLocacao.textContent = '✅ Confirmar Locação';
+                btnCancelEdicaoLocacao.style.display = 'none';
+                editBanner.classList.remove('show');
+                locFormTitle.textContent = 'Nova Locação';
+            }
+
+            btnCancelEdicaoLocacao.addEventListener('click', function() {
+                resetarFormLocacao();
+                atualizarSelectsLocacao();
+                showToast('📋 Edição cancelada.', 'info');
+            });
+
+            window._editarLocacao = function(id) {
+                const locacao = locacoes.find(l => l.id === id);
+                if (!locacao) {
+                    showToast('❌ Locação não encontrada.', 'error');
+                    return;
+                }
+                editandoLocacaoId = id;
+                atualizarSelectsLocacao();
+                document.getElementById('loc-veiculo').value = locacao.veiculoId;
+                document.getElementById('loc-locatario').value = locacao.locatarioId;
+                document.getElementById('loc-data-inicio').value = locacao.dataInicio;
+                document.getElementById('loc-data-fim').value = locacao.dataFim;
+                selectFormaCaucaoLoc.value = locacao.formaCaucao;
+                selectFormaCaucaoLoc.dispatchEvent(new Event('change'));
+                if (locacao.valorEntradaCaucao) {
+                    document.getElementById('loc-entrada-caucao').value = formatarMoeda(locacao.valorEntradaCaucao);
+                }
+                if (locacao.parcelasCaucao) {
+                    document.getElementById('loc-parcelas').value = locacao.parcelasCaucao;
+                }
+                const docInputs = document.querySelectorAll('#documentos-locatario-grid .doc-input');
+                docInputs.forEach(input => { input.value = ''; });
+
+                btnSubmitLocacao.textContent = '💾 Atualizar Locação';
+                btnCancelEdicaoLocacao.style.display = 'inline-block';
+                editBanner.classList.add('show');
+                document.getElementById('edit-banner-text').textContent =
+                    `Editando locação: ${locacao.veiculoNome} (${locacao.veiculoPlaca}) - ${locacao.locatarioNome}`;
+                locFormTitle.textContent = 'Editar Locação';
+                document.getElementById('card-form-locacao').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                showToast('✏️ Modo de edição ativado.', 'info');
+
+                setTimeout(atualizarValorParcela, 100);
+            };
+
+            document.getElementById('loc-data-inicio').addEventListener('change', function() {
+                const dataInicio = new Date(this.value);
+                if (!isNaN(dataInicio)) {
+                    const dataFim = new Date(dataInicio);
+                    dataFim.setMonth(dataFim.getMonth() + 6);
+                    const year = dataFim.getFullYear();
+                    const month = String(dataFim.getMonth() + 1).padStart(2, '0');
+                    const day = String(dataFim.getDate()).padStart(2, '0');
+                    document.getElementById('loc-data-fim').value = `${year}-${month}-${day}`;
+                }
+            });
+
+            formLocacao.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const veiculoId = parseInt(document.getElementById('loc-veiculo').value);
+                const locatarioId = parseInt(document.getElementById('loc-locatario').value);
+                const dataInicio = document.getElementById('loc-data-inicio').value;
+                const dataFim = document.getElementById('loc-data-fim').value;
+                const formaCaucao = selectFormaCaucaoLoc.value;
+
+                if (!veiculoId || !locatarioId || !dataInicio || !dataFim || !formaCaucao) {
+                    showToast(
+                        '⚠️ Preencha todos os campos obrigatórios da locação, incluindo Data Fim e Forma de Pagamento do Caução.',
+                        'error');
+                    return;
+                }
+
+                if (new Date(dataFim) <= new Date(dataInicio)) {
+                    showToast('⚠️ A Data Fim do Contrato deve ser posterior à Data Início.', 'error');
+                    return;
+                }
+
+                const veiculo = veiculos.find(v => v.id === veiculoId);
+                const locatario = locatarios.find(l => l.id === locatarioId);
+                if (!veiculo || !locatario) {
+                    showToast('❌ Veículo ou locatário não encontrado.', 'error');
+                    return;
+                }
+
+                const parcelas = (formaCaucao === 'parcelado' || formaCaucao === 'entrada_parcelado') ? (parseInt(
+                    document.getElementById('loc-parcelas').value) || 1) : 1;
+                if (parcelas > 20) {
+                    showToast('⚠️ O número máximo de parcelas é 20.', 'error');
+                    return;
+                }
+                const valorEntradaCaucao = formaCaucao === 'entrada_parcelado' ? parseMoedaBR(document.getElementById(
+                    'loc-entrada-caucao').value) : 0;
+
+                const docInputs = document.querySelectorAll('#documentos-locatario-grid .doc-input');
+                const documentosPromises = [];
+                docInputs.forEach(input => {
+                    if (input.files && input.files[0]) {
+                        const file = input.files[0];
+                        if (file.size > 10 * 1024 * 1024) {
+                            console.warn('Arquivo muito grande ignorado:', file.name);
+                            return;
+                        }
+                        documentosPromises.push(new Promise((resolve, reject) => {
+                            const reader = new FileReader();
+                            reader.onload = (ev) => resolve({
+                                nome: file.name,
+                                base64: ev.target.result,
+                                tipo: file.type,
+                                tamanho: file.size
+                            });
+                            reader.onerror = () => reject(new Error('Erro ao ler arquivo: ' + file
+                                .name));
+                            reader.readAsDataURL(file);
+                        }));
+                    }
+                });
+
+                let documentosLocatario = [];
+                if (documentosPromises.length > 0) {
+                    try {
+                        documentosLocatario = await Promise.all(documentosPromises);
+                    } catch (err) {
+                        showToast('⚠️ Erro ao processar alguns documentos. Verifique os arquivos.', 'error');
+                        console.error(err);
+                        return;
+                    }
+                }
+
+                if (editandoLocacaoId) {
+                    const index = locacoes.findIndex(l => l.id === editandoLocacaoId);
+                    if (index === -1) {
+                        showToast('❌ Locação não encontrada para edição.', 'error');
+                        resetarFormLocacao();
+                        atualizarSelectsLocacao();
+                        return;
+                    }
+                    const docsFinais = documentosLocatario.length > 0 ? documentosLocatario : (locacoes[index]
+                        .documentosLocatario || []);
+
+                    removerEntradasFluxoLocacao(locacoes[index]);
+
+                    locacoes[index] = {
+                        ...locacoes[index],
+                        veiculoId: veiculoId,
+                        locatarioId: locatarioId,
+                        veiculoPlaca: veiculo.placa,
+                        veiculoNome: `${veiculo.marca} ${veiculo.modelo}`,
+                        locatarioNome: locatario.nome,
+                        locatarioCPF: locatario.cpf,
+                        valorSemanal: veiculo.valorSemanal,
+                        caucao: veiculo.caucao,
+                        formaCaucao: formaCaucao,
+                        parcelasCaucao: parcelas,
+                        valorEntradaCaucao: valorEntradaCaucao,
+                        dataInicio: dataInicio,
+                        dataFim: dataFim,
+                        documentosLocatario: docsFinais,
+                        status: 'ativa',
+                        dataAtualizacao: new Date().toISOString()
+                    };
+
+                    locacoes[index].fluxoCaixaIds = criarEntradasFluxoLocacao(locacoes[index]);
+
+                    setStorage(STORAGE_KEYS.locacoes, locacoes);
+                    resetarFormLocacao();
+                    atualizarSelectsLocacao();
+                    atualizarTabelaLocacoes();
+                    atualizarDashboard();
+                    atualizarResumoFluxoCaixa();
+                    atualizarTabelaFluxoCaixa();
+                    showToast('✅ Locação atualizada com sucesso! Fluxo de Caixa sincronizado.', 'success');
+                } else {
+                    const novaLocacao = {
+                        id: Date.now(),
+                        veiculoId: veiculoId,
+                        locatarioId: locatarioId,
+                        veiculoPlaca: veiculo.placa,
+                        veiculoNome: `${veiculo.marca} ${veiculo.modelo}`,
+                        locatarioNome: locatario.nome,
+                        locatarioCPF: locatario.cpf,
+                        valorSemanal: veiculo.valorSemanal,
+                        caucao: veiculo.caucao,
+                        formaCaucao: formaCaucao,
+                        parcelasCaucao: parcelas,
+                        valorEntradaCaucao: valorEntradaCaucao,
+                        dataInicio: dataInicio,
+                        dataFim: dataFim,
+                        documentosLocatario: documentosLocatario,
+                        status: 'ativa',
+                        dataCriacao: new Date().toISOString()
+                    };
+
+                    novaLocacao.fluxoCaixaIds = criarEntradasFluxoLocacao(novaLocacao);
+
+                    locacoes.push(novaLocacao);
+                    setStorage(STORAGE_KEYS.locacoes, locacoes);
+                    formLocacao.reset();
+                    grupoParcelasLoc.style.display = 'none';
+                    grupoEntradaCaucaoLoc.style.display = 'none';
+                    document.getElementById('loc-parcelas').value = '2';
+                    document.getElementById('loc-entrada-caucao').value = '';
+                    divValorParcela.style.display = 'none';
+                    const docInputsReset = document.querySelectorAll('#documentos-locatario-grid .doc-input');
+                    docInputsReset.forEach(input => { input.value = ''; });
+                    atualizarSelectsLocacao();
+                    atualizarTabelaLocacoes();
+                    atualizarDashboard();
+                    atualizarResumoFluxoCaixa();
+                    atualizarTabelaFluxoCaixa();
+                    showToast('✅ Locação registrada com sucesso! Valores lançados no Fluxo de Caixa.', 'success');
+                }
+                initScrollButtons();
+            });
+
+            function atualizarTabelaLocacoes() {
+                const tbody = document.getElementById('tbody-locacoes');
+
+                let locacoesFiltradas = locacoes;
+                if (termoBuscaLocacoes.trim() !== '') {
+                    const termoSanitizado = sanitizarParaBusca(termoBuscaLocacoes);
+                    locacoesFiltradas = locacoes.filter(l => {
+                        const placaSanitizada = sanitizarParaBusca(l.veiculoPlaca);
+                        const cpfSanitizado = sanitizarParaBusca(l.locatarioCPF);
+                        return placaSanitizada.includes(termoSanitizado) || cpfSanitizado.includes(
+                            termoSanitizado);
+                    });
+                }
+
+                atualizarContadorBusca(locacoesFiltradas.length);
+
+                if (locacoesFiltradas.length === 0) {
+                    if (termoBuscaLocacoes.trim() !== '') {
+                        tbody.innerHTML =
+                            '<tr><td colspan="11" class="empty-state"><span class="icon">🔍</span><br>Nenhuma locação encontrada para esta busca.<br><small style="color:var(--text-muted);">Tente buscar por outra placa ou CPF.</small></td></tr>';
+                    } else {
+                        tbody.innerHTML =
+                            '<tr><td colspan="11" class="empty-state"><span class="icon">📋</span><br>Nenhuma locação ativa</td></tr>';
+                    }
+                    return;
+                }
+
+                tbody.innerHTML = locacoesFiltradas.map(l => {
+                    let caucaoHtml = formatarMoeda(l.caucao);
+                    if (l.formaCaucao === 'parcelado') {
+                        caucaoHtml +=
+                            ` <span class="badge badge-warning">${l.parcelasCaucao || '?'}x</span>`;
+                    } else if (l.formaCaucao === 'entrada_parcelado') {
+                        caucaoHtml +=
+                            ` <span class="badge badge-info">Entrada ${formatarMoeda(l.valorEntradaCaucao || 0)} + ${l.parcelasCaucao || '?'}x</span>`;
+                    } else {
+                        caucaoHtml += ' <span class="badge badge-success">À vista</span>';
+                    }
+
+                    const numDocs = (l.documentosLocatario && l.documentosLocatario.length) ? l
+                        .documentosLocatario.length : 0;
+                    let docsHtml = '<span style="color:var(--text-muted);">—</span>';
+                    if (numDocs > 0) {
+                        docsHtml =
+                            `<span class="badge badge-info" title="${numDocs} documento(s) anexado(s)">📎 ${numDocs}</span>`;
+                    }
+
+                    let placaClass = '';
+                    let cpfClass = '';
+                    if (termoBuscaLocacoes.trim() !== '') {
+                        const termoSanitizado = sanitizarParaBusca(termoBuscaLocacoes);
+                        if (sanitizarParaBusca(l.veiculoPlaca).includes(termoSanitizado)) {
+                            placaClass =
+                                'style="background:rgba(230,168,23,0.25);border-radius:4px;padding:2px 6px;"';
+                        }
+                        if (sanitizarParaBusca(l.locatarioCPF).includes(termoSanitizado)) {
+                            cpfClass =
+                                'style="background:rgba(230,168,23,0.25);border-radius:4px;padding:2px 6px;"';
+                        }
+                    }
+
+                    return `
+                    <tr>
+                        <td>${l.veiculoNome}</td>
+                        <td><strong ${placaClass}>${l.veiculoPlaca}</strong></td>
+                        <td>${l.locatarioNome}</td>
+                        <td><strong ${cpfClass}>${l.locatarioCPF}</strong></td>
+                        <td>${new Date(l.dataInicio).toLocaleDateString('pt-BR')}</td>
+                        <td>${new Date(l.dataFim).toLocaleDateString('pt-BR')}</td>
+                        <td class="highlight-valor">${formatarMoeda(l.valorSemanal)}</td>
+                        <td>${caucaoHtml}</td>
+                        <td><span class="badge badge-info">Ativa</span></td>
+                        <td>${docsHtml}</td>
+                        <td>
+                            <button class="btn-edit" onclick="window._editarLocacao(${l.id})" title="Editar Locação">✏️</button>
+                            <button class="btn-danger" onclick="window._excluirLocacao(${l.id})" title="Encerrar Locação">🗑️</button>
+                        </td>
+                    </tr>
+                `;
+                }).join('');
+                initScrollButtons();
+            }
+
+            function atualizarContadorBusca(totalFiltrado) {
+                const countNum = document.getElementById('search-count-num');
+                const resultsInfo = document.getElementById('search-results-info');
+                const btnLimparFiltro = document.getElementById('btn-limpar-filtro-locacoes');
+                const clearBtn = document.getElementById('clear-search-btn');
+
+                if (countNum) countNum.textContent = totalFiltrado;
+
+                if (termoBuscaLocacoes.trim() !== '') {
+                    resultsInfo.classList.add('active-filter');
+                    resultsInfo.innerHTML =
+                        `🔍 Encontradas: <strong class="highlight-count">${totalFiltrado}</strong> de ${locacoes.length} locações`;
+                    btnLimparFiltro.style.display = 'flex';
+                    clearBtn.classList.add('visible');
+                } else {
+                    resultsInfo.classList.remove('active-filter');
+                    resultsInfo.innerHTML =
+                        `Total: <strong class="highlight-count">${totalFiltrado}</strong> locações`;
+                    btnLimparFiltro.style.display = 'none';
+                    clearBtn.classList.remove('visible');
+                }
+            }
+
+            function atualizarUIBuscaLocacoes() {
+                atualizarTabelaLocacoes();
+                const inputBusca = document.getElementById('input-busca-locacoes');
+                const clearBtn = document.getElementById('clear-search-btn');
+                if (termoBuscaLocacoes.trim() !== '') {
+                    clearBtn.classList.add('visible');
+                } else {
+                    clearBtn.classList.remove('visible');
+                    inputBusca.value = '';
+                }
+                initScrollButtons();
+            }
+
+            window._excluirLocacao = function(id) {
+                const locacao = locacoes.find(l => l.id === id);
+                if (!locacao) return;
+                if (!confirm('Deseja encerrar esta locação? O veículo e locatário serão liberados e as transações do Fluxo de Caixa serão removidas.')) return;
+
+                removerEntradasFluxoLocacao(locacao);
+
+                if (editandoLocacaoId === id) {
+                    resetarFormLocacao();
+                    atualizarSelectsLocacao();
+                }
+                locacoes = locacoes.filter(l => l.id !== id);
+                setStorage(STORAGE_KEYS.locacoes, locacoes);
+                atualizarTabelaLocacoes();
+                atualizarSelectsLocacao();
+                atualizarDashboard();
+                atualizarResumoFluxoCaixa();
+                atualizarTabelaFluxoCaixa();
+                showToast('✅ Locação encerrada e transações removidas do Fluxo de Caixa!', 'info');
+            };
+
+            const inputBuscaLocacoes = document.getElementById('input-busca-locacoes');
+            const clearSearchBtn = document.getElementById('clear-search-btn');
+            const btnLimparFiltroLocacoes = document.getElementById('btn-limpar-filtro-locacoes');
+
+            inputBuscaLocacoes.addEventListener('input', function() {
+                termoBuscaLocacoes = this.value;
+                atualizarUIBuscaLocacoes();
+            });
+
+            inputBuscaLocacoes.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    termoBuscaLocacoes = '';
+                    this.value = '';
+                    atualizarUIBuscaLocacoes();
+                    this.blur();
+                }
+            });
+
+            clearSearchBtn.addEventListener('click', function() {
+                termoBuscaLocacoes = '';
+                inputBuscaLocacoes.value = '';
+                atualizarUIBuscaLocacoes();
+                inputBuscaLocacoes.focus();
+            });
+
+            btnLimparFiltroLocacoes.addEventListener('click', function() {
+                termoBuscaLocacoes = '';
+                inputBuscaLocacoes.value = '';
+                atualizarUIBuscaLocacoes();
+                inputBuscaLocacoes.focus();
+            });
+
+            function atualizarResumoFluxoCaixa() {
+                const totalEntradas = fluxoCaixa
+                    .filter(t => t.tipo === 'entrada')
+                    .reduce((sum, t) => sum + (parseFloat(t.valor) || 0), 0);
+                const totalSaidas = fluxoCaixa
+                    .filter(t => t.tipo === 'saida')
+                    .reduce((sum, t) => sum + (parseFloat(t.valor) || 0), 0);
+                const saldoAtual = totalEntradas - totalSaidas;
+
+                document.getElementById('stat-total-entradas').textContent = formatarMoeda(totalEntradas);
+                document.getElementById('stat-total-saidas').textContent = formatarMoeda(totalSaidas);
+                document.getElementById('stat-saldo-atual').textContent = formatarMoeda(saldoAtual);
+
+                const saldoCard = document.getElementById('stat-saldo-card');
+                if (saldoAtual < 0) {
+                    saldoCard.classList.add('saldo-negativo');
+                } else {
+                    saldoCard.classList.remove('saldo-negativo');
+                }
+            }
+
+            function atualizarTabelaFluxoCaixa() {
+                const tbody = document.getElementById('tbody-fluxo');
+
+                let transacoesFiltradas = fluxoCaixa;
+                if (termoBuscaFluxo.trim() !== '') {
+                    const termoSanitizado = sanitizarParaBusca(termoBuscaFluxo);
+                    transacoesFiltradas = fluxoCaixa.filter(t => {
+                        const descSanitizada = sanitizarParaBusca(t.descricao);
+                        const catSanitizada = sanitizarParaBusca(t.categoria || '');
+                        const obsSanitizada = sanitizarParaBusca(t.observacao || '');
+                        return descSanitizada.includes(termoSanitizado) ||
+                            catSanitizada.includes(termoSanitizado) ||
+                            obsSanitizada.includes(termoSanitizado);
+                    });
+                }
+
+                transacoesFiltradas.sort((a, b) => new Date(b.data) - new Date(a.data));
+
+                atualizarContadorBuscaFluxo(transacoesFiltradas.length);
+
+                if (transacoesFiltradas.length === 0) {
+                    if (termoBuscaFluxo.trim() !== '') {
+                        tbody.innerHTML =
+                            '<tr><td colspan="7" class="empty-state"><span class="icon">🔍</span><br>Nenhuma transação encontrada para esta busca.<br><small style="color:var(--text-muted);">Tente buscar por outra descrição ou categoria.</small></td></tr>';
+                    } else {
+                        tbody.innerHTML =
+                            '<tr><td colspan="7" class="empty-state"><span class="icon">💰</span><br>Nenhuma transação registrada</td></tr>';
+                    }
+                    return;
+                }
+
+                const categoriasLabels = {
+                    'locacao': 'Locação',
+                    'manutencao': 'Manutenção',
+                    'combustivel': 'Combustível',
+                    'imposto': 'Imposto / Taxa',
+                    'multa': 'Multa',
+                    'seguro': 'Seguro',
+                    'outros': 'Outros',
+                    '': 'Geral'
+                };
+
+                tbody.innerHTML = transacoesFiltradas.map(t => {
+                    const tipoBadge = t.tipo === 'entrada' ?
+                        '<span class="badge badge-entrada">📥 Entrada</span>' :
+                        '<span class="badge badge-saida">📤 Saída</span>';
+                    const valorClass = t.tipo === 'entrada' ? 'highlight-entrada' : 'highlight-saida';
+                    const categoriaLabel = categoriasLabels[t.categoria] || (t.categoria || 'Geral');
+                    const dataFormatada = t.data ? new Date(t.data + 'T00:00:00').toLocaleDateString(
+                        'pt-BR') : '—';
+
+                    let descHighlight = '';
+                    let catHighlight = '';
+                    if (termoBuscaFluxo.trim() !== '') {
+                        const termoSanitizado = sanitizarParaBusca(termoBuscaFluxo);
+                        if (sanitizarParaBusca(t.descricao).includes(termoSanitizado)) {
+                            descHighlight =
+                                'style="background:rgba(230,168,23,0.25);border-radius:4px;padding:2px 6px;"';
+                        }
+                        if (sanitizarParaBusca(t.categoria || '').includes(termoSanitizado)) {
+                            catHighlight =
+                                'style="background:rgba(230,168,23,0.25);border-radius:4px;padding:2px 6px;"';
+                        }
+                    }
+
+                    return `
+                    <tr>
+                        <td>${dataFormatada}</td>
+                        <td><span ${descHighlight}>${t.descricao}</span></td>
+                        <td><span ${catHighlight}>${categoriaLabel}</span></td>
+                        <td>${tipoBadge}</td>
+                        <td class="${valorClass}" style="font-weight:700;font-size:15px;">${formatarMoeda(t.valor)}</td>
+                        <td>${t.observacao || '<span style="color:var(--text-muted);">—</span>'}</td>
+                        <td>
+                            <button class="btn-edit" onclick="window._editarFluxo(${t.id})" title="Editar Transação">✏️</button>
+                            <button class="btn-danger" onclick="window._excluirFluxo(${t.id})" title="Excluir">🗑️</button>
+                        </td>
+                    </tr>
+                `;
+                }).join('');
+                initScrollButtons();
+            }
+
+            function atualizarContadorBuscaFluxo(totalFiltrado) {
+                const countNum = document.getElementById('search-count-num-fluxo');
+                const resultsInfo = document.getElementById('search-results-info-fluxo');
+                const btnLimparFiltro = document.getElementById('btn-limpar-filtro-fluxo');
+                const clearBtn = document.getElementById('clear-search-btn-fluxo');
+
+                if (countNum) countNum.textContent = totalFiltrado;
+
+                if (termoBuscaFluxo.trim() !== '') {
+                    resultsInfo.classList.add('active-filter');
+                    resultsInfo.innerHTML =
+                        `🔍 Encontradas: <strong class="highlight-count">${totalFiltrado}</strong> de ${fluxoCaixa.length} transações`;
+                    btnLimparFiltro.style.display = 'flex';
+                    clearBtn.classList.add('visible');
+                } else {
+                    resultsInfo.classList.remove('active-filter');
+                    resultsInfo.innerHTML =
+                        `Total: <strong class="highlight-count">${totalFiltrado}</strong> transações`;
+                    btnLimparFiltro.style.display = 'none';
+                    clearBtn.classList.remove('visible');
+                }
+            }
+
+            function atualizarUIBuscaFluxo() {
+                atualizarTabelaFluxoCaixa();
+                const inputBusca = document.getElementById('input-busca-fluxo');
+                const clearBtn = document.getElementById('clear-search-btn-fluxo');
+                if (termoBuscaFluxo.trim() !== '') {
+                    clearBtn.classList.add('visible');
+                } else {
+                    clearBtn.classList.remove('visible');
+                    inputBusca.value = '';
+                }
+                initScrollButtons();
+            }
+
+            const formFluxo = document.getElementById('form-fluxo');
+            const btnSubmitFluxo = document.getElementById('btn-submit-fluxo');
+            const btnCancelFluxo = document.getElementById('btn-cancel-fluxo');
+            const btnCancelEdicaoFluxo = document.getElementById('btn-cancel-edicao-fluxo');
+            const editBannerFluxo = document.getElementById('edit-banner-fluxo');
+            const fluxoFormTitle = document.getElementById('fluxo-form-title');
+
+            document.getElementById('f-data').value = new Date().toISOString().split('T')[0];
+
+            function resetarFormFluxo() {
+                formFluxo.reset();
+                document.getElementById('f-data').value = new Date().toISOString().split('T')[0];
+                document.getElementById('f-categoria').value = '';
+                editandoFluxoId = null;
+                btnSubmitFluxo.textContent = '💾 Registrar Transação';
+                btnCancelEdicaoFluxo.style.display = 'none';
+                editBannerFluxo.classList.remove('show');
+                fluxoFormTitle.textContent = 'Nova Transação';
+            }
+
+            btnCancelFluxo.addEventListener('click', resetarFormFluxo);
+            btnCancelEdicaoFluxo.addEventListener('click', function() {
+                resetarFormFluxo();
+                showToast('📋 Edição cancelada.', 'info');
+            });
+
+            formFluxo.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const dadosFluxo = {
+                    descricao: document.getElementById('f-descricao').value.trim(),
+                    valor: parseMoedaBR(document.getElementById('f-valor').value),
+                    tipo: document.getElementById('f-tipo').value,
+                    data: document.getElementById('f-data').value,
+                    categoria: document.getElementById('f-categoria').value,
+                    observacao: document.getElementById('f-observacao').value.trim(),
+                    dataAtualizacao: new Date().toISOString()
+                };
+
+                if (!dadosFluxo.descricao || !dadosFluxo.valor || !dadosFluxo.tipo || !dadosFluxo.data) {
+                    showToast('⚠️ Preencha todos os campos obrigatórios.', 'error');
+                    return;
+                }
+
+                if (dadosFluxo.valor <= 0) {
+                    showToast('⚠️ O valor deve ser maior que zero.', 'error');
+                    return;
+                }
+
+                if (editandoFluxoId) {
+                    const index = fluxoCaixa.findIndex(f => f.id === editandoFluxoId);
+                    if (index === -1) {
+                        showToast('❌ Transação não encontrada para edição.', 'error');
+                        resetarFormFluxo();
+                        return;
+                    }
+                    fluxoCaixa[index] = { ...fluxoCaixa[index], ...dadosFluxo };
+                    setStorage(STORAGE_KEYS.fluxocaixa, fluxoCaixa);
+                    resetarFormFluxo();
+                    atualizarResumoFluxoCaixa();
+                    atualizarTabelaFluxoCaixa();
+                    showToast('✅ Transação atualizada com sucesso!', 'success');
+                } else {
+                    const novaTransacao = {
+                        ...dadosFluxo,
+                        id: Date.now(),
+                        dataCriacao: new Date().toISOString()
+                    };
+                    fluxoCaixa.push(novaTransacao);
+                    setStorage(STORAGE_KEYS.fluxocaixa, fluxoCaixa);
+                    resetarFormFluxo();
+                    atualizarResumoFluxoCaixa();
+                    atualizarTabelaFluxoCaixa();
+                    showToast('✅ Transação registrada com sucesso!', 'success');
+                }
+                initScrollButtons();
+            });
+
+            window._editarFluxo = function(id) {
+                const transacao = fluxoCaixa.find(f => f.id === id);
+                if (!transacao) {
+                    showToast('❌ Transação não encontrada.', 'error');
+                    return;
+                }
+                editandoFluxoId = id;
+                document.getElementById('f-descricao').value = transacao.descricao || '';
+                document.getElementById('f-valor').value = formatarMoeda(transacao.valor || 0);
+                document.getElementById('f-tipo').value = transacao.tipo || '';
+                document.getElementById('f-data').value = transacao.data || '';
+                document.getElementById('f-categoria').value = transacao.categoria || '';
+                document.getElementById('f-observacao').value = transacao.observacao || '';
+
+                btnSubmitFluxo.textContent = '💾 Atualizar Transação';
+                btnCancelEdicaoFluxo.style.display = 'inline-block';
+                editBannerFluxo.classList.add('show');
+                document.getElementById('edit-banner-fluxo-text').textContent =
+                    `Editando transação: ${transacao.descricao} - ${formatarMoeda(transacao.valor)}`;
+                fluxoFormTitle.textContent = 'Editar Transação';
+                document.getElementById('card-form-fluxo').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                showToast('✏️ Modo de edição ativado.', 'info');
+            };
+
+            window._excluirFluxo = function(id) {
+                if (!confirm('Tem certeza que deseja excluir esta transação?')) return;
+                if (editandoFluxoId === id) resetarFormFluxo();
+                fluxoCaixa = fluxoCaixa.filter(f => f.id !== id);
+                setStorage(STORAGE_KEYS.fluxocaixa, fluxoCaixa);
+                atualizarResumoFluxoCaixa();
+                atualizarTabelaFluxoCaixa();
+                showToast('🗑️ Transação excluída com sucesso!', 'info');
+            };
+
+            const inputBuscaFluxo = document.getElementById('input-busca-fluxo');
+            const clearSearchBtnFluxo = document.getElementById('clear-search-btn-fluxo');
+            const btnLimparFiltroFluxo = document.getElementById('btn-limpar-filtro-fluxo');
+
+            inputBuscaFluxo.addEventListener('input', function() {
+                termoBuscaFluxo = this.value;
+                atualizarUIBuscaFluxo();
+            });
+
+            inputBuscaFluxo.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    termoBuscaFluxo = '';
+                    this.value = '';
+                    atualizarUIBuscaFluxo();
+                    this.blur();
+                }
+            });
+
+            clearSearchBtnFluxo.addEventListener('click', function() {
+                termoBuscaFluxo = '';
+                inputBuscaFluxo.value = '';
+                atualizarUIBuscaFluxo();
+                inputBuscaFluxo.focus();
+            });
+
+            btnLimparFiltroFluxo.addEventListener('click', function() {
+                termoBuscaFluxo = '';
+                inputBuscaFluxo.value = '';
+                atualizarUIBuscaFluxo();
+                inputBuscaFluxo.focus();
+            });
+
+            function abrirJanelaFiltro() {
+                const popupHTML = `<!DOCTYPE html>
+                <html lang="pt-BR">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Filtro de Locações - PAIZÃO RENT CAR</title>
+                    <style>
+                        * { margin:0; padding:0; box-sizing:border-box; }
+                        body { font-family:'Inter','Segoe UI',system-ui,sans-serif; background:#0c0f16; color:#e0e0e0; padding:20px; min-height:100vh; display:flex; flex-direction:column; }
+                        .aviso-fechar { background:rgba(231,76,60,0.2); border:1px solid rgba(231,76,60,0.5); color:#ff6b6b; padding:12px 18px; border-radius:10px; font-size:14px; font-weight:600; text-align:center; margin-bottom:16px; display:flex; align-items:center; justify-content:center; gap:8px; animation:pulse 2s infinite; }
+                        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.7} }
+                        .header-popup { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:12px; }
+                        .header-popup h2 { color:#fff; font-size:20px; display:flex; align-items:center; gap:8px; }
+                        .btn-fechar-popup { background:#e74c3c; color:#fff; border:none; padding:12px 24px; border-radius:10px; cursor:pointer; font-size:15px; font-weight:700; font-family:inherit; display:flex; align-items:center; gap:8px; transition:all 0.3s; letter-spacing:0.5px; box-shadow:0 4px 14px rgba(231,76,60,0.4); white-space:nowrap; }
+                        .btn-fechar-popup:hover { background:#c0392b; transform:translateY(-1px); box-shadow:0 6px 20px rgba(231,76,60,0.5); }
+                        .search-bar-container { display:flex; align-items:center; gap:12px; margin-bottom:18px; flex-wrap:wrap; }
+                        .search-input-wrapper { flex:1; min-width:250px; position:relative; }
+                        .search-input-wrapper .search-icon { position:absolute; left:14px; top:50%; transform:translateY(-50%); font-size:18px; color:#9a9da8; pointer-events:none; z-index:2; }
+                        .search-input-wrapper input { width:100%; padding:12px 16px 12px 44px; background:#1a1d28; border:1px solid #1e2230; border-radius:10px; color:#fff; font-size:15px; outline:none; transition:all 0.3s; font-family:inherit; }
+                        .search-input-wrapper input:focus { border-color:#e6a817; box-shadow:0 0 0 3px rgba(230,168,23,0.1); }
+                        .clear-btn { position:absolute; right:10px; top:50%; transform:translateY(-50%); background:transparent; border:none; color:#9a9da8; font-size:18px; cursor:pointer; padding:4px 8px; border-radius:50%; display:none; z-index:2; }
+                        .clear-btn.visible { display:block; }
+                        .clear-btn:hover { color:#fff; background:rgba(255,255,255,0.08); }
+                        .results-info { font-size:13px; color:#9a9da8; white-space:nowrap; }
+                        .results-info .count { color:#e6a817; font-weight:700; font-size:15px; }
+                        .btn-limpar { background:transparent; border:1px solid #1e2230; color:#9a9da8; padding:8px 16px; border-radius:8px; cursor:pointer; font-size:13px; font-family:inherit; white-space:nowrap; display:none; }
+                        .btn-limpar:hover { border-color:#e74c3c; color:#e74c3c; }
+                        .btn-editar { background:#2d5fcf; color:#fff; border:none; padding:4px 12px; border-radius:6px; cursor:pointer; font-size:12px; font-weight:600; font-family:inherit; transition:all 0.2s; white-space:nowrap; }
+                        .btn-editar:hover { background:#3b6fd4; transform:scale(1.02); }
+                        .btn-editar:active { transform:scale(0.96); }
+                        .table-wrapper { overflow-x:auto; border-radius:10px; border:1px solid #1e2230; flex:1; }
+                        table { width:100%; border-collapse:collapse; font-size:13px; min-width:750px; }
+                        table thead { background:#1a1d28; }
+                        table th { padding:12px 14px; text-align:left; font-weight:600; color:#9a9da8; text-transform:uppercase; font-size:10px; letter-spacing:1px; border-bottom:1px solid #1e2230; white-space:nowrap; }
+                        table td { padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.03); white-space:nowrap; color:#d0d3db; }
+                        table tbody tr:hover { background:rgba(255,255,255,0.015); }
+                        .badge { display:inline-block; padding:4px 10px; border-radius:20px; font-size:11px; font-weight:600; }
+                        .badge-success { background:rgba(39,174,96,0.2); color:#2ecc71; }
+                        .badge-warning { background:rgba(243,156,18,0.2); color:#f39c12; }
+                        .badge-info { background:rgba(45,95,207,0.2); color:#5b8def; }
+                        .highlight-valor { color:#e6a817; font-weight:700; }
+                        .empty-state { text-align:center; padding:40px; color:#9a9da8; }
+                        .empty-state .icon { font-size:48px; margin-bottom:12px; opacity:0.5; }
+                        @media (max-width:600px) { body{padding:12px} .header-popup{flex-direction:column;align-items:stretch} .btn-fechar-popup{width:100%;justify-content:center} .search-bar-container{flex-direction:column;align-items:stretch} .search-input-wrapper{min-width:100%} }
+                    </style>
+                </head>
+                <body>
+                    <div class="aviso-fechar"><span>⚠️</span><span>Para fechar esta janela, use o <strong>BOTÃO FECHAR</strong> abaixo.</span></div>
+                    <div class="header-popup"><h2>🔍 Filtro de Locações</h2><button class="btn-fechar-popup" id="btn-fechar-popup">✕ FECHAR</button></div>
+                    <div class="search-bar-container">
+                        <div class="search-input-wrapper"><span class="search-icon">🔍</span><input type="text" id="popup-busca" placeholder="Pesquisar por PLACA ou CPF..." autocomplete="off"><button class="clear-btn" id="popup-clear-btn" type="button">✕</button></div>
+                        <div class="results-info" id="popup-results-info">Total: <span class="count" id="popup-count">0</span> locações</div>
+                        <button class="btn-limpar" id="popup-btn-limpar" type="button">🧹 Limpar Filtro</button>
+                    </div>
+                    <div class="table-wrapper"><table><thead><tr><th>Veículo</th><th>Placa</th><th>Locatário</th><th>CPF</th><th>Data Início</th><th>Data Fim</th><th>Valor Semanal</th><th>Caução</th><th>Status</th><th>Docs</th><th>Ações</th></tr></thead><tbody id="popup-tbody"><tr><td colspan="11" class="empty-state"><span class="icon">📋</span><br>Nenhuma locação ativa</td></tr></tbody></table></div>
+                    <script>
+                        (function() {
+                            const STORAGE_KEY='paizao_locacoes';
+                            function getLocacoes(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY))||[]}catch(e){return[]}}
+                            function formatarMoeda(v){return 'R$ '+parseFloat(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}
+                            function sanitizar(s){return(s||'').replace(/[^a-zA-Z0-9]/g,'').toLowerCase()}
+                            const inputBusca=document.getElementById('popup-busca'),clearBtn=document.getElementById('popup-clear-btn'),btnLimpar=document.getElementById('popup-btn-limpar'),tbody=document.getElementById('popup-tbody'),countSpan=document.getElementById('popup-count'),resultsInfo=document.getElementById('popup-results-info'),btnFechar=document.getElementById('btn-fechar-popup');
+                            let fechamentoPermitido=false;
+                            btnFechar.addEventListener('click',function(){fechamentoPermitido=true;window.close()});
+                            window.addEventListener('beforeunload',function(e){if(!fechamentoPermitido){e.preventDefault();e.returnValue='⚠️ Por favor, use o botão FECHAR para fechar esta janela corretamente.';return e.returnValue}});
+                            function renderizar(termo){const locacoes=getLocacoes();let filtradas=locacoes;const termoSanitizado=sanitizar(termo);if(termo.trim()!==''){filtradas=locacoes.filter(l=>sanitizar(l.veiculoPlaca).includes(termoSanitizado)||sanitizar(l.locatarioCPF).includes(termoSanitizado));resultsInfo.innerHTML='🔍 Encontradas: <span class="count">'+filtradas.length+'</span> de '+locacoes.length+' locações';btnLimpar.style.display='flex';clearBtn.classList.add('visible')}else{resultsInfo.innerHTML='Total: <span class="count">'+filtradas.length+'</span> locações';btnLimpar.style.display='none';clearBtn.classList.remove('visible')}countSpan.textContent=filtradas.length;if(filtradas.length===0){tbody.innerHTML='<tr><td colspan="11" class="empty-state"><span class="icon">🔍</span><br>Nenhuma locação encontrada.</td></tr>';return}tbody.innerHTML=filtradas.map(l=>{let caucaoHtml=formatarMoeda(l.caucao);if(l.formaCaucao==='parcelado')caucaoHtml+=' <span class="badge badge-warning">'+(l.parcelasCaucao||'?')+'x</span>';else if(l.formaCaucao==='entrada_parcelado')caucaoHtml+=' <span class="badge badge-info">Entrada '+formatarMoeda(l.valorEntradaCaucao||0)+' + '+(l.parcelasCaucao||'?')+'x</span>';else caucaoHtml+=' <span class="badge badge-success">À vista</span>';const numDocs=(l.documentosLocatario&&l.documentosLocatario.length)?l.documentosLocatario.length:0;let docsHtml=numDocs>0?'<span class="badge badge-info">📎 '+numDocs+'</span>':'<span style="color:#9a9da8;">—</span>';let placaStyle='',cpfStyle='';if(termo.trim()!==''){if(sanitizar(l.veiculoPlaca).includes(termoSanitizado))placaStyle='background:rgba(230,168,23,0.25);border-radius:4px;padding:2px 6px;';if(sanitizar(l.locatarioCPF).includes(termoSanitizado))cpfStyle='background:rgba(230,168,23,0.25);border-radius:4px;padding:2px 6px;';}return '<tr><td>'+l.veiculoNome+'</td><td><strong style="'+placaStyle+'">'+l.veiculoPlaca+'</strong></td><td>'+l.locatarioNome+'</td><td><strong style="'+cpfStyle+'">'+l.locatarioCPF+'</strong></td><td>'+new Date(l.dataInicio).toLocaleDateString('pt-BR')+'</td><td>'+new Date(l.dataFim).toLocaleDateString('pt-BR')+'</td><td class="highlight-valor">'+formatarMoeda(l.valorSemanal)+'</td><td>'+caucaoHtml+'</td><td><span class="badge badge-info">Ativa</span></td><td>'+docsHtml+'</td><td><button class="btn-editar" onclick="window.editarLocacaoDaJanelaFiltro('+l.id+')" title="Editar locação na janela principal">✏️ Editar</button></td></tr>'}).join('')}
+                            inputBusca.addEventListener('input',function(){renderizar(this.value)});
+                            inputBusca.addEventListener('keydown',function(e){if(e.key==='Escape'){this.value='';renderizar('');this.blur()}});
+                            clearBtn.addEventListener('click',function(){inputBusca.value='';renderizar('');inputBusca.focus()});
+                            btnLimpar.addEventListener('click',function(){inputBusca.value='';renderizar('');inputBusca.focus()});
+                            setInterval(()=>{renderizar(inputBusca.value)},2000);
+                            inputBusca.focus();renderizar('');
+                        })();
+                    <\/script>
+                </body>
+                </html>`;
+
+                const largura = screen.availWidth || 1024;
+                const altura = screen.availHeight || 768;
+                const janela = window.open('', 'FiltroLocacoes',
+                    `width=${largura},height=${altura},left=0,top=0,scrollbars=yes,resizable=yes`);
+                if (janela) {
+                    janela.document.write(popupHTML);
+                    janela.document.close();
+                    try { janela.moveTo(0, 0);
+                        janela.resizeTo(screen.availWidth, screen.availHeight); } catch (e) {}
+                    janela.focus();
+                } else {
+                    showToast('⚠️ Pop-up bloqueado! Permita pop-ups para abrir o filtro.', 'error');
+                }
+            }
+
+            document.getElementById('btn-filtro-locacoes-nav').addEventListener('click', function(e) {
+                e.preventDefault();
+                abrirJanelaFiltro();
+            });
+
+            function abrirJanelaSeguro() {
+                const htmlVazio = `<!DOCTYPE html>
+                <html lang="pt-BR">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>SEGURO - PAIZÃO RENT CAR</title>
+                    <style>
+                        * { margin:0; padding:0; box-sizing:border-box; }
+                        body { background:#0c0f16; }
+                    </style>
+                </head>
+                <body></body>
+                </html>`;
+
+                const largura = screen.availWidth || 1024;
+                const altura = screen.availHeight || 768;
+                const janela = window.open('', 'SEGURO',
+                    `width=${largura},height=${altura},left=0,top=0,scrollbars=yes,resizable=yes`);
+
+                if (janela) {
+                    janela.document.write(htmlVazio);
+                    janela.document.close();
+                    try { janela.moveTo(0, 0);
+                        janela.resizeTo(screen.availWidth, screen.availHeight); } catch (e) {}
+                    janela.focus();
+                    showToast('🪟 Janela SEGURO aberta com sucesso!', 'success');
+                } else {
+                    showToast('⚠️ Pop-up bloqueado! Permita pop-ups para abrir o SEGURO.', 'error');
+                }
+            }
+
+            document.getElementById('btn-menu-nav').addEventListener('click', function(e) {
+                e.preventDefault();
+                abrirJanelaSeguro();
+            });
+
+            function inicializar() {
+                atualizarTabelaVeiculos();
+                atualizarTabelaLocatarios();
+                atualizarSelectsLocacao();
+                atualizarTabelaLocacoes();
+                atualizarResumoFluxoCaixa();
+                atualizarTabelaFluxoCaixa();
+                atualizarDashboard();
+                initScrollButtons();
+                atualizarUIBuscaLocacoes();
+                atualizarUIBuscaFluxo();
+            }
+
+            loginScreen.style.display = 'flex';
+            appScreen.classList.remove('active');
+
+            inicializar();
+
+            window.addEventListener('resize', () => initScrollButtons());
+            document.addEventListener('click', function() {
+                setTimeout(initScrollButtons, 150);
+            });
+
+            document.getElementById('mobile-menu-toggle')?.addEventListener('click', function() {
+                const nav = document.getElementById('top-nav');
+                if (nav) nav.classList.toggle('open');
+            });
+
+            console.log('🚗 PAIZÃO RENT CAR - Sistema inicializado com sucesso!');
+            console.log('👤 Usuário: SERGIO | 🔒 Senha: 080888');
+            console.log('💰 Fluxo de Caixa integrado com lançamento automático de locações!');
+            console.log('🪟 Botão SEGURO: abre janela vazia.');
+            console.log('🔍 Janela Filtro: agora com botão EDITAR para cada locação!');
+            console.log('📌 Novas funcionalidades:');
+            console.log('  1. Exibição do valor de cada parcela na tela de locação');
+            console.log('  2. Caução À VISTA agora lança o valor total no fluxo de caixa');
+            console.log('  3. Número máximo de parcelas aumentado para 20');
+            console.log('  4. Data fim do contrato preenchida automaticamente com +6 meses a partir da data início');
+            console.log('  5. Botão EDITAR na janela Filtro para editar a locação selecionada');
+        })();
+    </script>
+</body>
+</html>

@@ -6,12 +6,14 @@
     <title>PAIZÃO RENT CAR - Sistema de Locação (Sem Storage)</title>
 
     <!-- Firebase compat (apenas App, Firestore e Auth) -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js">
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js">
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js">
+    </script>
 
     <style>
-        /* todos os estilos permanecem idênticos à versão anterior */
         :root {
             --bg-dark: #0c0f16;
             --bg-card: #141822;
@@ -614,6 +616,20 @@
         .btn-pdf:hover {
             background: #3b6fd4;
         }
+        .btn-ver-docs {
+            background: var(--accent);
+            color: #fff;
+            font-size: 11px;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            border: none;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+        .btn-ver-docs:hover {
+            background: #3b6fd4;
+        }
         .table-wrapper {
             overflow-x: auto;
             border-radius: 10px;
@@ -1148,6 +1164,66 @@
             margin: 20px 0 16px 0;
             padding-top: 16px;
         }
+
+        /* Modal de documentos */
+        .docs-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.75);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+        }
+        .docs-modal-overlay.active {
+            display: flex;
+        }
+        .docs-modal {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+        }
+        .docs-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .docs-modal-header h3 {
+            color: #fff;
+            margin: 0;
+        }
+        .docs-modal-close {
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        .doc-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .doc-item:last-child {
+            border-bottom: none;
+        }
+        .doc-item a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -1438,6 +1514,17 @@
         </main>
     </div>
 
+    <!-- Modal de documentos das locações -->
+    <div class="docs-modal-overlay" id="docs-modal-overlay">
+        <div class="docs-modal">
+            <div class="docs-modal-header">
+                <h3>📎 Documentos da Locação</h3>
+                <button class="docs-modal-close" id="docs-modal-close">✕</button>
+            </div>
+            <div id="docs-modal-content"></div>
+        </div>
+    </div>
+
     <script>
         (function() {
             // ===================== CONFIGURAÇÃO FIREBASE (SEM STORAGE) =====================
@@ -1623,7 +1710,7 @@
                 return new Blob([ab], { type: mimeType });
             }
 
-            // ===================== SINCRONIZAÇÃO FLUXO DE CAIXA (mantida igual) =====================
+            // ===================== SINCRONIZAÇÃO FLUXO DE CAIXA =====================
             async function removerEntradasFluxoLocacao(locacao) {
                 if (!locacao || !locacao.fluxoCaixaIds || locacao.fluxoCaixaIds.length === 0) return;
                 const batch = db.batch();
@@ -1728,7 +1815,7 @@
                 }
             }
 
-            // ===================== SISTEMA DE USUÁRIOS E PERMISSÕES (inalterado) =====================
+            // ===================== SISTEMA DE USUÁRIOS E PERMISSÕES =====================
             async function garantirAdminPadrao() {
                 try {
                     const snapshot = await colecoes.usuarios.where('usuario', '==', 'SERGIO').get();
@@ -2317,6 +2404,7 @@
             async function uploadDocumentosLocacao(docInputs) {
                 const documentos = [];
                 const MAX_SIZE = 500 * 1024; // 500KB por arquivo
+                let tamanhoTotal = 0;
                 for (const input of docInputs) {
                     if (input.files && input.files[0]) {
                         const file = input.files[0];
@@ -2325,9 +2413,13 @@
                         }
                         try {
                             const base64 = await fileToBase64(file);
+                            tamanhoTotal += base64.length; // caracteres = bytes em base64 string
+                            if (tamanhoTotal > 900000) { // ~900KB para deixar margem para outros campos
+                                throw new Error('Tamanho total dos documentos excede o limite de 1MB do Firestore. Reduza o número ou tamanho dos arquivos.');
+                            }
                             documentos.push({ nome: file.name, base64: base64, tipo: file.type, tamanho: file.size });
                         } catch (error) {
-                            throw new Error(`Erro ao processar ${file.name}`);
+                            throw new Error(`Erro ao processar ${file.name}: ${error.message}`);
                         }
                     }
                 }
@@ -2396,7 +2488,7 @@
                     else if (l.formaCaucao === 'entrada_parcelado') caucaoHtml += ` <span class="badge badge-info">Entrada ${formatarMoeda(l.valorEntradaCaucao || 0)} + ${l.parcelasCaucao || '?'}x</span>`;
                     else caucaoHtml += ' <span class="badge badge-success">À vista</span>';
                     const numDocs = (l.documentosLocatario && l.documentosLocatario.length) ? l.documentosLocatario.length : 0;
-                    let docsHtml = numDocs > 0 ? `<span class="badge badge-info" title="${numDocs} documento(s)">📎 ${numDocs}</span>` : '<span style="color:var(--text-muted);">—</span>';
+                    let docsHtml = numDocs > 0 ? `<button class="btn-ver-docs" onclick="window._verDocumentosLocacao('${l.id}')" title="Ver Documentos">📄 Ver Docs (${numDocs})</button>` : '<span style="color:var(--text-muted);">—</span>';
                     return `<tr><td>${l.veiculoNome}</td><td><strong>${l.veiculoPlaca}</strong></td><td>${l.locatarioNome}</td><td><strong>${l.locatarioCPF}</strong></td><td>${new Date(l.dataInicio).toLocaleDateString('pt-BR')}</td><td>${new Date(l.dataFim).toLocaleDateString('pt-BR')}</td><td class="highlight-valor">${formatarMoeda(l.valorSemanal)}</td><td>${caucaoHtml}</td><td><span class="badge badge-info">Ativa</span></td><td>${docsHtml}</td><td><button class="btn-edit" onclick="window._editarLocacao('${l.id}')" title="Editar Locação">✏️</button><button class="btn-danger" onclick="window._excluirLocacao('${l.id}')" title="Encerrar Locação">🗑️</button></td></tr>`;
                 }).join('');
                 initScrollButtons();
@@ -2433,6 +2525,30 @@
             inputBuscaLocacoes.addEventListener('keydown', function(e) { if (e.key === 'Escape') { termoBuscaLocacoes = ''; this.value = ''; atualizarUIBuscaLocacoes(); this.blur(); } });
             clearSearchBtn.addEventListener('click', function() { termoBuscaLocacoes = ''; inputBuscaLocacoes.value = ''; atualizarUIBuscaLocacoes(); inputBuscaLocacoes.focus(); });
             btnLimparFiltroLocacoes.addEventListener('click', function() { termoBuscaLocacoes = ''; inputBuscaLocacoes.value = ''; atualizarUIBuscaLocacoes(); inputBuscaLocacoes.focus(); });
+
+            // ===================== VISUALIZAÇÃO DE DOCUMENTOS DA LOCAÇÃO =====================
+            window._verDocumentosLocacao = function(id) {
+                const locacao = locacoes.find(l => l.id === id);
+                if (!locacao || !locacao.documentosLocatario || locacao.documentosLocatario.length === 0) {
+                    showToast('Nenhum documento anexado.', 'info');
+                    return;
+                }
+                const content = document.getElementById('docs-modal-content');
+                const overlay = document.getElementById('docs-modal-overlay');
+                content.innerHTML = locacao.documentosLocatario.map((doc, index) => {
+                    return `<div class="doc-item">
+                        <span>📎 ${doc.nome || `Documento ${index + 1}`}</span>
+                        <a href="${doc.base64}" target="_blank" title="Abrir documento">🔗 Abrir</a>
+                    </div>`;
+                }).join('');
+                overlay.classList.add('active');
+            };
+            document.getElementById('docs-modal-close').addEventListener('click', function() {
+                document.getElementById('docs-modal-overlay').classList.remove('active');
+            });
+            document.getElementById('docs-modal-overlay').addEventListener('click', function(e) {
+                if (e.target === this) this.classList.remove('active');
+            });
 
             // ===================== FLUXO DE CAIXA (admin only) =====================
             function atualizarResumoFluxoCaixa() {
@@ -2632,7 +2748,7 @@
                 try { await colecoes.usuarios.doc(id).delete(); showToast('🗑️ Usuário excluído com sucesso!', 'info'); } catch (error) { console.error('Erro ao excluir usuário:', error); showToast('❌ Erro ao excluir usuário.', 'error'); }
             };
 
-            // ===================== JANELA FILTRO (sem alterações) =====================
+            // ===================== JANELA FILTRO =====================
             function abrirJanelaFiltro() {
                 const popupHTML = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Filtro de Locações - PAIZÃO RENT CAR</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Inter','Segoe UI',system-ui,sans-serif;background:#0c0f16;color:#e0e0e0;padding:20px;min-height:100vh;display:flex;flex-direction:column}.aviso-fechar{background:rgba(231,76,60,0.2);border:1px solid rgba(231,76,60,0.5);color:#ff6b6b;padding:12px 18px;border-radius:10px;font-size:14px;font-weight:600;text-align:center;margin-bottom:16px}.header-popup{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px}.header-popup h2{color:#fff;font-size:20px}.btn-fechar-popup{background:#e74c3c;color:#fff;border:none;padding:12px 24px;border-radius:10px;cursor:pointer;font-size:15px;font-weight:700}.search-input-wrapper{flex:1;min-width:250px;position:relative}.search-input-wrapper input{width:100%;padding:12px 16px 12px 44px;background:#1a1d28;border:1px solid #1e2230;border-radius:10px;color:#fff;font-size:15px;outline:none}.search-input-wrapper input:focus{border-color:#e6a817}.clear-btn{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:transparent;border:none;color:#9a9da8;font-size:18px;cursor:pointer;display:none}.clear-btn.visible{display:block}.btn-editar{background:#2d5fcf;color:#fff;border:none;padding:4px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600}table{width:100%;border-collapse:collapse;font-size:13px;min-width:750px}table thead{background:#1a1d28}table th{padding:12px 14px;text-align:left;color:#9a9da8;text-transform:uppercase;font-size:10px;border-bottom:1px solid #1e2230}table td{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.03);color:#d0d3db}.badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600}.badge-success{background:rgba(39,174,96,0.2);color:#2ecc71}.badge-warning{background:rgba(243,156,18,0.2);color:#f39c12}.badge-info{background:rgba(45,95,207,0.2);color:#5b8def}.highlight-valor{color:#e6a817;font-weight:700}</style></head><body><div class="aviso-fechar">⚠️ Para fechar, use o <strong>BOTÃO FECHAR</strong> abaixo.</div><div class="header-popup"><h2>🔍 Filtro de Locações</h2><button class="btn-fechar-popup" id="btn-fechar-popup">✕ FECHAR</button></div><div style="display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap;"><div class="search-input-wrapper"><span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);">🔍</span><input type="text" id="popup-busca" placeholder="Pesquisar por PLACA ou CPF..." autocomplete="off"><button class="clear-btn" id="popup-clear-btn">✕</button></div><span id="popup-results-info" style="font-size:13px;color:#9a9da8;">Total: <span id="popup-count" style="color:#e6a817;font-weight:700;">0</span> locações</span><button id="popup-btn-limpar" style="display:none;background:transparent;border:1px solid #1e2230;color:#9a9da8;padding:8px 16px;border-radius:8px;cursor:pointer;">🧹 Limpar</button></div><div style="overflow-x:auto;border-radius:10px;border:1px solid #1e2230;flex:1;"><table><thead><tr><th>Veículo</th><th>Placa</th><th>Locatário</th><th>CPF</th><th>Data Início</th><th>Data Fim</th><th>Valor Semanal</th><th>Caução</th><th>Status</th><th>Ações</th></tr></thead><tbody id="popup-tbody"></tbody></table></div><script>
                     const STORAGE_KEY='paizao_locacoes';function getLocacoes(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY))||[]}catch(e){return[]}}function formatarMoeda(v){return 'R$ '+parseFloat(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}function sanitizar(s){return(s||'').replace(/[^a-zA-Z0-9]/g,'').toLowerCase()}const inputBusca=document.getElementById('popup-busca'),clearBtn=document.getElementById('popup-clear-btn'),btnLimpar=document.getElementById('popup-btn-limpar'),tbody=document.getElementById('popup-tbody'),countSpan=document.getElementById('popup-count'),resultsInfo=document.getElementById('popup-results-info'),btnFechar=document.getElementById('btn-fechar-popup');let fechamentoPermitido=false;btnFechar.addEventListener('click',function(){fechamentoPermitido=true;window.close()});window.addEventListener('beforeunload',function(e){if(!fechamentoPermitido){e.preventDefault();e.returnValue='⚠️ Use o botão FECHAR para fechar esta janela.';return e.returnValue}});function renderizar(termo){const locacoes=getLocacoes();let filtradas=locacoes;const ts=sanitizar(termo);if(termo.trim()!==''){filtradas=locacoes.filter(l=>sanitizar(l.veiculoPlaca).includes(ts)||sanitizar(l.locatarioCPF).includes(ts));resultsInfo.innerHTML='🔍 Encontradas: <span style="color:#e6a817;font-weight:700;">'+filtradas.length+'</span> de '+locacoes.length;btnLimpar.style.display='flex';clearBtn.classList.add('visible')}else{resultsInfo.innerHTML='Total: <span style="color:#e6a817;font-weight:700;">'+filtradas.length+'</span> locações';btnLimpar.style.display='none';clearBtn.classList.remove('visible')}countSpan.textContent=filtradas.length;if(filtradas.length===0){tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:40px;">🔍 Nenhuma locação encontrada.</td></tr>';return}tbody.innerHTML=filtradas.map(l=>{let caucaoHtml=formatarMoeda(l.caucao);if(l.formaCaucao==='parcelado')caucaoHtml+=' <span class="badge badge-warning">'+(l.parcelasCaucao||'?')+'x</span>';else if(l.formaCaucao==='entrada_parcelado')caucaoHtml+=' <span class="badge badge-info">Entrada '+formatarMoeda(l.valorEntradaCaucao||0)+' + '+(l.parcelasCaucao||'?')+'x</span>';else caucaoHtml+=' <span class="badge badge-success">À vista</span>';return '<tr><td>'+l.veiculoNome+'</td><td><strong>'+l.veiculoPlaca+'</strong></td><td>'+l.locatarioNome+'</td><td>'+l.locatarioCPF+'</td><td>'+new Date(l.dataInicio).toLocaleDateString('pt-BR')+'</td><td>'+new Date(l.dataFim).toLocaleDateString('pt-BR')+'</td><td class="highlight-valor">'+formatarMoeda(l.valorSemanal)+'</td><td>'+caucaoHtml+'</td><td><span class="badge badge-info">Ativa</span></td><td><button class="btn-editar" onclick="window.editarLocacaoDaJanelaFiltro('+l.id+')">✏️ Editar</button></td></tr>'}).join('')}inputBusca.addEventListener('input',function(){renderizar(this.value)});clearBtn.addEventListener('click',function(){inputBusca.value='';renderizar('');inputBusca.focus()});btnLimpar.addEventListener('click',function(){inputBusca.value='';renderizar('');inputBusca.focus()});setInterval(()=>{renderizar(inputBusca.value)},2000);inputBusca.focus();renderizar('');
@@ -2657,7 +2773,7 @@
             garantirAdminPadrao();
             console.log('🚗 PAIZÃO RENT CAR - Sistema SEM Storage (Base64 no Firestore)');
             console.log('👤 Admin: SERGIO / 080888');
-            console.log('⚠️ Limite: documentos de até 500KB para não estourar o limite de 1MB do Firestore.');
+            console.log('⚠️ Limite: documentos de até 500KB (total < 1MB por documento no Firestore).');
         })();
     </script>
 </body>

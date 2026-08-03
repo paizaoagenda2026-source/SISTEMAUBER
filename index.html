@@ -3,16 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PAIZÃO RENT CAR - Sistema de Locação</title>
+    <title>PAIZÃO RENT CAR - Sistema de Locação (Sem Storage)</title>
 
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js">
-    </script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js">
-    </script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js">
-    </script>
+    <!-- Firebase compat (apenas App, Firestore e Auth) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
     <style>
+        /* todos os estilos permanecem idênticos à versão anterior */
         :root {
             --bg-dark: #0c0f16;
             --bg-card: #141822;
@@ -90,14 +89,8 @@
             animation: fadeInUp 0.6s ease;
         }
         @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         .login-logo {
             text-align: center;
@@ -203,19 +196,10 @@
             animation: shake 0.4s ease;
         }
         @keyframes shake {
-            0%,
-            100% {
-                transform: translateX(0);
-            }
-            25% {
-                transform: translateX(-6px);
-            }
-            50% {
-                transform: translateX(6px);
-            }
-            75% {
-                transform: translateX(-4px);
-            }
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            50% { transform: translateX(6px); }
+            75% { transform: translateX(-4px); }
         }
         .login-error.show {
             display: block;
@@ -329,13 +313,8 @@
             animation: none;
         }
         @keyframes pulseMenu {
-            0%,
-            100% {
-                box-shadow: 0 0 0 0 rgba(230, 168, 23, 0.4);
-            }
-            50% {
-                box-shadow: 0 0 0 10px rgba(230, 168, 23, 0);
-            }
+            0%, 100% { box-shadow: 0 0 0 0 rgba(230, 168, 23, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(230, 168, 23, 0); }
         }
         .top-user {
             display: flex;
@@ -413,14 +392,8 @@
             display: block;
         }
         @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         .page-header {
             margin-bottom: 28px;
@@ -473,19 +446,11 @@
             gap: 16px;
         }
         @media (max-width: 1200px) {
-            .grid-3 {
-                grid-template-columns: 1fr 1fr;
-            }
-            .grid-4 {
-                grid-template-columns: 1fr 1fr;
-            }
+            .grid-3 { grid-template-columns: 1fr 1fr; }
+            .grid-4 { grid-template-columns: 1fr 1fr; }
         }
         @media (max-width: 768px) {
-            .grid-2,
-            .grid-3,
-            .grid-4 {
-                grid-template-columns: 1fr;
-            }
+            .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
             .top-header {
                 padding: 0 16px;
                 flex-wrap: wrap;
@@ -503,39 +468,21 @@
                 -webkit-overflow-scrolling: touch;
                 scrollbar-width: none;
             }
-            .top-nav::-webkit-scrollbar {
-                display: none;
-            }
+            .top-nav::-webkit-scrollbar { display: none; }
             .top-nav button {
                 font-size: 13px;
                 padding: 6px 12px;
                 flex-shrink: 0;
             }
-            .top-user .user-info {
-                display: none;
-            }
-            .top-user .btn-logout {
-                padding: 4px 10px;
-                font-size: 11px;
-            }
-            .mobile-menu-toggle {
-                display: block;
-            }
-            .main-content {
-                padding: 16px;
-            }
+            .top-user .user-info { display: none; }
+            .top-user .btn-logout { padding: 4px 10px; font-size: 11px; }
+            .mobile-menu-toggle { display: block; }
+            .main-content { padding: 16px; }
         }
         @media (max-width: 480px) {
-            .top-header .brand .brand-text small {
-                display: none;
-            }
-            .top-header .brand .brand-text h2 {
-                font-size: 15px;
-            }
-            .top-nav button {
-                font-size: 12px;
-                padding: 4px 10px;
-            }
+            .top-header .brand .brand-text small { display: none; }
+            .top-header .brand .brand-text h2 { font-size: 15px; }
+            .top-nav button { font-size: 12px; padding: 4px 10px; }
         }
         .form-group-app {
             margin-bottom: 16px;
@@ -849,14 +796,10 @@
             margin-bottom: 24px;
         }
         @media (max-width: 1200px) {
-            .stats-row {
-                grid-template-columns: repeat(3, 1fr);
-            }
+            .stats-row { grid-template-columns: repeat(3, 1fr); }
         }
         @media (max-width: 768px) {
-            .stats-row {
-                grid-template-columns: 1fr 1fr;
-            }
+            .stats-row { grid-template-columns: 1fr 1fr; }
         }
         .stat-card {
             background: var(--bg-card);
@@ -987,9 +930,7 @@
             margin-top: 8px;
         }
         @media (max-width: 768px) {
-            .documentos-grid {
-                grid-template-columns: 1fr;
-            }
+            .documentos-grid { grid-template-columns: 1fr; }
         }
         .documentos-grid .form-group-app {
             margin-bottom: 8px;
@@ -1032,34 +973,16 @@
             max-width: 400px;
         }
         @keyframes slideInRight {
-            from {
-                transform: translateX(120%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
+            from { transform: translateX(120%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
         @keyframes fadeOutRight {
-            from {
-                transform: translateX(0);
-                opacity: 1;
-            }
-            to {
-                transform: translateX(120%);
-                opacity: 0;
-            }
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(120%); opacity: 0; }
         }
-        .toast-success {
-            background: #27ae60;
-        }
-        .toast-error {
-            background: #e74c3c;
-        }
-        .toast-info {
-            background: #2d5fcf;
-        }
+        .toast-success { background: #27ae60; }
+        .toast-error { background: #e74c3c; }
+        .toast-info { background: #2d5fcf; }
         .search-bar-container {
             display: flex;
             align-items: center;
@@ -1174,17 +1097,9 @@
                 flex-direction: column;
                 align-items: stretch;
             }
-            .search-input-wrapper {
-                min-width: 100%;
-            }
-            .search-results-info {
-                text-align: center;
-                justify-content: center;
-            }
-            .btn-limpar-filtro {
-                width: 100%;
-                justify-content: center;
-            }
+            .search-input-wrapper { min-width: 100%; }
+            .search-results-info { text-align: center; justify-content: center; }
+            .btn-limpar-filtro { width: 100%; justify-content: center; }
         }
         .sync-indicator {
             display: inline-flex;
@@ -1213,13 +1128,8 @@
             animation: pulse-dot 2s infinite;
         }
         @keyframes pulse-dot {
-            0%,
-            100% {
-                opacity: 1;
-            }
-            50% {
-                opacity: 0.4;
-            }
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
         }
         .readonly-badge {
             display: inline-block;
@@ -1329,7 +1239,7 @@
                             <div class="form-group-app"><label>Chassi</label><input type="text" id="v-chassi" placeholder="17 caracteres" required maxlength="17"></div>
                             <div class="form-group-app"><label>Valor Locação Semanal (R$)</label><input type="text" id="v-valor-semanal" placeholder="R$ 0,00" required oninput="formatarMoedaInput(this)" onblur="formatarMoedaInputBlur(this)"></div>
                             <div class="form-group-app"><label>Valor do Caução (R$)</label><input type="text" id="v-caucao" placeholder="R$ 0,00" required oninput="formatarMoedaInput(this)" onblur="formatarMoedaInputBlur(this)"></div>
-                            <div class="form-group-app"><label>Anexar Documento (PDF)</label><input type="file" id="v-documento" accept=".pdf"><small style="color:var(--text-muted);font-size:10px;">Arquivo PDF do documento do veículo</small></div>
+                            <div class="form-group-app"><label>Anexar Documento (PDF)</label><input type="file" id="v-documento" accept=".pdf"><small style="color:var(--text-muted);font-size:10px;">Arquivo PDF do documento do veículo (máx. 500KB)</small></div>
                         </div>
                         <div class="form-group-app" style="margin-top:4px;"><label>Opcionais do Veículo</label>
                             <div class="opcionais-group">
@@ -1416,7 +1326,7 @@
                             <div class="form-group-app" id="loc-grupo-entrada-caucao" style="display:none;"><label>Valor da Entrada do Caução (R$)</label><input type="text" id="loc-entrada-caucao" placeholder="R$ 0,00" step="0.01" min="0" oninput="formatarMoedaInput(this)" onblur="formatarMoedaInputBlur(this)"></div>
                             <div class="form-group-app" id="loc-grupo-parcelas" style="display:none;"><label>Nº de Parcelas (na semana)</label><input type="number" id="loc-parcelas" placeholder="Ex: 4" min="1" max="20" value="2"></div>
                         </div>
-                        <div class="card-title" style="margin-top:20px;"><span class="icon">📎</span> Documentos do Locatário (até 8 anexos)</div>
+                        <div class="card-title" style="margin-top:20px;"><span class="icon">📎</span> Documentos do Locatário (até 8 anexos, máx. 500KB cada)</div>
                         <div class="documentos-grid" id="documentos-locatario-grid">
                             <div class="form-group-app"><label>CPF</label><input type="file" accept=".pdf,.jpg,.jpeg,.png" class="doc-input"></div>
                             <div class="form-group-app"><label>CONTRATO</label><input type="file" accept=".pdf,.jpg,.jpeg,.png" class="doc-input"></div>
@@ -1530,7 +1440,7 @@
 
     <script>
         (function() {
-            // ===================== CONFIGURAÇÃO FIREBASE =====================
+            // ===================== CONFIGURAÇÃO FIREBASE (SEM STORAGE) =====================
             const firebaseConfig = {
                 apiKey: "AIzaSyA5Tn3ebMjJGFDcPJC6PaK2I5cl75DY2T4",
                 authDomain: "sistemauber-25da7.firebaseapp.com",
@@ -1542,7 +1452,24 @@
             };
             firebase.initializeApp(firebaseConfig);
             const db = firebase.firestore();
-            const storage = firebase.storage();
+            const auth = firebase.auth();
+
+            // Autenticação anônima para permitir leitura/gravação no Firestore
+            let authPronto = false;
+            auth.onAuthStateChanged(function(user) {
+                if (user) {
+                    authPronto = true;
+                    console.log('✅ Autenticado anonimamente no Firebase Auth');
+                } else {
+                    auth.signInAnonymously().catch(function(error) {
+                        console.error('Erro na autenticação anônima:', error);
+                        authPronto = false;
+                    });
+                }
+            });
+            if (!auth.currentUser) {
+                auth.signInAnonymously().catch(console.error);
+            }
 
             const colecoes = {
                 veiculos: db.collection('veiculos'),
@@ -1558,7 +1485,7 @@
             let locacoes = [];
             let fluxoCaixa = [];
             let usuarios = [];
-            let usuarioLogado = null; // { id, usuario, senha, nome, role, veiculosPermitidos }
+            let usuarioLogado = null;
 
             let editandoVeiculoId = null;
             let editandoLocatarioId = null;
@@ -1637,24 +1564,19 @@
                 const unsubLocatarios = colecoes.locatarios.onSnapshot((snapshot) => {
                     locatarios = [];
                     snapshot.forEach(doc => { locatarios.push({ id: doc.id, ...doc.data() }); });
-                    if (dadosCarregados) { atualizarTabelaLocatarios();
-                        atualizarDashboard();
-                        atualizarSelectsLocacao(); }
+                    if (dadosCarregados) { atualizarTabelaLocatarios(); atualizarDashboard(); atualizarSelectsLocacao(); }
                 }, (error) => { console.error('Erro listener locatários:', error); });
                 listenersAtivos.push(unsubLocatarios);
                 const unsubLocacoes = colecoes.locacoes.onSnapshot((snapshot) => {
                     locacoes = [];
                     snapshot.forEach(doc => { locacoes.push({ id: doc.id, ...doc.data() }); });
-                    if (dadosCarregados) { atualizarTabelaLocacoes();
-                        atualizarDashboard();
-                        atualizarSelectsLocacao(); }
+                    if (dadosCarregados) { atualizarTabelaLocacoes(); atualizarDashboard(); atualizarSelectsLocacao(); }
                 }, (error) => { console.error('Erro listener locações:', error); });
                 listenersAtivos.push(unsubLocacoes);
                 const unsubFluxo = colecoes.fluxocaixa.onSnapshot((snapshot) => {
                     fluxoCaixa = [];
                     snapshot.forEach(doc => { fluxoCaixa.push({ id: doc.id, ...doc.data() }); });
-                    if (dadosCarregados) { atualizarResumoFluxoCaixa();
-                        atualizarTabelaFluxoCaixa(); }
+                    if (dadosCarregados) { atualizarResumoFluxoCaixa(); atualizarTabelaFluxoCaixa(); }
                 }, (error) => { console.error('Erro listener fluxo caixa:', error); });
                 listenersAtivos.push(unsubFluxo);
                 const unsubUsuarios = colecoes.usuarios.onSnapshot((snapshot) => {
@@ -1667,8 +1589,7 @@
                     }
                 }, (error) => { console.error('Erro listener usuários:', error); });
                 listenersAtivos.push(unsubUsuarios);
-                setTimeout(() => { if (!dadosCarregados) { dadosCarregados = true;
-                        inicializarInterface(); } }, 500);
+                setTimeout(() => { if (!dadosCarregados) { dadosCarregados = true; inicializarInterface(); } }, 500);
             }
 
             function atualizarIndicadorSync(online) {
@@ -1682,13 +1603,32 @@
             window.addEventListener('online', () => atualizarIndicadorSync(true));
             window.addEventListener('offline', () => atualizarIndicadorSync(false));
 
-            // ===================== SINCRONIZAÇÃO FLUXO DE CAIXA =====================
+            // ===================== CONVERSÃO DE ARQUIVOS PARA BASE64 =====================
+            function fileToBase64(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result); // inclui o prefixo data:...
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            function base64ParaBlob(base64, mimeType) {
+                const byteString = atob(base64.split(',')[1]);
+                const ab = new ArrayBuffer(byteString.length);
+                const ia = new Uint8Array(ab);
+                for (let i = 0; i < byteString.length; i++) {
+                    ia[i] = byteString.charCodeAt(i);
+                }
+                return new Blob([ab], { type: mimeType });
+            }
+
+            // ===================== SINCRONIZAÇÃO FLUXO DE CAIXA (mantida igual) =====================
             async function removerEntradasFluxoLocacao(locacao) {
                 if (!locacao || !locacao.fluxoCaixaIds || locacao.fluxoCaixaIds.length === 0) return;
                 const batch = db.batch();
                 for (const fluxoId of locacao.fluxoCaixaIds) { batch.delete(colecoes.fluxocaixa.doc(fluxoId)); }
-                try { await batch.commit(); } catch (error) { console.error('Erro ao remover entradas do fluxo:',
-                    error); }
+                try { await batch.commit(); } catch (error) { console.error('Erro ao remover entradas do fluxo:', error); }
             }
             async function criarEntradasFluxoLocacao(locacao) {
                 const idsCriados = [];
@@ -1739,8 +1679,7 @@
                         idsCriados.push(entradaCaucaoRef.id);
                     }
                 }
-                try { await batch.commit(); } catch (error) { console.error('Erro ao criar entradas no fluxo:',
-                    error); }
+                try { await batch.commit(); } catch (error) { console.error('Erro ao criar entradas no fluxo:', error); }
                 return idsCriados;
             }
             async function atualizarDescricaoFluxoLocacao(locacao) {
@@ -1758,13 +1697,10 @@
                                 updateData.descricao = `Locação: ${descricaoBase}`;
                                 updateData.observacao =
                                     `Locação semanal - Contrato de ${new Date(locacao.dataInicio).toLocaleDateString('pt-BR')} até ${new Date(locacao.dataFim).toLocaleDateString('pt-BR')}`;
-                            } else if (dados.descricao && (dados.descricao.startsWith('Caução Entrada:') || dados
-                                    .descricao.startsWith('Caução (À Vista):'))) {
+                            } else if (dados.descricao && (dados.descricao.startsWith('Caução Entrada:') || dados.descricao.startsWith('Caução (À Vista):'))) {
                                 updateData.descricao = dados.descricao.replace(/:.*/, `: ${descricaoBase}`);
                             }
-                            if (Object.keys(updateData).length > 0) { updateData.dataAtualizacao = new Date()
-                                    .toISOString();
-                                await docRef.update(updateData); }
+                            if (Object.keys(updateData).length > 0) { updateData.dataAtualizacao = new Date().toISOString(); await docRef.update(updateData); }
                         }
                     } catch (error) { console.error('Erro ao atualizar descrição fluxo:', error); }
                 }
@@ -1774,11 +1710,8 @@
                 if (!veiculo) return;
                 for (const loc of locacoes) {
                     if (loc.veiculoId === veiculoId) {
-                        const updateData = { veiculoPlaca: veiculo.placa, veiculoNome: `${veiculo.marca} ${veiculo.modelo}`,
-                            valorSemanal: veiculo.valorSemanal, caucao: veiculo.caucao, dataAtualizacao: new Date()
-                                .toISOString() };
-                        try { await colecoes.locacoes.doc(loc.id).update(updateData); } catch (error) { console
-                                .error('Erro ao sincronizar locação:', error); }
+                        const updateData = { veiculoPlaca: veiculo.placa, veiculoNome: `${veiculo.marca} ${veiculo.modelo}`, valorSemanal: veiculo.valorSemanal, caucao: veiculo.caucao, dataAtualizacao: new Date().toISOString() };
+                        try { await colecoes.locacoes.doc(loc.id).update(updateData); } catch (error) { console.error('Erro ao sincronizar locação:', error); }
                         await atualizarDescricaoFluxoLocacao({ ...loc, ...updateData });
                     }
                 }
@@ -1788,16 +1721,14 @@
                 if (!locatario) return;
                 for (const loc of locacoes) {
                     if (loc.locatarioId === locatarioId) {
-                        const updateData = { locatarioNome: locatario.nome, locatarioCPF: locatario.cpf,
-                            dataAtualizacao: new Date().toISOString() };
-                        try { await colecoes.locacoes.doc(loc.id).update(updateData); } catch (error) { console
-                                .error('Erro ao sincronizar locação:', error); }
+                        const updateData = { locatarioNome: locatario.nome, locatarioCPF: locatario.cpf, dataAtualizacao: new Date().toISOString() };
+                        try { await colecoes.locacoes.doc(loc.id).update(updateData); } catch (error) { console.error('Erro ao sincronizar locação:', error); }
                         await atualizarDescricaoFluxoLocacao({ ...loc, ...updateData });
                     }
                 }
             }
 
-            // ===================== SISTEMA DE USUÁRIOS E PERMISSÕES =====================
+            // ===================== SISTEMA DE USUÁRIOS E PERMISSÕES (inalterado) =====================
             async function garantirAdminPadrao() {
                 try {
                     const snapshot = await colecoes.usuarios.where('usuario', '==', 'SERGIO').get();
@@ -1813,9 +1744,7 @@
                         });
                         console.log('✅ Admin padrão criado: SERGIO / 080888');
                     }
-                } catch (error) {
-                    console.error('Erro ao garantir admin padrão:', error);
-                }
+                } catch (error) { console.error('Erro ao garantir admin padrão:', error); }
             }
 
             function atualizarPermissoesVeiculoGrid() {
@@ -1835,8 +1764,7 @@
                 const grid = document.getElementById('permissoes-usuario-grid');
                 if (!grid || !isAdmin()) return;
                 if (veiculos.length === 0) {
-                    grid.innerHTML =
-                        '<span style="color:var(--text-muted);font-size:12px;">Nenhum veículo cadastrado.</span>';
+                    grid.innerHTML = '<span style="color:var(--text-muted);font-size:12px;">Nenhum veículo cadastrado.</span>';
                     return;
                 }
                 grid.innerHTML = veiculos.map(v => `
@@ -1855,12 +1783,10 @@
                     const jaPossui = (usuario.veiculosPermitidos || []).includes(veiculoId);
                     if (temPermissao && !jaPossui) {
                         const novosPermitidos = [...(usuario.veiculosPermitidos || []), veiculoId];
-                        try { await colecoes.usuarios.doc(usuario.id).update({ veiculosPermitidos: novosPermitidos,
-                                dataAtualizacao: new Date().toISOString() }); } catch (e) { console.error(e); }
+                        try { await colecoes.usuarios.doc(usuario.id).update({ veiculosPermitidos: novosPermitidos, dataAtualizacao: new Date().toISOString() }); } catch (e) { console.error(e); }
                     } else if (!temPermissao && jaPossui) {
                         const novosPermitidos = (usuario.veiculosPermitidos || []).filter(id => id !== veiculoId);
-                        try { await colecoes.usuarios.doc(usuario.id).update({ veiculosPermitidos: novosPermitidos,
-                                dataAtualizacao: new Date().toISOString() }); } catch (e) { console.error(e); }
+                        try { await colecoes.usuarios.doc(usuario.id).update({ veiculosPermitidos: novosPermitidos, dataAtualizacao: new Date().toISOString() }); } catch (e) { console.error(e); }
                     }
                 }
             }
@@ -1888,8 +1814,7 @@
                 input.value = 'R$ ' + valor.replace('.', ',');
             };
             window.formatarMoedaInputBlur = function(input) {
-                if (input.value === '' || input.value === 'R$ ') { input.value = ''; } else if (!input.value
-                    .includes(',')) {
+                if (input.value === '' || input.value === 'R$ ') { input.value = ''; } else if (!input.value.includes(',')) {
                     let valor = input.value.replace(/\D/g, '');
                     if (valor === '') { input.value = ''; return; }
                     valor = (parseInt(valor, 10) / 100).toFixed(2);
@@ -1897,26 +1822,12 @@
                 }
             };
 
-            function parseMoedaBR(valorString) { if (!valorString) return 0; let limpo = valorString.replace(/[^\d,]/g,
-                    '').replace(',', '.'); return parseFloat(limpo) || 0; }
-
-            function formatarMoeda(valor) { return 'R$ ' + parseFloat(valor || 0).toLocaleString('pt-BR', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2 }); }
-
-            function aplicarMascaraCPF(valor) { valor = valor.replace(/\D/g, '').substring(0, 11); return valor.replace(
-                    /(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4'); }
-
-            function aplicarMascaraTelefone(valor) { valor = valor.replace(/\D/g, '').substring(0, 11); if (valor.length <=
-                    10) return valor.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3'); return valor.replace(
-                    /(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$4'); }
-
-            function aplicarMascaraCEP(valor) { valor = valor.replace(/\D/g, '').substring(0, 8); return valor.replace(
-                    /(\d{5})(\d{3})/, '$1-$2'); }
-
-            function aplicarMascaraPlaca(valor) { valor = valor.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 7); if (
-                    valor.length >= 4) valor = valor.substring(0, 3) + '-' + valor.substring(3); return valor; }
-
+            function parseMoedaBR(valorString) { if (!valorString) return 0; let limpo = valorString.replace(/[^\d,]/g, '').replace(',', '.'); return parseFloat(limpo) || 0; }
+            function formatarMoeda(valor) { return 'R$ ' + parseFloat(valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+            function aplicarMascaraCPF(valor) { valor = valor.replace(/\D/g, '').substring(0, 11); return valor.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4'); }
+            function aplicarMascaraTelefone(valor) { valor = valor.replace(/\D/g, '').substring(0, 11); if (valor.length <= 10) return valor.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3'); return valor.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$4'); }
+            function aplicarMascaraCEP(valor) { valor = valor.replace(/\D/g, '').substring(0, 8); return valor.replace(/(\d{5})(\d{3})/, '$1-$2'); }
+            function aplicarMascaraPlaca(valor) { valor = valor.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 7); if (valor.length >= 4) valor = valor.substring(0, 3) + '-' + valor.substring(3); return valor; }
             function sanitizarParaBusca(str) { if (!str) return ''; return str.replace(/[^a-zA-Z0-9]/g, '').toLowerCase(); }
 
             function navegarPara(pageName) {
@@ -1931,28 +1842,15 @@
                 const activeBtn = document.querySelector(`.top-nav button[data-page="${pageName}"]`);
                 if (activeBtn) activeBtn.classList.add('active');
                 if (pageName === 'dashboard') atualizarDashboard();
-                if (pageName === 'veiculos') { atualizarTabelaVeiculos();
-                    initScrollButtons(); }
-                if (pageName === 'locatarios' && isAdmin()) { atualizarTabelaLocatarios();
-                    initScrollButtons(); }
-                if (pageName === 'locacoes' && isAdmin()) { atualizarSelectsLocacao();
-                    atualizarTabelaLocacoes();
-                    initScrollButtons(); if (termoBuscaLocacoes) { document.getElementById('input-busca-locacoes')
-                            .value = termoBuscaLocacoes;
-                        atualizarUIBuscaLocacoes(); } }
-                if (pageName === 'fluxocaixa' && isAdmin()) { atualizarResumoFluxoCaixa();
-                    atualizarTabelaFluxoCaixa();
-                    initScrollButtons(); if (termoBuscaFluxo) { document.getElementById('input-busca-fluxo').value =
-                            termoBuscaFluxo;
-                        atualizarUIBuscaFluxo(); } }
-                if (pageName === 'usuarios' && isAdmin()) { atualizarTabelaUsuarios();
-                    atualizarPermissoesUsuarioGrid();
-                    initScrollButtons(); }
+                if (pageName === 'veiculos') { atualizarTabelaVeiculos(); initScrollButtons(); }
+                if (pageName === 'locatarios' && isAdmin()) { atualizarTabelaLocatarios(); initScrollButtons(); }
+                if (pageName === 'locacoes' && isAdmin()) { atualizarSelectsLocacao(); atualizarTabelaLocacoes(); initScrollButtons(); if (termoBuscaLocacoes) { document.getElementById('input-busca-locacoes').value = termoBuscaLocacoes; atualizarUIBuscaLocacoes(); } }
+                if (pageName === 'fluxocaixa' && isAdmin()) { atualizarResumoFluxoCaixa(); atualizarTabelaFluxoCaixa(); initScrollButtons(); if (termoBuscaFluxo) { document.getElementById('input-busca-fluxo').value = termoBuscaFluxo; atualizarUIBuscaFluxo(); } }
+                if (pageName === 'usuarios' && isAdmin()) { atualizarTabelaUsuarios(); atualizarPermissoesUsuarioGrid(); initScrollButtons(); }
             }
 
             navButtons.forEach(btn => {
-                btn.addEventListener('click', () => { const page = btn.getAttribute('data-page');
-                    navegarPara(page); });
+                btn.addEventListener('click', () => { const page = btn.getAttribute('data-page'); navegarPara(page); });
             });
 
             loginForm.addEventListener('submit', async function(e) {
@@ -1960,8 +1858,7 @@
                 const userInput = document.getElementById('login-user').value.trim();
                 const passInput = document.getElementById('login-pass').value.trim();
                 try {
-                    const snapshot = await colecoes.usuarios.where('usuario', '==', userInput).where('senha',
-                        '==', passInput).get();
+                    const snapshot = await colecoes.usuarios.where('usuario', '==', userInput).where('senha', '==', passInput).get();
                     if (!snapshot.empty) {
                         const doc = snapshot.docs[0];
                         usuarioLogado = { id: doc.id, ...doc.data() };
@@ -1969,8 +1866,7 @@
                         loginScreen.style.display = 'none';
                         appScreen.classList.add('active');
                         document.getElementById('user-name-display').textContent = usuarioLogado.nome;
-                        document.getElementById('user-avatar-inicial').textContent = usuarioLogado.nome
-                            .charAt(0).toUpperCase();
+                        document.getElementById('user-avatar-inicial').textContent = usuarioLogado.nome.charAt(0).toUpperCase();
                         atualizarUIporPerfil();
                         if (!dadosCarregados) { ativarListenersFirestore(); } else { inicializarInterface(); }
                         showToast(`✅ Bem-vindo, ${usuarioLogado.nome}!`, 'success');
@@ -2022,8 +1918,7 @@
                     function updateScrollButtons() {
                         const tolerance = 2;
                         const canScrollLeft = wrapper.scrollLeft > tolerance;
-                        const canScrollRight = wrapper.scrollLeft < (wrapper.scrollWidth - wrapper.clientWidth -
-                            tolerance);
+                        const canScrollRight = wrapper.scrollLeft < (wrapper.scrollWidth - wrapper.clientWidth - tolerance);
                         btnLeft.classList.toggle('visible', canScrollLeft);
                         btnRight.classList.toggle('visible', canScrollRight);
                     }
@@ -2045,8 +1940,7 @@
                 const receitaTotal = locacoesPerm.reduce((sum, loc) => sum + (parseFloat(loc.valorSemanal) || 0), 0);
                 document.getElementById('stat-receita').textContent = isAdmin() ? formatarMoeda(receitaTotal) : '—';
                 const receitaCaucao = locacoesPerm.reduce((sum, loc) => sum + (parseFloat(loc.caucao) || 0), 0);
-                document.getElementById('stat-receita-caucao').textContent = isAdmin() ? formatarMoeda(receitaCaucao) :
-                    '—';
+                document.getElementById('stat-receita-caucao').textContent = isAdmin() ? formatarMoeda(receitaCaucao) : '—';
                 const ultimosDiv = document.getElementById('ultimos-cadastros');
                 let html = '';
                 if (veiculosPerm.length === 0) {
@@ -2055,8 +1949,7 @@
                     const ultimosVeiculos = veiculosPerm.slice(-3).reverse();
                     html += '<strong style="color:#fff;">🚙 Veículos Disponíveis:</strong><br>';
                     ultimosVeiculos.forEach(v => {
-                        html +=
-                            `• ${v.marca} ${v.modelo} - Placa: ${v.placa} - KM: ${v.km} - Semanal: ${formatarMoeda(v.valorSemanal)}<br>`;
+                        html += `• ${v.marca} ${v.modelo} - Placa: ${v.placa} - KM: ${v.km} - Semanal: ${formatarMoeda(v.valorSemanal)}<br>`;
                     });
                 }
                 ultimosDiv.innerHTML = html || '<span style="color:var(--text-muted);">Nenhum cadastro.</span>';
@@ -2099,12 +1992,10 @@
                 atualizarPermissoesVeiculoGrid();
             }
             btnCancelVeiculo.addEventListener('click', resetarFormVeiculo);
-            btnCancelEdicaoVeiculo.addEventListener('click', function() { resetarFormVeiculo();
-                showToast('📋 Edição cancelada. Formulário limpo.', 'info'); });
+            btnCancelEdicaoVeiculo.addEventListener('click', function() { resetarFormVeiculo(); showToast('📋 Edição cancelada. Formulário limpo.', 'info'); });
 
             formVeiculo.addEventListener('submit', async function(e) {
-                if (!isAdmin()) { showToast('⚠️ Apenas o administrador pode cadastrar veículos.', 'error');
-                    return; }
+                if (!isAdmin()) { showToast('⚠️ Apenas o administrador pode cadastrar veículos.', 'error'); return; }
                 e.preventDefault();
                 const documentoInput = document.getElementById('v-documento');
                 const documentoFile = documentoInput.files[0];
@@ -2114,7 +2005,8 @@
                     multimidia: document.getElementById('v-op-multimidia').checked,
                     rodas: document.getElementById('v-op-rodas').checked
                 };
-                async function salvarVeiculo(docURL = null, docNome = null) {
+
+                async function salvarVeiculo(docBase64 = null, docNome = null) {
                     const dadosVeiculo = {
                         marca: document.getElementById('v-marca').value.trim(),
                         modelo: document.getElementById('v-modelo').value.trim(),
@@ -2130,43 +2022,40 @@
                         dataAtualizacao: new Date().toISOString()
                     };
                     if (editandoVeiculoId) {
-                        if (docURL) { dadosVeiculo.documentoURL = docURL;
-                            dadosVeiculo.documentoNome = docNome; } else { const veiculoAtual = veiculos.find(v =>
-                                v.id === editandoVeiculoId);
-                            dadosVeiculo.documentoURL = veiculoAtual?.documentoURL || null;
-                            dadosVeiculo.documentoNome = veiculoAtual?.documentoNome || null; }
+                        if (docBase64) {
+                            dadosVeiculo.documentoBase64 = docBase64;
+                            dadosVeiculo.documentoNome = docNome;
+                        } else {
+                            const veiculoAtual = veiculos.find(v => v.id === editandoVeiculoId);
+                            dadosVeiculo.documentoBase64 = veiculoAtual?.documentoBase64 || null;
+                            dadosVeiculo.documentoNome = veiculoAtual?.documentoNome || null;
+                        }
                         try {
                             await colecoes.veiculos.doc(editandoVeiculoId).update(dadosVeiculo);
                             await sincronizarPermissoesVeiculo(editandoVeiculoId);
                             resetarFormVeiculo();
                             showToast('✅ Veículo atualizado com sucesso!', 'success');
                             await syncLocacoesVeiculo(editandoVeiculoId);
-                        } catch (error) { console.error('Erro ao atualizar veículo:', error);
-                            showToast('❌ Erro ao atualizar veículo.', 'error'); }
+                        } catch (error) { console.error('Erro ao atualizar veículo:', error); showToast('❌ Erro ao atualizar veículo.', 'error'); }
                     } else {
-                        const novoVeiculo = { ...dadosVeiculo, documentoURL: docURL, documentoNome: docNome,
-                            dataCadastro: new Date().toISOString() };
+                        const novoVeiculo = { ...dadosVeiculo, documentoBase64: docBase64, documentoNome: docNome, dataCadastro: new Date().toISOString() };
                         try {
                             const docRef = await colecoes.veiculos.add(novoVeiculo);
                             await sincronizarPermissoesVeiculo(docRef.id);
                             resetarFormVeiculo();
                             showToast('✅ Veículo cadastrado com sucesso!', 'success');
                             await syncLocacoesVeiculo(docRef.id);
-                        } catch (error) { console.error('Erro ao cadastrar veículo:', error);
-                            showToast('❌ Erro ao cadastrar veículo.', 'error'); }
+                        } catch (error) { console.error('Erro ao cadastrar veículo:', error); showToast('❌ Erro ao cadastrar veículo.', 'error'); }
                     }
                 }
                 if (documentoFile) {
-                    if (documentoFile.size > 8 * 1024 * 1024) { showToast(
-                            '⚠️ Arquivo PDF muito grande! Limite de 8MB.', 'error'); return; }
-                    showToast('⏳ Enviando documento para o Firebase Storage...', 'info');
+                    const MAX_SIZE = 500 * 1024; // 500KB
+                    if (documentoFile.size > MAX_SIZE) { showToast('⚠️ Arquivo muito grande! Limite de 500KB para evitar estouro do Firestore.', 'error'); return; }
+                    showToast('⏳ Processando documento...', 'info');
                     try {
-                        const storageRef = storage.ref(`documentos/veiculos/${Date.now()}_${documentoFile.name}`);
-                        const uploadTask = await storageRef.put(documentoFile);
-                        const docURL = await uploadTask.ref.getDownloadURL();
-                        await salvarVeiculo(docURL, documentoFile.name);
-                    } catch (error) { console.error('Erro upload documento:', error);
-                        showToast('❌ Erro ao enviar documento. Tente novamente.', 'error'); }
+                        const base64 = await fileToBase64(documentoFile);
+                        await salvarVeiculo(base64, documentoFile.name);
+                    } catch (error) { console.error('Erro ao converter documento:', error); showToast('❌ Erro ao processar documento.', 'error'); }
                 } else { await salvarVeiculo(null, null); }
             });
 
@@ -2178,20 +2067,23 @@
                 if (isAdmin() && thAcoes) thAcoes.style.display = '';
                 const colspan = isAdmin() ? 13 : 12;
                 if (veiculosPerm.length === 0) {
-                    tbody.innerHTML =
-                        `<tr><td colspan="${colspan}" class="empty-state"><span class="icon">🚙</span><br>${isAdmin() ? 'Nenhum veículo cadastrado' : 'Nenhum veículo disponível para visualização'}</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="${colspan}" class="empty-state"><span class="icon">🚙</span><br>${isAdmin() ? 'Nenhum veículo cadastrado' : 'Nenhum veículo disponível para visualização'}</td></tr>`;
                     return;
                 }
-                tbody.innerHTML = veiculosPerm.map(v => `
-                    <tr>
+                tbody.innerHTML = veiculosPerm.map(v => {
+                    let docLink = '<span style="color:var(--text-muted);">—</span>';
+                    if (v.documentoBase64) {
+                        docLink = `<a href="${v.documentoBase64}" target="_blank" class="btn-pdf" title="Ver Documento">📄 Ver PDF</a>`;
+                    }
+                    return `<tr>
                         <td>${v.marca}</td><td>${v.modelo}</td><td>${v.cor}</td><td><strong>${v.potencia || '—'}</strong></td>
                         <td><strong>${v.placa}</strong></td><td>${(v.km || 0).toLocaleString('pt-BR')}</td><td>${v.renavan}</td>
                         <td><small>${v.chassi}</small></td><td class="highlight-valor">${formatarMoeda(v.valorSemanal)}</td>
                         <td class="highlight-valor">${formatarMoeda(v.caucao)}</td><td>${formatarOpcionais(v.opcionais)}</td>
-                        <td>${v.documentoURL ? `<a href="${v.documentoURL}" target="_blank" class="btn-pdf" title="Ver Documento">📄 Ver PDF</a>` : '<span style="color:var(--text-muted);">—</span>'}</td>
+                        <td>${docLink}</td>
                         ${isAdmin() ? `<td><button class="btn-edit" onclick="window._editarVeiculo('${v.id}')" title="Editar Veículo">✏️</button><button class="btn-danger" onclick="window._excluirVeiculo('${v.id}')" title="Excluir">🗑️</button></td>` : ''}
-                    </tr>
-                `).join('');
+                    </tr>`;
+                }).join('');
                 initScrollButtons();
             }
 
@@ -2230,14 +2122,9 @@
                 if (!isAdmin()) { showToast('⚠️ Apenas o administrador pode excluir veículos.', 'error'); return; }
                 if (!confirm('Tem certeza que deseja excluir este veículo?')) return;
                 const emLocacao = locacoes.some(l => l.veiculoId === id);
-                if (emLocacao) { showToast(
-                        '⚠️ Este veículo está vinculado a uma locação ativa. Remova a locação primeiro.', 'error');
-                    return; }
+                if (emLocacao) { showToast('⚠️ Este veículo está vinculado a uma locação ativa. Remova a locação primeiro.', 'error'); return; }
                 if (editandoVeiculoId === id) resetarFormVeiculo();
-                try { await colecoes.veiculos.doc(id).delete();
-                    showToast('🗑️ Veículo excluído com sucesso!', 'info'); } catch (error) { console.error(
-                        'Erro ao excluir veículo:', error);
-                    showToast('❌ Erro ao excluir veículo.', 'error'); }
+                try { await colecoes.veiculos.doc(id).delete(); showToast('🗑️ Veículo excluído com sucesso!', 'info'); } catch (error) { console.error('Erro ao excluir veículo:', error); showToast('❌ Erro ao excluir veículo.', 'error'); }
             };
 
             // ===================== LOCATÁRIOS (admin only) =====================
@@ -2263,8 +2150,7 @@
                 locatFormTitle.textContent = 'Novo Locatário';
             }
             btnCancelLocatario.addEventListener('click', resetarFormLocatario);
-            btnCancelEdicaoLocatario.addEventListener('click', function() { resetarFormLocatario();
-                showToast('📋 Edição cancelada.', 'info'); });
+            btnCancelEdicaoLocatario.addEventListener('click', function() { resetarFormLocatario(); showToast('📋 Edição cancelada.', 'info'); });
             formLocatario.addEventListener('submit', async function(e) {
                 if (!isAdmin()) return;
                 e.preventDefault();
@@ -2281,28 +2167,17 @@
                     dataAtualizacao: new Date().toISOString()
                 };
                 if (editandoLocatarioId) {
-                    try { await colecoes.locatarios.doc(editandoLocatarioId).update(dadosLocatario);
-                        resetarFormLocatario();
-                        showToast('✅ Locatário atualizado com sucesso!', 'success');
-                        await syncLocacoesLocatario(editandoLocatarioId); } catch (error) { console.error(
-                            'Erro ao atualizar locatário:', error);
-                        showToast('❌ Erro ao atualizar locatário.', 'error'); }
+                    try { await colecoes.locatarios.doc(editandoLocatarioId).update(dadosLocatario); resetarFormLocatario(); showToast('✅ Locatário atualizado com sucesso!', 'success'); await syncLocacoesLocatario(editandoLocatarioId); } catch (error) { console.error('Erro ao atualizar locatário:', error); showToast('❌ Erro ao atualizar locatário.', 'error'); }
                 } else {
                     const novoLocatario = { ...dadosLocatario, dataCadastro: new Date().toISOString() };
-                    try { const docRef = await colecoes.locatarios.add(novoLocatario);
-                        resetarFormLocatario();
-                        showToast('✅ Locatário cadastrado com sucesso!', 'success');
-                        await syncLocacoesLocatario(docRef.id); } catch (error) { console.error(
-                            'Erro ao cadastrar locatário:', error);
-                        showToast('❌ Erro ao cadastrar locatário.', 'error'); }
+                    try { const docRef = await colecoes.locatarios.add(novoLocatario); resetarFormLocatario(); showToast('✅ Locatário cadastrado com sucesso!', 'success'); await syncLocacoesLocatario(docRef.id); } catch (error) { console.error('Erro ao cadastrar locatário:', error); showToast('❌ Erro ao cadastrar locatário.', 'error'); }
                 }
             });
 
             function atualizarTabelaLocatarios() {
                 if (!isAdmin()) return;
                 const tbody = document.getElementById('tbody-locatarios');
-                if (locatarios.length === 0) { tbody.innerHTML =
-                        '<tr><td colspan="7" class="empty-state"><span class="icon">👥</span><br>Nenhum locatário cadastrado</td></tr>'; return; }
+                if (locatarios.length === 0) { tbody.innerHTML = '<tr><td colspan="7" class="empty-state"><span class="icon">👥</span><br>Nenhum locatário cadastrado</td></tr>'; return; }
                 tbody.innerHTML = locatarios.map(l => `
                     <tr><td><strong>${l.nome}</strong></td><td>${l.cpf}</td><td>${l.rg}</td><td>${l.cnh}</td><td>${l.fone}</td><td>${l.cidade}</td>
                         <td><button class="btn-edit" onclick="window._editarLocatario('${l.id}')" title="Editar Locatário">✏️</button><button class="btn-danger" onclick="window._excluirLocatario('${l.id}')" title="Excluir">🗑️</button></td></tr>
@@ -2326,8 +2201,7 @@
                 btnSubmitLocatario.textContent = '💾 Atualizar Locatário';
                 btnCancelEdicaoLocatario.style.display = 'inline-block';
                 editBannerLocatario.classList.add('show');
-                document.getElementById('edit-banner-locatario-text').textContent =
-                    `Editando locatário: ${locatario.nome} - CPF: ${locatario.cpf}`;
+                document.getElementById('edit-banner-locatario-text').textContent = `Editando locatário: ${locatario.nome} - CPF: ${locatario.cpf}`;
                 locatFormTitle.textContent = 'Editar Locatário';
                 document.getElementById('card-form-locatario').scrollIntoView({ behavior: 'smooth', block: 'start' });
                 showToast('✏️ Modo de edição ativado.', 'info');
@@ -2336,14 +2210,9 @@
                 if (!isAdmin()) return;
                 if (!confirm('Tem certeza que deseja excluir este locatário?')) return;
                 const emLocacao = locacoes.some(l => l.locatarioId === id);
-                if (emLocacao) { showToast(
-                        '⚠️ Este locatário está vinculado a uma locação ativa. Remova a locação primeiro.', 'error');
-                    return; }
+                if (emLocacao) { showToast('⚠️ Este locatário está vinculado a uma locação ativa. Remova a locação primeiro.', 'error'); return; }
                 if (editandoLocatarioId === id) resetarFormLocatario();
-                try { await colecoes.locatarios.doc(id).delete();
-                    showToast('🗑️ Locatário excluído com sucesso!', 'info'); } catch (error) { console.error(
-                        'Erro ao excluir locatário:', error);
-                    showToast('❌ Erro ao excluir locatário.', 'error'); }
+                try { await colecoes.locatarios.doc(id).delete(); showToast('🗑️ Locatário excluído com sucesso!', 'info'); } catch (error) { console.error('Erro ao excluir locatário:', error); showToast('❌ Erro ao excluir locatário.', 'error'); }
             };
 
             // ===================== LOCAÇÕES (admin only) =====================
@@ -2357,26 +2226,21 @@
             const locFormTitle = document.getElementById('loc-form-title');
             const divValorParcela = document.createElement('div');
             divValorParcela.id = 'loc-valor-parcela-info';
-            divValorParcela.style.cssText =
-                'margin-top:8px;font-size:14px;color:var(--text-muted);display:none;padding:8px 12px;background:var(--input-bg);border-radius:6px;border-left:3px solid var(--primary);';
+            divValorParcela.style.cssText = 'margin-top:8px;font-size:14px;color:var(--text-muted);display:none;padding:8px 12px;background:var(--input-bg);border-radius:6px;border-left:3px solid var(--primary);';
             document.getElementById('loc-grupo-parcelas').appendChild(divValorParcela);
+
             selectFormaCaucaoLoc.addEventListener('change', function() {
                 const forma = this.value;
-                grupoParcelasLoc.style.display = (forma === 'parcelado' || forma === 'entrada_parcelado') ? 'block' :
-                    'none';
+                grupoParcelasLoc.style.display = (forma === 'parcelado' || forma === 'entrada_parcelado') ? 'block' : 'none';
                 grupoEntradaCaucaoLoc.style.display = forma === 'entrada_parcelado' ? 'block' : 'none';
-                if (forma === 'avista') { document.getElementById('loc-parcelas').value = '1';
-                    document.getElementById('loc-entrada-caucao').value = '';
-                    divValorParcela.style.display = 'none'; }
-                if (forma === 'parcelado') { document.getElementById('loc-entrada-caucao').value = '';
-                    atualizarValorParcela(); }
+                if (forma === 'avista') { document.getElementById('loc-parcelas').value = '1'; document.getElementById('loc-entrada-caucao').value = ''; divValorParcela.style.display = 'none'; }
+                if (forma === 'parcelado') { document.getElementById('loc-entrada-caucao').value = ''; atualizarValorParcela(); }
                 if (forma === 'entrada_parcelado') { atualizarValorParcela(); }
             });
 
             function atualizarValorParcela() {
                 const forma = selectFormaCaucaoLoc.value;
-                if (forma !== 'parcelado' && forma !== 'entrada_parcelado') { divValorParcela.style.display =
-                    'none'; return; }
+                if (forma !== 'parcelado' && forma !== 'entrada_parcelado') { divValorParcela.style.display = 'none'; return; }
                 const veiculoId = document.getElementById('loc-veiculo').value;
                 const veiculo = veiculos.find(v => v.id === veiculoId);
                 if (!veiculo) { divValorParcela.style.display = 'none'; return; }
@@ -2384,11 +2248,8 @@
                 const parcelas = parseInt(document.getElementById('loc-parcelas').value) || 1;
                 const entrada = parseMoedaBR(document.getElementById('loc-entrada-caucao').value);
                 let textoParcelas = '';
-                if (forma === 'parcelado') { textoParcelas = parcelas > 0 ? `${parcelas}x de ${formatarMoeda(valorCaucao / parcelas)}` :
-                        'Número de parcelas inválido'; } else if (forma === 'entrada_parcelado') { const valorRestante =
-                        valorCaucao - entrada; if (parcelas > 0 && valorRestante > 0) textoParcelas =
-                        `Entrada ${formatarMoeda(entrada)} + ${parcelas}x de ${formatarMoeda(valorRestante / parcelas)} (Total: ${formatarMoeda(valorCaucao)})`;
-                    else textoParcelas = `Entrada ${formatarMoeda(entrada)} já cobre o valor total do caução.`; }
+                if (forma === 'parcelado') { textoParcelas = parcelas > 0 ? `${parcelas}x de ${formatarMoeda(valorCaucao / parcelas)}` : 'Número de parcelas inválido'; }
+                else if (forma === 'entrada_parcelado') { const valorRestante = valorCaucao - entrada; if (parcelas > 0 && valorRestante > 0) textoParcelas = `Entrada ${formatarMoeda(entrada)} + ${parcelas}x de ${formatarMoeda(valorRestante / parcelas)} (Total: ${formatarMoeda(valorCaucao)})`; else textoParcelas = `Entrada ${formatarMoeda(entrada)} já cobre o valor total do caução.`; }
                 divValorParcela.textContent = `💡 Valor de cada parcela: ${textoParcelas}`;
                 divValorParcela.style.display = 'block';
             }
@@ -2402,14 +2263,10 @@
                 const selectLocatario = document.getElementById('loc-locatario');
                 const veiculosLocadosIds = locacoes.filter(l => l.id !== editandoLocacaoId).map(l => l.veiculoId);
                 const veiculosDisponiveis = veiculos.filter(v => !veiculosLocadosIds.includes(v.id));
-                selectVeiculo.innerHTML = '<option value="">Selecione um veículo...</option>' + veiculosDisponiveis.map(
-                    v =>
-                    `<option value="${v.id}">${v.marca} ${v.modelo} - Placa: ${v.placa} (Semanal: ${formatarMoeda(v.valorSemanal)} | Caução: ${formatarMoeda(v.caucao)})</option>`
-                ).join('');
+                selectVeiculo.innerHTML = '<option value="">Selecione um veículo...</option>' + veiculosDisponiveis.map(v => `<option value="${v.id}">${v.marca} ${v.modelo} - Placa: ${v.placa} (Semanal: ${formatarMoeda(v.valorSemanal)} | Caução: ${formatarMoeda(v.caucao)})</option>`).join('');
                 const locatariosLocadosIds = locacoes.filter(l => l.id !== editandoLocacaoId).map(l => l.locatarioId);
                 const locatariosDisponiveis = locatarios.filter(l => !locatariosLocadosIds.includes(l.id));
-                selectLocatario.innerHTML = '<option value="">Selecione um locatário...</option>' + locatariosDisponiveis
-                    .map(l => `<option value="${l.id}">${l.nome} - CPF: ${l.cpf}</option>`).join('');
+                selectLocatario.innerHTML = '<option value="">Selecione um locatário...</option>' + locatariosDisponiveis.map(l => `<option value="${l.id}">${l.nome} - CPF: ${l.cpf}</option>`).join('');
             }
 
             function resetarFormLocacao() {
@@ -2427,9 +2284,7 @@
                 editBanner.classList.remove('show');
                 locFormTitle.textContent = 'Nova Locação';
             }
-            btnCancelEdicaoLocacao.addEventListener('click', function() { resetarFormLocacao();
-                atualizarSelectsLocacao();
-                showToast('📋 Edição cancelada.', 'info'); });
+            btnCancelEdicaoLocacao.addEventListener('click', function() { resetarFormLocacao(); atualizarSelectsLocacao(); showToast('📋 Edição cancelada.', 'info'); });
             window._editarLocacao = function(id) {
                 if (!isAdmin()) return;
                 const locacao = locacoes.find(l => l.id === id);
@@ -2442,16 +2297,14 @@
                 document.getElementById('loc-data-fim').value = locacao.dataFim;
                 selectFormaCaucaoLoc.value = locacao.formaCaucao;
                 selectFormaCaucaoLoc.dispatchEvent(new Event('change'));
-                if (locacao.valorEntradaCaucao) document.getElementById('loc-entrada-caucao').value = formatarMoeda(
-                    locacao.valorEntradaCaucao);
+                if (locacao.valorEntradaCaucao) document.getElementById('loc-entrada-caucao').value = formatarMoeda(locacao.valorEntradaCaucao);
                 if (locacao.parcelasCaucao) document.getElementById('loc-parcelas').value = locacao.parcelasCaucao;
                 const docInputs = document.querySelectorAll('#documentos-locatario-grid .doc-input');
                 docInputs.forEach(input => { input.value = ''; });
                 btnSubmitLocacao.textContent = '💾 Atualizar Locação';
                 btnCancelEdicaoLocacao.style.display = 'inline-block';
                 editBanner.classList.add('show');
-                document.getElementById('edit-banner-text').textContent =
-                    `Editando locação: ${locacao.veiculoNome} (${locacao.veiculoPlaca}) - ${locacao.locatarioNome}`;
+                document.getElementById('edit-banner-text').textContent = `Editando locação: ${locacao.veiculoNome} (${locacao.veiculoPlaca}) - ${locacao.locatarioNome}`;
                 locFormTitle.textContent = 'Editar Locação';
                 document.getElementById('card-form-locacao').scrollIntoView({ behavior: 'smooth', block: 'start' });
                 showToast('✏️ Modo de edição ativado.', 'info');
@@ -2459,19 +2312,25 @@
             };
             document.getElementById('loc-data-inicio').addEventListener('change', function() {
                 const dataInicio = new Date(this.value);
-                if (!isNaN(dataInicio)) { const dataFim = new Date(dataInicio);
-                    dataFim.setMonth(dataFim.getMonth() + 6);
-                    document.getElementById('loc-data-fim').value =
-                        `${dataFim.getFullYear()}-${String(dataFim.getMonth() + 1).padStart(2, '0')}-${String(dataFim.getDate()).padStart(2, '0')}`; }
+                if (!isNaN(dataInicio)) { const dataFim = new Date(dataInicio); dataFim.setMonth(dataFim.getMonth() + 6); document.getElementById('loc-data-fim').value = `${dataFim.getFullYear()}-${String(dataFim.getMonth() + 1).padStart(2, '0')}-${String(dataFim.getDate()).padStart(2, '0')}`; }
             });
             async function uploadDocumentosLocacao(docInputs) {
                 const documentos = [];
-                for (const input of docInputs) { if (input.files && input.files[0]) { const file = input.files[0]; if (file
-                            .size > 10 * 1024 * 1024) continue; try { const storageRef = storage.ref(
-                            `documentos/locacoes/${Date.now()}_${file.name}`); const uploadTask = await storageRef.put(
-                            file); const url = await uploadTask.ref.getDownloadURL();
-                        documentos.push({ nome: file.name, url: url, tipo: file.type, tamanho: file.size }); } catch (
-                        error) { throw new Error(`Erro ao enviar ${file.name}`); } } }
+                const MAX_SIZE = 500 * 1024; // 500KB por arquivo
+                for (const input of docInputs) {
+                    if (input.files && input.files[0]) {
+                        const file = input.files[0];
+                        if (file.size > MAX_SIZE) {
+                            throw new Error(`Arquivo ${file.name} excede 500KB.`);
+                        }
+                        try {
+                            const base64 = await fileToBase64(file);
+                            documentos.push({ nome: file.name, base64: base64, tipo: file.type, tamanho: file.size });
+                        } catch (error) {
+                            throw new Error(`Erro ao processar ${file.name}`);
+                        }
+                    }
+                }
                 return documentos;
             }
             formLocacao.addEventListener('submit', async function(e) {
@@ -2482,62 +2341,38 @@
                 const dataInicio = document.getElementById('loc-data-inicio').value;
                 const dataFim = document.getElementById('loc-data-fim').value;
                 const formaCaucao = selectFormaCaucaoLoc.value;
-                if (!veiculoId || !locatarioId || !dataInicio || !dataFim || !formaCaucao) { showToast(
-                        '⚠️ Preencha todos os campos obrigatórios.', 'error'); return; }
-                if (new Date(dataFim) <= new Date(dataInicio)) { showToast(
-                        '⚠️ A Data Fim do Contrato deve ser posterior à Data Início.', 'error'); return; }
+                if (!veiculoId || !locatarioId || !dataInicio || !dataFim || !formaCaucao) { showToast('⚠️ Preencha todos os campos obrigatórios.', 'error'); return; }
+                if (new Date(dataFim) <= new Date(dataInicio)) { showToast('⚠️ A Data Fim do Contrato deve ser posterior à Data Início.', 'error'); return; }
                 const veiculo = veiculos.find(v => v.id === veiculoId);
                 const locatario = locatarios.find(l => l.id === locatarioId);
                 if (!veiculo || !locatario) { showToast('❌ Veículo ou locatário não encontrado.', 'error'); return; }
-                const parcelas = (formaCaucao === 'parcelado' || formaCaucao === 'entrada_parcelado') ? (parseInt(document
-                    .getElementById('loc-parcelas').value) || 1) : 1;
+                const parcelas = (formaCaucao === 'parcelado' || formaCaucao === 'entrada_parcelado') ? (parseInt(document.getElementById('loc-parcelas').value) || 1) : 1;
                 if (parcelas > 20) { showToast('⚠️ O número máximo de parcelas é 20.', 'error'); return; }
-                const valorEntradaCaucao = formaCaucao === 'entrada_parcelado' ? parseMoedaBR(document.getElementById(
-                    'loc-entrada-caucao').value) : 0;
+                const valorEntradaCaucao = formaCaucao === 'entrada_parcelado' ? parseMoedaBR(document.getElementById('loc-entrada-caucao').value) : 0;
                 const docInputs = document.querySelectorAll('#documentos-locatario-grid .doc-input');
                 let documentosLocatario = [];
-                try { documentosLocatario = await uploadDocumentosLocacao(docInputs); } catch (error) { showToast(
-                        '⚠️ Erro ao processar documentos: ' + error.message, 'error'); return; }
+                try { documentosLocatario = await uploadDocumentosLocacao(docInputs); } catch (error) { showToast('⚠️ Erro ao processar documentos: ' + error.message, 'error'); return; }
                 if (editandoLocacaoId) {
                     const locacaoAtual = locacoes.find(l => l.id === editandoLocacaoId);
-                    const docsFinais = documentosLocatario.length > 0 ? documentosLocatario : (locacaoAtual
-                        ?.documentosLocatario || []);
+                    const docsFinais = documentosLocatario.length > 0 ? documentosLocatario : (locacaoAtual?.documentosLocatario || []);
                     await removerEntradasFluxoLocacao(locacaoAtual);
-                    const updateData = { veiculoId, locatarioId, veiculoPlaca: veiculo.placa, veiculoNome: `${veiculo.marca} ${veiculo.modelo}`,
-                        locatarioNome: locatario.nome, locatarioCPF: locatario.cpf, valorSemanal: veiculo
-                        .valorSemanal, caucao: veiculo.caucao, formaCaucao, parcelasCaucao: parcelas,
-                        valorEntradaCaucao, dataInicio, dataFim, documentosLocatario: docsFinais, status: 'ativa',
-                        dataAtualizacao: new Date().toISOString() };
+                    const updateData = { veiculoId, locatarioId, veiculoPlaca: veiculo.placa, veiculoNome: `${veiculo.marca} ${veiculo.modelo}`, locatarioNome: locatario.nome, locatarioCPF: locatario.cpf, valorSemanal: veiculo.valorSemanal, caucao: veiculo.caucao, formaCaucao, parcelasCaucao: parcelas, valorEntradaCaucao, dataInicio, dataFim, documentosLocatario: docsFinais, status: 'ativa', dataAtualizacao: new Date().toISOString() };
                     try {
                         await colecoes.locacoes.doc(editandoLocacaoId).update(updateData);
                         const fluxoCaixaIds = await criarEntradasFluxoLocacao({ ...updateData, id: editandoLocacaoId });
                         await colecoes.locacoes.doc(editandoLocacaoId).update({ fluxoCaixaIds });
-                        resetarFormLocacao();
-                        atualizarSelectsLocacao();
+                        resetarFormLocacao(); atualizarSelectsLocacao();
                         showToast('✅ Locação atualizada com sucesso!', 'success');
-                    } catch (error) { console.error('Erro ao atualizar locação:', error);
-                        showToast('❌ Erro ao atualizar locação.', 'error'); }
+                    } catch (error) { console.error('Erro ao atualizar locação:', error); showToast('❌ Erro ao atualizar locação.', 'error'); }
                 } else {
-                    const novaLocacao = { veiculoId, locatarioId, veiculoPlaca: veiculo.placa, veiculoNome: `${veiculo.marca} ${veiculo.modelo}`,
-                        locatarioNome: locatario.nome, locatarioCPF: locatario.cpf, valorSemanal: veiculo
-                        .valorSemanal, caucao: veiculo.caucao, formaCaucao, parcelasCaucao: parcelas,
-                        valorEntradaCaucao, dataInicio, dataFim, documentosLocatario, status: 'ativa',
-                        dataCriacao: new Date().toISOString(), dataAtualizacao: new Date().toISOString() };
+                    const novaLocacao = { veiculoId, locatarioId, veiculoPlaca: veiculo.placa, veiculoNome: `${veiculo.marca} ${veiculo.modelo}`, locatarioNome: locatario.nome, locatarioCPF: locatario.cpf, valorSemanal: veiculo.valorSemanal, caucao: veiculo.caucao, formaCaucao, parcelasCaucao: parcelas, valorEntradaCaucao, dataInicio, dataFim, documentosLocatario, status: 'ativa', dataCriacao: new Date().toISOString(), dataAtualizacao: new Date().toISOString() };
                     try {
                         const docRef = await colecoes.locacoes.add(novaLocacao);
                         const fluxoCaixaIds = await criarEntradasFluxoLocacao({ ...novaLocacao, id: docRef.id });
                         await colecoes.locacoes.doc(docRef.id).update({ fluxoCaixaIds });
-                        formLocacao.reset();
-                        grupoParcelasLoc.style.display = 'none';
-                        grupoEntradaCaucaoLoc.style.display = 'none';
-                        document.getElementById('loc-parcelas').value = '2';
-                        document.getElementById('loc-entrada-caucao').value = '';
-                        divValorParcela.style.display = 'none';
-                        document.querySelectorAll('#documentos-locatario-grid .doc-input').forEach(i => i.value = '');
-                        atualizarSelectsLocacao();
+                        formLocacao.reset(); grupoParcelasLoc.style.display = 'none'; grupoEntradaCaucaoLoc.style.display = 'none'; document.getElementById('loc-parcelas').value = '2'; document.getElementById('loc-entrada-caucao').value = ''; divValorParcela.style.display = 'none'; document.querySelectorAll('#documentos-locatario-grid .doc-input').forEach(i => i.value = ''); atualizarSelectsLocacao();
                         showToast('✅ Locação registrada com sucesso!', 'success');
-                    } catch (error) { console.error('Erro ao registrar locação:', error);
-                        showToast('❌ Erro ao registrar locação.', 'error'); }
+                    } catch (error) { console.error('Erro ao registrar locação:', error); showToast('❌ Erro ao registrar locação.', 'error'); }
                 }
                 initScrollButtons();
             });
@@ -2548,28 +2383,20 @@
                 let locacoesFiltradas = getLocacoesPermitidas();
                 if (termoBuscaLocacoes.trim() !== '') {
                     const termoSanitizado = sanitizarParaBusca(termoBuscaLocacoes);
-                    locacoesFiltradas = locacoesFiltradas.filter(l => sanitizarParaBusca(l.veiculoPlaca).includes(
-                        termoSanitizado) || sanitizarParaBusca(l.locatarioCPF).includes(termoSanitizado));
+                    locacoesFiltradas = locacoesFiltradas.filter(l => sanitizarParaBusca(l.veiculoPlaca).includes(termoSanitizado) || sanitizarParaBusca(l.locatarioCPF).includes(termoSanitizado));
                 }
                 atualizarContadorBusca(locacoesFiltradas.length);
                 if (locacoesFiltradas.length === 0) {
-                    tbody.innerHTML = termoBuscaLocacoes.trim() !== '' ?
-                        '<tr><td colspan="11" class="empty-state"><span class="icon">🔍</span><br>Nenhuma locação encontrada.</td></tr>' :
-                        '<tr><td colspan="11" class="empty-state"><span class="icon">📋</span><br>Nenhuma locação ativa</td></tr>';
+                    tbody.innerHTML = termoBuscaLocacoes.trim() !== '' ? '<tr><td colspan="11" class="empty-state"><span class="icon">🔍</span><br>Nenhuma locação encontrada.</td></tr>' : '<tr><td colspan="11" class="empty-state"><span class="icon">📋</span><br>Nenhuma locação ativa</td></tr>';
                     return;
                 }
                 tbody.innerHTML = locacoesFiltradas.map(l => {
                     let caucaoHtml = formatarMoeda(l.caucao);
-                    if (l.formaCaucao === 'parcelado') caucaoHtml +=
-                        ` <span class="badge badge-warning">${l.parcelasCaucao || '?'}x</span>`;
-                    else if (l.formaCaucao === 'entrada_parcelado') caucaoHtml +=
-                        ` <span class="badge badge-info">Entrada ${formatarMoeda(l.valorEntradaCaucao || 0)} + ${l.parcelasCaucao || '?'}x</span>`;
+                    if (l.formaCaucao === 'parcelado') caucaoHtml += ` <span class="badge badge-warning">${l.parcelasCaucao || '?'}x</span>`;
+                    else if (l.formaCaucao === 'entrada_parcelado') caucaoHtml += ` <span class="badge badge-info">Entrada ${formatarMoeda(l.valorEntradaCaucao || 0)} + ${l.parcelasCaucao || '?'}x</span>`;
                     else caucaoHtml += ' <span class="badge badge-success">À vista</span>';
-                    const numDocs = (l.documentosLocatario && l.documentosLocatario.length) ? l.documentosLocatario
-                        .length : 0;
-                    let docsHtml = numDocs > 0 ?
-                        `<span class="badge badge-info" title="${numDocs} documento(s)">📎 ${numDocs}</span>` :
-                        '<span style="color:var(--text-muted);">—</span>';
+                    const numDocs = (l.documentosLocatario && l.documentosLocatario.length) ? l.documentosLocatario.length : 0;
+                    let docsHtml = numDocs > 0 ? `<span class="badge badge-info" title="${numDocs} documento(s)">📎 ${numDocs}</span>` : '<span style="color:var(--text-muted);">—</span>';
                     return `<tr><td>${l.veiculoNome}</td><td><strong>${l.veiculoPlaca}</strong></td><td>${l.locatarioNome}</td><td><strong>${l.locatarioCPF}</strong></td><td>${new Date(l.dataInicio).toLocaleDateString('pt-BR')}</td><td>${new Date(l.dataFim).toLocaleDateString('pt-BR')}</td><td class="highlight-valor">${formatarMoeda(l.valorSemanal)}</td><td>${caucaoHtml}</td><td><span class="badge badge-info">Ativa</span></td><td>${docsHtml}</td><td><button class="btn-edit" onclick="window._editarLocacao('${l.id}')" title="Editar Locação">✏️</button><button class="btn-danger" onclick="window._excluirLocacao('${l.id}')" title="Encerrar Locação">🗑️</button></td></tr>`;
                 }).join('');
                 initScrollButtons();
@@ -2583,62 +2410,35 @@
                 if (countNum) countNum.textContent = totalFiltrado;
                 if (termoBuscaLocacoes.trim() !== '') {
                     resultsInfo.classList.add('active-filter');
-                    resultsInfo.innerHTML =
-                        `🔍 Encontradas: <strong class="highlight-count">${totalFiltrado}</strong> de ${locacoes.length} locações`;
+                    resultsInfo.innerHTML = `🔍 Encontradas: <strong class="highlight-count">${totalFiltrado}</strong> de ${locacoes.length} locações`;
                     btnLimparFiltro.style.display = 'flex';
                     clearBtn.classList.add('visible');
-                } else { resultsInfo.classList.remove('active-filter');
-                    resultsInfo.innerHTML =
-                    `Total: <strong class="highlight-count">${totalFiltrado}</strong> locações`;
-                    btnLimparFiltro.style.display = 'none';
-                    clearBtn.classList.remove('visible'); }
+                } else { resultsInfo.classList.remove('active-filter'); resultsInfo.innerHTML = `Total: <strong class="highlight-count">${totalFiltrado}</strong> locações`; btnLimparFiltro.style.display = 'none'; clearBtn.classList.remove('visible'); }
             }
 
-            function atualizarUIBuscaLocacoes() { atualizarTabelaLocacoes(); const inputBusca = document.getElementById(
-                    'input-busca-locacoes'); const clearBtn = document.getElementById('clear-search-btn'); if (
-                    termoBuscaLocacoes.trim() !== '') { clearBtn.classList.add('visible'); } else { clearBtn.classList
-                    .remove('visible');
-                inputBusca.value = ''; }
-                initScrollButtons(); }
+            function atualizarUIBuscaLocacoes() { atualizarTabelaLocacoes(); const inputBusca = document.getElementById('input-busca-locacoes'); const clearBtn = document.getElementById('clear-search-btn'); if (termoBuscaLocacoes.trim() !== '') { clearBtn.classList.add('visible'); } else { clearBtn.classList.remove('visible'); inputBusca.value = ''; } initScrollButtons(); }
             window._excluirLocacao = async function(id) {
                 if (!isAdmin()) return;
                 const locacao = locacoes.find(l => l.id === id);
                 if (!locacao) return;
                 if (!confirm('Deseja encerrar esta locação? As transações do Fluxo de Caixa serão removidas.')) return;
                 await removerEntradasFluxoLocacao(locacao);
-                if (editandoLocacaoId === id) { resetarFormLocacao();
-                    atualizarSelectsLocacao(); }
-                try { await colecoes.locacoes.doc(id).delete();
-                    showToast('✅ Locação encerrada com sucesso!', 'info'); } catch (error) { console.error(
-                        'Erro ao encerrar locação:', error);
-                    showToast('❌ Erro ao encerrar locação.', 'error'); }
+                if (editandoLocacaoId === id) { resetarFormLocacao(); atualizarSelectsLocacao(); }
+                try { await colecoes.locacoes.doc(id).delete(); showToast('✅ Locação encerrada com sucesso!', 'info'); } catch (error) { console.error('Erro ao encerrar locação:', error); showToast('❌ Erro ao encerrar locação.', 'error'); }
             };
             const inputBuscaLocacoes = document.getElementById('input-busca-locacoes');
             const clearSearchBtn = document.getElementById('clear-search-btn');
             const btnLimparFiltroLocacoes = document.getElementById('btn-limpar-filtro-locacoes');
-            inputBuscaLocacoes.addEventListener('input', function() { termoBuscaLocacoes = this.value;
-                atualizarUIBuscaLocacoes(); });
-            inputBuscaLocacoes.addEventListener('keydown', function(e) { if (e.key === 'Escape') { termoBuscaLocacoes =
-                        '';
-                    this.value = '';
-                    atualizarUIBuscaLocacoes();
-                    this.blur(); } });
-            clearSearchBtn.addEventListener('click', function() { termoBuscaLocacoes = '';
-                inputBuscaLocacoes.value = '';
-                atualizarUIBuscaLocacoes();
-                inputBuscaLocacoes.focus(); });
-            btnLimparFiltroLocacoes.addEventListener('click', function() { termoBuscaLocacoes = '';
-                inputBuscaLocacoes.value = '';
-                atualizarUIBuscaLocacoes();
-                inputBuscaLocacoes.focus(); });
+            inputBuscaLocacoes.addEventListener('input', function() { termoBuscaLocacoes = this.value; atualizarUIBuscaLocacoes(); });
+            inputBuscaLocacoes.addEventListener('keydown', function(e) { if (e.key === 'Escape') { termoBuscaLocacoes = ''; this.value = ''; atualizarUIBuscaLocacoes(); this.blur(); } });
+            clearSearchBtn.addEventListener('click', function() { termoBuscaLocacoes = ''; inputBuscaLocacoes.value = ''; atualizarUIBuscaLocacoes(); inputBuscaLocacoes.focus(); });
+            btnLimparFiltroLocacoes.addEventListener('click', function() { termoBuscaLocacoes = ''; inputBuscaLocacoes.value = ''; atualizarUIBuscaLocacoes(); inputBuscaLocacoes.focus(); });
 
             // ===================== FLUXO DE CAIXA (admin only) =====================
             function atualizarResumoFluxoCaixa() {
                 if (!isAdmin()) return;
-                const totalEntradas = fluxoCaixa.filter(t => t.tipo === 'entrada').reduce((sum, t) => sum + (parseFloat(t
-                    .valor) || 0), 0);
-                const totalSaidas = fluxoCaixa.filter(t => t.tipo === 'saida').reduce((sum, t) => sum + (parseFloat(t
-                    .valor) || 0), 0);
+                const totalEntradas = fluxoCaixa.filter(t => t.tipo === 'entrada').reduce((sum, t) => sum + (parseFloat(t.valor) || 0), 0);
+                const totalSaidas = fluxoCaixa.filter(t => t.tipo === 'saida').reduce((sum, t) => sum + (parseFloat(t.valor) || 0), 0);
                 const saldoAtual = totalEntradas - totalSaidas;
                 document.getElementById('stat-total-entradas').textContent = formatarMoeda(totalEntradas);
                 document.getElementById('stat-total-saidas').textContent = formatarMoeda(totalSaidas);
@@ -2652,21 +2452,14 @@
                 let transacoesFiltradas = fluxoCaixa;
                 if (termoBuscaFluxo.trim() !== '') {
                     const termoSanitizado = sanitizarParaBusca(termoBuscaFluxo);
-                    transacoesFiltradas = fluxoCaixa.filter(t => sanitizarParaBusca(t.descricao).includes(
-                        termoSanitizado) || sanitizarParaBusca(t.categoria || '').includes(termoSanitizado) ||
-                        sanitizarParaBusca(t.observacao || '').includes(termoSanitizado));
+                    transacoesFiltradas = fluxoCaixa.filter(t => sanitizarParaBusca(t.descricao).includes(termoSanitizado) || sanitizarParaBusca(t.categoria || '').includes(termoSanitizado) || sanitizarParaBusca(t.observacao || '').includes(termoSanitizado));
                 }
                 transacoesFiltradas.sort((a, b) => new Date(b.data) - new Date(a.data));
                 atualizarContadorBuscaFluxo(transacoesFiltradas.length);
-                if (transacoesFiltradas.length === 0) { tbody.innerHTML = termoBuscaFluxo.trim() !== '' ?
-                        '<tr><td colspan="7" class="empty-state"><span class="icon">🔍</span><br>Nenhuma transação encontrada.</td></tr>' :
-                        '<tr><td colspan="7" class="empty-state"><span class="icon">💰</span><br>Nenhuma transação registrada</td></tr>'; return; }
-                const categoriasLabels = { 'locacao': 'Locação', 'manutencao': 'Manutenção', 'combustivel': 'Combustível',
-                    'imposto': 'Imposto / Taxa', 'multa': 'Multa', 'seguro': 'Seguro', 'outros': 'Outros',
-                    '': 'Geral' };
+                if (transacoesFiltradas.length === 0) { tbody.innerHTML = termoBuscaFluxo.trim() !== '' ? '<tr><td colspan="7" class="empty-state"><span class="icon">🔍</span><br>Nenhuma transação encontrada.</td></tr>' : '<tr><td colspan="7" class="empty-state"><span class="icon">💰</span><br>Nenhuma transação registrada</td></tr>'; return; }
+                const categoriasLabels = { 'locacao': 'Locação', 'manutencao': 'Manutenção', 'combustivel': 'Combustível', 'imposto': 'Imposto / Taxa', 'multa': 'Multa', 'seguro': 'Seguro', 'outros': 'Outros', '': 'Geral' };
                 tbody.innerHTML = transacoesFiltradas.map(t => {
-                    const tipoBadge = t.tipo === 'entrada' ? '<span class="badge badge-entrada">📥 Entrada</span>' :
-                        '<span class="badge badge-saida">📤 Saída</span>';
+                    const tipoBadge = t.tipo === 'entrada' ? '<span class="badge badge-entrada">📥 Entrada</span>' : '<span class="badge badge-saida">📤 Saída</span>';
                     const valorClass = t.tipo === 'entrada' ? 'highlight-entrada' : 'highlight-saida';
                     const categoriaLabel = categoriasLabels[t.categoria] || (t.categoria || 'Geral');
                     const dataFormatada = t.data ? new Date(t.data + 'T00:00:00').toLocaleDateString('pt-BR') : '—';
@@ -2681,23 +2474,10 @@
                 const btnLimparFiltro = document.getElementById('btn-limpar-filtro-fluxo');
                 const clearBtn = document.getElementById('clear-search-btn-fluxo');
                 if (countNum) countNum.textContent = totalFiltrado;
-                if (termoBuscaFluxo.trim() !== '') { resultsInfo.classList.add('active-filter');
-                    resultsInfo.innerHTML =
-                        `🔍 Encontradas: <strong class="highlight-count">${totalFiltrado}</strong> de ${fluxoCaixa.length} transações`;
-                    btnLimparFiltro.style.display = 'flex';
-                    clearBtn.classList.add('visible'); } else { resultsInfo.classList.remove('active-filter');
-                    resultsInfo.innerHTML =
-                        `Total: <strong class="highlight-count">${totalFiltrado}</strong> transações`;
-                    btnLimparFiltro.style.display = 'none';
-                    clearBtn.classList.remove('visible'); }
+                if (termoBuscaFluxo.trim() !== '') { resultsInfo.classList.add('active-filter'); resultsInfo.innerHTML = `🔍 Encontradas: <strong class="highlight-count">${totalFiltrado}</strong> de ${fluxoCaixa.length} transações`; btnLimparFiltro.style.display = 'flex'; clearBtn.classList.add('visible'); } else { resultsInfo.classList.remove('active-filter'); resultsInfo.innerHTML = `Total: <strong class="highlight-count">${totalFiltrado}</strong> transações`; btnLimparFiltro.style.display = 'none'; clearBtn.classList.remove('visible'); }
             }
 
-            function atualizarUIBuscaFluxo() { atualizarTabelaFluxoCaixa(); const inputBusca = document.getElementById(
-                    'input-busca-fluxo'); const clearBtn = document.getElementById('clear-search-btn-fluxo'); if (
-                    termoBuscaFluxo.trim() !== '') { clearBtn.classList.add('visible'); } else { clearBtn.classList.remove(
-                    'visible');
-                inputBusca.value = ''; }
-                initScrollButtons(); }
+            function atualizarUIBuscaFluxo() { atualizarTabelaFluxoCaixa(); const inputBusca = document.getElementById('input-busca-fluxo'); const clearBtn = document.getElementById('clear-search-btn-fluxo'); if (termoBuscaFluxo.trim() !== '') { clearBtn.classList.add('visible'); } else { clearBtn.classList.remove('visible'); inputBusca.value = ''; } initScrollButtons(); }
             const formFluxo = document.getElementById('form-fluxo');
             const btnSubmitFluxo = document.getElementById('btn-submit-fluxo');
             const btnCancelFluxo = document.getElementById('btn-cancel-fluxo');
@@ -2717,30 +2497,14 @@
                 fluxoFormTitle.textContent = 'Nova Transação';
             }
             btnCancelFluxo.addEventListener('click', resetarFormFluxo);
-            btnCancelEdicaoFluxo.addEventListener('click', function() { resetarFormFluxo();
-                showToast('📋 Edição cancelada.', 'info'); });
+            btnCancelEdicaoFluxo.addEventListener('click', function() { resetarFormFluxo(); showToast('📋 Edição cancelada.', 'info'); });
             formFluxo.addEventListener('submit', async function(e) {
                 if (!isAdmin()) return;
                 e.preventDefault();
-                const dadosFluxo = { descricao: document.getElementById('f-descricao').value.trim(), valor: parseMoedaBR(
-                        document.getElementById('f-valor').value), tipo: document.getElementById('f-tipo').value,
-                    data: document.getElementById('f-data').value, categoria: document.getElementById('f-categoria')
-                        .value, observacao: document.getElementById('f-observacao').value.trim(),
-                    dataAtualizacao: new Date().toISOString() };
-                if (!dadosFluxo.descricao || !dadosFluxo.valor || !dadosFluxo.tipo || !dadosFluxo.data) { showToast(
-                        '⚠️ Preencha todos os campos obrigatórios.', 'error'); return; }
+                const dadosFluxo = { descricao: document.getElementById('f-descricao').value.trim(), valor: parseMoedaBR(document.getElementById('f-valor').value), tipo: document.getElementById('f-tipo').value, data: document.getElementById('f-data').value, categoria: document.getElementById('f-categoria').value, observacao: document.getElementById('f-observacao').value.trim(), dataAtualizacao: new Date().toISOString() };
+                if (!dadosFluxo.descricao || !dadosFluxo.valor || !dadosFluxo.tipo || !dadosFluxo.data) { showToast('⚠️ Preencha todos os campos obrigatórios.', 'error'); return; }
                 if (dadosFluxo.valor <= 0) { showToast('⚠️ O valor deve ser maior que zero.', 'error'); return; }
-                if (editandoFluxoId) { try { await colecoes.fluxocaixa.doc(editandoFluxoId).update(dadosFluxo);
-                        resetarFormFluxo();
-                        showToast('✅ Transação atualizada com sucesso!', 'success'); } catch (error) { console.error(
-                            'Erro ao atualizar transação:', error);
-                        showToast('❌ Erro ao atualizar transação.', 'error'); } } else { const novaTransacao = { ...
-                        dadosFluxo, dataCriacao: new Date().toISOString() }; try { await colecoes.fluxocaixa.add(
-                        novaTransacao);
-                    resetarFormFluxo();
-                    showToast('✅ Transação registrada com sucesso!', 'success'); } catch (error) { console.error(
-                        'Erro ao registrar transação:', error);
-                    showToast('❌ Erro ao registrar transação.', 'error'); } }
+                if (editandoFluxoId) { try { await colecoes.fluxocaixa.doc(editandoFluxoId).update(dadosFluxo); resetarFormFluxo(); showToast('✅ Transação atualizada com sucesso!', 'success'); } catch (error) { console.error('Erro ao atualizar transação:', error); showToast('❌ Erro ao atualizar transação.', 'error'); } } else { const novaTransacao = { ...dadosFluxo, dataCriacao: new Date().toISOString() }; try { await colecoes.fluxocaixa.add(novaTransacao); resetarFormFluxo(); showToast('✅ Transação registrada com sucesso!', 'success'); } catch (error) { console.error('Erro ao registrar transação:', error); showToast('❌ Erro ao registrar transação.', 'error'); } }
                 initScrollButtons();
             });
             window._editarFluxo = function(id) {
@@ -2757,8 +2521,7 @@
                 btnSubmitFluxo.textContent = '💾 Atualizar Transação';
                 btnCancelEdicaoFluxo.style.display = 'inline-block';
                 editBannerFluxo.classList.add('show');
-                document.getElementById('edit-banner-fluxo-text').textContent =
-                    `Editando transação: ${transacao.descricao} - ${formatarMoeda(transacao.valor)}`;
+                document.getElementById('edit-banner-fluxo-text').textContent = `Editando transação: ${transacao.descricao} - ${formatarMoeda(transacao.valor)}`;
                 fluxoFormTitle.textContent = 'Editar Transação';
                 document.getElementById('card-form-fluxo').scrollIntoView({ behavior: 'smooth', block: 'start' });
                 showToast('✏️ Modo de edição ativado.', 'info');
@@ -2767,28 +2530,15 @@
                 if (!isAdmin()) return;
                 if (!confirm('Tem certeza que deseja excluir esta transação?')) return;
                 if (editandoFluxoId === id) resetarFormFluxo();
-                try { await colecoes.fluxocaixa.doc(id).delete();
-                    showToast('🗑️ Transação excluída com sucesso!', 'info'); } catch (error) { console.error(
-                        'Erro ao excluir transação:', error);
-                    showToast('❌ Erro ao excluir transação.', 'error'); }
+                try { await colecoes.fluxocaixa.doc(id).delete(); showToast('🗑️ Transação excluída com sucesso!', 'info'); } catch (error) { console.error('Erro ao excluir transação:', error); showToast('❌ Erro ao excluir transação.', 'error'); }
             };
             const inputBuscaFluxo = document.getElementById('input-busca-fluxo');
             const clearSearchBtnFluxo = document.getElementById('clear-search-btn-fluxo');
             const btnLimparFiltroFluxo = document.getElementById('btn-limpar-filtro-fluxo');
-            inputBuscaFluxo.addEventListener('input', function() { termoBuscaFluxo = this.value;
-                atualizarUIBuscaFluxo(); });
-            inputBuscaFluxo.addEventListener('keydown', function(e) { if (e.key === 'Escape') { termoBuscaFluxo = '';
-                    this.value = '';
-                    atualizarUIBuscaFluxo();
-                    this.blur(); } });
-            clearSearchBtnFluxo.addEventListener('click', function() { termoBuscaFluxo = '';
-                inputBuscaFluxo.value = '';
-                atualizarUIBuscaFluxo();
-                inputBuscaFluxo.focus(); });
-            btnLimparFiltroFluxo.addEventListener('click', function() { termoBuscaFluxo = '';
-                inputBuscaFluxo.value = '';
-                atualizarUIBuscaFluxo();
-                inputBuscaFluxo.focus(); });
+            inputBuscaFluxo.addEventListener('input', function() { termoBuscaFluxo = this.value; atualizarUIBuscaFluxo(); });
+            inputBuscaFluxo.addEventListener('keydown', function(e) { if (e.key === 'Escape') { termoBuscaFluxo = ''; this.value = ''; atualizarUIBuscaFluxo(); this.blur(); } });
+            clearSearchBtnFluxo.addEventListener('click', function() { termoBuscaFluxo = ''; inputBuscaFluxo.value = ''; atualizarUIBuscaFluxo(); inputBuscaFluxo.focus(); });
+            btnLimparFiltroFluxo.addEventListener('click', function() { termoBuscaFluxo = ''; inputBuscaFluxo.value = ''; atualizarUIBuscaFluxo(); inputBuscaFluxo.focus(); });
 
             // ===================== GERENCIAMENTO DE USUÁRIOS (admin only) =====================
             const formUsuario = document.getElementById('form-usuario');
@@ -2808,8 +2558,7 @@
                 atualizarPermissoesUsuarioGrid();
             }
             btnCancelUsuario.addEventListener('click', resetarFormUsuario);
-            btnCancelEdicaoUsuario.addEventListener('click', function() { resetarFormUsuario();
-                showToast('📋 Edição cancelada.', 'info'); });
+            btnCancelEdicaoUsuario.addEventListener('click', function() { resetarFormUsuario(); showToast('📋 Edição cancelada.', 'info'); });
 
             formUsuario.addEventListener('submit', async function(e) {
                 if (!isAdmin()) return;
@@ -2822,25 +2571,21 @@
                 const veiculosPermitidos = [];
                 checksVeiculos.forEach(ch => { if (ch.checked) veiculosPermitidos.push(ch.value); });
                 if (editandoUsuarioId) {
-                    const updateData = { nome, usuario: login, senha, veiculosPermitidos, dataAtualizacao: new Date()
-                            .toISOString() };
+                    const updateData = { nome, usuario: login, senha, veiculosPermitidos, dataAtualizacao: new Date().toISOString() };
                     try {
                         await colecoes.usuarios.doc(editandoUsuarioId).update(updateData);
                         resetarFormUsuario();
                         showToast('✅ Usuário atualizado com sucesso!', 'success');
-                    } catch (error) { console.error('Erro ao atualizar usuário:', error);
-                        showToast('❌ Erro ao atualizar usuário.', 'error'); }
+                    } catch (error) { console.error('Erro ao atualizar usuário:', error); showToast('❌ Erro ao atualizar usuário.', 'error'); }
                 } else {
                     const existe = usuarios.some(u => u.usuario === login);
                     if (existe) { showToast('⚠️ Já existe um usuário com este login.', 'error'); return; }
-                    const novoUsuario = { nome, usuario: login, senha, role: 'usuario', veiculosPermitidos,
-                        dataCriacao: new Date().toISOString(), dataAtualizacao: new Date().toISOString() };
+                    const novoUsuario = { nome, usuario: login, senha, role: 'usuario', veiculosPermitidos, dataCriacao: new Date().toISOString(), dataAtualizacao: new Date().toISOString() };
                     try {
                         await colecoes.usuarios.add(novoUsuario);
                         resetarFormUsuario();
                         showToast('✅ Usuário criado com sucesso!', 'success');
-                    } catch (error) { console.error('Erro ao criar usuário:', error);
-                        showToast('❌ Erro ao criar usuário.', 'error'); }
+                    } catch (error) { console.error('Erro ao criar usuário:', error); showToast('❌ Erro ao criar usuário.', 'error'); }
                 }
             });
 
@@ -2848,20 +2593,13 @@
                 if (!isAdmin()) return;
                 const tbody = document.getElementById('tbody-usuarios');
                 const usuariosFiltrados = usuarios;
-                if (usuariosFiltrados.length === 0) { tbody.innerHTML =
-                        '<tr><td colspan="6" class="empty-state"><span class="icon">👤</span><br>Nenhum usuário cadastrado</td></tr>'; return; }
+                if (usuariosFiltrados.length === 0) { tbody.innerHTML = '<tr><td colspan="6" class="empty-state"><span class="icon">👤</span><br>Nenhum usuário cadastrado</td></tr>'; return; }
                 tbody.innerHTML = usuariosFiltrados.map(u => {
                     const numVeiculos = (u.veiculosPermitidos || []).length;
-                    const roleBadge = u.role === 'admin' ?
-                        '<span class="badge badge-warning">👑 Admin</span>' :
-                        '<span class="badge badge-info">👤 Usuário</span>';
-                    const veiculosTexto = u.role === 'admin' ? '<span style="color:var(--text-muted);">Todos</span>' :
-                        (numVeiculos > 0 ? `<span class="badge badge-success">${numVeiculos} veículo(s)</span>` :
-                            '<span style="color:var(--danger);">Nenhum</span>');
+                    const roleBadge = u.role === 'admin' ? '<span class="badge badge-warning">👑 Admin</span>' : '<span class="badge badge-info">👤 Usuário</span>';
+                    const veiculosTexto = u.role === 'admin' ? '<span style="color:var(--text-muted);">Todos</span>' : (numVeiculos > 0 ? `<span class="badge badge-success">${numVeiculos} veículo(s)</span>` : '<span style="color:var(--danger);">Nenhum</span>');
                     const dataCriacao = u.dataCriacao ? new Date(u.dataCriacao).toLocaleDateString('pt-BR') : '—';
-                    const acoesHtml = u.role !== 'admin' ?
-                        `<button class="btn-edit" onclick="window._editarUsuario('${u.id}')" title="Editar Usuário">✏️</button><button class="btn-danger" onclick="window._excluirUsuario('${u.id}')" title="Excluir">🗑️</button>` :
-                        '<span style="color:var(--text-muted);font-size:11px;">Protegido</span>';
+                    const acoesHtml = u.role !== 'admin' ? `<button class="btn-edit" onclick="window._editarUsuario('${u.id}')" title="Editar Usuário">✏️</button><button class="btn-danger" onclick="window._excluirUsuario('${u.id}')" title="Excluir">🗑️</button>` : '<span style="color:var(--text-muted);font-size:11px;">Protegido</span>';
                     return `<tr><td><strong>${u.nome}</strong></td><td>${u.usuario}</td><td>${roleBadge}</td><td>${veiculosTexto}</td><td>${dataCriacao}</td><td>${acoesHtml}</td></tr>`;
                 }).join('');
                 initScrollButtons();
@@ -2870,8 +2608,7 @@
             window._editarUsuario = function(id) {
                 if (!isAdmin()) return;
                 const usuario = usuarios.find(u => u.id === id);
-                if (!usuario || usuario.role === 'admin') { showToast('⚠️ Não é possível editar o administrador.',
-                        'error'); return; }
+                if (!usuario || usuario.role === 'admin') { showToast('⚠️ Não é possível editar o administrador.', 'error'); return; }
                 editandoUsuarioId = id;
                 document.getElementById('u-nome').value = usuario.nome || '';
                 document.getElementById('u-login').value = usuario.usuario || '';
@@ -2879,8 +2616,7 @@
                 btnSubmitUsuario.textContent = '💾 Atualizar Usuário';
                 btnCancelEdicaoUsuario.style.display = 'inline-block';
                 editBannerUsuario.classList.add('show');
-                document.getElementById('edit-banner-usuario-text').textContent =
-                    `Editando usuário: ${usuario.nome} (${usuario.usuario})`;
+                document.getElementById('edit-banner-usuario-text').textContent = `Editando usuário: ${usuario.nome} (${usuario.usuario})`;
                 usuarioFormTitle.textContent = 'Editar Usuário';
                 document.getElementById('card-form-usuario').scrollIntoView({ behavior: 'smooth', block: 'start' });
                 atualizarPermissoesUsuarioGrid();
@@ -2890,59 +2626,38 @@
             window._excluirUsuario = async function(id) {
                 if (!isAdmin()) return;
                 const usuario = usuarios.find(u => u.id === id);
-                if (!usuario || usuario.role === 'admin') { showToast('⚠️ Não é possível excluir o administrador.',
-                        'error'); return; }
+                if (!usuario || usuario.role === 'admin') { showToast('⚠️ Não é possível excluir o administrador.', 'error'); return; }
                 if (!confirm(`Tem certeza que deseja excluir o usuário "${usuario.nome}"?`)) return;
                 if (editandoUsuarioId === id) resetarFormUsuario();
-                try { await colecoes.usuarios.doc(id).delete();
-                    showToast('🗑️ Usuário excluído com sucesso!', 'info'); } catch (error) { console.error(
-                        'Erro ao excluir usuário:', error);
-                    showToast('❌ Erro ao excluir usuário.', 'error'); }
+                try { await colecoes.usuarios.doc(id).delete(); showToast('🗑️ Usuário excluído com sucesso!', 'info'); } catch (error) { console.error('Erro ao excluir usuário:', error); showToast('❌ Erro ao excluir usuário.', 'error'); }
             };
 
-            // ===================== JANELA FILTRO =====================
+            // ===================== JANELA FILTRO (sem alterações) =====================
             function abrirJanelaFiltro() {
                 const popupHTML = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Filtro de Locações - PAIZÃO RENT CAR</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Inter','Segoe UI',system-ui,sans-serif;background:#0c0f16;color:#e0e0e0;padding:20px;min-height:100vh;display:flex;flex-direction:column}.aviso-fechar{background:rgba(231,76,60,0.2);border:1px solid rgba(231,76,60,0.5);color:#ff6b6b;padding:12px 18px;border-radius:10px;font-size:14px;font-weight:600;text-align:center;margin-bottom:16px}.header-popup{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px}.header-popup h2{color:#fff;font-size:20px}.btn-fechar-popup{background:#e74c3c;color:#fff;border:none;padding:12px 24px;border-radius:10px;cursor:pointer;font-size:15px;font-weight:700}.search-input-wrapper{flex:1;min-width:250px;position:relative}.search-input-wrapper input{width:100%;padding:12px 16px 12px 44px;background:#1a1d28;border:1px solid #1e2230;border-radius:10px;color:#fff;font-size:15px;outline:none}.search-input-wrapper input:focus{border-color:#e6a817}.clear-btn{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:transparent;border:none;color:#9a9da8;font-size:18px;cursor:pointer;display:none}.clear-btn.visible{display:block}.btn-editar{background:#2d5fcf;color:#fff;border:none;padding:4px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600}table{width:100%;border-collapse:collapse;font-size:13px;min-width:750px}table thead{background:#1a1d28}table th{padding:12px 14px;text-align:left;color:#9a9da8;text-transform:uppercase;font-size:10px;border-bottom:1px solid #1e2230}table td{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.03);color:#d0d3db}.badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600}.badge-success{background:rgba(39,174,96,0.2);color:#2ecc71}.badge-warning{background:rgba(243,156,18,0.2);color:#f39c12}.badge-info{background:rgba(45,95,207,0.2);color:#5b8def}.highlight-valor{color:#e6a817;font-weight:700}</style></head><body><div class="aviso-fechar">⚠️ Para fechar, use o <strong>BOTÃO FECHAR</strong> abaixo.</div><div class="header-popup"><h2>🔍 Filtro de Locações</h2><button class="btn-fechar-popup" id="btn-fechar-popup">✕ FECHAR</button></div><div style="display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap;"><div class="search-input-wrapper"><span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);">🔍</span><input type="text" id="popup-busca" placeholder="Pesquisar por PLACA ou CPF..." autocomplete="off"><button class="clear-btn" id="popup-clear-btn">✕</button></div><span id="popup-results-info" style="font-size:13px;color:#9a9da8;">Total: <span id="popup-count" style="color:#e6a817;font-weight:700;">0</span> locações</span><button id="popup-btn-limpar" style="display:none;background:transparent;border:1px solid #1e2230;color:#9a9da8;padding:8px 16px;border-radius:8px;cursor:pointer;">🧹 Limpar</button></div><div style="overflow-x:auto;border-radius:10px;border:1px solid #1e2230;flex:1;"><table><thead><tr><th>Veículo</th><th>Placa</th><th>Locatário</th><th>CPF</th><th>Data Início</th><th>Data Fim</th><th>Valor Semanal</th><th>Caução</th><th>Status</th><th>Ações</th></tr></thead><tbody id="popup-tbody"></tbody></table></div><script>
-                const STORAGE_KEY='paizao_locacoes';function getLocacoes(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY))||[]}catch(e){return[]}}function formatarMoeda(v){return 'R$ '+parseFloat(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}function sanitizar(s){return(s||'').replace(/[^a-zA-Z0-9]/g,'').toLowerCase()}const inputBusca=document.getElementById('popup-busca'),clearBtn=document.getElementById('popup-clear-btn'),btnLimpar=document.getElementById('popup-btn-limpar'),tbody=document.getElementById('popup-tbody'),countSpan=document.getElementById('popup-count'),resultsInfo=document.getElementById('popup-results-info'),btnFechar=document.getElementById('btn-fechar-popup');let fechamentoPermitido=false;btnFechar.addEventListener('click',function(){fechamentoPermitido=true;window.close()});window.addEventListener('beforeunload',function(e){if(!fechamentoPermitido){e.preventDefault();e.returnValue='⚠️ Use o botão FECHAR para fechar esta janela.';return e.returnValue}});function renderizar(termo){const locacoes=getLocacoes();let filtradas=locacoes;const ts=sanitizar(termo);if(termo.trim()!==''){filtradas=locacoes.filter(l=>sanitizar(l.veiculoPlaca).includes(ts)||sanitizar(l.locatarioCPF).includes(ts));resultsInfo.innerHTML='🔍 Encontradas: <span style="color:#e6a817;font-weight:700;">'+filtradas.length+'</span> de '+locacoes.length;btnLimpar.style.display='flex';clearBtn.classList.add('visible')}else{resultsInfo.innerHTML='Total: <span style="color:#e6a817;font-weight:700;">'+filtradas.length+'</span> locações';btnLimpar.style.display='none';clearBtn.classList.remove('visible')}countSpan.textContent=filtradas.length;if(filtradas.length===0){tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:40px;">🔍 Nenhuma locação encontrada.</td></tr>';return}tbody.innerHTML=filtradas.map(l=>{let caucaoHtml=formatarMoeda(l.caucao);if(l.formaCaucao==='parcelado')caucaoHtml+=' <span class="badge badge-warning">'+(l.parcelasCaucao||'?')+'x</span>';else if(l.formaCaucao==='entrada_parcelado')caucaoHtml+=' <span class="badge badge-info">Entrada '+formatarMoeda(l.valorEntradaCaucao||0)+' + '+(l.parcelasCaucao||'?')+'x</span>';else caucaoHtml+=' <span class="badge badge-success">À vista</span>';return '<tr><td>'+l.veiculoNome+'</td><td><strong>'+l.veiculoPlaca+'</strong></td><td>'+l.locatarioNome+'</td><td>'+l.locatarioCPF+'</td><td>'+new Date(l.dataInicio).toLocaleDateString('pt-BR')+'</td><td>'+new Date(l.dataFim).toLocaleDateString('pt-BR')+'</td><td class="highlight-valor">'+formatarMoeda(l.valorSemanal)+'</td><td>'+caucaoHtml+'</td><td><span class="badge badge-info">Ativa</span></td><td><button class="btn-editar" onclick="window.editarLocacaoDaJanelaFiltro('+l.id+')">✏️ Editar</button></td></tr>'}).join('')}inputBusca.addEventListener('input',function(){renderizar(this.value)});clearBtn.addEventListener('click',function(){inputBusca.value='';renderizar('');inputBusca.focus()});btnLimpar.addEventListener('click',function(){inputBusca.value='';renderizar('');inputBusca.focus()});setInterval(()=>{renderizar(inputBusca.value)},2000);inputBusca.focus();renderizar('');
+                    const STORAGE_KEY='paizao_locacoes';function getLocacoes(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY))||[]}catch(e){return[]}}function formatarMoeda(v){return 'R$ '+parseFloat(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}function sanitizar(s){return(s||'').replace(/[^a-zA-Z0-9]/g,'').toLowerCase()}const inputBusca=document.getElementById('popup-busca'),clearBtn=document.getElementById('popup-clear-btn'),btnLimpar=document.getElementById('popup-btn-limpar'),tbody=document.getElementById('popup-tbody'),countSpan=document.getElementById('popup-count'),resultsInfo=document.getElementById('popup-results-info'),btnFechar=document.getElementById('btn-fechar-popup');let fechamentoPermitido=false;btnFechar.addEventListener('click',function(){fechamentoPermitido=true;window.close()});window.addEventListener('beforeunload',function(e){if(!fechamentoPermitido){e.preventDefault();e.returnValue='⚠️ Use o botão FECHAR para fechar esta janela.';return e.returnValue}});function renderizar(termo){const locacoes=getLocacoes();let filtradas=locacoes;const ts=sanitizar(termo);if(termo.trim()!==''){filtradas=locacoes.filter(l=>sanitizar(l.veiculoPlaca).includes(ts)||sanitizar(l.locatarioCPF).includes(ts));resultsInfo.innerHTML='🔍 Encontradas: <span style="color:#e6a817;font-weight:700;">'+filtradas.length+'</span> de '+locacoes.length;btnLimpar.style.display='flex';clearBtn.classList.add('visible')}else{resultsInfo.innerHTML='Total: <span style="color:#e6a817;font-weight:700;">'+filtradas.length+'</span> locações';btnLimpar.style.display='none';clearBtn.classList.remove('visible')}countSpan.textContent=filtradas.length;if(filtradas.length===0){tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:40px;">🔍 Nenhuma locação encontrada.</td></tr>';return}tbody.innerHTML=filtradas.map(l=>{let caucaoHtml=formatarMoeda(l.caucao);if(l.formaCaucao==='parcelado')caucaoHtml+=' <span class="badge badge-warning">'+(l.parcelasCaucao||'?')+'x</span>';else if(l.formaCaucao==='entrada_parcelado')caucaoHtml+=' <span class="badge badge-info">Entrada '+formatarMoeda(l.valorEntradaCaucao||0)+' + '+(l.parcelasCaucao||'?')+'x</span>';else caucaoHtml+=' <span class="badge badge-success">À vista</span>';return '<tr><td>'+l.veiculoNome+'</td><td><strong>'+l.veiculoPlaca+'</strong></td><td>'+l.locatarioNome+'</td><td>'+l.locatarioCPF+'</td><td>'+new Date(l.dataInicio).toLocaleDateString('pt-BR')+'</td><td>'+new Date(l.dataFim).toLocaleDateString('pt-BR')+'</td><td class="highlight-valor">'+formatarMoeda(l.valorSemanal)+'</td><td>'+caucaoHtml+'</td><td><span class="badge badge-info">Ativa</span></td><td><button class="btn-editar" onclick="window.editarLocacaoDaJanelaFiltro('+l.id+')">✏️ Editar</button></td></tr>'}).join('')}inputBusca.addEventListener('input',function(){renderizar(this.value)});clearBtn.addEventListener('click',function(){inputBusca.value='';renderizar('');inputBusca.focus()});btnLimpar.addEventListener('click',function(){inputBusca.value='';renderizar('');inputBusca.focus()});setInterval(()=>{renderizar(inputBusca.value)},2000);inputBusca.focus();renderizar('');
                 <\/script></body></html>`;
-                const janela = window.open('', 'FiltroLocacoes',
-                    `width=${screen.availWidth},height=${screen.availHeight},left=0,top=0,scrollbars=yes,resizable=yes`);
-                if (janela) { janela.document.write(popupHTML);
-                    janela.document.close();
-                    janela.focus(); } else { showToast('⚠️ Pop-up bloqueado! Permita pop-ups para abrir o filtro.',
-                    'error'); }
+                const janela = window.open('', 'FiltroLocacoes', `width=${screen.availWidth},height=${screen.availHeight},left=0,top=0,scrollbars=yes,resizable=yes`);
+                if (janela) { janela.document.write(popupHTML); janela.document.close(); janela.focus(); } else { showToast('⚠️ Pop-up bloqueado! Permita pop-ups para abrir o filtro.', 'error'); }
             }
-            document.getElementById('btn-filtro-locacoes-nav').addEventListener('click', function(e) { e.preventDefault();
-                abrirJanelaFiltro(); });
+            document.getElementById('btn-filtro-locacoes-nav').addEventListener('click', function(e) { e.preventDefault(); abrirJanelaFiltro(); });
 
             function abrirJanelaSeguro() {
-                const janela = window.open('', 'SEGURO',
-                    `width=${screen.availWidth},height=${screen.availHeight},left=0,top=0,scrollbars=yes,resizable=yes`);
-                if (janela) { janela.document.write(
-                        '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>SEGURO</title></head><body style="background:#0c0f16;"></body></html>'
-                        );
-                    janela.document.close();
-                    janela.focus();
-                    showToast('🪟 Janela SEGURO aberta!', 'success'); } else { showToast('⚠️ Pop-up bloqueado!',
-                        'error'); }
+                const janela = window.open('', 'SEGURO', `width=${screen.availWidth},height=${screen.availHeight},left=0,top=0,scrollbars=yes,resizable=yes`);
+                if (janela) { janela.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>SEGURO</title></head><body style="background:#0c0f16;"></body></html>'); janela.document.close(); janela.focus(); showToast('🪟 Janela SEGURO aberta!', 'success'); } else { showToast('⚠️ Pop-up bloqueado!', 'error'); }
             }
-            document.getElementById('btn-menu-nav').addEventListener('click', function(e) { e.preventDefault();
-                abrirJanelaSeguro(); });
-            window.editarLocacaoDaJanelaFiltro = function(locacaoId) { if (window.opener && window.opener._editarLocacao) {
-                    window.opener._editarLocacao(locacaoId);
-                    window.opener.focus(); } try { window.close(); } catch (e) {} };
+            document.getElementById('btn-menu-nav').addEventListener('click', function(e) { e.preventDefault(); abrirJanelaSeguro(); });
+            window.editarLocacaoDaJanelaFiltro = function(locacaoId) { if (window.opener && window.opener._editarLocacao) { window.opener._editarLocacao(locacaoId); window.opener.focus(); } try { window.close(); } catch (e) {} };
 
             // ===================== INICIALIZAÇÃO =====================
-            document.getElementById('mobile-menu-toggle')?.addEventListener('click', function() { document.getElementById(
-                    'top-nav').classList.toggle('open'); });
+            document.getElementById('mobile-menu-toggle')?.addEventListener('click', function() { document.getElementById('top-nav').classList.toggle('open'); });
             loginScreen.style.display = 'flex';
             appScreen.classList.remove('active');
             atualizarIndicadorSync(navigator.onLine);
             garantirAdminPadrao();
-            console.log('🚗 PAIZÃO RENT CAR - Sistema Multi-Usuário com Firebase!');
+            console.log('🚗 PAIZÃO RENT CAR - Sistema SEM Storage (Base64 no Firestore)');
             console.log('👤 Admin: SERGIO / 080888');
-            console.log('🔐 Usuários comuns: acesso restrito aos veículos vinculados');
-            console.log('📄 Usuários podem visualizar e baixar documentos, sem editar');
+            console.log('⚠️ Limite: documentos de até 500KB para não estourar o limite de 1MB do Firestore.');
         })();
     </script>
 </body>

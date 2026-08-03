@@ -1632,6 +1632,32 @@
                 atualizarPermissoesUsuarioGrid();
             }
 
+            // ===================== DOWNLOAD FORÇADO DE DOCUMENTOS =====================
+            function downloadDocumento(base64, nome) {
+                // Determina o MIME type a partir do prefixo data: ou assume PDF
+                let mimeType = 'application/pdf';
+                const match = base64.match(/^data:(.*?);base64,/);
+                if (match) {
+                    mimeType = match[1];
+                }
+                // Converte base64 para blob
+                const byteString = atob(base64.split(',')[1] || base64);
+                const ab = new ArrayBuffer(byteString.length);
+                const ia = new Uint8Array(ab);
+                for (let i = 0; i < byteString.length; i++) {
+                    ia[i] = byteString.charCodeAt(i);
+                }
+                const blob = new Blob([ab], { type: mimeType });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = nome || 'documento';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+
             // ===================== LISTENERS EM TEMPO REAL =====================
             function ativarListenersFirestore() {
                 listenersAtivos.forEach(unsub => unsub());
@@ -1694,7 +1720,7 @@
             function fileToBase64(file) {
                 return new Promise((resolve, reject) => {
                     const reader = new FileReader();
-                    reader.onload = () => resolve(reader.result); // inclui o prefixo data:...
+                    reader.onload = () => resolve(reader.result);
                     reader.onerror = reject;
                     reader.readAsDataURL(file);
                 });
@@ -2160,7 +2186,9 @@
                 tbody.innerHTML = veiculosPerm.map(v => {
                     let docLink = '<span style="color:var(--text-muted);">—</span>';
                     if (v.documentoBase64) {
-                        docLink = `<a href="${v.documentoBase64}" target="_blank" class="btn-pdf" title="Ver Documento">📄 Ver PDF</a>`;
+                        // Link que força o download do PDF em vez de abrir
+                        const nomeArquivo = (v.documentoNome || 'documento.pdf').replace(/'/g, "\\'");
+                        docLink = `<a href="#" class="btn-pdf" onclick="event.preventDefault(); downloadDocumento('${v.documentoBase64}', '${nomeArquivo}')" title="Baixar Documento">📥 PDF</a>`;
                     }
                     return `<tr>
                         <td>${v.marca}</td><td>${v.modelo}</td><td>${v.cor}</td><td><strong>${v.potencia || '—'}</strong></td>
@@ -2413,8 +2441,8 @@
                         }
                         try {
                             const base64 = await fileToBase64(file);
-                            tamanhoTotal += base64.length; // caracteres = bytes em base64 string
-                            if (tamanhoTotal > 900000) { // ~900KB para deixar margem para outros campos
+                            tamanhoTotal += base64.length;
+                            if (tamanhoTotal > 900000) {
                                 throw new Error('Tamanho total dos documentos excede o limite de 1MB do Firestore. Reduza o número ou tamanho dos arquivos.');
                             }
                             documentos.push({ nome: file.name, base64: base64, tipo: file.type, tamanho: file.size });
@@ -2526,7 +2554,7 @@
             clearSearchBtn.addEventListener('click', function() { termoBuscaLocacoes = ''; inputBuscaLocacoes.value = ''; atualizarUIBuscaLocacoes(); inputBuscaLocacoes.focus(); });
             btnLimparFiltroLocacoes.addEventListener('click', function() { termoBuscaLocacoes = ''; inputBuscaLocacoes.value = ''; atualizarUIBuscaLocacoes(); inputBuscaLocacoes.focus(); });
 
-            // ===================== VISUALIZAÇÃO DE DOCUMENTOS DA LOCAÇÃO =====================
+            // ===================== VISUALIZAÇÃO DE DOCUMENTOS DA LOCAÇÃO (com download forçado) =====================
             window._verDocumentosLocacao = function(id) {
                 const locacao = locacoes.find(l => l.id === id);
                 if (!locacao || !locacao.documentosLocatario || locacao.documentosLocatario.length === 0) {
@@ -2536,9 +2564,10 @@
                 const content = document.getElementById('docs-modal-content');
                 const overlay = document.getElementById('docs-modal-overlay');
                 content.innerHTML = locacao.documentosLocatario.map((doc, index) => {
+                    const nomeArquivo = (doc.nome || `documento_${index+1}`).replace(/'/g, "\\'");
                     return `<div class="doc-item">
-                        <span>📎 ${doc.nome || `Documento ${index + 1}`}</span>
-                        <a href="${doc.base64}" target="_blank" title="Abrir documento">🔗 Abrir</a>
+                        <span>📎 ${doc.nome || `Documento ${index+1}`}</span>
+                        <a href="#" onclick="event.preventDefault(); downloadDocumento('${doc.base64}', '${nomeArquivo}')" title="Baixar documento">📥 Baixar</a>
                     </div>`;
                 }).join('');
                 overlay.classList.add('active');

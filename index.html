@@ -1537,6 +1537,7 @@
                 appId: "1:226273766671:web:d82b540a9317f8a08b627a",
                 measurementId: "G-JPRYWHGQNC"
             };
+
             firebase.initializeApp(firebaseConfig);
             const db = firebase.firestore();
             const auth = firebase.auth();
@@ -1657,6 +1658,9 @@
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
             }
+
+            // TORNA A FUNÇÃO ACESSÍVEL NO ESCOPO GLOBAL
+            window.downloadDocumento = downloadDocumento;
 
             // ===================== LISTENERS EM TEMPO REAL =====================
             function ativarListenersFirestore() {

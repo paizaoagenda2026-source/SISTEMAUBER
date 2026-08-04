@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PAIZÃO RENT CAR - Sistema de Locação (Sem Storage)</title>
 
-    <!-- Firebase compat (apenas App, Firestore e Auth) -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js">
     </script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js">
@@ -1164,8 +1163,6 @@
             margin: 20px 0 16px 0;
             padding-top: 16px;
         }
-
-        /* Modal de documentos */
         .docs-modal-overlay {
             display: none;
             position: fixed;
@@ -1266,6 +1263,7 @@
                 <button data-page="veiculos"><span class="nav-icon">🚙</span> Veículos</button>
                 <button data-page="locatarios" class="nav-admin-only"><span class="nav-icon">👥</span> Locatários</button>
                 <button data-page="locacoes" class="nav-admin-only"><span class="nav-icon">📋</span> Locações</button>
+                <button data-page="docpdf" class="nav-admin-only"><span class="nav-icon">📄</span> DOC PDF</button>
                 <button data-page="fluxocaixa" class="nav-admin-only" style="border:1px solid var(--border);"><span class="nav-icon">💰</span> Fluxo de Caixa</button>
                 <button data-page="usuarios" class="nav-admin-only" style="border:1px solid var(--accent);"><span class="nav-icon">👤</span> Usuários</button>
                 <button id="btn-filtro-locacoes-nav" class="nav-admin-only" title="Abrir filtro de locações em janela separada"><span class="nav-icon">🔍</span> Filtro</button>
@@ -1402,19 +1400,9 @@
                             <div class="form-group-app" id="loc-grupo-entrada-caucao" style="display:none;"><label>Valor da Entrada do Caução (R$)</label><input type="text" id="loc-entrada-caucao" placeholder="R$ 0,00" step="0.01" min="0" oninput="formatarMoedaInput(this)" onblur="formatarMoedaInputBlur(this)"></div>
                             <div class="form-group-app" id="loc-grupo-parcelas" style="display:none;"><label>Nº de Parcelas (na semana)</label><input type="number" id="loc-parcelas" placeholder="Ex: 4" min="1" max="20" value="2"></div>
                         </div>
-                        <div class="card-title" style="margin-top:20px;"><span class="icon">📎</span> Documentos do Locatário (até 8 anexos, máx. 500KB cada)</div>
-                        <div class="documentos-grid" id="documentos-locatario-grid">
-                            <div class="form-group-app"><label>CPF</label><input type="file" accept=".pdf,.jpg,.jpeg,.png" class="doc-input"></div>
-                            <div class="form-group-app"><label>CONTRATO</label><input type="file" accept=".pdf,.jpg,.jpeg,.png" class="doc-input"></div>
-                            <div class="form-group-app"><label>RG</label><input type="file" accept=".pdf,.jpg,.jpeg,.png" class="doc-input"></div>
-                            <div class="form-group-app"><label>TERMO</label><input type="file" accept=".pdf,.jpg,.jpeg,.png" class="doc-input"></div>
-                            <div class="form-group-app"><label>CNH</label><input type="file" accept=".pdf,.jpg,.jpeg,.png" class="doc-input"></div>
-                            <div class="form-group-app"><label>PROMISSORIA</label><input type="file" accept=".pdf,.jpg,.jpeg,.png" class="doc-input"></div>
-                            <div class="form-group-app"><label>DOC CARRO</label><input type="file" accept=".pdf,.jpg,.jpeg,.png" class="doc-input"></div>
-                            <div class="form-group-app"><label>COMPR ENDEREÇO</label><input type="file" accept=".pdf,.jpg,.jpeg,.png" class="doc-input"></div>
-                        </div>
                         <div style="display:flex;gap:12px;margin-top:16px;">
                             <button type="submit" class="btn-app btn-save" id="btn-submit-locacao">✅ Confirmar Locação</button>
+                            <button type="button" class="btn-app btn-cancel" id="btn-pdf-upload-locacao" style="display: inline-flex; align-items: center; gap: 6px;">📎 PDF</button>
                             <button type="button" class="btn-app btn-cancel" id="btn-cancel-edicao-locacao" style="display:none;">❌ Cancelar Edição</button>
                         </div>
                     </form>
@@ -1429,6 +1417,25 @@
                         <button class="scroll-btn scroll-btn-left" aria-label="Rolar para esquerda">◀</button>
                         <button class="scroll-btn scroll-btn-right" aria-label="Rolar para direita">▶</button>
                         <table id="tabela-locacoes"><thead><tr><th>Veículo</th><th>Placa</th><th>Locatário</th><th>CPF</th><th>Data Início</th><th>Data Fim</th><th>Valor Semanal</th><th>Caução</th><th>Status</th><th>Docs</th><th>Ações</th></tr></thead><tbody id="tbody-locacoes"><tr><td colspan="11" class="empty-state"><span class="icon">📋</span><br>Nenhuma locação ativa</td></tr></tbody></table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DOC PDF (admin only) -->
+            <div class="page" id="page-docpdf">
+                <div class="page-header"><h2>📄 Documentos PDF</h2><p>Gerencie os arquivos PDF salvos no sistema</p></div>
+                <div class="card">
+                    <div class="card-title"><span class="icon">📋</span> PDFs Armazenados</div>
+                    <div style="margin-bottom: 16px; display: flex; justify-content: flex-end;">
+                        <button class="btn-app btn-save" id="btn-novo-pdf-docpdf" style="display: inline-flex; align-items: center; gap: 6px;">➕ Novo PDF</button>
+                    </div>
+                    <div class="table-wrapper" id="table-wrapper-docpdf">
+                        <button class="scroll-btn scroll-btn-left" aria-label="Rolar para esquerda">◀</button>
+                        <button class="scroll-btn scroll-btn-right" aria-label="Rolar para direita">▶</button>
+                        <table id="tabela-docpdf">
+                            <thead><tr><th>Nome do Arquivo</th><th>Data de Upload</th><th>Ações</th></tr></thead>
+                            <tbody id="tbody-docpdf"><tr><td colspan="3" class="empty-state"><span class="icon">📄</span><br>Nenhum PDF armazenado</td></tr></tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -1525,9 +1532,30 @@
         </div>
     </div>
 
+    <!-- Modal de upload de PDF para a aba DOC PDF -->
+    <div class="docs-modal-overlay" id="modal-pdf-overlay">
+        <div class="docs-modal">
+            <div class="docs-modal-header">
+                <h3>📎 Upload de PDF</h3>
+                <button class="docs-modal-close" id="modal-pdf-close">✕</button>
+            </div>
+            <div class="form-group-app">
+                <label>Nome do Arquivo</label>
+                <input type="text" id="input-pdf-nome" placeholder="Digite um nome para o arquivo">
+            </div>
+            <div class="form-group-app">
+                <label>Arquivo PDF</label>
+                <input type="file" id="input-pdf-file" accept=".pdf">
+                <small style="color:var(--text-muted);font-size:10px;">Tamanho máximo: 500KB</small>
+            </div>
+            <button class="btn-app btn-save" id="btn-salvar-pdf" style="width:100%; margin-top:8px;">💾 Salvar PDF</button>
+            <span id="pdf-upload-error" style="color:var(--danger);font-size:12px;display:none;margin-top:8px;display:block;"></span>
+        </div>
+    </div>
+
     <script>
         (function() {
-            // ===================== CONFIGURAÇÃO FIREBASE (SEM STORAGE) =====================
+            // ===================== CONFIGURAÇÃO FIREBASE =====================
             const firebaseConfig = {
                 apiKey: "AIzaSyA5Tn3ebMjJGFDcPJC6PaK2I5cl75DY2T4",
                 authDomain: "sistemauber-25da7.firebaseapp.com",
@@ -1542,7 +1570,6 @@
             const db = firebase.firestore();
             const auth = firebase.auth();
 
-            // Autenticação anônima para permitir leitura/gravação no Firestore
             let authPronto = false;
             auth.onAuthStateChanged(function(user) {
                 if (user) {
@@ -1564,7 +1591,8 @@
                 locatarios: db.collection('locatarios'),
                 locacoes: db.collection('locacoes'),
                 fluxocaixa: db.collection('fluxocaixa'),
-                usuarios: db.collection('usuarios')
+                usuarios: db.collection('usuarios'),
+                docspdf: db.collection('docspdf')
             };
 
             // ===================== VARIÁVEIS GLOBAIS =====================
@@ -1573,6 +1601,7 @@
             let locacoes = [];
             let fluxoCaixa = [];
             let usuarios = [];
+            let docsPdf = [];
             let usuarioLogado = null;
 
             let editandoVeiculoId = null;
@@ -1635,13 +1664,11 @@
 
             // ===================== DOWNLOAD FORÇADO DE DOCUMENTOS =====================
             function downloadDocumento(base64, nome) {
-                // Determina o MIME type a partir do prefixo data: ou assume PDF
                 let mimeType = 'application/pdf';
                 const match = base64.match(/^data:(.*?);base64,/);
                 if (match) {
                     mimeType = match[1];
                 }
-                // Converte base64 para blob
                 const byteString = atob(base64.split(',')[1] || base64);
                 const ab = new ArrayBuffer(byteString.length);
                 const ia = new Uint8Array(ab);
@@ -1659,7 +1686,6 @@
                 URL.revokeObjectURL(url);
             }
 
-            // TORNA A FUNÇÃO ACESSÍVEL NO ESCOPO GLOBAL
             window.downloadDocumento = downloadDocumento;
 
             // ===================== LISTENERS EM TEMPO REAL =====================
@@ -1706,6 +1732,12 @@
                     }
                 }, (error) => { console.error('Erro listener usuários:', error); });
                 listenersAtivos.push(unsubUsuarios);
+                const unsubDocsPdf = colecoes.docspdf.onSnapshot((snapshot) => {
+                    docsPdf = [];
+                    snapshot.forEach(doc => { docsPdf.push({ id: doc.id, ...doc.data() }); });
+                    if (dadosCarregados) { atualizarTabelaDocsPdf(); }
+                }, (error) => { console.error('Erro listener docs pdf:', error); });
+                listenersAtivos.push(unsubDocsPdf);
                 setTimeout(() => { if (!dadosCarregados) { dadosCarregados = true; inicializarInterface(); } }, 500);
             }
 
@@ -1728,16 +1760,6 @@
                     reader.onerror = reject;
                     reader.readAsDataURL(file);
                 });
-            }
-
-            function base64ParaBlob(base64, mimeType) {
-                const byteString = atob(base64.split(',')[1]);
-                const ab = new ArrayBuffer(byteString.length);
-                const ia = new Uint8Array(ab);
-                for (let i = 0; i < byteString.length; i++) {
-                    ia[i] = byteString.charCodeAt(i);
-                }
-                return new Blob([ab], { type: mimeType });
             }
 
             // ===================== SINCRONIZAÇÃO FLUXO DE CAIXA =====================
@@ -1948,7 +1970,7 @@
             function sanitizarParaBusca(str) { if (!str) return ''; return str.replace(/[^a-zA-Z0-9]/g, '').toLowerCase(); }
 
             function navegarPara(pageName) {
-                if (!isAdmin() && ['locatarios', 'locacoes', 'fluxocaixa', 'usuarios'].includes(pageName)) {
+                if (!isAdmin() && ['locatarios', 'locacoes', 'fluxocaixa', 'usuarios', 'docpdf'].includes(pageName)) {
                     showToast('⚠️ Acesso restrito ao administrador.', 'error');
                     return;
                 }
@@ -1962,6 +1984,7 @@
                 if (pageName === 'veiculos') { atualizarTabelaVeiculos(); initScrollButtons(); }
                 if (pageName === 'locatarios' && isAdmin()) { atualizarTabelaLocatarios(); initScrollButtons(); }
                 if (pageName === 'locacoes' && isAdmin()) { atualizarSelectsLocacao(); atualizarTabelaLocacoes(); initScrollButtons(); if (termoBuscaLocacoes) { document.getElementById('input-busca-locacoes').value = termoBuscaLocacoes; atualizarUIBuscaLocacoes(); } }
+                if (pageName === 'docpdf' && isAdmin()) { atualizarTabelaDocsPdf(); initScrollButtons(); }
                 if (pageName === 'fluxocaixa' && isAdmin()) { atualizarResumoFluxoCaixa(); atualizarTabelaFluxoCaixa(); initScrollButtons(); if (termoBuscaFluxo) { document.getElementById('input-busca-fluxo').value = termoBuscaFluxo; atualizarUIBuscaFluxo(); } }
                 if (pageName === 'usuarios' && isAdmin()) { atualizarTabelaUsuarios(); atualizarPermissoesUsuarioGrid(); initScrollButtons(); }
             }
@@ -2190,7 +2213,6 @@
                 tbody.innerHTML = veiculosPerm.map(v => {
                     let docLink = '<span style="color:var(--text-muted);">—</span>';
                     if (v.documentoBase64) {
-                        // Link que força o download do PDF em vez de abrir
                         const nomeArquivo = (v.documentoNome || 'documento.pdf').replace(/'/g, "\\'");
                         docLink = `<a href="#" class="btn-pdf" onclick="event.preventDefault(); downloadDocumento('${v.documentoBase64}', '${nomeArquivo}')" title="Baixar Documento">📥 PDF</a>`;
                     }
@@ -2395,8 +2417,6 @@
                 document.getElementById('loc-parcelas').value = '2';
                 document.getElementById('loc-entrada-caucao').value = '';
                 divValorParcela.style.display = 'none';
-                const docInputs = document.querySelectorAll('#documentos-locatario-grid .doc-input');
-                docInputs.forEach(input => { input.value = ''; });
                 editandoLocacaoId = null;
                 btnSubmitLocacao.textContent = '✅ Confirmar Locação';
                 btnCancelEdicaoLocacao.style.display = 'none';
@@ -2418,8 +2438,6 @@
                 selectFormaCaucaoLoc.dispatchEvent(new Event('change'));
                 if (locacao.valorEntradaCaucao) document.getElementById('loc-entrada-caucao').value = formatarMoeda(locacao.valorEntradaCaucao);
                 if (locacao.parcelasCaucao) document.getElementById('loc-parcelas').value = locacao.parcelasCaucao;
-                const docInputs = document.querySelectorAll('#documentos-locatario-grid .doc-input');
-                docInputs.forEach(input => { input.value = ''; });
                 btnSubmitLocacao.textContent = '💾 Atualizar Locação';
                 btnCancelEdicaoLocacao.style.display = 'inline-block';
                 editBanner.classList.add('show');
@@ -2433,30 +2451,7 @@
                 const dataInicio = new Date(this.value);
                 if (!isNaN(dataInicio)) { const dataFim = new Date(dataInicio); dataFim.setMonth(dataFim.getMonth() + 6); document.getElementById('loc-data-fim').value = `${dataFim.getFullYear()}-${String(dataFim.getMonth() + 1).padStart(2, '0')}-${String(dataFim.getDate()).padStart(2, '0')}`; }
             });
-            async function uploadDocumentosLocacao(docInputs) {
-                const documentos = [];
-                const MAX_SIZE = 500 * 1024; // 500KB por arquivo
-                let tamanhoTotal = 0;
-                for (const input of docInputs) {
-                    if (input.files && input.files[0]) {
-                        const file = input.files[0];
-                        if (file.size > MAX_SIZE) {
-                            throw new Error(`Arquivo ${file.name} excede 500KB.`);
-                        }
-                        try {
-                            const base64 = await fileToBase64(file);
-                            tamanhoTotal += base64.length;
-                            if (tamanhoTotal > 900000) {
-                                throw new Error('Tamanho total dos documentos excede o limite de 1MB do Firestore. Reduza o número ou tamanho dos arquivos.');
-                            }
-                            documentos.push({ nome: file.name, base64: base64, tipo: file.type, tamanho: file.size });
-                        } catch (error) {
-                            throw new Error(`Erro ao processar ${file.name}: ${error.message}`);
-                        }
-                    }
-                }
-                return documentos;
-            }
+
             formLocacao.addEventListener('submit', async function(e) {
                 if (!isAdmin()) return;
                 e.preventDefault();
@@ -2473,14 +2468,20 @@
                 const parcelas = (formaCaucao === 'parcelado' || formaCaucao === 'entrada_parcelado') ? (parseInt(document.getElementById('loc-parcelas').value) || 1) : 1;
                 if (parcelas > 20) { showToast('⚠️ O número máximo de parcelas é 20.', 'error'); return; }
                 const valorEntradaCaucao = formaCaucao === 'entrada_parcelado' ? parseMoedaBR(document.getElementById('loc-entrada-caucao').value) : 0;
-                const docInputs = document.querySelectorAll('#documentos-locatario-grid .doc-input');
-                let documentosLocatario = [];
-                try { documentosLocatario = await uploadDocumentosLocacao(docInputs); } catch (error) { showToast('⚠️ Erro ao processar documentos: ' + error.message, 'error'); return; }
+
                 if (editandoLocacaoId) {
                     const locacaoAtual = locacoes.find(l => l.id === editandoLocacaoId);
-                    const docsFinais = documentosLocatario.length > 0 ? documentosLocatario : (locacaoAtual?.documentosLocatario || []);
+                    const docsExistentes = locacaoAtual?.documentosLocatario || [];
                     await removerEntradasFluxoLocacao(locacaoAtual);
-                    const updateData = { veiculoId, locatarioId, veiculoPlaca: veiculo.placa, veiculoNome: `${veiculo.marca} ${veiculo.modelo}`, locatarioNome: locatario.nome, locatarioCPF: locatario.cpf, valorSemanal: veiculo.valorSemanal, caucao: veiculo.caucao, formaCaucao, parcelasCaucao: parcelas, valorEntradaCaucao, dataInicio, dataFim, documentosLocatario: docsFinais, status: 'ativa', dataAtualizacao: new Date().toISOString() };
+                    const updateData = {
+                        veiculoId, locatarioId, veiculoPlaca: veiculo.placa, veiculoNome: `${veiculo.marca} ${veiculo.modelo}`,
+                        locatarioNome: locatario.nome, locatarioCPF: locatario.cpf,
+                        valorSemanal: veiculo.valorSemanal, caucao: veiculo.caucao,
+                        formaCaucao, parcelasCaucao: parcelas, valorEntradaCaucao,
+                        dataInicio, dataFim,
+                        documentosLocatario: docsExistentes,
+                        status: 'ativa', dataAtualizacao: new Date().toISOString()
+                    };
                     try {
                         await colecoes.locacoes.doc(editandoLocacaoId).update(updateData);
                         const fluxoCaixaIds = await criarEntradasFluxoLocacao({ ...updateData, id: editandoLocacaoId });
@@ -2489,12 +2490,20 @@
                         showToast('✅ Locação atualizada com sucesso!', 'success');
                     } catch (error) { console.error('Erro ao atualizar locação:', error); showToast('❌ Erro ao atualizar locação.', 'error'); }
                 } else {
-                    const novaLocacao = { veiculoId, locatarioId, veiculoPlaca: veiculo.placa, veiculoNome: `${veiculo.marca} ${veiculo.modelo}`, locatarioNome: locatario.nome, locatarioCPF: locatario.cpf, valorSemanal: veiculo.valorSemanal, caucao: veiculo.caucao, formaCaucao, parcelasCaucao: parcelas, valorEntradaCaucao, dataInicio, dataFim, documentosLocatario, status: 'ativa', dataCriacao: new Date().toISOString(), dataAtualizacao: new Date().toISOString() };
+                    const novaLocacao = {
+                        veiculoId, locatarioId, veiculoPlaca: veiculo.placa, veiculoNome: `${veiculo.marca} ${veiculo.modelo}`,
+                        locatarioNome: locatario.nome, locatarioCPF: locatario.cpf,
+                        valorSemanal: veiculo.valorSemanal, caucao: veiculo.caucao,
+                        formaCaucao, parcelasCaucao: parcelas, valorEntradaCaucao,
+                        dataInicio, dataFim,
+                        documentosLocatario: [],
+                        status: 'ativa', dataCriacao: new Date().toISOString(), dataAtualizacao: new Date().toISOString()
+                    };
                     try {
                         const docRef = await colecoes.locacoes.add(novaLocacao);
                         const fluxoCaixaIds = await criarEntradasFluxoLocacao({ ...novaLocacao, id: docRef.id });
                         await colecoes.locacoes.doc(docRef.id).update({ fluxoCaixaIds });
-                        formLocacao.reset(); grupoParcelasLoc.style.display = 'none'; grupoEntradaCaucaoLoc.style.display = 'none'; document.getElementById('loc-parcelas').value = '2'; document.getElementById('loc-entrada-caucao').value = ''; divValorParcela.style.display = 'none'; document.querySelectorAll('#documentos-locatario-grid .doc-input').forEach(i => i.value = ''); atualizarSelectsLocacao();
+                        formLocacao.reset(); grupoParcelasLoc.style.display = 'none'; grupoEntradaCaucaoLoc.style.display = 'none'; document.getElementById('loc-parcelas').value = '2'; document.getElementById('loc-entrada-caucao').value = ''; divValorParcela.style.display = 'none'; atualizarSelectsLocacao();
                         showToast('✅ Locação registrada com sucesso!', 'success');
                     } catch (error) { console.error('Erro ao registrar locação:', error); showToast('❌ Erro ao registrar locação.', 'error'); }
                 }
@@ -2558,7 +2567,7 @@
             clearSearchBtn.addEventListener('click', function() { termoBuscaLocacoes = ''; inputBuscaLocacoes.value = ''; atualizarUIBuscaLocacoes(); inputBuscaLocacoes.focus(); });
             btnLimparFiltroLocacoes.addEventListener('click', function() { termoBuscaLocacoes = ''; inputBuscaLocacoes.value = ''; atualizarUIBuscaLocacoes(); inputBuscaLocacoes.focus(); });
 
-            // ===================== VISUALIZAÇÃO DE DOCUMENTOS DA LOCAÇÃO (com download forçado) =====================
+            // ===================== VISUALIZAÇÃO DE DOCUMENTOS DA LOCAÇÃO =====================
             window._verDocumentosLocacao = function(id) {
                 const locacao = locacoes.find(l => l.id === id);
                 if (!locacao || !locacao.documentosLocatario || locacao.documentosLocatario.length === 0) {
@@ -2780,6 +2789,135 @@
                 if (editandoUsuarioId === id) resetarFormUsuario();
                 try { await colecoes.usuarios.doc(id).delete(); showToast('🗑️ Usuário excluído com sucesso!', 'info'); } catch (error) { console.error('Erro ao excluir usuário:', error); showToast('❌ Erro ao excluir usuário.', 'error'); }
             };
+
+            // ===================== GERENCIAMENTO DE PDFs (DOC PDF) =====================
+            function atualizarTabelaDocsPdf() {
+                if (!isAdmin()) return;
+                const tbody = document.getElementById('tbody-docpdf');
+                if (docsPdf.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" class="empty-state"><span class="icon">📄</span><br>Nenhum PDF armazenado</td></tr>';
+                    return;
+                }
+                docsPdf.sort((a, b) => new Date(b.dataCriacao) - new Date(a.dataCriacao));
+                tbody.innerHTML = docsPdf.map(doc => {
+                    const dataFormatada = doc.dataCriacao ? new Date(doc.dataCriacao).toLocaleDateString('pt-BR') + ' ' + new Date(doc.dataCriacao).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '—';
+                    const nomeArquivo = (doc.nome || 'documento.pdf').replace(/'/g, "\\'");
+                    return `<tr>
+                        <td><strong>${doc.nome || 'Sem nome'}</strong></td>
+                        <td>${dataFormatada}</td>
+                        <td>
+                            <button class="btn-pdf" onclick="event.preventDefault(); downloadDocumento('${doc.base64}', '${nomeArquivo}')" title="Baixar PDF">📥 Download</button>
+                            <button class="btn-edit" onclick="window._renomearPdf('${doc.id}')" title="Renomear">✏️ Renomear</button>
+                            <button class="btn-danger" onclick="window._excluirPdf('${doc.id}')" title="Excluir">🗑️</button>
+                        </td>
+                    </tr>`;
+                }).join('');
+                initScrollButtons();
+            }
+
+            window._renomearPdf = async function(id) {
+                if (!isAdmin()) return;
+                const doc = docsPdf.find(d => d.id === id);
+                if (!doc) return;
+                const novoNome = prompt('Digite o novo nome para o arquivo:', doc.nome || 'documento.pdf');
+                if (novoNome && novoNome.trim() !== '') {
+                    try {
+                        await colecoes.docspdf.doc(id).update({ nome: novoNome.trim(), dataAtualizacao: new Date().toISOString() });
+                        showToast('✅ Nome atualizado com sucesso!', 'success');
+                    } catch (error) {
+                        console.error('Erro ao renomear PDF:', error);
+                        showToast('❌ Erro ao renomear.', 'error');
+                    }
+                }
+            };
+
+            window._excluirPdf = async function(id) {
+                if (!isAdmin()) return;
+                if (!confirm('Tem certeza que deseja excluir este PDF?')) return;
+                try {
+                    await colecoes.docspdf.doc(id).delete();
+                    showToast('🗑️ PDF excluído com sucesso!', 'info');
+                } catch (error) {
+                    console.error('Erro ao excluir PDF:', error);
+                    showToast('❌ Erro ao excluir.', 'error');
+                }
+            };
+
+            function abrirModalPdfUpload() {
+                document.getElementById('modal-pdf-overlay').classList.add('active');
+                document.getElementById('input-pdf-nome').value = '';
+                document.getElementById('input-pdf-file').value = '';
+                document.getElementById('pdf-upload-error').style.display = 'none';
+                document.getElementById('pdf-upload-error').textContent = '';
+                setTimeout(() => document.getElementById('input-pdf-nome').focus(), 100);
+            }
+
+            function fecharModalPdfUpload() {
+                document.getElementById('modal-pdf-overlay').classList.remove('active');
+            }
+
+            document.getElementById('modal-pdf-close').addEventListener('click', fecharModalPdfUpload);
+            document.getElementById('modal-pdf-overlay').addEventListener('click', function(e) {
+                if (e.target === this) fecharModalPdfUpload();
+            });
+
+            document.getElementById('btn-pdf-upload-locacao').addEventListener('click', function() {
+                if (!isAdmin()) {
+                    showToast('⚠️ Apenas o administrador pode fazer upload de PDFs.', 'error');
+                    return;
+                }
+                abrirModalPdfUpload();
+            });
+
+            document.getElementById('btn-novo-pdf-docpdf').addEventListener('click', function() {
+                abrirModalPdfUpload();
+            });
+
+            document.getElementById('btn-salvar-pdf').addEventListener('click', async function() {
+                const nomeInput = document.getElementById('input-pdf-nome');
+                const fileInput = document.getElementById('input-pdf-file');
+                const errorSpan = document.getElementById('pdf-upload-error');
+
+                let nome = nomeInput.value.trim();
+                const file = fileInput.files[0];
+
+                if (!file) {
+                    errorSpan.textContent = 'Selecione um arquivo PDF.';
+                    errorSpan.style.display = 'block';
+                    return;
+                }
+                if (file.type !== 'application/pdf') {
+                    errorSpan.textContent = 'O arquivo deve ser um PDF.';
+                    errorSpan.style.display = 'block';
+                    return;
+                }
+                const MAX_SIZE = 500 * 1024;
+                if (file.size > MAX_SIZE) {
+                    errorSpan.textContent = 'Arquivo muito grande! Limite de 500KB.';
+                    errorSpan.style.display = 'block';
+                    return;
+                }
+                if (!nome) {
+                    nome = file.name.replace(/\.pdf$/i, '');
+                }
+
+                try {
+                    const base64 = await fileToBase64(file);
+                    await colecoes.docspdf.add({
+                        nome: nome,
+                        base64: base64,
+                        tamanho: file.size,
+                        dataCriacao: new Date().toISOString(),
+                        dataAtualizacao: new Date().toISOString()
+                    });
+                    fecharModalPdfUpload();
+                    showToast('✅ PDF salvo com sucesso na aba DOC PDF!', 'success');
+                } catch (error) {
+                    console.error('Erro ao salvar PDF:', error);
+                    errorSpan.textContent = 'Erro ao processar o arquivo.';
+                    errorSpan.style.display = 'block';
+                }
+            });
 
             // ===================== JANELA FILTRO =====================
             function abrirJanelaFiltro() {

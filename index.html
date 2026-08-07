@@ -2205,7 +2205,6 @@
                     } else if (page === 'auditoria') {
                         btn.style.display = isAdmin() ? '' : 'none';
                     } else if (page === 'banco') {
-                        // Agora exibe para qualquer usuário com permissão da aba "banco"
                         btn.style.display = temPermissaoAba('banco') ? '' : 'none';
                     } else {
                         btn.style.display = temPermissaoAba(page) ? '' : 'none';
@@ -2656,12 +2655,10 @@
                 const userInput = document.getElementById('login-user').value.trim();
                 const passInput = document.getElementById('login-pass').value.trim();
                 try {
-                    // Consulta apenas pelo nome de usuário, sem índice composto
                     const snapshot = await colecoes.usuarios.where('usuario', '==', userInput).get();
                     if (!snapshot.empty) {
                         const doc = snapshot.docs[0];
                         const userData = doc.data();
-                        // Verifica a senha no lado do cliente
                         if (userData.senha === passInput) {
                             usuarioLogado = { id: doc.id, ...userData };
                             loginError.classList.remove('show');
@@ -2674,14 +2671,12 @@
                             if (!dadosCarregados) { ativarListenersFirestore(); } else { inicializarInterface(); }
                             showToast(`✅ Bem-vindo, ${usuarioLogado.nome}!`, 'success');
                         } else {
-                            // Senha incorreta
                             loginError.classList.add('show');
                             document.getElementById('login-pass').value = '';
                             document.getElementById('login-pass').focus();
                             setTimeout(() => loginError.classList.remove('show'), 3000);
                         }
                     } else {
-                        // Usuário não encontrado
                         loginError.classList.add('show');
                         document.getElementById('login-pass').value = '';
                         document.getElementById('login-pass').focus();
@@ -2723,7 +2718,6 @@
                     showToast('⚠️ Você não tem permissão para acessar esta aba.', 'error');
                     return;
                 }
-                // Permissão especial para auditoria (só admin) e banco (quem tem permissão)
                 if (pageName === 'auditoria' && !isAdmin()) {
                     showToast('⚠️ Apenas o administrador pode acessar esta aba.', 'error');
                     return;
@@ -2775,7 +2769,8 @@
 
             function inicializarInterface() {
                 atualizarUIporPerfil();
-                navegarPara('veiculos');
+                // Após login, sempre abre na aba Garagem
+                navegarPara('garagem');
                 initScrollButtons();
                 atualizarIndicadorSync(navigator.onLine);
             }
@@ -4523,6 +4518,7 @@
             console.log('🆘 Upload de imagens na aba Socorro ativado');
             console.log('🗑️ Botão Limpar Log na aba Auditoria adicionado');
             console.log('🏦 Aba Banco agora disponível para usuários com a permissão da aba "banco"');
+            console.log('🖼️ Após login, a aba Garagem é aberta por padrão');
         })();
     </script>
 </body>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PAIZÃO RENT CAR - Sistema de Locação (Sem Storage)</title>
+    <title>PAIZÃO RENT CAR - Sistema de Locação</title>
 
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -621,6 +621,29 @@
         }
         .btn-ver-docs:hover {
             background: #3b6fd4;
+        }
+        .btn-copiar-pix {
+            background: var(--primary);
+            color: #1a1a1a;
+            font-size: 12px;
+            padding: 4px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            border: none;
+            font-family: inherit;
+            font-weight: 600;
+            transition: all 0.2s;
+            margin-left: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .btn-copiar-pix:hover {
+            background: #f0b822;
+            box-shadow: 0 2px 10px rgba(230, 168, 23, 0.4);
+        }
+        .btn-copiar-pix:active {
+            transform: scale(0.96);
         }
         .table-wrapper {
             overflow-x: auto;
@@ -1460,6 +1483,7 @@
                 <button data-page="locatarios" class="nav-admin-only"><span class="nav-icon">👥</span> Locatários</button>
                 <button data-page="manutencao" class="nav-admin-only" style="border:1px solid var(--border);"><span class="nav-icon">🔧</span> Manutenção</button>
                 <button data-page="fluxocaixa" class="nav-admin-only" style="border:1px solid var(--border);"><span class="nav-icon">💰</span> Fluxo de Caixa</button>
+                <button data-page="banco" class="nav-admin-only" style="border:1px solid var(--border);"><span class="nav-icon">🏦</span> Banco</button>
                 <button data-page="usuarios" class="nav-admin-only" style="border:1px solid var(--accent);"><span class="nav-icon">👤</span> Usuários</button>
                 <button data-page="auditoria" class="nav-admin-only" style="border:1px solid var(--accent);"><span class="nav-icon">📋</span> Auditoria</button>
             </nav>
@@ -1781,6 +1805,49 @@
                 </div>
             </div>
 
+            <!-- BANCO (nova aba) -->
+            <div class="page" id="page-banco">
+                <div class="page-header"><h2>🏦 Dados Bancários</h2><p>Cadastre as informações da conta bancária para recebimentos via Pix</p></div>
+                <div class="card" id="card-form-banco">
+                    <div class="card-title"><span class="icon">🏦</span> Informações do Banco</div>
+                    <form id="form-banco" autocomplete="off">
+                        <div class="grid-2">
+                            <div class="form-group-app">
+                                <label>Banco</label>
+                                <input type="text" id="b-banco" placeholder="Ex: Nubank, Banco do Brasil, Itaú..." required>
+                            </div>
+                            <div class="form-group-app">
+                                <label>Agência</label>
+                                <input type="text" id="b-agencia" placeholder="Ex: 0001" required>
+                            </div>
+                            <div class="form-group-app">
+                                <label>Conta</label>
+                                <input type="text" id="b-conta" placeholder="Ex: 123456-7" required>
+                            </div>
+                            <div class="form-group-app">
+                                <label>Titular</label>
+                                <input type="text" id="b-titular" placeholder="Nome do titular da conta" required>
+                            </div>
+                            <div class="form-group-app">
+                                <label>Pix (Chave)</label>
+                                <input type="text" id="b-pix" placeholder="Ex: CPF, e-mail, telefone ou chave aleatória" required>
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:12px; margin-top:16px;">
+                            <button type="submit" class="btn-app btn-save" id="btn-salvar-banco">💾 Salvar Dados Bancários</button>
+                            <button type="button" class="btn-app btn-cancel" id="btn-cancel-banco">Limpar</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card" id="card-banco-visualizacao" style="display:none;">
+                    <div class="card-title"><span class="icon">📋</span> Dados Salvos</div>
+                    <div id="banco-info-display" style="color:#d0d3db; font-size:14px; line-height:2;">
+                        <!-- preenchido dinamicamente -->
+                    </div>
+                    <button type="button" class="btn-app btn-edit" id="btn-editar-banco" style="margin-top:12px;">✏️ Editar</button>
+                </div>
+            </div>
+
             <!-- Usuários (admin only) -->
             <div class="page" id="page-usuarios">
                 <div class="page-header"><h2>👤 Gerenciamento de Usuários</h2><p>Crie e gerencie usuários com acesso limitado a abas, ações, veículos e sub-abas</p></div>
@@ -1793,8 +1860,6 @@
                             <div class="form-group-app"><label>Login (Usuário)</label><input type="text" id="u-login" placeholder="Nome de usuário para login" required autocomplete="off"></div>
                             <div class="form-group-app"><label>Senha</label><input type="password" id="u-senha" placeholder="Senha de acesso" required autocomplete="off"></div>
                         </div>
-
-                        <!-- ABAS PERMITIDAS -->
                         <div class="section-divider">
                             <div class="form-group-app"><label>📑 Abas Permitidas</label>
                                 <div class="permissoes-grid" id="permissoes-abas-grid">
@@ -1806,13 +1871,12 @@
                                     <label><input type="checkbox" class="perm-abas-check" value="locacoes"> 📋 Locações</label>
                                     <label><input type="checkbox" class="perm-abas-check" value="manutencao"> 🔧 Manutenção</label>
                                     <label><input type="checkbox" class="perm-abas-check" value="fluxocaixa"> 💰 Fluxo de Caixa</label>
+                                    <label><input type="checkbox" class="perm-abas-check" value="banco"> 🏦 Banco</label>
                                     <label><input type="checkbox" class="perm-abas-check" value="usuarios"> 👤 Usuários</label>
                                     <label><input type="checkbox" class="perm-abas-check" value="filtro"> 🔍 Filtro</label>
                                 </div>
                             </div>
                         </div>
-
-                        <!-- SUB-ABAS DO CARRO -->
                         <div class="section-divider">
                             <div class="form-group-app"><label>🚘 Sub-Abas do CARRO Permitidas</label>
                                 <div class="permissoes-grid" id="permissoes-subabas-carro-grid">
@@ -1823,8 +1887,6 @@
                                 </div>
                             </div>
                         </div>
-
-                        <!-- SUB-ABAS DO HISTÓRICO DE MANUTENÇÃO -->
                         <div class="section-divider">
                             <div class="form-group-app"><label>🔧 Sub-Abas do Histórico de Manutenção Permitidas</label>
                                 <div class="permissoes-grid" id="permissoes-subabas-manutencao-grid">
@@ -1835,8 +1897,6 @@
                                 </div>
                             </div>
                         </div>
-
-                        <!-- AÇÕES/BOTÕES -->
                         <div class="section-divider">
                             <div class="form-group-app"><label>🔘 Ações Permitidas (Botões)</label>
                                 <div class="permissoes-grid" id="permissoes-acoes-grid">
@@ -1848,8 +1908,6 @@
                                 </div>
                             </div>
                         </div>
-
-                        <!-- VEÍCULOS PERMITIDOS -->
                         <div class="section-divider">
                             <div class="form-group-app"><label>🚙 Veículos Permitidos para este Usuário</label>
                                 <div class="permissoes-grid" id="permissoes-usuario-grid">
@@ -1857,7 +1915,6 @@
                                 </div>
                             </div>
                         </div>
-
                         <div style="display:flex;gap:12px;margin-top:8px;">
                             <button type="submit" class="btn-app btn-save" id="btn-submit-usuario">💾 Salvar Usuário</button>
                             <button type="button" class="btn-app btn-cancel" id="btn-cancel-usuario">Limpar</button>
@@ -2045,7 +2102,8 @@
                 carroPdfs: db.collection('carro_pdfs'),
                 manutencoes: db.collection('manutencoes'),
                 auditoria: db.collection('auditoria'),
-                socorroImagens: db.collection('socorro_imagens')
+                socorroImagens: db.collection('socorro_imagens'),
+                banco: db.collection('banco')
             };
 
             // ===================== VARIÁVEIS GLOBAIS =====================
@@ -2059,6 +2117,7 @@
             let manutencoes = [];
             let auditoriaLogs = [];
             let socorroImagens = [];
+            let dadosBanco = null;
             let usuarioLogado = null;
 
             let editandoVeiculoId = null;
@@ -2143,7 +2202,7 @@
                     const page = btn.getAttribute('data-page');
                     if (page === 'veiculos' || page === 'garagem' || page === 'carro' || page === 'socorro') {
                         btn.style.display = '';
-                    } else if (page === 'auditoria') {
+                    } else if (page === 'auditoria' || page === 'banco') {
                         btn.style.display = isAdmin() ? '' : 'none';
                     } else {
                         btn.style.display = temPermissaoAba(page) ? '' : 'none';
@@ -2219,6 +2278,7 @@
                     atualizarTabelaUsuarios();
                     atualizarSubAbasCarro();
                     atualizarTabelaAuditoria();
+                    atualizarDadosBanco();
                     aplicarRestricoesSubAbasCarro();
                     aplicarRestricoesSubAbasManutencao();
                     destacarAbaManutencaoAtiva();
@@ -2578,6 +2638,7 @@
                     input.value = 'R$ ' + valor.replace('.', ',');
                 }
             };
+
             function parseMoedaBR(valorString) { if (!valorString) return 0; let limpo = valorString.replace(/[^\d,]/g, '').replace(',', '.'); return parseFloat(limpo) || 0; }
             function formatarMoeda(valor) { return 'R$ ' + parseFloat(valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
             function aplicarMascaraCPF(valor) { valor = valor.replace(/\D/g, '').substring(0, 11); return valor.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4'); }
@@ -2586,25 +2647,38 @@
             function aplicarMascaraPlaca(valor) { valor = valor.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 7); if (valor.length >= 4) valor = valor.substring(0, 3) + '-' + valor.substring(3); return valor; }
             function sanitizarParaBusca(str) { if (!str) return ''; return str.replace(/[^a-zA-Z0-9]/g, '').toLowerCase(); }
 
+            // ===================== LOGIN CORRIGIDO =====================
             loginForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
                 const userInput = document.getElementById('login-user').value.trim();
                 const passInput = document.getElementById('login-pass').value.trim();
                 try {
-                    const snapshot = await colecoes.usuarios.where('usuario', '==', userInput).where('senha', '==', passInput).get();
+                    // Consulta apenas pelo nome de usuário, sem índice composto
+                    const snapshot = await colecoes.usuarios.where('usuario', '==', userInput).get();
                     if (!snapshot.empty) {
                         const doc = snapshot.docs[0];
-                        usuarioLogado = { id: doc.id, ...doc.data() };
-                        loginError.classList.remove('show');
-                        loginScreen.style.display = 'none';
-                        appScreen.classList.add('active');
-                        document.getElementById('user-name-display').textContent = usuarioLogado.nome;
-                        document.getElementById('user-avatar-inicial').textContent = usuarioLogado.nome.charAt(0).toUpperCase();
-                        await registrarAuditoria('login', 'Sistema', '', `Login do usuário ${usuarioLogado.nome}`);
-                        atualizarUIporPerfil();
-                        if (!dadosCarregados) { ativarListenersFirestore(); } else { inicializarInterface(); }
-                        showToast(`✅ Bem-vindo, ${usuarioLogado.nome}!`, 'success');
+                        const userData = doc.data();
+                        // Verifica a senha no lado do cliente
+                        if (userData.senha === passInput) {
+                            usuarioLogado = { id: doc.id, ...userData };
+                            loginError.classList.remove('show');
+                            loginScreen.style.display = 'none';
+                            appScreen.classList.add('active');
+                            document.getElementById('user-name-display').textContent = usuarioLogado.nome;
+                            document.getElementById('user-avatar-inicial').textContent = usuarioLogado.nome.charAt(0).toUpperCase();
+                            await registrarAuditoria('login', 'Sistema', '', `Login do usuário ${usuarioLogado.nome}`);
+                            atualizarUIporPerfil();
+                            if (!dadosCarregados) { ativarListenersFirestore(); } else { inicializarInterface(); }
+                            showToast(`✅ Bem-vindo, ${usuarioLogado.nome}!`, 'success');
+                        } else {
+                            // Senha incorreta
+                            loginError.classList.add('show');
+                            document.getElementById('login-pass').value = '';
+                            document.getElementById('login-pass').focus();
+                            setTimeout(() => loginError.classList.remove('show'), 3000);
+                        }
                     } else {
+                        // Usuário não encontrado
                         loginError.classList.add('show');
                         document.getElementById('login-pass').value = '';
                         document.getElementById('login-pass').focus();
@@ -2642,12 +2716,12 @@
             });
 
             function navegarPara(pageName) {
-                if (!temPermissaoAba(pageName) && pageName !== 'auditoria') {
+                if (!temPermissaoAba(pageName) && pageName !== 'auditoria' && pageName !== 'banco') {
                     showToast('⚠️ Você não tem permissão para acessar esta aba.', 'error');
                     return;
                 }
-                if (pageName === 'auditoria' && !isAdmin()) {
-                    showToast('⚠️ Apenas o administrador pode acessar a Auditoria.', 'error');
+                if ((pageName === 'auditoria' || pageName === 'banco') && !isAdmin()) {
+                    showToast('⚠️ Apenas o administrador pode acessar esta aba.', 'error');
                     return;
                 }
                 pages.forEach(p => p.classList.remove('active'));
@@ -2665,6 +2739,7 @@
                 if (pageName === 'locacoes' && temPermissaoAba('locacoes')) { atualizarSelectsLocacao(); atualizarTabelaLocacoes(); initScrollButtons(); if (termoBuscaLocacoes) { document.getElementById('input-busca-locacoes').value = termoBuscaLocacoes; atualizarUIBuscaLocacoes(); } }
                 if (pageName === 'manutencao' && temPermissaoAba('manutencao')) { atualizarSelectManutencaoVeiculos(); aplicarRestricoesSubAbasManutencao(); destacarAbaManutencaoAtiva(); atualizarTabelaManutencoes(); initScrollButtons(); }
                 if (pageName === 'fluxocaixa' && temPermissaoAba('fluxocaixa')) { atualizarResumoFluxoCaixa(); atualizarTabelaFluxoCaixa(); initScrollButtons(); if (termoBuscaFluxo) { document.getElementById('input-busca-fluxo').value = termoBuscaFluxo; atualizarUIBuscaFluxo(); } }
+                if (pageName === 'banco' && isAdmin()) { atualizarDadosBanco(); }
                 if (pageName === 'usuarios' && temPermissaoAba('usuarios')) { atualizarTabelaUsuarios(); atualizarPermissoesUsuarioGrid(); initScrollButtons(); }
                 if (pageName === 'auditoria') { atualizarTabelaAuditoria(); initScrollButtons(); if (termoBuscaAuditoria) { document.getElementById('input-busca-auditoria').value = termoBuscaAuditoria; atualizarUIBuscaAuditoria(); } }
             }
@@ -4215,6 +4290,102 @@
                 inputBuscaAuditoria.focus();
             });
 
+            // ===================== BANCO =====================
+            function atualizarDadosBanco() {
+                const cardVisualizacao = document.getElementById('card-banco-visualizacao');
+                const display = document.getElementById('banco-info-display');
+                if (!dadosBanco) {
+                    if (cardVisualizacao) cardVisualizacao.style.display = 'none';
+                    document.getElementById('b-banco').value = '';
+                    document.getElementById('b-agencia').value = '';
+                    document.getElementById('b-conta').value = '';
+                    document.getElementById('b-titular').value = '';
+                    document.getElementById('b-pix').value = '';
+                    return;
+                }
+                if (cardVisualizacao) cardVisualizacao.style.display = 'block';
+                if (display) {
+                    display.innerHTML = `
+                        <strong>🏦 Banco:</strong> ${dadosBanco.banco || '—'}<br>
+                        <strong>🏢 Agência:</strong> ${dadosBanco.agencia || '—'}<br>
+                        <strong>🔢 Conta:</strong> ${dadosBanco.conta || '—'}<br>
+                        <strong>👤 Titular:</strong> ${dadosBanco.titular || '—'}<br>
+                        <strong>🔑 Pix:</strong> ${dadosBanco.pix || '—'} 
+                        <button class="btn-copiar-pix" onclick="window._copiarPix()" title="Copiar apenas números do Pix">📋 Copiar</button><br>
+                        <small style="color:var(--text-muted);">Última atualização: ${dadosBanco.dataAtualizacao ? new Date(dadosBanco.dataAtualizacao).toLocaleString('pt-BR') : '—'}</small>
+                    `;
+                }
+                document.getElementById('b-banco').value = dadosBanco.banco || '';
+                document.getElementById('b-agencia').value = dadosBanco.agencia || '';
+                document.getElementById('b-conta').value = dadosBanco.conta || '';
+                document.getElementById('b-titular').value = dadosBanco.titular || '';
+                document.getElementById('b-pix').value = dadosBanco.pix || '';
+            }
+
+            // Função para copiar apenas os números da chave Pix
+            window._copiarPix = function() {
+                if (!dadosBanco || !dadosBanco.pix) {
+                    showToast('⚠️ Nenhuma chave Pix cadastrada.', 'error');
+                    return;
+                }
+                const numeros = dadosBanco.pix.replace(/\D/g, '');
+                if (numeros === '') {
+                    showToast('⚠️ A chave Pix não contém números.', 'error');
+                    return;
+                }
+                navigator.clipboard.writeText(numeros).then(() => {
+                    showToast('✅ Pix copiado (somente números)!', 'success');
+                    registrarAuditoria('download', 'Banco', 'info', 'Cópia do Pix (apenas números)');
+                }).catch(() => {
+                    showToast('❌ Erro ao copiar. Tente novamente.', 'error');
+                });
+            };
+
+            const formBanco = document.getElementById('form-banco');
+            formBanco.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                if (!isAdmin()) {
+                    showToast('⚠️ Apenas o administrador pode alterar os dados bancários.', 'error');
+                    return;
+                }
+                const dados = {
+                    banco: document.getElementById('b-banco').value.trim(),
+                    agencia: document.getElementById('b-agencia').value.trim(),
+                    conta: document.getElementById('b-conta').value.trim(),
+                    titular: document.getElementById('b-titular').value.trim(),
+                    pix: document.getElementById('b-pix').value.trim(),
+                    dataAtualizacao: new Date().toISOString()
+                };
+                try {
+                    await colecoes.banco.doc('info').set(dados, { merge: true });
+                    showToast('✅ Dados bancários salvos com sucesso!', 'success');
+                    registrarAuditoria('editar', 'Banco', 'info', 'Dados bancários atualizados');
+                } catch (error) {
+                    console.error('Erro ao salvar dados bancários:', error);
+                    showToast('❌ Erro ao salvar dados bancários.', 'error');
+                }
+            });
+
+            document.getElementById('btn-cancel-banco').addEventListener('click', function() {
+                if (dadosBanco) {
+                    document.getElementById('b-banco').value = dadosBanco.banco || '';
+                    document.getElementById('b-agencia').value = dadosBanco.agencia || '';
+                    document.getElementById('b-conta').value = dadosBanco.conta || '';
+                    document.getElementById('b-titular').value = dadosBanco.titular || '';
+                    document.getElementById('b-pix').value = dadosBanco.pix || '';
+                } else {
+                    formBanco.reset();
+                }
+                showToast('📋 Campos restaurados.', 'info');
+            });
+
+            // BOTÃO EDITAR BANCO (NOVO)
+            document.getElementById('btn-editar-banco').addEventListener('click', function() {
+                // Rola até o formulário de edição e foca no primeiro campo
+                document.getElementById('card-form-banco').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                document.getElementById('b-banco').focus();
+            });
+
             // ===================== ATIVAR LISTENERS =====================
             function ativarListenersFirestore() {
                 listenersAtivos.forEach(unsub => unsub());
@@ -4285,7 +4456,6 @@
                 }, (error) => { console.error('Erro listener manutenções:', error); });
                 listenersAtivos.push(unsubManutencoes);
 
-                // LISTENER PARA AUDITORIA
                 const unsubAuditoria = colecoes.auditoria.orderBy('timestamp', 'desc').onSnapshot((snapshot) => {
                     auditoriaLogs = [];
                     snapshot.forEach(doc => { auditoriaLogs.push({ id: doc.id, ...doc.data() }); });
@@ -4295,7 +4465,6 @@
                 }, (error) => { console.error('Erro listener auditoria:', error); });
                 listenersAtivos.push(unsubAuditoria);
 
-                // LISTENER PARA SOCORRO IMAGENS
                 const unsubSocorro = colecoes.socorroImagens.onSnapshot((snapshot) => {
                     socorroImagens = [];
                     snapshot.forEach(doc => { socorroImagens.push({ id: doc.id, ...doc.data() }); });
@@ -4304,6 +4473,20 @@
                     }
                 }, (error) => { console.error('Erro listener socorro imagens:', error); });
                 listenersAtivos.push(unsubSocorro);
+
+                const unsubBanco = colecoes.banco.doc('info').onSnapshot((doc) => {
+                    if (doc.exists) {
+                        dadosBanco = { id: doc.id, ...doc.data() };
+                    } else {
+                        dadosBanco = null;
+                    }
+                    if (dadosCarregados) {
+                        atualizarDadosBanco();
+                    }
+                }, (error) => {
+                    console.error('Erro listener banco:', error);
+                });
+                listenersAtivos.push(unsubBanco);
 
                 setTimeout(() => { if (!dadosCarregados) { dadosCarregados = true; inicializarInterface(); } }, 500);
             }
@@ -4330,6 +4513,7 @@
             console.log('✅ Auditoria ativada: todas as ações são registradas automaticamente');
             console.log('🆘 Upload de imagens na aba Socorro ativado');
             console.log('🗑️ Botão Limpar Log na aba Auditoria adicionado');
+            console.log('🏦 Aba Banco adicionada com campos: Banco, Agência, Conta, Titular, Pix e botão Editar');
         })();
     </script>
 </body>

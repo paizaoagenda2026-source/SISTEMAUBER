@@ -1216,13 +1216,13 @@
             font-weight: 600;
         }
 
-        /* Estilos para a garagem */
-        .garagem-grid {
+        /* Estilos para a garagem e socorro (grid de imagens) */
+        .garagem-grid, .socorro-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
             gap: 16px;
         }
-        .garagem-card {
+        .garagem-card, .socorro-card {
             background: var(--input-bg);
             border: 1px solid var(--border);
             border-radius: 12px;
@@ -1231,42 +1231,42 @@
             display: flex;
             flex-direction: column;
         }
-        .garagem-card:hover {
+        .garagem-card:hover, .socorro-card:hover {
             border-color: var(--primary);
             box-shadow: 0 4px 16px rgba(230, 168, 23, 0.15);
             transform: translateY(-2px);
         }
-        .garagem-card-img {
+        .garagem-card-img, .socorro-card-img {
             width: 100%;
             height: auto;
             object-fit: contain;
             background: #0c0f16;
             cursor: pointer;
         }
-        .garagem-card-body {
+        .garagem-card-body, .socorro-card-body {
             padding: 12px;
             flex: 1;
             display: flex;
             flex-direction: column;
             gap: 8px;
         }
-        .garagem-card-body .img-nome {
+        .garagem-card-body .img-nome, .socorro-card-body .img-nome {
             font-weight: 600;
             font-size: 13px;
             color: #fff;
             word-break: break-word;
             line-height: 1.3;
         }
-        .garagem-card-body .img-data {
+        .garagem-card-body .img-data, .socorro-card-body .img-data {
             font-size: 10px;
             color: var(--text-muted);
         }
-        .garagem-card-actions {
+        .garagem-card-actions, .socorro-card-actions {
             display: flex;
             gap: 6px;
             flex-wrap: wrap;
         }
-        .garagem-card-actions button {
+        .garagem-card-actions button, .socorro-card-actions button {
             font-size: 11px;
             padding: 4px 10px;
             border-radius: 6px;
@@ -1298,10 +1298,10 @@
             background: #2ecc71;
         }
         @media (max-width: 600px) {
-            .garagem-grid {
+            .garagem-grid, .socorro-grid {
                 grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
             }
-            .garagem-card-img {
+            .garagem-card-img, .socorro-card-img {
                 height: auto;
                 object-fit: contain;
             }
@@ -1395,6 +1395,26 @@
         .badge-acao.logout { background: rgba(243,156,18,0.2); color: var(--warning); }
         .badge-acao.upload { background: rgba(142,68,173,0.2); color: #9b59b6; }
         .badge-acao.download { background: rgba(41,128,185,0.2); color: #3498db; }
+
+        .btn-limpar-auditoria {
+            background: var(--danger);
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            font-family: inherit;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-limpar-auditoria:hover {
+            background: #c0392b;
+            box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4);
+        }
     </style>
 </head>
 <body>
@@ -1456,8 +1476,6 @@
         </header>
 
         <main class="main-content" id="main-content">
-            <!-- Página Dashboard removida -->
-
             <!-- Veículos -->
             <div class="page active" id="page-veiculos">
                 <div class="page-header"><h2>🚙 Cadastro de Veículos</h2><p id="veiculos-subtitle">Gerencie a frota de veículos com todos os dados, valores e documentos</p></div>
@@ -1529,19 +1547,32 @@
                 </div>
             </div>
 
-            <!-- Socorro (ABA MODIFICADA: BOTÕES DE DOWNLOAD) -->
+            <!-- Socorro (COM UPLOAD DE IMAGENS) -->
             <div class="page" id="page-socorro">
-                <div class="page-header"><h2>🆘 Socorro</h2><p>Página de emergência / suporte</p></div>
+                <div class="page-header"><h2>🆘 Socorro</h2><p>Upload de imagens para a central de ajuda / suporte</p></div>
+                <div class="card" id="card-form-socorro">
+                    <div class="card-title"><span class="icon">📤</span> Enviar Imagem para o Socorro</div>
+                    <div class="grid-2">
+                        <div class="form-group-app">
+                            <label>Nome da Imagem (opcional)</label>
+                            <input type="text" id="socorro-nome" placeholder="Ex: Foto do problema">
+                        </div>
+                        <div class="form-group-app">
+                            <label>Selecionar Imagem</label>
+                            <input type="file" id="socorro-file" accept="image/*">
+                            <small style="color:var(--text-muted);font-size:10px;">Formatos aceitos: JPG, PNG, GIF, WebP. Imagens muito grandes serão comprimidas automaticamente.</small>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:12px; margin-top:8px;">
+                        <button class="btn-app btn-save" id="btn-upload-socorro" style="display: inline-flex; align-items: center; gap: 6px;">⬆️ Enviar Imagem</button>
+                        <button class="btn-app btn-cancel" id="btn-cancel-socorro">Limpar</button>
+                    </div>
+                    <span id="socorro-upload-error" style="color:var(--danger);font-size:12px;display:none;margin-top:8px;"></span>
+                </div>
                 <div class="card">
-                    <div class="card-title"><span class="icon">🆘</span> Central de Ajuda</div>
-                    <p style="color:var(--text-muted); margin-bottom: 20px;">Conteúdo da aba Socorro. Aqui você pode adicionar informações de contato, instruções ou recursos de emergência.</p>
-                    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                        <button class="btn-app btn-save" id="btn-socorro-download-jpg" style="display: inline-flex; align-items: center; gap: 8px;">
-                            🖼️ Baixar Imagem JPG
-                        </button>
-                        <button class="btn-app btn-save" id="btn-socorro-download-video" style="display: inline-flex; align-items: center; gap: 8px;">
-                            🎬 Baixar Vídeo MP4
-                        </button>
+                    <div class="card-title"><span class="icon">🖼️</span> Imagens Enviadas para o Socorro</div>
+                    <div class="socorro-grid" id="socorro-grid">
+                        <div class="empty-state"><span class="icon">🖼️</span><br>Nenhuma imagem enviada</div>
                     </div>
                 </div>
             </div>
@@ -1843,11 +1874,18 @@
                 </div>
             </div>
 
-            <!-- AUDITORIA (NOVA ABA) -->
+            <!-- AUDITORIA (COM BOTÃO LIMPAR LOG) -->
             <div class="page" id="page-auditoria">
                 <div class="page-header"><h2>📋 Auditoria</h2><p>Registro de todas as ações realizadas pelos usuários</p></div>
                 <div class="card">
-                    <div class="card-title"><span class="icon">📋</span> Log de Atividades</div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <div class="card-title" style="margin-bottom: 0; padding-bottom: 0; border-bottom: none;">
+                            <span class="icon">📋</span> Log de Atividades
+                        </div>
+                        <button class="btn-limpar-auditoria" id="btn-limpar-auditoria" title="Limpar todo o log de atividades (requer senha)">
+                            🗑️ Limpar Log
+                        </button>
+                    </div>
                     <div class="search-bar-container" id="search-bar-auditoria">
                         <div class="search-input-wrapper">
                             <span class="search-icon">🔍</span>
@@ -2006,7 +2044,8 @@
                 garagem: db.collection('garagem'),
                 carroPdfs: db.collection('carro_pdfs'),
                 manutencoes: db.collection('manutencoes'),
-                auditoria: db.collection('auditoria') // NOVA COLEÇÃO
+                auditoria: db.collection('auditoria'),
+                socorroImagens: db.collection('socorro_imagens')
             };
 
             // ===================== VARIÁVEIS GLOBAIS =====================
@@ -2018,7 +2057,8 @@
             let garagem = [];
             let carroPdfs = [];
             let manutencoes = [];
-            let auditoriaLogs = []; // NOVO ARRAY
+            let auditoriaLogs = [];
+            let socorroImagens = [];
             let usuarioLogado = null;
 
             let editandoVeiculoId = null;
@@ -2029,7 +2069,7 @@
             let editandoManutencaoId = null;
             let termoBuscaLocacoes = '';
             let termoBuscaFluxo = '';
-            let termoBuscaAuditoria = ''; // NOVA VARIÁVEL
+            let termoBuscaAuditoria = '';
             let dadosCarregados = false;
             let listenersAtivos = [];
 
@@ -2042,8 +2082,8 @@
                     await colecoes.auditoria.add({
                         userId: usuarioLogado.id,
                         userName: usuarioLogado.nome,
-                        acao: acao, // criar, editar, excluir, login, logout, upload, download
-                        entidade: entidade, // Veículo, Locatário, Locação, etc.
+                        acao: acao,
+                        entidade: entidade,
                         entidadeId: entidadeId || '',
                         descricao: descricao,
                         timestamp: firebase.firestore.FieldValue.serverTimestamp()
@@ -2154,6 +2194,8 @@
                 if (formFluxoCard) formFluxoCard.style.display = temPermissaoAcao('criar') ? '' : 'none';
                 const formManutencaoCard = document.getElementById('card-form-manutencao');
                 if (formManutencaoCard) formManutencaoCard.style.display = temPermissaoAcao('criar') ? '' : 'none';
+                const formSocorroCard = document.getElementById('card-form-socorro');
+                if (formSocorroCard) formSocorroCard.style.display = temPermissaoAcao('upload') ? '' : 'none';
 
                 const btnUploadGaragem = document.getElementById('btn-upload-garagem-veiculo');
                 if (btnUploadGaragem) btnUploadGaragem.style.display = temPermissaoAcao('upload') ? '' : 'none';
@@ -2173,9 +2215,10 @@
                     atualizarTabelaFluxoCaixa();
                     atualizarTabelaManutencoes();
                     atualizarGaragem();
+                    atualizarSocorro();
                     atualizarTabelaUsuarios();
                     atualizarSubAbasCarro();
-                    atualizarTabelaAuditoria(); // NOVO
+                    atualizarTabelaAuditoria();
                     aplicarRestricoesSubAbasCarro();
                     aplicarRestricoesSubAbasManutencao();
                     destacarAbaManutencaoAtiva();
@@ -2557,7 +2600,7 @@
                         appScreen.classList.add('active');
                         document.getElementById('user-name-display').textContent = usuarioLogado.nome;
                         document.getElementById('user-avatar-inicial').textContent = usuarioLogado.nome.charAt(0).toUpperCase();
-                        await registrarAuditoria('login', 'Sistema', '', `Login do usuário ${usuarioLogado.nome}`); // LOGIN
+                        await registrarAuditoria('login', 'Sistema', '', `Login do usuário ${usuarioLogado.nome}`);
                         atualizarUIporPerfil();
                         if (!dadosCarregados) { ativarListenersFirestore(); } else { inicializarInterface(); }
                         showToast(`✅ Bem-vindo, ${usuarioLogado.nome}!`, 'success');
@@ -2577,7 +2620,7 @@
             btnLogout.addEventListener('click', async () => {
                 if (confirm('Deseja realmente sair do sistema?')) {
                     if (usuarioLogado) {
-                        await registrarAuditoria('logout', 'Sistema', '', `Logout do usuário ${usuarioLogado.nome}`); // LOGOUT
+                        await registrarAuditoria('logout', 'Sistema', '', `Logout do usuário ${usuarioLogado.nome}`);
                     }
                     appScreen.classList.remove('active');
                     loginScreen.style.display = 'flex';
@@ -2599,7 +2642,7 @@
             });
 
             function navegarPara(pageName) {
-                if (!temPermissaoAba(pageName) && pageName !== 'auditoria') { // Auditoria é admin only, já verifica em isAdmin
+                if (!temPermissaoAba(pageName) && pageName !== 'auditoria') {
                     showToast('⚠️ Você não tem permissão para acessar esta aba.', 'error');
                     return;
                 }
@@ -2616,7 +2659,7 @@
 
                 if (pageName === 'veiculos') { atualizarTabelaVeiculos(); initScrollButtons(); }
                 if (pageName === 'garagem') { atualizarGaragem(); }
-                if (pageName === 'socorro') { }
+                if (pageName === 'socorro') { atualizarSocorro(); }
                 if (pageName === 'carro') { atualizarSubAbasCarro(); aplicarRestricoesSubAbasCarro(); }
                 if (pageName === 'locatarios' && temPermissaoAba('locatarios')) { atualizarTabelaLocatarios(); initScrollButtons(); }
                 if (pageName === 'locacoes' && temPermissaoAba('locacoes')) { atualizarSelectsLocacao(); atualizarTabelaLocacoes(); initScrollButtons(); if (termoBuscaLocacoes) { document.getElementById('input-busca-locacoes').value = termoBuscaLocacoes; atualizarUIBuscaLocacoes(); } }
@@ -2688,14 +2731,14 @@
                     const dataFormatada = img.dataCriacao ? new Date(img.dataCriacao).toLocaleDateString('pt-BR') + ' ' + new Date(img.dataCriacao).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '—';
                     return `
                         <div class="garagem-card">
-                            <img class="garagem-card-img" src="${img.base64}" alt="${img.nome || 'Imagem'}" onclick="window._abrirVisualizacaoImagem('${img.id}')" title="Clique para ampliar">
+                            <img class="garagem-card-img" src="${img.base64}" alt="${img.nome || 'Imagem'}" onclick="window._abrirVisualizacaoImagem('${img.id}', 'garagem')" title="Clique para ampliar">
                             <div class="garagem-card-body">
                                 <div class="img-nome">${img.nome || 'Sem nome'}</div>
                                 <div class="img-data">${dataFormatada}</div>
                                 <div class="garagem-card-actions">
-                                    <button class="btn-download-img" onclick="event.stopPropagation(); window._downloadImagem('${img.id}')" title="Download">📥</button>
-                                    <button class="btn-rename" onclick="event.stopPropagation(); window._renomearImagem('${img.id}')" title="Renomear (requer senha)">✏️</button>
-                                    <button class="btn-delete-img" onclick="event.stopPropagation(); window._excluirImagem('${img.id}')" title="Excluir (requer senha)">🗑️</button>
+                                    <button class="btn-download-img" onclick="event.stopPropagation(); window._downloadImagem('${img.id}', 'garagem')" title="Download">📥</button>
+                                    <button class="btn-rename" onclick="event.stopPropagation(); window._renomearImagem('${img.id}', 'garagem')" title="Renomear (requer senha)">✏️</button>
+                                    <button class="btn-delete-img" onclick="event.stopPropagation(); window._excluirImagem('${img.id}', 'garagem')" title="Excluir (requer senha)">🗑️</button>
                                 </div>
                             </div>
                         </div>
@@ -2703,8 +2746,9 @@
                 }).join('');
             }
 
-            window._abrirVisualizacaoImagem = function(id) {
-                const img = garagem.find(i => i.id === id);
+            window._abrirVisualizacaoImagem = function(id, origem) {
+                const array = origem === 'garagem' ? garagem : socorroImagens;
+                const img = array.find(i => i.id === id);
                 if (!img) return;
                 const overlay = document.createElement('div');
                 overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:99999;display:flex;align-items:center;justify-content:center;cursor:pointer;';
@@ -2712,8 +2756,9 @@
                 overlay.addEventListener('click', () => overlay.remove());
                 document.body.appendChild(overlay);
             };
-            window._downloadImagem = function(id) {
-                const img = garagem.find(i => i.id === id);
+            window._downloadImagem = function(id, origem) {
+                const array = origem === 'garagem' ? garagem : socorroImagens;
+                const img = array.find(i => i.id === id);
                 if (!img) return;
                 const a = document.createElement('a');
                 a.href = img.base64;
@@ -2721,10 +2766,12 @@
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
-                registrarAuditoria('download', 'Garagem', id, `Download da imagem "${img.nome || 'sem nome'}"`);
+                registrarAuditoria('download', origem === 'garagem' ? 'Garagem' : 'Socorro', id, `Download da imagem "${img.nome || 'sem nome'}"`);
             };
-            window._renomearImagem = async function(id) {
-                const img = garagem.find(i => i.id === id);
+            window._renomearImagem = async function(id, origem) {
+                const array = origem === 'garagem' ? garagem : socorroImagens;
+                const colecao = origem === 'garagem' ? colecoes.garagem : colecoes.socorroImagens;
+                const img = array.find(i => i.id === id);
                 if (!img) return;
                 const senha = prompt('Digite a senha para renomear:');
                 if (senha !== '080888') {
@@ -2734,16 +2781,17 @@
                 const novoNome = prompt('Digite o novo nome para a imagem:', img.nome || 'imagem');
                 if (novoNome && novoNome.trim() !== '') {
                     try {
-                        await colecoes.garagem.doc(id).update({ nome: novoNome.trim(), dataAtualizacao: new Date().toISOString() });
+                        await colecao.doc(id).update({ nome: novoNome.trim(), dataAtualizacao: new Date().toISOString() });
                         showToast('✅ Nome atualizado com sucesso!', 'success');
-                        registrarAuditoria('editar', 'Garagem', id, `Renomeado para "${novoNome.trim()}"`);
+                        registrarAuditoria('editar', origem === 'garagem' ? 'Garagem' : 'Socorro', id, `Renomeado para "${novoNome.trim()}"`);
                     } catch (error) {
                         console.error('Erro ao renomear imagem:', error);
                         showToast('❌ Erro ao renomear.', 'error');
                     }
                 }
             };
-            window._excluirImagem = async function(id) {
+            window._excluirImagem = async function(id, origem) {
+                const colecao = origem === 'garagem' ? colecoes.garagem : colecoes.socorroImagens;
                 const senha = prompt('Digite a senha para excluir:');
                 if (senha !== '080888') {
                     showToast('❌ Senha incorreta!', 'error');
@@ -2751,9 +2799,9 @@
                 }
                 if (!confirm('Tem certeza que deseja excluir esta imagem?')) return;
                 try {
-                    await colecoes.garagem.doc(id).delete();
+                    await colecao.doc(id).delete();
                     showToast('🗑️ Imagem excluída com sucesso!', 'info');
-                    registrarAuditoria('excluir', 'Garagem', id, 'Imagem excluída');
+                    registrarAuditoria('excluir', origem === 'garagem' ? 'Garagem' : 'Socorro', id, 'Imagem excluída');
                 } catch (error) {
                     console.error('Erro ao excluir imagem:', error);
                     showToast('❌ Erro ao excluir.', 'error');
@@ -2790,6 +2838,84 @@
                     showToast('✅ Imagem salva na Garagem com sucesso!', 'success');
                     registrarAuditoria('upload', 'Garagem', docRef.id, `Upload da imagem "${nome}"`);
                 } catch (error) { console.error('Erro ao salvar imagem:', error); errorSpan.textContent = 'Erro ao processar o arquivo.'; errorSpan.style.display = 'block'; }
+            });
+
+            // ===================== SOCORRO - UPLOAD E GALERIA =====================
+            function atualizarSocorro() {
+                const grid = document.getElementById('socorro-grid');
+                if (socorroImagens.length === 0) {
+                    grid.innerHTML = '<div class="empty-state"><span class="icon">🖼️</span><br>Nenhuma imagem enviada</div>';
+                    return;
+                }
+                socorroImagens.sort((a, b) => new Date(b.dataCriacao) - new Date(a.dataCriacao));
+                grid.innerHTML = socorroImagens.map(img => {
+                    const dataFormatada = img.dataCriacao ? new Date(img.dataCriacao).toLocaleDateString('pt-BR') + ' ' + new Date(img.dataCriacao).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '—';
+                    return `
+                        <div class="socorro-card">
+                            <img class="socorro-card-img" src="${img.base64}" alt="${img.nome || 'Imagem'}" onclick="window._abrirVisualizacaoImagem('${img.id}', 'socorro')" title="Clique para ampliar">
+                            <div class="socorro-card-body">
+                                <div class="img-nome">${img.nome || 'Sem nome'}</div>
+                                <div class="img-data">${dataFormatada}</div>
+                                <div class="socorro-card-actions">
+                                    <button class="btn-download-img" onclick="event.stopPropagation(); window._downloadImagem('${img.id}', 'socorro')" title="Download">📥</button>
+                                    <button class="btn-rename" onclick="event.stopPropagation(); window._renomearImagem('${img.id}', 'socorro')" title="Renomear (requer senha)">✏️</button>
+                                    <button class="btn-delete-img" onclick="event.stopPropagation(); window._excluirImagem('${img.id}', 'socorro')" title="Excluir (requer senha)">🗑️</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            document.getElementById('btn-upload-socorro').addEventListener('click', async function() {
+                if (!temPermissaoAcao('upload')) {
+                    showToast('⚠️ Você não tem permissão para fazer upload.', 'error');
+                    return;
+                }
+                const nomeInput = document.getElementById('socorro-nome');
+                const fileInput = document.getElementById('socorro-file');
+                const errorSpan = document.getElementById('socorro-upload-error');
+                let nome = nomeInput.value.trim();
+                const file = fileInput.files[0];
+                if (!file) {
+                    errorSpan.textContent = 'Selecione um arquivo de imagem.';
+                    errorSpan.style.display = 'block';
+                    return;
+                }
+                if (!file.type.startsWith('image/')) {
+                    errorSpan.textContent = 'O arquivo deve ser uma imagem (JPG, PNG, GIF, WebP).';
+                    errorSpan.style.display = 'block';
+                    return;
+                }
+                if (!nome) {
+                    nome = file.name.replace(/\.[^.]+$/, '');
+                }
+                try {
+                    showToast('⏳ Enviando imagem para o Socorro...', 'info');
+                    const base64 = await comprimirImagem(file, 1200, 900 * 1024);
+                    const docRef = await colecoes.socorroImagens.add({
+                        nome: nome,
+                        base64: base64,
+                        tipo: file.type,
+                        dataCriacao: new Date().toISOString(),
+                        dataAtualizacao: new Date().toISOString()
+                    });
+                    nomeInput.value = '';
+                    fileInput.value = '';
+                    errorSpan.style.display = 'none';
+                    showToast('✅ Imagem enviada para o Socorro com sucesso!', 'success');
+                    registrarAuditoria('upload', 'Socorro', docRef.id, `Upload da imagem "${nome}"`);
+                } catch (error) {
+                    console.error('Erro ao enviar imagem para o Socorro:', error);
+                    errorSpan.textContent = 'Erro ao processar o arquivo. Verifique o tamanho e tente novamente.';
+                    errorSpan.style.display = 'block';
+                }
+            });
+
+            document.getElementById('btn-cancel-socorro').addEventListener('click', function() {
+                document.getElementById('socorro-nome').value = '';
+                document.getElementById('socorro-file').value = '';
+                document.getElementById('socorro-upload-error').style.display = 'none';
             });
 
             // ===================== VEÍCULOS =====================
@@ -4025,6 +4151,41 @@
                 initScrollButtons();
             }
 
+            // BOTÃO LIMPAR LOG DE ATIVIDADES
+            document.getElementById('btn-limpar-auditoria').addEventListener('click', async function() {
+                if (!isAdmin()) {
+                    showToast('⚠️ Apenas o administrador pode limpar o log.', 'error');
+                    return;
+                }
+                const senha = prompt('⚠️ Digite a senha para LIMPAR TODO O LOG de atividades:');
+                if (senha !== '080888') {
+                    showToast('❌ Senha incorreta! Operação cancelada.', 'error');
+                    return;
+                }
+                if (!confirm('🚨 Tem certeza que deseja EXCLUIR TODOS os registros de auditoria? Esta ação é irreversível!')) {
+                    return;
+                }
+                try {
+                    showToast('⏳ Limpando log de atividades...', 'info');
+                    const snapshot = await colecoes.auditoria.get();
+                    const batchSize = 500;
+                    const totalDocs = snapshot.docs.length;
+                    for (let i = 0; i < totalDocs; i += batchSize) {
+                        const batch = db.batch();
+                        const docsBatch = snapshot.docs.slice(i, i + batchSize);
+                        docsBatch.forEach(doc => {
+                            batch.delete(doc.ref);
+                        });
+                        await batch.commit();
+                    }
+                    showToast(`✅ Log de atividades limpo! ${totalDocs} registros removidos.`, 'success');
+                    registrarAuditoria('excluir', 'Auditoria', '', 'Log de atividades limpo pelo administrador');
+                } catch (error) {
+                    console.error('Erro ao limpar auditoria:', error);
+                    showToast('❌ Erro ao limpar o log. Tente novamente.', 'error');
+                }
+            });
+
             const inputBuscaAuditoria = document.getElementById('input-busca-auditoria');
             const clearSearchBtnAuditoria = document.getElementById('clear-search-btn-auditoria');
             const btnLimparFiltroAuditoria = document.getElementById('btn-limpar-filtro-auditoria');
@@ -4052,23 +4213,6 @@
                 inputBuscaAuditoria.value = '';
                 atualizarUIBuscaAuditoria();
                 inputBuscaAuditoria.focus();
-            });
-
-            // ===================== NOVOS BOTÕES DE DOWNLOAD NA ABA SOCORRO =====================
-            // Botão JPG
-            document.getElementById('btn-socorro-download-jpg')?.addEventListener('click', () => {
-                const jpgBase64 = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAABAAEDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYI4Q/SF5SVGFiYGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD3+iiigD//2Q==';
-                downloadDocumento(jpgBase64, 'exemplo.jpg');
-                registrarAuditoria('download', 'Socorro', '', 'Download de imagem JPG de exemplo');
-                showToast('✅ Imagem JPG baixada!', 'success');
-            });
-
-            // Botão Vídeo MP4
-            document.getElementById('btn-socorro-download-video')?.addEventListener('click', () => {
-                const videoBase64 = 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMWlzb28AAAAYc29mdHdhcmUAR0VUIC5hdmMubW92aWUAAABxc2QNCQAAAAwAAABkAAAAIAAAAAEAEAIAAQCAEAACAQAQQAAABAAAAAQAAAAAABAAAAAIAAQABAiQAAABXZAAfAAAA';
-                downloadDocumento(videoBase64, 'video.mp4');
-                registrarAuditoria('download', 'Socorro', '', 'Download de vídeo MP4 de exemplo');
-                showToast('✅ Vídeo MP4 baixado!', 'success');
             });
 
             // ===================== ATIVAR LISTENERS =====================
@@ -4151,6 +4295,16 @@
                 }, (error) => { console.error('Erro listener auditoria:', error); });
                 listenersAtivos.push(unsubAuditoria);
 
+                // LISTENER PARA SOCORRO IMAGENS
+                const unsubSocorro = colecoes.socorroImagens.onSnapshot((snapshot) => {
+                    socorroImagens = [];
+                    snapshot.forEach(doc => { socorroImagens.push({ id: doc.id, ...doc.data() }); });
+                    if (dadosCarregados) {
+                        atualizarSocorro();
+                    }
+                }, (error) => { console.error('Erro listener socorro imagens:', error); });
+                listenersAtivos.push(unsubSocorro);
+
                 setTimeout(() => { if (!dadosCarregados) { dadosCarregados = true; inicializarInterface(); } }, 500);
             }
 
@@ -4174,7 +4328,8 @@
             console.log('🚗 PAIZÃO RENT CAR - Sistema SEM Storage (Base64 no Firestore)');
             console.log('👤 Admin: SERGIO / 080888');
             console.log('✅ Auditoria ativada: todas as ações são registradas automaticamente');
-            console.log('🆘 Botões de download (JPG e MP4) adicionados na aba Socorro');
+            console.log('🆘 Upload de imagens na aba Socorro ativado');
+            console.log('🗑️ Botão Limpar Log na aba Auditoria adicionado');
         })();
     </script>
 </body>

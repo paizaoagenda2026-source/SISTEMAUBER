@@ -5,14 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PAIZÃO RENT CAR - Sistema de Locação (Sem Storage)</title>
 
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js">
-    </script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js">
-    </script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js">
-    </script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
     <style>
+        /* Todos os estilos mantidos na íntegra */
         :root {
             --bg-dark: #0c0f16;
             --bg-card: #141822;
@@ -197,7 +195,8 @@
             animation: shake 0.4s ease;
         }
         @keyframes shake {
-            0%, 100% { transform: translateX(0); }
+            0%,
+            100% { transform: translateX(0); }
             25% { transform: translateX(-6px); }
             50% { transform: translateX(6px); }
             75% { transform: translateX(-4px); }
@@ -288,15 +287,6 @@
         .top-nav button .nav-icon {
             font-size: 18px;
         }
-        #btn-filtro-locacoes-nav {
-            border: 1px dashed var(--border);
-            margin-left: 4px;
-        }
-        #btn-filtro-locacoes-nav:hover {
-            border-color: var(--primary);
-            background: rgba(230, 168, 23, 0.08);
-            color: var(--primary);
-        }
         #btn-menu-nav {
             border: 2px solid var(--primary);
             background: rgba(230, 168, 23, 0.08);
@@ -314,7 +304,8 @@
             animation: none;
         }
         @keyframes pulseMenu {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(230, 168, 23, 0.4); }
+            0%,
+            100% { box-shadow: 0 0 0 0 rgba(230, 168, 23, 0.4); }
             50% { box-shadow: 0 0 0 10px rgba(230, 168, 23, 0); }
         }
         .top-user {
@@ -451,7 +442,9 @@
             .grid-4 { grid-template-columns: 1fr 1fr; }
         }
         @media (max-width: 768px) {
-            .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+            .grid-2,
+            .grid-3,
+            .grid-4 { grid-template-columns: 1fr; }
             .top-header {
                 padding: 0 16px;
                 flex-wrap: wrap;
@@ -552,7 +545,7 @@
             cursor: pointer;
             transition: all 0.3s;
             font-family: inherit;
-            letter-spacing: 0.3px;
+            letter-spacing: 0.3s;
         }
         .btn-save {
             background: var(--success);
@@ -1143,7 +1136,8 @@
             animation: pulse-dot 2s infinite;
         }
         @keyframes pulse-dot {
-            0%, 100% { opacity: 1; }
+            0%,
+            100% { opacity: 1; }
             50% { opacity: 0.4; }
         }
         .readonly-badge {
@@ -1170,7 +1164,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.75);
+            background: rgba(0, 0, 0, 0.75);
             z-index: 10000;
             align-items: center;
             justify-content: center;
@@ -1187,7 +1181,7 @@
             width: 90%;
             max-height: 80vh;
             overflow-y: auto;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
         }
         .docs-modal-header {
             display: flex;
@@ -1221,6 +1215,186 @@
             text-decoration: none;
             font-weight: 600;
         }
+
+        /* Estilos para a garagem */
+        .garagem-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 16px;
+        }
+        .garagem-card {
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+        .garagem-card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 4px 16px rgba(230, 168, 23, 0.15);
+            transform: translateY(-2px);
+        }
+        .garagem-card-img {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+            background: #0c0f16;
+            cursor: pointer;
+        }
+        .garagem-card-body {
+            padding: 12px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .garagem-card-body .img-nome {
+            font-weight: 600;
+            font-size: 13px;
+            color: #fff;
+            word-break: break-word;
+            line-height: 1.3;
+        }
+        .garagem-card-body .img-data {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+        .garagem-card-actions {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .garagem-card-actions button {
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            border: none;
+            font-family: inherit;
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+        .btn-rename {
+            background: var(--accent);
+            color: #fff;
+        }
+        .btn-rename:hover {
+            background: #3b6fd4;
+        }
+        .btn-delete-img {
+            background: var(--danger);
+            color: #fff;
+        }
+        .btn-delete-img:hover {
+            background: #c0392b;
+        }
+        .btn-download-img {
+            background: var(--success);
+            color: #fff;
+        }
+        .btn-download-img:hover {
+            background: #2ecc71;
+        }
+        @media (max-width: 600px) {
+            .garagem-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+            .garagem-card-img {
+                height: auto;
+                object-fit: contain;
+            }
+        }
+
+        /* Estilos para sub-abas do CARRO */
+        .sub-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 12px;
+        }
+        .sub-tab-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 8px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .sub-tab-btn:hover {
+            background: rgba(255, 255, 255, 0.04);
+            color: #fff;
+        }
+        .sub-tab-btn.active {
+            background: rgba(230, 168, 23, 0.12);
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+        .sub-tab-content {
+            display: none;
+        }
+        .sub-tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        .carro-pdf-list {
+            margin-top: 16px;
+        }
+        .carro-pdf-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            margin-bottom: 6px;
+        }
+        .carro-pdf-item span {
+            color: #d0d3db;
+            font-size: 13px;
+        }
+        .carro-pdf-actions button {
+            font-size: 11px;
+            margin-left: 4px;
+        }
+
+        /* Estilo extra para botões de navegação internos */
+        .btn-ir-locacoes {
+            background: #2d5fcf;
+            color: #fff;
+            border: 1px solid var(--accent);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-ir-locacoes:hover {
+            background: #3b6fd4;
+            border-color: #fff;
+        }
+
+        /* Badge para tipo de ação na auditoria */
+        .badge-acao {
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .badge-acao.criar { background: rgba(39,174,96,0.2); color: #2ecc71; }
+        .badge-acao.editar { background: rgba(45,95,207,0.2); color: #5b8def; }
+        .badge-acao.excluir { background: rgba(231,76,60,0.2); color: #e74c3c; }
+        .badge-acao.login { background: rgba(230,168,23,0.2); color: var(--primary); }
+        .badge-acao.logout { background: rgba(243,156,18,0.2); color: var(--warning); }
+        .badge-acao.upload { background: rgba(142,68,173,0.2); color: #9b59b6; }
+        .badge-acao.download { background: rgba(41,128,185,0.2); color: #3498db; }
     </style>
 </head>
 <body>
@@ -1259,15 +1433,15 @@
                 </div>
             </div>
             <nav class="top-nav" id="top-nav">
-                <button class="active" data-page="dashboard"><span class="nav-icon">📊</span> Dashboard</button>
-                <button data-page="veiculos"><span class="nav-icon">🚙</span> Veículos</button>
+                <button class="active" data-page="veiculos"><span class="nav-icon">🚙</span> Veículos</button>
+                <button data-page="garagem"><span class="nav-icon">🖼️</span> Garagem</button>
+                <button data-page="socorro"><span class="nav-icon">🆘</span> Socorro</button>
+                <button data-page="carro" id="btn-menu-nav"><span class="nav-icon">🚘</span> CARRO</button>
                 <button data-page="locatarios" class="nav-admin-only"><span class="nav-icon">👥</span> Locatários</button>
-                <button data-page="locacoes" class="nav-admin-only"><span class="nav-icon">📋</span> Locações</button>
-                <button data-page="docpdf" class="nav-admin-only"><span class="nav-icon">📄</span> DOC PDF</button>
+                <button data-page="manutencao" class="nav-admin-only" style="border:1px solid var(--border);"><span class="nav-icon">🔧</span> Manutenção</button>
                 <button data-page="fluxocaixa" class="nav-admin-only" style="border:1px solid var(--border);"><span class="nav-icon">💰</span> Fluxo de Caixa</button>
                 <button data-page="usuarios" class="nav-admin-only" style="border:1px solid var(--accent);"><span class="nav-icon">👤</span> Usuários</button>
-                <button id="btn-filtro-locacoes-nav" class="nav-admin-only" title="Abrir filtro de locações em janela separada"><span class="nav-icon">🔍</span> Filtro</button>
-                <button id="btn-menu-nav" title="Abrir o sistema completo na janela SEGURO (sem login)"><span class="nav-icon">🪟</span> SEGURO</button>
+                <button data-page="auditoria" class="nav-admin-only" style="border:1px solid var(--accent);"><span class="nav-icon">📋</span> Auditoria</button>
             </nav>
             <div class="top-user">
                 <span class="sync-indicator online" id="sync-indicator" title="Status da sincronização com Firebase"><span class="sync-dot"></span> <span id="sync-text">Online</span></span>
@@ -1282,21 +1456,10 @@
         </header>
 
         <main class="main-content" id="main-content">
-            <!-- Dashboard -->
-            <div class="page active" id="page-dashboard">
-                <div class="page-header"><h2>📊 Dashboard</h2><p>Visão geral do sistema PAIZÃO RENT CAR</p></div>
-                <div class="stats-row" id="stats-row">
-                    <div class="stat-card"><div class="stat-icon">🚙</div><div class="stat-value" id="stat-veiculos">0</div><div class="stat-label">Veículos Cadastrados</div></div>
-                    <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-value" id="stat-locatarios">0</div><div class="stat-label">Locatários</div></div>
-                    <div class="stat-card"><div class="stat-icon">📋</div><div class="stat-value" id="stat-locacoes">0</div><div class="stat-label">Locações Ativas</div></div>
-                    <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value" id="stat-receita">R$ 0</div><div class="stat-label">Receita Semanal Estimada</div></div>
-                    <div class="stat-card"><div class="stat-icon">🔒</div><div class="stat-value" id="stat-receita-caucao">R$ 0</div><div class="stat-label">Receita Caução Estimada</div></div>
-                </div>
-                <div class="card"><div class="card-title"><span class="icon">🕐</span> Últimos Cadastros</div><div id="ultimos-cadastros" style="color:var(--text-muted);font-size:13px;">Nenhum cadastro realizado ainda.</div></div>
-            </div>
+            <!-- Página Dashboard removida -->
 
             <!-- Veículos -->
-            <div class="page" id="page-veiculos">
+            <div class="page active" id="page-veiculos">
                 <div class="page-header"><h2>🚙 Cadastro de Veículos</h2><p id="veiculos-subtitle">Gerencie a frota de veículos com todos os dados, valores e documentos</p></div>
                 <div class="card" id="card-form-veiculo">
                     <div class="card-title"><span class="icon">📝</span> <span id="veic-form-title">Novo Veículo</span></div>
@@ -1313,7 +1476,7 @@
                             <div class="form-group-app"><label>Chassi</label><input type="text" id="v-chassi" placeholder="17 caracteres" required maxlength="17"></div>
                             <div class="form-group-app"><label>Valor Locação Semanal (R$)</label><input type="text" id="v-valor-semanal" placeholder="R$ 0,00" required oninput="formatarMoedaInput(this)" onblur="formatarMoedaInputBlur(this)"></div>
                             <div class="form-group-app"><label>Valor do Caução (R$)</label><input type="text" id="v-caucao" placeholder="R$ 0,00" required oninput="formatarMoedaInput(this)" onblur="formatarMoedaInputBlur(this)"></div>
-                            <div class="form-group-app"><label>Anexar Documento (PDF)</label><input type="file" id="v-documento" accept=".pdf"><small style="color:var(--text-muted);font-size:10px;">Arquivo PDF do documento do veículo (máx. 500KB)</small></div>
+                            <div class="form-group-app"><label>Anexar Documento (PDF)</label><input type="file" id="v-documento" accept=".pdf"><small style="color:var(--text-muted);font-size:10px;">Arquivo PDF do documento do veículo</small></div>
                         </div>
                         <div class="form-group-app" style="margin-top:4px;"><label>Opcionais do Veículo</label>
                             <div class="opcionais-group">
@@ -1333,6 +1496,7 @@
                         </div>
                         <div style="display:flex;gap:12px;margin-top:8px;">
                             <button type="submit" class="btn-app btn-save" id="btn-submit-veiculo">💾 Salvar Veículo</button>
+                            <button type="button" class="btn-app" id="btn-upload-garagem-veiculo" style="background: var(--accent); color: #fff;">🖼️ Enviar para Garagem</button>
                             <button type="button" class="btn-app btn-cancel" id="btn-cancel-veiculo">Limpar</button>
                             <button type="button" class="btn-app btn-cancel" id="btn-cancel-edicao-veiculo" style="display:none;">❌ Cancelar Edição</button>
                         </div>
@@ -1347,6 +1511,77 @@
                             <thead><tr><th>Marca</th><th>Modelo</th><th>Cor</th><th>Potência</th><th>Placa</th><th>KM</th><th>RENAVAN</th><th>Chassi</th><th>Valor Semanal</th><th>Caução</th><th>Opcionais</th><th>Documento</th><th id="th-acoes-veiculos">Ações</th></tr></thead>
                             <tbody id="tbody-veiculos"><tr><td colspan="13" class="empty-state"><span class="icon">🚙</span><br>Nenhum veículo cadastrado</td></tr></tbody>
                         </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Garagem -->
+            <div class="page" id="page-garagem">
+                <div class="page-header"><h2>🖼️ Garagem</h2><p>Visualize e gerencie as imagens enviadas</p></div>
+                <div class="card">
+                    <div class="card-title"><span class="icon">🖼️</span> Imagens da Garagem</div>
+                    <div style="margin-bottom: 16px; display: flex; justify-content: flex-end;">
+                        <button class="btn-app btn-save" id="btn-nova-imagem-garagem" style="display: inline-flex; align-items: center; gap: 6px;">➕ Nova Imagem</button>
+                    </div>
+                    <div class="garagem-grid" id="garagem-grid">
+                        <div class="empty-state"><span class="icon">🖼️</span><br>Nenhuma imagem na garagem</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Socorro (ABA MODIFICADA: BOTÕES DE DOWNLOAD) -->
+            <div class="page" id="page-socorro">
+                <div class="page-header"><h2>🆘 Socorro</h2><p>Página de emergência / suporte</p></div>
+                <div class="card">
+                    <div class="card-title"><span class="icon">🆘</span> Central de Ajuda</div>
+                    <p style="color:var(--text-muted); margin-bottom: 20px;">Conteúdo da aba Socorro. Aqui você pode adicionar informações de contato, instruções ou recursos de emergência.</p>
+                    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                        <button class="btn-app btn-save" id="btn-socorro-download-jpg" style="display: inline-flex; align-items: center; gap: 8px;">
+                            🖼️ Baixar Imagem JPG
+                        </button>
+                        <button class="btn-app btn-save" id="btn-socorro-download-video" style="display: inline-flex; align-items: center; gap: 8px;">
+                            🎬 Baixar Vídeo MP4
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARRO (com sub-abas) -->
+            <div class="page" id="page-carro">
+                <div class="page-header"><h2>🚘 CARRO</h2><p>Informações e sub-abas do veículo</p></div>
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <div class="sub-tabs" id="carro-sub-tabs" style="margin-bottom: 0; padding-bottom: 0; border-bottom: none;">
+                            <button class="sub-tab-btn active" data-subtab="QMK3B93">QMK3B93</button>
+                            <button class="sub-tab-btn" data-subtab="GIW0G03">GIW0G03</button>
+                            <button class="sub-tab-btn" data-subtab="QNC2C21">QNC2C21</button>
+                            <button class="sub-tab-btn" data-subtab="BYQ4E06">BYQ4E06</button>
+                        </div>
+                        <button class="btn-app btn-save" id="btn-upload-carro-pdf" style="display: inline-flex; align-items: center; gap: 6px;" title="Fazer upload de PDF para a sub-aba selecionada">📎 Upload PDF</button>
+                    </div>
+                    <div class="sub-tab-content active" id="subtab-QMK3B93">
+                        <h3 style="color:#fff; margin-bottom:12px;">🔹 QMK3B93</h3>
+                        <div class="carro-pdf-list" id="carro-pdf-list-QMK3B93">
+                            <span style="color:var(--text-muted);">Nenhum PDF anexado a esta sub-aba.</span>
+                        </div>
+                    </div>
+                    <div class="sub-tab-content" id="subtab-GIW0G03">
+                        <h3 style="color:#fff; margin-bottom:12px;">🔹 GIW0G03</h3>
+                        <div class="carro-pdf-list" id="carro-pdf-list-GIW0G03">
+                            <span style="color:var(--text-muted);">Nenhum PDF anexado a esta sub-aba.</span>
+                        </div>
+                    </div>
+                    <div class="sub-tab-content" id="subtab-QNC2C21">
+                        <h3 style="color:#fff; margin-bottom:12px;">🔹 QNC2C21</h3>
+                        <div class="carro-pdf-list" id="carro-pdf-list-QNC2C21">
+                            <span style="color:var(--text-muted);">Nenhum PDF anexado a esta sub-aba.</span>
+                        </div>
+                    </div>
+                    <div class="sub-tab-content" id="subtab-BYQ4E06">
+                        <h3 style="color:#fff; margin-bottom:12px;">🔹 BYQ4E06</h3>
+                        <div class="carro-pdf-list" id="carro-pdf-list-BYQ4E06">
+                            <span style="color:var(--text-muted);">Nenhum PDF anexado a esta sub-aba.</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1369,9 +1604,10 @@
                             <div class="form-group-app"><label>Bairro</label><input type="text" id="l-bairro" placeholder="Bairro" required></div>
                             <div class="form-group-app"><label>Cidade</label><input type="text" id="l-cidade" placeholder="Cidade" required></div>
                         </div>
-                        <div style="display:flex;gap:12px;margin-top:8px;">
+                        <div style="display:flex;gap:12px;margin-top:8px; flex-wrap: wrap; align-items: center;">
                             <button type="submit" class="btn-app btn-save" id="btn-submit-locatario">💾 Salvar Locatário</button>
                             <button type="button" class="btn-app btn-cancel" id="btn-cancel-locatario">Limpar</button>
+                            <button type="button" class="btn-app btn-ir-locacoes" id="btn-ir-locacoes" title="Ir para Locações">📋 Locações</button>
                             <button type="button" class="btn-app btn-cancel" id="btn-cancel-edicao-locatario" style="display:none;">❌ Cancelar Edição</button>
                         </div>
                     </form>
@@ -1400,9 +1636,10 @@
                             <div class="form-group-app" id="loc-grupo-entrada-caucao" style="display:none;"><label>Valor da Entrada do Caução (R$)</label><input type="text" id="loc-entrada-caucao" placeholder="R$ 0,00" step="0.01" min="0" oninput="formatarMoedaInput(this)" onblur="formatarMoedaInputBlur(this)"></div>
                             <div class="form-group-app" id="loc-grupo-parcelas" style="display:none;"><label>Nº de Parcelas (na semana)</label><input type="number" id="loc-parcelas" placeholder="Ex: 4" min="1" max="20" value="2"></div>
                         </div>
-                        <div style="display:flex;gap:12px;margin-top:16px;">
+                        <div style="display:flex;gap:12px;margin-top:16px; flex-wrap: wrap; align-items: center;">
                             <button type="submit" class="btn-app btn-save" id="btn-submit-locacao">✅ Confirmar Locação</button>
                             <button type="button" class="btn-app btn-cancel" id="btn-pdf-upload-locacao" style="display: inline-flex; align-items: center; gap: 6px;">📎 PDF</button>
+                            <button type="button" class="btn-app btn-filtro-locacao" id="btn-filtro-locacoes-nav" title="Abrir filtro de locações em janela separada" style="display: inline-flex; align-items: center; gap: 6px;">🔍 Filtro</button>
                             <button type="button" class="btn-app btn-cancel" id="btn-cancel-edicao-locacao" style="display:none;">❌ Cancelar Edição</button>
                         </div>
                     </form>
@@ -1421,20 +1658,50 @@
                 </div>
             </div>
 
-            <!-- DOC PDF (admin only) -->
-            <div class="page" id="page-docpdf">
-                <div class="page-header"><h2>📄 Documentos PDF</h2><p>Gerencie os arquivos PDF salvos no sistema</p></div>
+            <!-- MANUTENÇÃO (COM SUB-ABAS CORRIGIDAS) -->
+            <div class="page" id="page-manutencao">
+                <div class="page-header"><h2>🔧 Manutenção de Veículos</h2><p>Registre e acompanhe as manutenções realizadas na frota</p></div>
+                <div class="card" id="card-form-manutencao">
+                    <div class="card-title"><span class="icon">📝</span> <span id="manut-form-title">Nova Manutenção</span></div>
+                    <div class="edit-banner" id="edit-banner-manutencao">✏️ <span id="edit-banner-manutencao-text">Você está editando um registro de manutenção.</span></div>
+                    <form id="form-manutencao" autocomplete="off">
+                        <div class="grid-3">
+                            <div class="form-group-app"><label>Veículo (Modelo/Marca)</label><select id="m-veiculo" required><option value="">Selecione um veículo...</option></select></div>
+                            <div class="form-group-app"><label>Sub-Aba (Placa do Veículo)</label><select id="m-subaba" required><option value="">Escolha a sub-aba...</option><option value="QMK3B93">QMK3B93</option><option value="QYB4E06">QYB4E06</option><option value="QNC2C21">QNC2C21</option><option value="GIW0G03">GIW0G03</option></select></div>
+                            <div class="form-group-app"><label>Data da Manutenção</label><input type="date" id="m-data" required></div>
+                            <div class="form-group-app"><label>Tipo de Manutenção</label><select id="m-tipo" required><option value="">Selecione o tipo...</option><option value="preventiva">🔧 Preventiva</option><option value="corretiva">🔩 Corretiva</option><option value="revisao">📋 Revisão Programada</option><option value="pneus">🛞 Pneus</option><option value="oleo">🛢️ Troca de Óleo</option><option value="freios">🛑 Freios</option><option value="suspensao">🔗 Suspensão</option><option value="eletrica">⚡ Elétrica</option><option value="lataria">🎨 Lataria / Pintura</option><option value="outros">📌 Outros</option></select></div>
+                            <div class="form-group-app"><label>Descrição do Serviço</label><input type="text" id="m-descricao" placeholder="Ex: Troca de pastilhas de freio dianteiras" required></div>
+                            <div class="form-group-app"><label>Valor Gasto (R$)</label><input type="text" id="m-valor" placeholder="R$ 0,00" oninput="formatarMoedaInput(this)" onblur="formatarMoedaInputBlur(this)"></div>
+                            <div class="form-group-app"><label>KM Atual no Momento</label><input type="number" id="m-km" placeholder="Ex: 55000"></div>
+                            <div class="form-group-app"><label>Observação</label><input type="text" id="m-observacao" placeholder="Observações adicionais..."></div>
+                        </div>
+                        <div class="form-group-app" style="margin-top:8px;">
+                            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                                <input type="checkbox" id="m-registrar-fluxo" style="width:auto;accent-color:var(--success);"> Registrar automaticamente como despesa no Fluxo de Caixa
+                            </label>
+                        </div>
+                        <div style="display:flex;gap:12px;margin-top:8px;">
+                            <button type="submit" class="btn-app btn-save" id="btn-submit-manutencao">💾 Registrar Manutenção</button>
+                            <button type="button" class="btn-app btn-cancel" id="btn-cancel-manutencao">Limpar</button>
+                            <button type="button" class="btn-app btn-cancel" id="btn-cancel-edicao-manutencao" style="display:none;">❌ Cancelar Edição</button>
+                        </div>
+                    </form>
+                </div>
+                <!-- Histórico de Manutenções com sub-abas -->
                 <div class="card">
-                    <div class="card-title"><span class="icon">📋</span> PDFs Armazenados</div>
-                    <div style="margin-bottom: 16px; display: flex; justify-content: flex-end;">
-                        <button class="btn-app btn-save" id="btn-novo-pdf-docpdf" style="display: inline-flex; align-items: center; gap: 6px;">➕ Novo PDF</button>
+                    <div class="card-title"><span class="icon">📋</span> Histórico de Manutenções</div>
+                    <div class="sub-tabs" id="manutencao-sub-tabs">
+                        <button class="sub-tab-btn active" data-placa="QMK3B93">QMK3B93</button>
+                        <button class="sub-tab-btn" data-placa="QYB4E06">QYB4E06</button>
+                        <button class="sub-tab-btn" data-placa="QNC2C21">QNC2C21</button>
+                        <button class="sub-tab-btn" data-placa="GIW0G03">GIW0G03</button>
                     </div>
-                    <div class="table-wrapper" id="table-wrapper-docpdf">
+                    <div class="table-wrapper" id="table-wrapper-manutencao">
                         <button class="scroll-btn scroll-btn-left" aria-label="Rolar para esquerda">◀</button>
                         <button class="scroll-btn scroll-btn-right" aria-label="Rolar para direita">▶</button>
-                        <table id="tabela-docpdf">
-                            <thead><tr><th>Nome do Arquivo</th><th>Data de Upload</th><th>Ações</th></tr></thead>
-                            <tbody id="tbody-docpdf"><tr><td colspan="3" class="empty-state"><span class="icon">📄</span><br>Nenhum PDF armazenado</td></tr></tbody>
+                        <table id="tabela-manutencao">
+                            <thead><tr><th>Veículo</th><th>Placa</th><th>Data</th><th>Tipo</th><th>Descrição</th><th>Valor</th><th>KM</th><th>Observação</th><th>Fluxo Caixa</th><th>Ações</th></tr></thead>
+                            <tbody id="tbody-manutencao"><tr><td colspan="10" class="empty-state"><span class="icon">🔧</span><br>Nenhuma manutenção registrada</td></tr></tbody>
                         </table>
                     </div>
                 </div>
@@ -1485,7 +1752,7 @@
 
             <!-- Usuários (admin only) -->
             <div class="page" id="page-usuarios">
-                <div class="page-header"><h2>👤 Gerenciamento de Usuários</h2><p>Crie e gerencie usuários com acesso limitado a veículos específicos</p></div>
+                <div class="page-header"><h2>👤 Gerenciamento de Usuários</h2><p>Crie e gerencie usuários com acesso limitado a abas, ações, veículos e sub-abas</p></div>
                 <div class="card" id="card-form-usuario">
                     <div class="card-title"><span class="icon">📝</span> <span id="usuario-form-title">Novo Usuário</span></div>
                     <div class="edit-banner" id="edit-banner-usuario">✏️ <span id="edit-banner-usuario-text">Você está editando um usuário existente.</span></div>
@@ -1495,14 +1762,71 @@
                             <div class="form-group-app"><label>Login (Usuário)</label><input type="text" id="u-login" placeholder="Nome de usuário para login" required autocomplete="off"></div>
                             <div class="form-group-app"><label>Senha</label><input type="password" id="u-senha" placeholder="Senha de acesso" required autocomplete="off"></div>
                         </div>
+
+                        <!-- ABAS PERMITIDAS -->
+                        <div class="section-divider">
+                            <div class="form-group-app"><label>📑 Abas Permitidas</label>
+                                <div class="permissoes-grid" id="permissoes-abas-grid">
+                                    <label><input type="checkbox" class="perm-abas-check" value="veiculos"> 🚙 Veículos</label>
+                                    <label><input type="checkbox" class="perm-abas-check" value="garagem"> 🖼️ Garagem</label>
+                                    <label><input type="checkbox" class="perm-abas-check" value="socorro"> 🆘 Socorro</label>
+                                    <label><input type="checkbox" class="perm-abas-check" value="carro"> 🚘 CARRO</label>
+                                    <label><input type="checkbox" class="perm-abas-check" value="locatarios"> 👥 Locatários</label>
+                                    <label><input type="checkbox" class="perm-abas-check" value="locacoes"> 📋 Locações</label>
+                                    <label><input type="checkbox" class="perm-abas-check" value="manutencao"> 🔧 Manutenção</label>
+                                    <label><input type="checkbox" class="perm-abas-check" value="fluxocaixa"> 💰 Fluxo de Caixa</label>
+                                    <label><input type="checkbox" class="perm-abas-check" value="usuarios"> 👤 Usuários</label>
+                                    <label><input type="checkbox" class="perm-abas-check" value="filtro"> 🔍 Filtro</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SUB-ABAS DO CARRO -->
+                        <div class="section-divider">
+                            <div class="form-group-app"><label>🚘 Sub-Abas do CARRO Permitidas</label>
+                                <div class="permissoes-grid" id="permissoes-subabas-carro-grid">
+                                    <label><input type="checkbox" class="perm-subabas-carro-check" value="QMK3B93"> 🔹 QMK3B93</label>
+                                    <label><input type="checkbox" class="perm-subabas-carro-check" value="GIW0G03"> 🔹 GIW0G03</label>
+                                    <label><input type="checkbox" class="perm-subabas-carro-check" value="QNC2C21"> 🔹 QNC2C21</label>
+                                    <label><input type="checkbox" class="perm-subabas-carro-check" value="BYQ4E06"> 🔹 BYQ4E06</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SUB-ABAS DO HISTÓRICO DE MANUTENÇÃO -->
+                        <div class="section-divider">
+                            <div class="form-group-app"><label>🔧 Sub-Abas do Histórico de Manutenção Permitidas</label>
+                                <div class="permissoes-grid" id="permissoes-subabas-manutencao-grid">
+                                    <label><input type="checkbox" class="perm-subabas-manutencao-check" value="QMK3B93"> 🔹 QMK3B93</label>
+                                    <label><input type="checkbox" class="perm-subabas-manutencao-check" value="QYB4E06"> 🔹 QYB4E06</label>
+                                    <label><input type="checkbox" class="perm-subabas-manutencao-check" value="QNC2C21"> 🔹 QNC2C21</label>
+                                    <label><input type="checkbox" class="perm-subabas-manutencao-check" value="GIW0G03"> 🔹 GIW0G03</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- AÇÕES/BOTÕES -->
+                        <div class="section-divider">
+                            <div class="form-group-app"><label>🔘 Ações Permitidas (Botões)</label>
+                                <div class="permissoes-grid" id="permissoes-acoes-grid">
+                                    <label><input type="checkbox" class="perm-acoes-check" value="criar"> ➕ Criar / Adicionar</label>
+                                    <label><input type="checkbox" class="perm-acoes-check" value="editar"> ✏️ Editar</label>
+                                    <label><input type="checkbox" class="perm-acoes-check" value="excluir"> 🗑️ Excluir</label>
+                                    <label><input type="checkbox" class="perm-acoes-check" value="upload"> 📤 Upload (PDFs/Imagens)</label>
+                                    <label><input type="checkbox" class="perm-acoes-check" value="download"> 📥 Download de Documentos</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- VEÍCULOS PERMITIDOS -->
                         <div class="section-divider">
                             <div class="form-group-app"><label>🚙 Veículos Permitidos para este Usuário</label>
                                 <div class="permissoes-grid" id="permissoes-usuario-grid">
                                     <span style="color:var(--text-muted);font-size:12px;">Nenhum veículo cadastrado.</span>
                                 </div>
-                                <small style="color:var(--text-muted);font-size:10px;">Marque os veículos que este usuário poderá visualizar. Ele terá acesso apenas aos dados e documentos dos veículos selecionados.</small>
                             </div>
                         </div>
+
                         <div style="display:flex;gap:12px;margin-top:8px;">
                             <button type="submit" class="btn-app btn-save" id="btn-submit-usuario">💾 Salvar Usuário</button>
                             <button type="button" class="btn-app btn-cancel" id="btn-cancel-usuario">Limpar</button>
@@ -1514,14 +1838,51 @@
                     <div class="table-wrapper" id="table-wrapper-usuarios">
                         <button class="scroll-btn scroll-btn-left" aria-label="Rolar para esquerda">◀</button>
                         <button class="scroll-btn scroll-btn-right" aria-label="Rolar para direita">▶</button>
-                        <table id="tabela-usuarios"><thead><tr><th>Nome</th><th>Login</th><th>Perfil</th><th>Veículos Permitidos</th><th>Data Criação</th><th>Ações</th></tr></thead><tbody id="tbody-usuarios"><tr><td colspan="6" class="empty-state"><span class="icon">👤</span><br>Nenhum usuário cadastrado</td></tr></tbody></table>
+                        <table id="tabela-usuarios"><thead><tr><th>Nome</th><th>Login</th><th>Perfil</th><th>Abas</th><th>Sub-Abas CARRO</th><th>Sub-Abas Manutenção</th><th>Ações (Botões)</th><th>Veículos</th><th>Data Criação</th><th>Ações</th></tr></thead><tbody id="tbody-usuarios"><tr><td colspan="10" class="empty-state"><span class="icon">👤</span><br>Nenhum usuário cadastrado</td></tr></tbody></table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AUDITORIA (NOVA ABA) -->
+            <div class="page" id="page-auditoria">
+                <div class="page-header"><h2>📋 Auditoria</h2><p>Registro de todas as ações realizadas pelos usuários</p></div>
+                <div class="card">
+                    <div class="card-title"><span class="icon">📋</span> Log de Atividades</div>
+                    <div class="search-bar-container" id="search-bar-auditoria">
+                        <div class="search-input-wrapper">
+                            <span class="search-icon">🔍</span>
+                            <input type="text" id="input-busca-auditoria" placeholder="Pesquisar por usuário, ação ou entidade..." autocomplete="off">
+                            <button class="clear-search-btn" id="clear-search-btn-auditoria" title="Limpar pesquisa" type="button">✕</button>
+                        </div>
+                        <div class="search-results-info" id="search-results-info-auditoria">
+                            <span id="search-count-text-auditoria">Total: <strong class="highlight-count" id="search-count-num-auditoria">0</strong> registros</span>
+                        </div>
+                        <button class="btn-limpar-filtro" id="btn-limpar-filtro-auditoria" style="display:none;" type="button">🧹 Limpar Filtro</button>
+                    </div>
+                    <div class="table-wrapper" id="table-wrapper-auditoria">
+                        <button class="scroll-btn scroll-btn-left" aria-label="Rolar para esquerda">◀</button>
+                        <button class="scroll-btn scroll-btn-right" aria-label="Rolar para direita">▶</button>
+                        <table id="tabela-auditoria">
+                            <thead>
+                                <tr>
+                                    <th>Data/Hora</th>
+                                    <th>Usuário</th>
+                                    <th>Ação</th>
+                                    <th>Entidade</th>
+                                    <th>Descrição</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-auditoria">
+                                <tr><td colspan="5" class="empty-state"><span class="icon">📋</span><br>Nenhum registro de auditoria encontrado</td></tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- Modal de documentos das locações -->
+    <!-- Modais mantidos iguais -->
     <div class="docs-modal-overlay" id="docs-modal-overlay">
         <div class="docs-modal">
             <div class="docs-modal-header">
@@ -1532,7 +1893,6 @@
         </div>
     </div>
 
-    <!-- Modal de upload de PDF para a aba DOC PDF -->
     <div class="docs-modal-overlay" id="modal-pdf-overlay">
         <div class="docs-modal">
             <div class="docs-modal-header">
@@ -1546,10 +1906,60 @@
             <div class="form-group-app">
                 <label>Arquivo PDF</label>
                 <input type="file" id="input-pdf-file" accept=".pdf">
-                <small style="color:var(--text-muted);font-size:10px;">Tamanho máximo: 500KB</small>
+                <small style="color:var(--text-muted);font-size:10px;">Arquivo PDF (qualquer tamanho, mas lembre-se do limite de 1MB por documento do Firestore)</small>
             </div>
             <button class="btn-app btn-save" id="btn-salvar-pdf" style="width:100%; margin-top:8px;">💾 Salvar PDF</button>
-            <span id="pdf-upload-error" style="color:var(--danger);font-size:12px;display:none;margin-top:8px;display:block;"></span>
+            <span id="pdf-upload-error" style="color:var(--danger);font-size:12px;display:none;margin-top:8px;"></span>
+        </div>
+    </div>
+
+    <div class="docs-modal-overlay" id="modal-imagem-overlay">
+        <div class="docs-modal">
+            <div class="docs-modal-header">
+                <h3>🖼️ Upload de Imagem para Garagem</h3>
+                <button class="docs-modal-close" id="modal-imagem-close">✕</button>
+            </div>
+            <div class="form-group-app">
+                <label>Nome da Imagem</label>
+                <input type="text" id="input-imagem-nome" placeholder="Digite um nome para a imagem">
+            </div>
+            <div class="form-group-app">
+                <label>Arquivo de Imagem</label>
+                <input type="file" id="input-imagem-file" accept="image/*">
+                <small style="color:var(--text-muted);font-size:10px;">Formatos aceitos: JPG, PNG, GIF, WebP. Imagens muito grandes serão comprimidas automaticamente.</small>
+            </div>
+            <button class="btn-app btn-save" id="btn-salvar-imagem" style="width:100%; margin-top:8px;">💾 Salvar Imagem</button>
+            <span id="imagem-upload-error" style="color:var(--danger);font-size:12px;display:none;margin-top:8px;"></span>
+        </div>
+    </div>
+
+    <!-- Modal de Upload de PDF para Sub-Aba do CARRO -->
+    <div class="docs-modal-overlay" id="modal-carro-pdf-overlay">
+        <div class="docs-modal">
+            <div class="docs-modal-header">
+                <h3>📎 Upload de PDF para Sub-Aba do CARRO</h3>
+                <button class="docs-modal-close" id="modal-carro-pdf-close">✕</button>
+            </div>
+            <div class="form-group-app">
+                <label>Escolha a Sub-Aba de Destino</label>
+                <select id="select-carro-subaba">
+                    <option value="QMK3B93">QMK3B93</option>
+                    <option value="GIW0G03">GIW0G03</option>
+                    <option value="QNC2C21">QNC2C21</option>
+                    <option value="BYQ4E06">BYQ4E06</option>
+                </select>
+            </div>
+            <div class="form-group-app">
+                <label>Nome do Arquivo</label>
+                <input type="text" id="input-carro-pdf-nome" placeholder="Digite um nome para o arquivo">
+            </div>
+            <div class="form-group-app">
+                <label>Arquivo PDF</label>
+                <input type="file" id="input-carro-pdf-file" accept=".pdf">
+                <small style="color:var(--text-muted);font-size:10px;">Arquivo PDF (qualquer tamanho, sujeito ao limite do Firestore)</small>
+            </div>
+            <button class="btn-app btn-save" id="btn-salvar-carro-pdf" style="width:100%; margin-top:8px;">💾 Salvar PDF na Sub-Aba</button>
+            <span id="carro-pdf-upload-error" style="color:var(--danger);font-size:12px;display:none;margin-top:8px;"></span>
         </div>
     </div>
 
@@ -1592,7 +2002,11 @@
                 locacoes: db.collection('locacoes'),
                 fluxocaixa: db.collection('fluxocaixa'),
                 usuarios: db.collection('usuarios'),
-                docspdf: db.collection('docspdf')
+                docspdf: db.collection('docspdf'),
+                garagem: db.collection('garagem'),
+                carroPdfs: db.collection('carro_pdfs'),
+                manutencoes: db.collection('manutencoes'),
+                auditoria: db.collection('auditoria') // NOVA COLEÇÃO
             };
 
             // ===================== VARIÁVEIS GLOBAIS =====================
@@ -1601,7 +2015,10 @@
             let locacoes = [];
             let fluxoCaixa = [];
             let usuarios = [];
-            let docsPdf = [];
+            let garagem = [];
+            let carroPdfs = [];
+            let manutencoes = [];
+            let auditoriaLogs = []; // NOVO ARRAY
             let usuarioLogado = null;
 
             let editandoVeiculoId = null;
@@ -1609,10 +2026,32 @@
             let editandoLocacaoId = null;
             let editandoFluxoId = null;
             let editandoUsuarioId = null;
+            let editandoManutencaoId = null;
             let termoBuscaLocacoes = '';
             let termoBuscaFluxo = '';
+            let termoBuscaAuditoria = ''; // NOVA VARIÁVEL
             let dadosCarregados = false;
             let listenersAtivos = [];
+
+            let placaFiltroManutencao = 'QMK3B93';
+
+            // ===================== FUNÇÃO DE AUDITORIA =====================
+            async function registrarAuditoria(acao, entidade, entidadeId, descricao) {
+                if (!usuarioLogado) return;
+                try {
+                    await colecoes.auditoria.add({
+                        userId: usuarioLogado.id,
+                        userName: usuarioLogado.nome,
+                        acao: acao, // criar, editar, excluir, login, logout, upload, download
+                        entidade: entidade, // Veículo, Locatário, Locação, etc.
+                        entidadeId: entidadeId || '',
+                        descricao: descricao,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                } catch (error) {
+                    console.error('Erro ao registrar auditoria:', error);
+                }
+            }
 
             // ===================== FUNÇÕES AUXILIARES =====================
             function getVeiculosPermitidos() {
@@ -1632,15 +2071,61 @@
 
             function isAdmin() { return usuarioLogado && usuarioLogado.role === 'admin'; }
 
+            function temPermissaoAba(aba) {
+                if (!usuarioLogado) return false;
+                if (isAdmin()) return true;
+                return (usuarioLogado.abasPermitidas || []).includes(aba);
+            }
+
+            function temPermissaoAcao(acao) {
+                if (!usuarioLogado) return false;
+                if (isAdmin()) return true;
+                return (usuarioLogado.acoesPermitidas || []).includes(acao);
+            }
+
+            function temPermissaoSubAbaCarro(subaba) {
+                if (!usuarioLogado) return false;
+                if (isAdmin()) return true;
+                if (!temPermissaoAba('carro')) return false;
+                return (usuarioLogado.subAbasCarroPermitidas || []).includes(subaba);
+            }
+
+            function temPermissaoSubAbaManutencao(subaba) {
+                if (!usuarioLogado) return false;
+                if (isAdmin()) return true;
+                if (!temPermissaoAba('manutencao')) return false;
+                return (usuarioLogado.subAbasManutencaoPermitidas || []).includes(subaba);
+            }
+
             function atualizarUIporPerfil() {
-                const adminElements = document.querySelectorAll('.nav-admin-only');
+                const navButtons = document.querySelectorAll('.top-nav button[data-page]');
+                navButtons.forEach(btn => {
+                    const page = btn.getAttribute('data-page');
+                    if (page === 'veiculos' || page === 'garagem' || page === 'carro' || page === 'socorro') {
+                        btn.style.display = '';
+                    } else if (page === 'auditoria') {
+                        btn.style.display = isAdmin() ? '' : 'none';
+                    } else {
+                        btn.style.display = temPermissaoAba(page) ? '' : 'none';
+                    }
+                });
+
+                const btnIrLocacoes = document.getElementById('btn-ir-locacoes');
+                if (btnIrLocacoes) {
+                    btnIrLocacoes.style.display = temPermissaoAba('locacoes') ? '' : 'none';
+                }
+
+                const btnFiltro = document.getElementById('btn-filtro-locacoes-nav');
+                if (btnFiltro) {
+                    btnFiltro.style.display = temPermissaoAba('filtro') ? '' : 'none';
+                }
+
                 const formVeiculoCard = document.getElementById('card-form-veiculo');
                 const sectionPermissoes = document.getElementById('section-permissoes-veiculo');
                 const thAcoesVeiculos = document.getElementById('th-acoes-veiculos');
                 const veiculosSubtitle = document.getElementById('veiculos-subtitle');
 
                 if (isAdmin()) {
-                    adminElements.forEach(el => el.style.display = '');
                     if (formVeiculoCard) formVeiculoCard.style.display = '';
                     if (sectionPermissoes) sectionPermissoes.style.display = '';
                     if (thAcoesVeiculos) thAcoesVeiculos.style.display = '';
@@ -1649,20 +2134,104 @@
                     document.getElementById('user-role-display').textContent = 'Administrador';
                     document.getElementById('user-role-display').style.color = 'var(--primary)';
                 } else {
-                    adminElements.forEach(el => el.style.display = 'none');
-                    if (formVeiculoCard) formVeiculoCard.style.display = 'none';
+                    const podeCriar = temPermissaoAcao('criar');
+                    if (formVeiculoCard) formVeiculoCard.style.display = podeCriar ? '' : 'none';
                     if (sectionPermissoes) sectionPermissoes.style.display = 'none';
-                    if (thAcoesVeiculos) thAcoesVeiculos.style.display = 'none';
+                    const podeEditar = temPermissaoAcao('editar');
+                    const podeExcluir = temPermissaoAcao('excluir');
+                    if (thAcoesVeiculos) thAcoesVeiculos.style.display = (podeEditar || podeExcluir) ? '' : 'none';
                     if (veiculosSubtitle) veiculosSubtitle.textContent =
                         'Visualize os veículos e faça download dos documentos';
                     document.getElementById('user-role-display').textContent = 'Usuário';
                     document.getElementById('user-role-display').style.color = 'var(--accent)';
                 }
+
+                const formLocatarioCard = document.getElementById('card-form-locatario');
+                if (formLocatarioCard) formLocatarioCard.style.display = temPermissaoAcao('criar') ? '' : 'none';
+                const formLocacaoCard = document.getElementById('card-form-locacao');
+                if (formLocacaoCard) formLocacaoCard.style.display = temPermissaoAcao('criar') ? '' : 'none';
+                const formFluxoCard = document.getElementById('card-form-fluxo');
+                if (formFluxoCard) formFluxoCard.style.display = temPermissaoAcao('criar') ? '' : 'none';
+                const formManutencaoCard = document.getElementById('card-form-manutencao');
+                if (formManutencaoCard) formManutencaoCard.style.display = temPermissaoAcao('criar') ? '' : 'none';
+
+                const btnUploadGaragem = document.getElementById('btn-upload-garagem-veiculo');
+                if (btnUploadGaragem) btnUploadGaragem.style.display = temPermissaoAcao('upload') ? '' : 'none';
+                const btnNovaImagemGaragem = document.getElementById('btn-nova-imagem-garagem');
+                if (btnNovaImagemGaragem) btnNovaImagemGaragem.style.display = temPermissaoAcao('upload') ? '' : 'none';
+                const btnPdfUploadLocacao = document.getElementById('btn-pdf-upload-locacao');
+                if (btnPdfUploadLocacao) btnPdfUploadLocacao.style.display = temPermissaoAcao('upload') ? '' : 'none';
+                const btnUploadCarroPdf = document.getElementById('btn-upload-carro-pdf');
+                if (btnUploadCarroPdf) btnUploadCarroPdf.style.display = temPermissaoAcao('upload') ? '' : 'none';
+
                 atualizarPermissoesVeiculoGrid();
                 atualizarPermissoesUsuarioGrid();
+                if (dadosCarregados) {
+                    atualizarTabelaVeiculos();
+                    atualizarTabelaLocatarios();
+                    atualizarTabelaLocacoes();
+                    atualizarTabelaFluxoCaixa();
+                    atualizarTabelaManutencoes();
+                    atualizarGaragem();
+                    atualizarTabelaUsuarios();
+                    atualizarSubAbasCarro();
+                    atualizarTabelaAuditoria(); // NOVO
+                    aplicarRestricoesSubAbasCarro();
+                    aplicarRestricoesSubAbasManutencao();
+                    destacarAbaManutencaoAtiva();
+                }
             }
 
-            // ===================== DOWNLOAD FORÇADO DE DOCUMENTOS =====================
+            function aplicarRestricoesSubAbasCarro() {
+                if (isAdmin()) {
+                    document.querySelectorAll('#carro-sub-tabs .sub-tab-btn').forEach(btn => btn.style.display = '');
+                    return;
+                }
+                const subAbasPermitidas = usuarioLogado?.subAbasCarroPermitidas || [];
+                document.querySelectorAll('#carro-sub-tabs .sub-tab-btn').forEach(btn => {
+                    const subaba = btn.getAttribute('data-subtab');
+                    btn.style.display = subAbasPermitidas.includes(subaba) ? '' : 'none';
+                });
+                const activeBtn = document.querySelector('#carro-sub-tabs .sub-tab-btn.active');
+                if (activeBtn && !subAbasPermitidas.includes(activeBtn.getAttribute('data-subtab'))) {
+                    const primeiraPermitida = Array.from(document.querySelectorAll('#carro-sub-tabs .sub-tab-btn')).find(b => b.style.display !== 'none');
+                    if (primeiraPermitida) primeiraPermitida.click();
+                }
+            }
+
+            function aplicarRestricoesSubAbasManutencao() {
+                if (isAdmin()) {
+                    document.querySelectorAll('#manutencao-sub-tabs .sub-tab-btn').forEach(btn => btn.style.display = '');
+                    const selectSubaba = document.getElementById('m-subaba');
+                    if (selectSubaba) {
+                        selectSubaba.querySelectorAll('option').forEach(opt => opt.style.display = '');
+                    }
+                    return;
+                }
+                const subAbasPermitidas = usuarioLogado?.subAbasManutencaoPermitidas || [];
+                document.querySelectorAll('#manutencao-sub-tabs .sub-tab-btn').forEach(btn => {
+                    const placa = btn.getAttribute('data-placa');
+                    btn.style.display = subAbasPermitidas.includes(placa) ? '' : 'none';
+                });
+                const activeBtn = document.querySelector('#manutencao-sub-tabs .sub-tab-btn.active');
+                if (activeBtn && !subAbasPermitidas.includes(activeBtn.getAttribute('data-placa'))) {
+                    const primeiraPermitida = Array.from(document.querySelectorAll('#manutencao-sub-tabs .sub-tab-btn')).find(b => b.style.display !== 'none');
+                    if (primeiraPermitida) {
+                        primeiraPermitida.click();
+                    }
+                }
+                const selectSubaba = document.getElementById('m-subaba');
+                if (selectSubaba) {
+                    selectSubaba.querySelectorAll('option').forEach(opt => {
+                        if (opt.value === '') return;
+                        opt.style.display = subAbasPermitidas.includes(opt.value) ? '' : 'none';
+                    });
+                    if (selectSubaba.value && !subAbasPermitidas.includes(selectSubaba.value)) {
+                        selectSubaba.value = '';
+                    }
+                }
+            }
+
             function downloadDocumento(base64, nome) {
                 let mimeType = 'application/pdf';
                 const match = base64.match(/^data:(.*?);base64,/);
@@ -1685,74 +2254,8 @@
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
             }
-
             window.downloadDocumento = downloadDocumento;
 
-            // ===================== LISTENERS EM TEMPO REAL =====================
-            function ativarListenersFirestore() {
-                listenersAtivos.forEach(unsub => unsub());
-                listenersAtivos = [];
-                const unsubVeiculos = colecoes.veiculos.onSnapshot((snapshot) => {
-                    veiculos = [];
-                    snapshot.forEach(doc => { veiculos.push({ id: doc.id, ...doc.data() }); });
-                    if (dadosCarregados) {
-                        atualizarTabelaVeiculos();
-                        atualizarDashboard();
-                        atualizarSelectsLocacao();
-                        atualizarPermissoesVeiculoGrid();
-                        atualizarPermissoesUsuarioGrid();
-                    }
-                }, (error) => { console.error('Erro listener veículos:', error); });
-                listenersAtivos.push(unsubVeiculos);
-                const unsubLocatarios = colecoes.locatarios.onSnapshot((snapshot) => {
-                    locatarios = [];
-                    snapshot.forEach(doc => { locatarios.push({ id: doc.id, ...doc.data() }); });
-                    if (dadosCarregados) { atualizarTabelaLocatarios(); atualizarDashboard(); atualizarSelectsLocacao(); }
-                }, (error) => { console.error('Erro listener locatários:', error); });
-                listenersAtivos.push(unsubLocatarios);
-                const unsubLocacoes = colecoes.locacoes.onSnapshot((snapshot) => {
-                    locacoes = [];
-                    snapshot.forEach(doc => { locacoes.push({ id: doc.id, ...doc.data() }); });
-                    if (dadosCarregados) { atualizarTabelaLocacoes(); atualizarDashboard(); atualizarSelectsLocacao(); }
-                }, (error) => { console.error('Erro listener locações:', error); });
-                listenersAtivos.push(unsubLocacoes);
-                const unsubFluxo = colecoes.fluxocaixa.onSnapshot((snapshot) => {
-                    fluxoCaixa = [];
-                    snapshot.forEach(doc => { fluxoCaixa.push({ id: doc.id, ...doc.data() }); });
-                    if (dadosCarregados) { atualizarResumoFluxoCaixa(); atualizarTabelaFluxoCaixa(); }
-                }, (error) => { console.error('Erro listener fluxo caixa:', error); });
-                listenersAtivos.push(unsubFluxo);
-                const unsubUsuarios = colecoes.usuarios.onSnapshot((snapshot) => {
-                    usuarios = [];
-                    snapshot.forEach(doc => { usuarios.push({ id: doc.id, ...doc.data() }); });
-                    if (dadosCarregados) {
-                        atualizarTabelaUsuarios();
-                        atualizarPermissoesVeiculoGrid();
-                        atualizarPermissoesUsuarioGrid();
-                    }
-                }, (error) => { console.error('Erro listener usuários:', error); });
-                listenersAtivos.push(unsubUsuarios);
-                const unsubDocsPdf = colecoes.docspdf.onSnapshot((snapshot) => {
-                    docsPdf = [];
-                    snapshot.forEach(doc => { docsPdf.push({ id: doc.id, ...doc.data() }); });
-                    if (dadosCarregados) { atualizarTabelaDocsPdf(); }
-                }, (error) => { console.error('Erro listener docs pdf:', error); });
-                listenersAtivos.push(unsubDocsPdf);
-                setTimeout(() => { if (!dadosCarregados) { dadosCarregados = true; inicializarInterface(); } }, 500);
-            }
-
-            function atualizarIndicadorSync(online) {
-                const indicador = document.getElementById('sync-indicator');
-                const syncText = document.getElementById('sync-text');
-                if (indicador && syncText) {
-                    indicador.className = 'sync-indicator ' + (online ? 'online' : 'offline');
-                    syncText.textContent = online ? 'Online' : 'Offline';
-                }
-            }
-            window.addEventListener('online', () => atualizarIndicadorSync(true));
-            window.addEventListener('offline', () => atualizarIndicadorSync(false));
-
-            // ===================== CONVERSÃO DE ARQUIVOS PARA BASE64 =====================
             function fileToBase64(file) {
                 return new Promise((resolve, reject) => {
                     const reader = new FileReader();
@@ -1762,7 +2265,46 @@
                 });
             }
 
-            // ===================== SINCRONIZAÇÃO FLUXO DE CAIXA =====================
+            function comprimirImagem(file, maxWidth = 1200, maxSizeBytes = 800 * 1024) {
+                return new Promise((resolve, reject) => {
+                    if (file.size <= maxSizeBytes) {
+                        const reader = new FileReader();
+                        reader.onload = () => resolve(reader.result);
+                        reader.onerror = reject;
+                        reader.readAsDataURL(file);
+                        return;
+                    }
+                    const img = new Image();
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        img.onload = () => {
+                            let width = img.width;
+                            let height = img.height;
+                            if (width > maxWidth) {
+                                height = Math.round((height * maxWidth) / width);
+                                width = maxWidth;
+                            }
+                            const canvas = document.createElement('canvas');
+                            canvas.width = width;
+                            canvas.height = height;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0, width, height);
+                            let quality = 0.8;
+                            let result = canvas.toDataURL('image/jpeg', quality);
+                            while (result.length > 900000 && quality > 0.2) {
+                                quality -= 0.1;
+                                result = canvas.toDataURL('image/jpeg', quality);
+                            }
+                            resolve(result);
+                        };
+                        img.onerror = reject;
+                        img.src = e.target.result;
+                    };
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+            }
+
             async function removerEntradasFluxoLocacao(locacao) {
                 if (!locacao || !locacao.fluxoCaixaIds || locacao.fluxoCaixaIds.length === 0) return;
                 const batch = db.batch();
@@ -1772,8 +2314,7 @@
             async function criarEntradasFluxoLocacao(locacao) {
                 const idsCriados = [];
                 const dataTransacao = locacao.dataInicio || new Date().toISOString().split('T')[0];
-                const descricaoBase =
-                    `${locacao.veiculoNome || 'Veículo'} (${locacao.veiculoPlaca || 'sem placa'}) - ${locacao.locatarioNome || 'Locatário'}`;
+                const descricaoBase = `${locacao.veiculoNome || 'Veículo'} (${locacao.veiculoPlaca || 'sem placa'}) - ${locacao.locatarioNome || 'Locatário'}`;
                 const batch = db.batch();
                 const entradaSemanalRef = colecoes.fluxocaixa.doc();
                 batch.set(entradaSemanalRef, {
@@ -1823,8 +2364,7 @@
             }
             async function atualizarDescricaoFluxoLocacao(locacao) {
                 if (!locacao || !locacao.fluxoCaixaIds || locacao.fluxoCaixaIds.length === 0) return;
-                const descricaoBase =
-                    `${locacao.veiculoNome || 'Veículo'} (${locacao.veiculoPlaca || 'sem placa'}) - ${locacao.locatarioNome || 'Locatário'}`;
+                const descricaoBase = `${locacao.veiculoNome || 'Veículo'} (${locacao.veiculoPlaca || 'sem placa'}) - ${locacao.locatarioNome || 'Locatário'}`;
                 for (const fluxoId of locacao.fluxoCaixaIds) {
                     try {
                         const docRef = colecoes.fluxocaixa.doc(fluxoId);
@@ -1834,8 +2374,7 @@
                             let updateData = {};
                             if (dados.descricao && dados.descricao.startsWith('Locação:')) {
                                 updateData.descricao = `Locação: ${descricaoBase}`;
-                                updateData.observacao =
-                                    `Locação semanal - Contrato de ${new Date(locacao.dataInicio).toLocaleDateString('pt-BR')} até ${new Date(locacao.dataFim).toLocaleDateString('pt-BR')}`;
+                                updateData.observacao = `Locação semanal - Contrato de ${new Date(locacao.dataInicio).toLocaleDateString('pt-BR')} até ${new Date(locacao.dataFim).toLocaleDateString('pt-BR')}`;
                             } else if (dados.descricao && (dados.descricao.startsWith('Caução Entrada:') || dados.descricao.startsWith('Caução (À Vista):'))) {
                                 updateData.descricao = dados.descricao.replace(/:.*/, `: ${descricaoBase}`);
                             }
@@ -1867,7 +2406,6 @@
                 }
             }
 
-            // ===================== SISTEMA DE USUÁRIOS E PERMISSÕES =====================
             async function garantirAdminPadrao() {
                 try {
                     const snapshot = await colecoes.usuarios.where('usuario', '==', 'SERGIO').get();
@@ -1878,6 +2416,10 @@
                             nome: 'SERGIO',
                             role: 'admin',
                             veiculosPermitidos: [],
+                            abasPermitidas: [],
+                            acoesPermitidas: [],
+                            subAbasCarroPermitidas: [],
+                            subAbasManutencaoPermitidas: [],
                             dataCriacao: new Date().toISOString(),
                             dataAtualizacao: new Date().toISOString()
                         });
@@ -1891,7 +2433,7 @@
                 if (!grid || !isAdmin()) return;
                 const usuariosNaoAdmin = usuarios.filter(u => u.role !== 'admin');
                 if (usuariosNaoAdmin.length === 0) {
-                    grid.innerHTML = '<span style="color:var(--text-muted);font-size:12px;">Nenhum usuário não-admin cadastrado. Cadastre usuários na página "Usuários".</span>';
+                    grid.innerHTML = '<span style="color:var(--text-muted);font-size:12px;">Nenhum usuário não-admin cadastrado.</span>';
                     return;
                 }
                 grid.innerHTML = usuariosNaoAdmin.map(u => `
@@ -1909,6 +2451,40 @@
                 grid.innerHTML = veiculos.map(v => `
                     <label><input type="checkbox" class="perm-usuario-check" value="${v.id}" ${(editandoUsuarioId && usuarios.find(u => u.id === editandoUsuarioId)?.veiculosPermitidos?.includes(v.id)) ? 'checked' : ''}> 🚙 ${v.marca} ${v.modelo} <small style="color:var(--text-muted);">(${v.placa})</small></label>
                 `).join('');
+            }
+
+            function atualizarPermissoesAbasEAcoesGrid() {
+                if (!isAdmin()) return;
+                if (editandoUsuarioId) {
+                    const usuario = usuarios.find(u => u.id === editandoUsuarioId);
+                    if (usuario && usuario.role !== 'admin') {
+                        const abasPermitidas = usuario.abasPermitidas || [];
+                        const acoesPermitidas = usuario.acoesPermitidas || [];
+                        const subAbasCarro = usuario.subAbasCarroPermitidas || [];
+                        const subAbasManutencao = usuario.subAbasManutencaoPermitidas || [];
+                        document.querySelectorAll('.perm-abas-check').forEach(ch => {
+                            ch.checked = abasPermitidas.includes(ch.value);
+                        });
+                        document.querySelectorAll('.perm-acoes-check').forEach(ch => {
+                            ch.checked = acoesPermitidas.includes(ch.value);
+                        });
+                        document.querySelectorAll('.perm-subabas-carro-check').forEach(ch => {
+                            ch.checked = subAbasCarro.includes(ch.value);
+                        });
+                        document.querySelectorAll('.perm-subabas-manutencao-check').forEach(ch => {
+                            ch.checked = subAbasManutencao.includes(ch.value);
+                        });
+                    } else {
+                        document.querySelectorAll('.perm-abas-check, .perm-acoes-check, .perm-subabas-carro-check, .perm-subabas-manutencao-check').forEach(ch => ch.checked = false);
+                    }
+                } else {
+                    document.querySelectorAll('.perm-abas-check').forEach(ch => {
+                        ch.checked = ['veiculos', 'garagem', 'carro', 'socorro'].includes(ch.value);
+                    });
+                    document.querySelectorAll('.perm-acoes-check').forEach(ch => ch.checked = false);
+                    document.querySelectorAll('.perm-subabas-carro-check').forEach(ch => ch.checked = true);
+                    document.querySelectorAll('.perm-subabas-manutencao-check').forEach(ch => ch.checked = true);
+                }
             }
 
             async function sincronizarPermissoesVeiculo(veiculoId) {
@@ -1930,7 +2506,6 @@
                 }
             }
 
-            // ===================== INTERFACE DO USUÁRIO =====================
             const loginScreen = document.getElementById('login-screen');
             const appScreen = document.getElementById('app-screen');
             const loginForm = document.getElementById('login-form');
@@ -1960,7 +2535,6 @@
                     input.value = 'R$ ' + valor.replace('.', ',');
                 }
             };
-
             function parseMoedaBR(valorString) { if (!valorString) return 0; let limpo = valorString.replace(/[^\d,]/g, '').replace(',', '.'); return parseFloat(limpo) || 0; }
             function formatarMoeda(valor) { return 'R$ ' + parseFloat(valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
             function aplicarMascaraCPF(valor) { valor = valor.replace(/\D/g, '').substring(0, 11); return valor.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4'); }
@@ -1968,30 +2542,6 @@
             function aplicarMascaraCEP(valor) { valor = valor.replace(/\D/g, '').substring(0, 8); return valor.replace(/(\d{5})(\d{3})/, '$1-$2'); }
             function aplicarMascaraPlaca(valor) { valor = valor.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 7); if (valor.length >= 4) valor = valor.substring(0, 3) + '-' + valor.substring(3); return valor; }
             function sanitizarParaBusca(str) { if (!str) return ''; return str.replace(/[^a-zA-Z0-9]/g, '').toLowerCase(); }
-
-            function navegarPara(pageName) {
-                if (!isAdmin() && ['locatarios', 'locacoes', 'fluxocaixa', 'usuarios', 'docpdf'].includes(pageName)) {
-                    showToast('⚠️ Acesso restrito ao administrador.', 'error');
-                    return;
-                }
-                pages.forEach(p => p.classList.remove('active'));
-                const targetPage = document.getElementById('page-' + pageName);
-                if (targetPage) targetPage.classList.add('active');
-                navButtons.forEach(b => b.classList.remove('active'));
-                const activeBtn = document.querySelector(`.top-nav button[data-page="${pageName}"]`);
-                if (activeBtn) activeBtn.classList.add('active');
-                if (pageName === 'dashboard') atualizarDashboard();
-                if (pageName === 'veiculos') { atualizarTabelaVeiculos(); initScrollButtons(); }
-                if (pageName === 'locatarios' && isAdmin()) { atualizarTabelaLocatarios(); initScrollButtons(); }
-                if (pageName === 'locacoes' && isAdmin()) { atualizarSelectsLocacao(); atualizarTabelaLocacoes(); initScrollButtons(); if (termoBuscaLocacoes) { document.getElementById('input-busca-locacoes').value = termoBuscaLocacoes; atualizarUIBuscaLocacoes(); } }
-                if (pageName === 'docpdf' && isAdmin()) { atualizarTabelaDocsPdf(); initScrollButtons(); }
-                if (pageName === 'fluxocaixa' && isAdmin()) { atualizarResumoFluxoCaixa(); atualizarTabelaFluxoCaixa(); initScrollButtons(); if (termoBuscaFluxo) { document.getElementById('input-busca-fluxo').value = termoBuscaFluxo; atualizarUIBuscaFluxo(); } }
-                if (pageName === 'usuarios' && isAdmin()) { atualizarTabelaUsuarios(); atualizarPermissoesUsuarioGrid(); initScrollButtons(); }
-            }
-
-            navButtons.forEach(btn => {
-                btn.addEventListener('click', () => { const page = btn.getAttribute('data-page'); navegarPara(page); });
-            });
 
             loginForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
@@ -2007,6 +2557,7 @@
                         appScreen.classList.add('active');
                         document.getElementById('user-name-display').textContent = usuarioLogado.nome;
                         document.getElementById('user-avatar-inicial').textContent = usuarioLogado.nome.charAt(0).toUpperCase();
+                        await registrarAuditoria('login', 'Sistema', '', `Login do usuário ${usuarioLogado.nome}`); // LOGIN
                         atualizarUIporPerfil();
                         if (!dadosCarregados) { ativarListenersFirestore(); } else { inicializarInterface(); }
                         showToast(`✅ Bem-vindo, ${usuarioLogado.nome}!`, 'success');
@@ -2023,8 +2574,11 @@
                 }
             });
 
-            btnLogout.addEventListener('click', () => {
+            btnLogout.addEventListener('click', async () => {
                 if (confirm('Deseja realmente sair do sistema?')) {
+                    if (usuarioLogado) {
+                        await registrarAuditoria('logout', 'Sistema', '', `Logout do usuário ${usuarioLogado.nome}`); // LOGOUT
+                    }
                     appScreen.classList.remove('active');
                     loginScreen.style.display = 'flex';
                     document.getElementById('login-pass').value = '';
@@ -2037,13 +2591,65 @@
                     termoBuscaFluxo = '';
                     document.getElementById('input-busca-fluxo').value = '';
                     atualizarUIBuscaFluxo();
+                    termoBuscaAuditoria = '';
+                    document.getElementById('input-busca-auditoria') && (document.getElementById('input-busca-auditoria').value = '');
+                    atualizarUIBuscaAuditoria();
                     showToast('👋 Logout realizado com sucesso!', 'info');
                 }
             });
 
+            function navegarPara(pageName) {
+                if (!temPermissaoAba(pageName) && pageName !== 'auditoria') { // Auditoria é admin only, já verifica em isAdmin
+                    showToast('⚠️ Você não tem permissão para acessar esta aba.', 'error');
+                    return;
+                }
+                if (pageName === 'auditoria' && !isAdmin()) {
+                    showToast('⚠️ Apenas o administrador pode acessar a Auditoria.', 'error');
+                    return;
+                }
+                pages.forEach(p => p.classList.remove('active'));
+                const targetPage = document.getElementById('page-' + pageName);
+                if (targetPage) targetPage.classList.add('active');
+                navButtons.forEach(b => b.classList.remove('active'));
+                const activeBtn = document.querySelector(`.top-nav button[data-page="${pageName}"]`);
+                if (activeBtn) activeBtn.classList.add('active');
+
+                if (pageName === 'veiculos') { atualizarTabelaVeiculos(); initScrollButtons(); }
+                if (pageName === 'garagem') { atualizarGaragem(); }
+                if (pageName === 'socorro') { }
+                if (pageName === 'carro') { atualizarSubAbasCarro(); aplicarRestricoesSubAbasCarro(); }
+                if (pageName === 'locatarios' && temPermissaoAba('locatarios')) { atualizarTabelaLocatarios(); initScrollButtons(); }
+                if (pageName === 'locacoes' && temPermissaoAba('locacoes')) { atualizarSelectsLocacao(); atualizarTabelaLocacoes(); initScrollButtons(); if (termoBuscaLocacoes) { document.getElementById('input-busca-locacoes').value = termoBuscaLocacoes; atualizarUIBuscaLocacoes(); } }
+                if (pageName === 'manutencao' && temPermissaoAba('manutencao')) { atualizarSelectManutencaoVeiculos(); aplicarRestricoesSubAbasManutencao(); destacarAbaManutencaoAtiva(); atualizarTabelaManutencoes(); initScrollButtons(); }
+                if (pageName === 'fluxocaixa' && temPermissaoAba('fluxocaixa')) { atualizarResumoFluxoCaixa(); atualizarTabelaFluxoCaixa(); initScrollButtons(); if (termoBuscaFluxo) { document.getElementById('input-busca-fluxo').value = termoBuscaFluxo; atualizarUIBuscaFluxo(); } }
+                if (pageName === 'usuarios' && temPermissaoAba('usuarios')) { atualizarTabelaUsuarios(); atualizarPermissoesUsuarioGrid(); initScrollButtons(); }
+                if (pageName === 'auditoria') { atualizarTabelaAuditoria(); initScrollButtons(); if (termoBuscaAuditoria) { document.getElementById('input-busca-auditoria').value = termoBuscaAuditoria; atualizarUIBuscaAuditoria(); } }
+            }
+
+            navButtons.forEach(btn => {
+                btn.addEventListener('click', () => { const page = btn.getAttribute('data-page'); navegarPara(page); });
+            });
+
+            document.getElementById('btn-ir-locacoes').addEventListener('click', function() {
+                if (!temPermissaoAba('locacoes')) {
+                    showToast('⚠️ Você não tem permissão para acessar Locações.', 'error');
+                    return;
+                }
+                navegarPara('locacoes');
+            });
+
+            document.getElementById('btn-filtro-locacoes-nav').addEventListener('click', function(e) {
+                e.preventDefault();
+                if (!temPermissaoAba('filtro')) {
+                    showToast('⚠️ Você não tem permissão para usar o Filtro.', 'error');
+                    return;
+                }
+                abrirJanelaFiltro();
+            });
+
             function inicializarInterface() {
                 atualizarUIporPerfil();
-                navegarPara('dashboard');
+                navegarPara('veiculos');
                 initScrollButtons();
                 atualizarIndicadorSync(navigator.onLine);
             }
@@ -2054,7 +2660,6 @@
                     const btnLeft = wrapper.querySelector('.scroll-btn-left');
                     const btnRight = wrapper.querySelector('.scroll-btn-right');
                     if (!btnLeft || !btnRight) return;
-
                     function updateScrollButtons() {
                         const tolerance = 2;
                         const canScrollLeft = wrapper.scrollLeft > tolerance;
@@ -2071,29 +2676,121 @@
                 });
             }
 
-            function atualizarDashboard() {
-                const veiculosPerm = getVeiculosPermitidos();
-                const locacoesPerm = getLocacoesPermitidas();
-                document.getElementById('stat-veiculos').textContent = veiculosPerm.length;
-                document.getElementById('stat-locatarios').textContent = isAdmin() ? locatarios.length : '—';
-                document.getElementById('stat-locacoes').textContent = isAdmin() ? locacoesPerm.length : '—';
-                const receitaTotal = locacoesPerm.reduce((sum, loc) => sum + (parseFloat(loc.valorSemanal) || 0), 0);
-                document.getElementById('stat-receita').textContent = isAdmin() ? formatarMoeda(receitaTotal) : '—';
-                const receitaCaucao = locacoesPerm.reduce((sum, loc) => sum + (parseFloat(loc.caucao) || 0), 0);
-                document.getElementById('stat-receita-caucao').textContent = isAdmin() ? formatarMoeda(receitaCaucao) : '—';
-                const ultimosDiv = document.getElementById('ultimos-cadastros');
-                let html = '';
-                if (veiculosPerm.length === 0) {
-                    html = '<span style="color:var(--text-muted);">Nenhum veículo disponível para visualização.</span>';
-                } else {
-                    const ultimosVeiculos = veiculosPerm.slice(-3).reverse();
-                    html += '<strong style="color:#fff;">🚙 Veículos Disponíveis:</strong><br>';
-                    ultimosVeiculos.forEach(v => {
-                        html += `• ${v.marca} ${v.modelo} - Placa: ${v.placa} - KM: ${v.km} - Semanal: ${formatarMoeda(v.valorSemanal)}<br>`;
-                    });
+            // ===================== GARAGEM =====================
+            function atualizarGaragem() {
+                const grid = document.getElementById('garagem-grid');
+                if (garagem.length === 0) {
+                    grid.innerHTML = '<div class="empty-state"><span class="icon">🖼️</span><br>Nenhuma imagem na garagem</div>';
+                    return;
                 }
-                ultimosDiv.innerHTML = html || '<span style="color:var(--text-muted);">Nenhum cadastro.</span>';
+                garagem.sort((a, b) => new Date(b.dataCriacao) - new Date(a.dataCriacao));
+                grid.innerHTML = garagem.map(img => {
+                    const dataFormatada = img.dataCriacao ? new Date(img.dataCriacao).toLocaleDateString('pt-BR') + ' ' + new Date(img.dataCriacao).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '—';
+                    return `
+                        <div class="garagem-card">
+                            <img class="garagem-card-img" src="${img.base64}" alt="${img.nome || 'Imagem'}" onclick="window._abrirVisualizacaoImagem('${img.id}')" title="Clique para ampliar">
+                            <div class="garagem-card-body">
+                                <div class="img-nome">${img.nome || 'Sem nome'}</div>
+                                <div class="img-data">${dataFormatada}</div>
+                                <div class="garagem-card-actions">
+                                    <button class="btn-download-img" onclick="event.stopPropagation(); window._downloadImagem('${img.id}')" title="Download">📥</button>
+                                    <button class="btn-rename" onclick="event.stopPropagation(); window._renomearImagem('${img.id}')" title="Renomear (requer senha)">✏️</button>
+                                    <button class="btn-delete-img" onclick="event.stopPropagation(); window._excluirImagem('${img.id}')" title="Excluir (requer senha)">🗑️</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
             }
+
+            window._abrirVisualizacaoImagem = function(id) {
+                const img = garagem.find(i => i.id === id);
+                if (!img) return;
+                const overlay = document.createElement('div');
+                overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:99999;display:flex;align-items:center;justify-content:center;cursor:pointer;';
+                overlay.innerHTML = `<img src="${img.base64}" style="max-width:95%;max-height:95%;border-radius:8px;box-shadow:0 0 40px rgba(0,0,0,0.8);" alt="${img.nome || 'Imagem'}"><span style="position:absolute;top:20px;right:30px;color:#fff;font-size:28px;cursor:pointer;">✕</span>`;
+                overlay.addEventListener('click', () => overlay.remove());
+                document.body.appendChild(overlay);
+            };
+            window._downloadImagem = function(id) {
+                const img = garagem.find(i => i.id === id);
+                if (!img) return;
+                const a = document.createElement('a');
+                a.href = img.base64;
+                a.download = img.nome || 'imagem';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                registrarAuditoria('download', 'Garagem', id, `Download da imagem "${img.nome || 'sem nome'}"`);
+            };
+            window._renomearImagem = async function(id) {
+                const img = garagem.find(i => i.id === id);
+                if (!img) return;
+                const senha = prompt('Digite a senha para renomear:');
+                if (senha !== '080888') {
+                    showToast('❌ Senha incorreta!', 'error');
+                    return;
+                }
+                const novoNome = prompt('Digite o novo nome para a imagem:', img.nome || 'imagem');
+                if (novoNome && novoNome.trim() !== '') {
+                    try {
+                        await colecoes.garagem.doc(id).update({ nome: novoNome.trim(), dataAtualizacao: new Date().toISOString() });
+                        showToast('✅ Nome atualizado com sucesso!', 'success');
+                        registrarAuditoria('editar', 'Garagem', id, `Renomeado para "${novoNome.trim()}"`);
+                    } catch (error) {
+                        console.error('Erro ao renomear imagem:', error);
+                        showToast('❌ Erro ao renomear.', 'error');
+                    }
+                }
+            };
+            window._excluirImagem = async function(id) {
+                const senha = prompt('Digite a senha para excluir:');
+                if (senha !== '080888') {
+                    showToast('❌ Senha incorreta!', 'error');
+                    return;
+                }
+                if (!confirm('Tem certeza que deseja excluir esta imagem?')) return;
+                try {
+                    await colecoes.garagem.doc(id).delete();
+                    showToast('🗑️ Imagem excluída com sucesso!', 'info');
+                    registrarAuditoria('excluir', 'Garagem', id, 'Imagem excluída');
+                } catch (error) {
+                    console.error('Erro ao excluir imagem:', error);
+                    showToast('❌ Erro ao excluir.', 'error');
+                }
+            };
+
+            function abrirModalImagemUpload() {
+                document.getElementById('modal-imagem-overlay').classList.add('active');
+                document.getElementById('input-imagem-nome').value = '';
+                document.getElementById('input-imagem-file').value = '';
+                document.getElementById('imagem-upload-error').style.display = 'none';
+                document.getElementById('imagem-upload-error').textContent = '';
+                setTimeout(() => document.getElementById('input-imagem-nome').focus(), 100);
+            }
+            function fecharModalImagemUpload() { document.getElementById('modal-imagem-overlay').classList.remove('active'); }
+            document.getElementById('modal-imagem-close').addEventListener('click', fecharModalImagemUpload);
+            document.getElementById('modal-imagem-overlay').addEventListener('click', function(e) { if (e.target === this) fecharModalImagemUpload(); });
+            document.getElementById('btn-upload-garagem-veiculo').addEventListener('click', abrirModalImagemUpload);
+            document.getElementById('btn-nova-imagem-garagem').addEventListener('click', abrirModalImagemUpload);
+            document.getElementById('btn-salvar-imagem').addEventListener('click', async function() {
+                const nomeInput = document.getElementById('input-imagem-nome');
+                const fileInput = document.getElementById('input-imagem-file');
+                const errorSpan = document.getElementById('imagem-upload-error');
+                let nome = nomeInput.value.trim();
+                const file = fileInput.files[0];
+                if (!file) { errorSpan.textContent = 'Selecione um arquivo de imagem.'; errorSpan.style.display = 'block'; return; }
+                if (!file.type.startsWith('image/')) { errorSpan.textContent = 'O arquivo deve ser uma imagem (JPG, PNG, GIF, WebP).'; errorSpan.style.display = 'block'; return; }
+                if (!nome) { nome = file.name.replace(/\.[^.]+$/, ''); }
+                try {
+                    showToast('⏳ Processando imagem...', 'info');
+                    const base64 = await comprimirImagem(file);
+                    const docRef = await colecoes.garagem.add({ nome: nome, base64: base64, tipo: file.type, dataCriacao: new Date().toISOString(), dataAtualizacao: new Date().toISOString() });
+                    fecharModalImagemUpload();
+                    showToast('✅ Imagem salva na Garagem com sucesso!', 'success');
+                    registrarAuditoria('upload', 'Garagem', docRef.id, `Upload da imagem "${nome}"`);
+                } catch (error) { console.error('Erro ao salvar imagem:', error); errorSpan.textContent = 'Erro ao processar o arquivo.'; errorSpan.style.display = 'block'; }
+            });
 
             // ===================== VEÍCULOS =====================
             const formVeiculo = document.getElementById('form-veiculo');
@@ -2114,7 +2811,7 @@
                 if (opcionais.rodas) badges.push('<span class="badge-opcional">🛞 Rodas Liga</span>');
                 return badges.length > 0 ? badges.join(' ') : '<span style="color:var(--text-muted);">—</span>';
             }
-
+            
             function resetarFormVeiculo() {
                 formVeiculo.reset();
                 document.getElementById('v-op-ar').checked = false;
@@ -2162,19 +2859,14 @@
                         dataAtualizacao: new Date().toISOString()
                     };
                     if (editandoVeiculoId) {
-                        if (docBase64) {
-                            dadosVeiculo.documentoBase64 = docBase64;
-                            dadosVeiculo.documentoNome = docNome;
-                        } else {
-                            const veiculoAtual = veiculos.find(v => v.id === editandoVeiculoId);
-                            dadosVeiculo.documentoBase64 = veiculoAtual?.documentoBase64 || null;
-                            dadosVeiculo.documentoNome = veiculoAtual?.documentoNome || null;
-                        }
+                        if (docBase64) { dadosVeiculo.documentoBase64 = docBase64; dadosVeiculo.documentoNome = docNome; }
+                        else { const veiculoAtual = veiculos.find(v => v.id === editandoVeiculoId); dadosVeiculo.documentoBase64 = veiculoAtual?.documentoBase64 || null; dadosVeiculo.documentoNome = veiculoAtual?.documentoNome || null; }
                         try {
                             await colecoes.veiculos.doc(editandoVeiculoId).update(dadosVeiculo);
                             await sincronizarPermissoesVeiculo(editandoVeiculoId);
                             resetarFormVeiculo();
                             showToast('✅ Veículo atualizado com sucesso!', 'success');
+                            registrarAuditoria('editar', 'Veículo', editandoVeiculoId, `${dadosVeiculo.marca} ${dadosVeiculo.modelo} - Placa: ${dadosVeiculo.placa}`);
                             await syncLocacoesVeiculo(editandoVeiculoId);
                         } catch (error) { console.error('Erro ao atualizar veículo:', error); showToast('❌ Erro ao atualizar veículo.', 'error'); }
                     } else {
@@ -2184,18 +2876,14 @@
                             await sincronizarPermissoesVeiculo(docRef.id);
                             resetarFormVeiculo();
                             showToast('✅ Veículo cadastrado com sucesso!', 'success');
+                            registrarAuditoria('criar', 'Veículo', docRef.id, `${dadosVeiculo.marca} ${dadosVeiculo.modelo} - Placa: ${dadosVeiculo.placa}`);
                             await syncLocacoesVeiculo(docRef.id);
                         } catch (error) { console.error('Erro ao cadastrar veículo:', error); showToast('❌ Erro ao cadastrar veículo.', 'error'); }
                     }
                 }
                 if (documentoFile) {
-                    const MAX_SIZE = 500 * 1024; // 500KB
-                    if (documentoFile.size > MAX_SIZE) { showToast('⚠️ Arquivo muito grande! Limite de 500KB para evitar estouro do Firestore.', 'error'); return; }
                     showToast('⏳ Processando documento...', 'info');
-                    try {
-                        const base64 = await fileToBase64(documentoFile);
-                        await salvarVeiculo(base64, documentoFile.name);
-                    } catch (error) { console.error('Erro ao converter documento:', error); showToast('❌ Erro ao processar documento.', 'error'); }
+                    try { const base64 = await fileToBase64(documentoFile); await salvarVeiculo(base64, documentoFile.name); } catch (error) { console.error('Erro ao converter documento:', error); showToast('❌ Erro ao processar documento.', 'error'); }
                 } else { await salvarVeiculo(null, null); }
             });
 
@@ -2203,33 +2891,21 @@
                 const tbody = document.getElementById('tbody-veiculos');
                 const veiculosPerm = getVeiculosPermitidos();
                 const thAcoes = document.getElementById('th-acoes-veiculos');
-                if (!isAdmin() && thAcoes) thAcoes.style.display = 'none';
-                if (isAdmin() && thAcoes) thAcoes.style.display = '';
-                const colspan = isAdmin() ? 13 : 12;
-                if (veiculosPerm.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="${colspan}" class="empty-state"><span class="icon">🚙</span><br>${isAdmin() ? 'Nenhum veículo cadastrado' : 'Nenhum veículo disponível para visualização'}</td></tr>`;
-                    return;
-                }
+                if (!isAdmin() && !temPermissaoAcao('editar') && !temPermissaoAcao('excluir')) { if (thAcoes) thAcoes.style.display = 'none'; } else { if (thAcoes) thAcoes.style.display = ''; }
+                const colspan = (isAdmin() || temPermissaoAcao('editar') || temPermissaoAcao('excluir')) ? 13 : 12;
+                if (veiculosPerm.length === 0) { tbody.innerHTML = `<tr><td colspan="${colspan}" class="empty-state"><span class="icon">🚙</span><br>${isAdmin() ? 'Nenhum veículo cadastrado' : 'Nenhum veículo disponível para visualização'}</td></tr>`; return; }
                 tbody.innerHTML = veiculosPerm.map(v => {
                     let docLink = '<span style="color:var(--text-muted);">—</span>';
-                    if (v.documentoBase64) {
-                        const nomeArquivo = (v.documentoNome || 'documento.pdf').replace(/'/g, "\\'");
-                        docLink = `<a href="#" class="btn-pdf" onclick="event.preventDefault(); downloadDocumento('${v.documentoBase64}', '${nomeArquivo}')" title="Baixar Documento">📥 PDF</a>`;
-                    }
-                    return `<tr>
-                        <td>${v.marca}</td><td>${v.modelo}</td><td>${v.cor}</td><td><strong>${v.potencia || '—'}</strong></td>
-                        <td><strong>${v.placa}</strong></td><td>${(v.km || 0).toLocaleString('pt-BR')}</td><td>${v.renavan}</td>
-                        <td><small>${v.chassi}</small></td><td class="highlight-valor">${formatarMoeda(v.valorSemanal)}</td>
-                        <td class="highlight-valor">${formatarMoeda(v.caucao)}</td><td>${formatarOpcionais(v.opcionais)}</td>
-                        <td>${docLink}</td>
-                        ${isAdmin() ? `<td><button class="btn-edit" onclick="window._editarVeiculo('${v.id}')" title="Editar Veículo">✏️</button><button class="btn-danger" onclick="window._excluirVeiculo('${v.id}')" title="Excluir">🗑️</button></td>` : ''}
-                    </tr>`;
+                    if (v.documentoBase64 && temPermissaoAcao('download')) { const nomeArquivo = (v.documentoNome || 'documento.pdf').replace(/'/g, "\\'"); docLink = `<a href="#" class="btn-pdf" onclick="event.preventDefault(); downloadDocumento('${v.documentoBase64}', '${nomeArquivo}'); registrarAuditoria('download', 'Veículo', '${v.id}', 'Download do documento');" title="Baixar Documento">📥 PDF</a>`; }
+                    let acoesHtml = '';
+                    if (isAdmin() || temPermissaoAcao('editar') || temPermissaoAcao('excluir')) { acoesHtml = '<td>'; if (temPermissaoAcao('editar')) acoesHtml += `<button class="btn-edit" onclick="window._editarVeiculo('${v.id}')" title="Editar Veículo">✏️</button>`; if (temPermissaoAcao('excluir')) acoesHtml += `<button class="btn-danger" onclick="window._excluirVeiculo('${v.id}')" title="Excluir">🗑️</button>`; acoesHtml += '</td>'; }
+                    return `<tr><td>${v.marca}</td><td>${v.modelo}</td><td>${v.cor}</td><td><strong>${v.potencia || '—'}</strong></td><td><strong>${v.placa}</strong></td><td>${(v.km || 0).toLocaleString('pt-BR')}</td><td>${v.renavan}</td><td><small>${v.chassi}</small></td><td class="highlight-valor">${formatarMoeda(v.valorSemanal)}</td><td class="highlight-valor">${formatarMoeda(v.caucao)}</td><td>${formatarOpcionais(v.opcionais)}</td><td>${docLink}</td>${acoesHtml}</tr>`;
                 }).join('');
                 initScrollButtons();
             }
 
             window._editarVeiculo = function(id) {
-                if (!isAdmin()) { showToast('⚠️ Apenas o administrador pode editar veículos.', 'error'); return; }
+                if (!isAdmin() && !temPermissaoAcao('editar')) { showToast('⚠️ Você não tem permissão para editar veículos.', 'error'); return; }
                 const veiculo = veiculos.find(v => v.id === id);
                 if (!veiculo) { showToast('❌ Veículo não encontrado.', 'error'); return; }
                 editandoVeiculoId = id;
@@ -2251,24 +2927,27 @@
                 btnSubmitVeiculo.textContent = '💾 Atualizar Veículo';
                 btnCancelEdicaoVeiculo.style.display = 'inline-block';
                 editBannerVeiculo.classList.add('show');
-                document.getElementById('edit-banner-veiculo-text').textContent =
-                    `Editando veículo: ${veiculo.marca} ${veiculo.modelo} - Placa: ${veiculo.placa}`;
+                document.getElementById('edit-banner-veiculo-text').textContent = `Editando veículo: ${veiculo.marca} ${veiculo.modelo} - Placa: ${veiculo.placa}`;
                 veicFormTitle.textContent = 'Editar Veículo';
                 document.getElementById('card-form-veiculo').scrollIntoView({ behavior: 'smooth', block: 'start' });
                 atualizarPermissoesVeiculoGrid();
                 showToast('✏️ Modo de edição ativado.', 'info');
             };
-
             window._excluirVeiculo = async function(id) {
-                if (!isAdmin()) { showToast('⚠️ Apenas o administrador pode excluir veículos.', 'error'); return; }
+                if (!isAdmin() && !temPermissaoAcao('excluir')) { showToast('⚠️ Você não tem permissão para excluir veículos.', 'error'); return; }
                 if (!confirm('Tem certeza que deseja excluir este veículo?')) return;
                 const emLocacao = locacoes.some(l => l.veiculoId === id);
                 if (emLocacao) { showToast('⚠️ Este veículo está vinculado a uma locação ativa. Remova a locação primeiro.', 'error'); return; }
+                const veiculo = veiculos.find(v => v.id === id);
                 if (editandoVeiculoId === id) resetarFormVeiculo();
-                try { await colecoes.veiculos.doc(id).delete(); showToast('🗑️ Veículo excluído com sucesso!', 'info'); } catch (error) { console.error('Erro ao excluir veículo:', error); showToast('❌ Erro ao excluir veículo.', 'error'); }
+                try {
+                    await colecoes.veiculos.doc(id).delete();
+                    showToast('🗑️ Veículo excluído com sucesso!', 'info');
+                    registrarAuditoria('excluir', 'Veículo', id, veiculo ? `${veiculo.marca} ${veiculo.modelo} - Placa: ${veiculo.placa}` : '');
+                } catch (error) { console.error('Erro ao excluir veículo:', error); showToast('❌ Erro ao excluir veículo.', 'error'); }
             };
 
-            // ===================== LOCATÁRIOS (admin only) =====================
+            // ===================== LOCATÁRIOS =====================
             const formLocatario = document.getElementById('form-locatario');
             const inputCPF = document.getElementById('l-cpf');
             const inputFone = document.getElementById('l-fone');
@@ -2292,8 +2971,9 @@
             }
             btnCancelLocatario.addEventListener('click', resetarFormLocatario);
             btnCancelEdicaoLocatario.addEventListener('click', function() { resetarFormLocatario(); showToast('📋 Edição cancelada.', 'info'); });
+
             formLocatario.addEventListener('submit', async function(e) {
-                if (!isAdmin()) return;
+                if (!isAdmin() && !temPermissaoAcao('criar')) return;
                 e.preventDefault();
                 const dadosLocatario = {
                     nome: document.getElementById('l-nome').value.trim(),
@@ -2308,25 +2988,38 @@
                     dataAtualizacao: new Date().toISOString()
                 };
                 if (editandoLocatarioId) {
-                    try { await colecoes.locatarios.doc(editandoLocatarioId).update(dadosLocatario); resetarFormLocatario(); showToast('✅ Locatário atualizado com sucesso!', 'success'); await syncLocacoesLocatario(editandoLocatarioId); } catch (error) { console.error('Erro ao atualizar locatário:', error); showToast('❌ Erro ao atualizar locatário.', 'error'); }
+                    try {
+                        await colecoes.locatarios.doc(editandoLocatarioId).update(dadosLocatario);
+                        resetarFormLocatario();
+                        showToast('✅ Locatário atualizado com sucesso!', 'success');
+                        registrarAuditoria('editar', 'Locatário', editandoLocatarioId, dadosLocatario.nome);
+                        await syncLocacoesLocatario(editandoLocatarioId);
+                    } catch (error) { console.error('Erro ao atualizar locatário:', error); showToast('❌ Erro ao atualizar locatário.', 'error'); }
                 } else {
                     const novoLocatario = { ...dadosLocatario, dataCadastro: new Date().toISOString() };
-                    try { const docRef = await colecoes.locatarios.add(novoLocatario); resetarFormLocatario(); showToast('✅ Locatário cadastrado com sucesso!', 'success'); await syncLocacoesLocatario(docRef.id); } catch (error) { console.error('Erro ao cadastrar locatário:', error); showToast('❌ Erro ao cadastrar locatário.', 'error'); }
+                    try {
+                        const docRef = await colecoes.locatarios.add(novoLocatario);
+                        resetarFormLocatario();
+                        showToast('✅ Locatário cadastrado com sucesso!', 'success');
+                        registrarAuditoria('criar', 'Locatário', docRef.id, dadosLocatario.nome);
+                        await syncLocacoesLocatario(docRef.id);
+                    } catch (error) { console.error('Erro ao cadastrar locatário:', error); showToast('❌ Erro ao cadastrar locatário.', 'error'); }
                 }
             });
 
             function atualizarTabelaLocatarios() {
-                if (!isAdmin()) return;
+                if (!isAdmin() && !temPermissaoAba('locatarios')) return;
                 const tbody = document.getElementById('tbody-locatarios');
                 if (locatarios.length === 0) { tbody.innerHTML = '<tr><td colspan="7" class="empty-state"><span class="icon">👥</span><br>Nenhum locatário cadastrado</td></tr>'; return; }
-                tbody.innerHTML = locatarios.map(l => `
-                    <tr><td><strong>${l.nome}</strong></td><td>${l.cpf}</td><td>${l.rg}</td><td>${l.cnh}</td><td>${l.fone}</td><td>${l.cidade}</td>
-                        <td><button class="btn-edit" onclick="window._editarLocatario('${l.id}')" title="Editar Locatário">✏️</button><button class="btn-danger" onclick="window._excluirLocatario('${l.id}')" title="Excluir">🗑️</button></td></tr>
-                `).join('');
+                tbody.innerHTML = locatarios.map(l => {
+                    let acoesHtml = '';
+                    if (temPermissaoAcao('editar') || temPermissaoAcao('excluir')) { acoesHtml = '<td>'; if (temPermissaoAcao('editar')) acoesHtml += `<button class="btn-edit" onclick="window._editarLocatario('${l.id}')" title="Editar Locatário">✏️</button>`; if (temPermissaoAcao('excluir')) acoesHtml += `<button class="btn-danger" onclick="window._excluirLocatario('${l.id}')" title="Excluir">🗑️</button>`; acoesHtml += '</td>'; }
+                    return `<tr><td><strong>${l.nome}</strong></td><td>${l.cpf}</td><td>${l.rg}</td><td>${l.cnh}</td><td>${l.fone}</td><td>${l.cidade}</td>${acoesHtml}</tr>`;
+                }).join('');
                 initScrollButtons();
             }
             window._editarLocatario = function(id) {
-                if (!isAdmin()) return;
+                if (!isAdmin() && !temPermissaoAcao('editar')) { showToast('⚠️ Você não tem permissão para editar locatários.', 'error'); return; }
                 const locatario = locatarios.find(l => l.id === id);
                 if (!locatario) { showToast('❌ Locatário não encontrado.', 'error'); return; }
                 editandoLocatarioId = id;
@@ -2348,15 +3041,20 @@
                 showToast('✏️ Modo de edição ativado.', 'info');
             };
             window._excluirLocatario = async function(id) {
-                if (!isAdmin()) return;
+                if (!isAdmin() && !temPermissaoAcao('excluir')) { showToast('⚠️ Você não tem permissão para excluir locatários.', 'error'); return; }
                 if (!confirm('Tem certeza que deseja excluir este locatário?')) return;
                 const emLocacao = locacoes.some(l => l.locatarioId === id);
                 if (emLocacao) { showToast('⚠️ Este locatário está vinculado a uma locação ativa. Remova a locação primeiro.', 'error'); return; }
+                const locatario = locatarios.find(l => l.id === id);
                 if (editandoLocatarioId === id) resetarFormLocatario();
-                try { await colecoes.locatarios.doc(id).delete(); showToast('🗑️ Locatário excluído com sucesso!', 'info'); } catch (error) { console.error('Erro ao excluir locatário:', error); showToast('❌ Erro ao excluir locatário.', 'error'); }
+                try {
+                    await colecoes.locatarios.doc(id).delete();
+                    showToast('🗑️ Locatário excluído com sucesso!', 'info');
+                    registrarAuditoria('excluir', 'Locatário', id, locatario ? locatario.nome : '');
+                } catch (error) { console.error('Erro ao excluir locatário:', error); showToast('❌ Erro ao excluir locatário.', 'error'); }
             };
 
-            // ===================== LOCAÇÕES (admin only) =====================
+            // ===================== LOCAÇÕES =====================
             const formLocacao = document.getElementById('form-locacao');
             const selectFormaCaucaoLoc = document.getElementById('loc-forma-caucao');
             const grupoParcelasLoc = document.getElementById('loc-grupo-parcelas');
@@ -2389,8 +3087,7 @@
                 const parcelas = parseInt(document.getElementById('loc-parcelas').value) || 1;
                 const entrada = parseMoedaBR(document.getElementById('loc-entrada-caucao').value);
                 let textoParcelas = '';
-                if (forma === 'parcelado') { textoParcelas = parcelas > 0 ? `${parcelas}x de ${formatarMoeda(valorCaucao / parcelas)}` : 'Número de parcelas inválido'; }
-                else if (forma === 'entrada_parcelado') { const valorRestante = valorCaucao - entrada; if (parcelas > 0 && valorRestante > 0) textoParcelas = `Entrada ${formatarMoeda(entrada)} + ${parcelas}x de ${formatarMoeda(valorRestante / parcelas)} (Total: ${formatarMoeda(valorCaucao)})`; else textoParcelas = `Entrada ${formatarMoeda(entrada)} já cobre o valor total do caução.`; }
+                if (forma === 'parcelado') { textoParcelas = parcelas > 0 ? `${parcelas}x de ${formatarMoeda(valorCaucao / parcelas)}` : 'Número de parcelas inválido'; } else if (forma === 'entrada_parcelado') { const valorRestante = valorCaucao - entrada; if (parcelas > 0 && valorRestante > 0) textoParcelas = `Entrada ${formatarMoeda(entrada)} + ${parcelas}x de ${formatarMoeda(valorRestante / parcelas)} (Total: ${formatarMoeda(valorCaucao)})`; else textoParcelas = `Entrada ${formatarMoeda(entrada)} já cobre o valor total do caução.`; }
                 divValorParcela.textContent = `💡 Valor de cada parcela: ${textoParcelas}`;
                 divValorParcela.style.display = 'block';
             }
@@ -2469,18 +3166,26 @@
                 if (parcelas > 20) { showToast('⚠️ O número máximo de parcelas é 20.', 'error'); return; }
                 const valorEntradaCaucao = formaCaucao === 'entrada_parcelado' ? parseMoedaBR(document.getElementById('loc-entrada-caucao').value) : 0;
 
+                const descricaoAudit = `${veiculo.marca} ${veiculo.modelo} (${veiculo.placa}) locado para ${locatario.nome}`;
+
                 if (editandoLocacaoId) {
                     const locacaoAtual = locacoes.find(l => l.id === editandoLocacaoId);
                     const docsExistentes = locacaoAtual?.documentosLocatario || [];
                     await removerEntradasFluxoLocacao(locacaoAtual);
                     const updateData = {
-                        veiculoId, locatarioId, veiculoPlaca: veiculo.placa, veiculoNome: `${veiculo.marca} ${veiculo.modelo}`,
-                        locatarioNome: locatario.nome, locatarioCPF: locatario.cpf,
-                        valorSemanal: veiculo.valorSemanal, caucao: veiculo.caucao,
-                        formaCaucao, parcelasCaucao: parcelas, valorEntradaCaucao,
+                        veiculoId, locatarioId,
+                        veiculoPlaca: veiculo.placa,
+                        veiculoNome: `${veiculo.marca} ${veiculo.modelo}`,
+                        locatarioNome: locatario.nome,
+                        locatarioCPF: locatario.cpf,
+                        valorSemanal: veiculo.valorSemanal,
+                        caucao: veiculo.caucao,
+                        formaCaucao, parcelasCaucao: parcelas,
+                        valorEntradaCaucao,
                         dataInicio, dataFim,
                         documentosLocatario: docsExistentes,
-                        status: 'ativa', dataAtualizacao: new Date().toISOString()
+                        status: 'ativa',
+                        dataAtualizacao: new Date().toISOString()
                     };
                     try {
                         await colecoes.locacoes.doc(editandoLocacaoId).update(updateData);
@@ -2488,23 +3193,38 @@
                         await colecoes.locacoes.doc(editandoLocacaoId).update({ fluxoCaixaIds });
                         resetarFormLocacao(); atualizarSelectsLocacao();
                         showToast('✅ Locação atualizada com sucesso!', 'success');
+                        registrarAuditoria('editar', 'Locação', editandoLocacaoId, descricaoAudit);
                     } catch (error) { console.error('Erro ao atualizar locação:', error); showToast('❌ Erro ao atualizar locação.', 'error'); }
                 } else {
                     const novaLocacao = {
-                        veiculoId, locatarioId, veiculoPlaca: veiculo.placa, veiculoNome: `${veiculo.marca} ${veiculo.modelo}`,
-                        locatarioNome: locatario.nome, locatarioCPF: locatario.cpf,
-                        valorSemanal: veiculo.valorSemanal, caucao: veiculo.caucao,
-                        formaCaucao, parcelasCaucao: parcelas, valorEntradaCaucao,
+                        veiculoId, locatarioId,
+                        veiculoPlaca: veiculo.placa,
+                        veiculoNome: `${veiculo.marca} ${veiculo.modelo}`,
+                        locatarioNome: locatario.nome,
+                        locatarioCPF: locatario.cpf,
+                        valorSemanal: veiculo.valorSemanal,
+                        caucao: veiculo.caucao,
+                        formaCaucao, parcelasCaucao: parcelas,
+                        valorEntradaCaucao,
                         dataInicio, dataFim,
                         documentosLocatario: [],
-                        status: 'ativa', dataCriacao: new Date().toISOString(), dataAtualizacao: new Date().toISOString()
+                        status: 'ativa',
+                        dataCriacao: new Date().toISOString(),
+                        dataAtualizacao: new Date().toISOString()
                     };
                     try {
                         const docRef = await colecoes.locacoes.add(novaLocacao);
                         const fluxoCaixaIds = await criarEntradasFluxoLocacao({ ...novaLocacao, id: docRef.id });
                         await colecoes.locacoes.doc(docRef.id).update({ fluxoCaixaIds });
-                        formLocacao.reset(); grupoParcelasLoc.style.display = 'none'; grupoEntradaCaucaoLoc.style.display = 'none'; document.getElementById('loc-parcelas').value = '2'; document.getElementById('loc-entrada-caucao').value = ''; divValorParcela.style.display = 'none'; atualizarSelectsLocacao();
+                        formLocacao.reset();
+                        grupoParcelasLoc.style.display = 'none';
+                        grupoEntradaCaucaoLoc.style.display = 'none';
+                        document.getElementById('loc-parcelas').value = '2';
+                        document.getElementById('loc-entrada-caucao').value = '';
+                        divValorParcela.style.display = 'none';
+                        atualizarSelectsLocacao();
                         showToast('✅ Locação registrada com sucesso!', 'success');
+                        registrarAuditoria('criar', 'Locação', docRef.id, descricaoAudit);
                     } catch (error) { console.error('Erro ao registrar locação:', error); showToast('❌ Erro ao registrar locação.', 'error'); }
                 }
                 initScrollButtons();
@@ -2519,10 +3239,7 @@
                     locacoesFiltradas = locacoesFiltradas.filter(l => sanitizarParaBusca(l.veiculoPlaca).includes(termoSanitizado) || sanitizarParaBusca(l.locatarioCPF).includes(termoSanitizado));
                 }
                 atualizarContadorBusca(locacoesFiltradas.length);
-                if (locacoesFiltradas.length === 0) {
-                    tbody.innerHTML = termoBuscaLocacoes.trim() !== '' ? '<tr><td colspan="11" class="empty-state"><span class="icon">🔍</span><br>Nenhuma locação encontrada.</td></tr>' : '<tr><td colspan="11" class="empty-state"><span class="icon">📋</span><br>Nenhuma locação ativa</td></tr>';
-                    return;
-                }
+                if (locacoesFiltradas.length === 0) { tbody.innerHTML = termoBuscaLocacoes.trim() !== '' ? '<tr><td colspan="11" class="empty-state"><span class="icon">🔍</span><br>Nenhuma locação encontrada.</td></tr>' : '<tr><td colspan="11" class="empty-state"><span class="icon">📋</span><br>Nenhuma locação ativa</td></tr>'; return; }
                 tbody.innerHTML = locacoesFiltradas.map(l => {
                     let caucaoHtml = formatarMoeda(l.caucao);
                     if (l.formaCaucao === 'parcelado') caucaoHtml += ` <span class="badge badge-warning">${l.parcelasCaucao || '?'}x</span>`;
@@ -2530,7 +3247,11 @@
                     else caucaoHtml += ' <span class="badge badge-success">À vista</span>';
                     const numDocs = (l.documentosLocatario && l.documentosLocatario.length) ? l.documentosLocatario.length : 0;
                     let docsHtml = numDocs > 0 ? `<button class="btn-ver-docs" onclick="window._verDocumentosLocacao('${l.id}')" title="Ver Documentos">📄 Ver Docs (${numDocs})</button>` : '<span style="color:var(--text-muted);">—</span>';
-                    return `<tr><td>${l.veiculoNome}</td><td><strong>${l.veiculoPlaca}</strong></td><td>${l.locatarioNome}</td><td><strong>${l.locatarioCPF}</strong></td><td>${new Date(l.dataInicio).toLocaleDateString('pt-BR')}</td><td>${new Date(l.dataFim).toLocaleDateString('pt-BR')}</td><td class="highlight-valor">${formatarMoeda(l.valorSemanal)}</td><td>${caucaoHtml}</td><td><span class="badge badge-info">Ativa</span></td><td>${docsHtml}</td><td><button class="btn-edit" onclick="window._editarLocacao('${l.id}')" title="Editar Locação">✏️</button><button class="btn-danger" onclick="window._excluirLocacao('${l.id}')" title="Encerrar Locação">🗑️</button></td></tr>`;
+                    let acoesHtml = '<td>';
+                    if (temPermissaoAcao('editar')) acoesHtml += `<button class="btn-edit" onclick="window._editarLocacao('${l.id}')" title="Editar Locação">✏️</button>`;
+                    if (temPermissaoAcao('excluir')) acoesHtml += `<button class="btn-danger" onclick="window._excluirLocacao('${l.id}')" title="Encerrar Locação">🗑️</button>`;
+                    acoesHtml += '</td>';
+                    return `<tr><td>${l.veiculoNome}</td><td><strong>${l.veiculoPlaca}</strong></td><td>${l.locatarioNome}</td><td><strong>${l.locatarioCPF}</strong></td><td>${new Date(l.dataInicio).toLocaleDateString('pt-BR')}</td><td>${new Date(l.dataFim).toLocaleDateString('pt-BR')}</td><td class="highlight-valor">${formatarMoeda(l.valorSemanal)}</td><td>${caucaoHtml}</td><td><span class="badge badge-info">Ativa</span></td><td>${docsHtml}</td>${acoesHtml}</tr>`;
                 }).join('');
                 initScrollButtons();
             }
@@ -2541,12 +3262,7 @@
                 const btnLimparFiltro = document.getElementById('btn-limpar-filtro-locacoes');
                 const clearBtn = document.getElementById('clear-search-btn');
                 if (countNum) countNum.textContent = totalFiltrado;
-                if (termoBuscaLocacoes.trim() !== '') {
-                    resultsInfo.classList.add('active-filter');
-                    resultsInfo.innerHTML = `🔍 Encontradas: <strong class="highlight-count">${totalFiltrado}</strong> de ${locacoes.length} locações`;
-                    btnLimparFiltro.style.display = 'flex';
-                    clearBtn.classList.add('visible');
-                } else { resultsInfo.classList.remove('active-filter'); resultsInfo.innerHTML = `Total: <strong class="highlight-count">${totalFiltrado}</strong> locações`; btnLimparFiltro.style.display = 'none'; clearBtn.classList.remove('visible'); }
+                if (termoBuscaLocacoes.trim() !== '') { resultsInfo.classList.add('active-filter'); resultsInfo.innerHTML = `🔍 Encontradas: <strong class="highlight-count">${totalFiltrado}</strong> de ${locacoes.length} locações`; btnLimparFiltro.style.display = 'flex'; clearBtn.classList.add('visible'); } else { resultsInfo.classList.remove('active-filter'); resultsInfo.innerHTML = `Total: <strong class="highlight-count">${totalFiltrado}</strong> locações`; btnLimparFiltro.style.display = 'none'; clearBtn.classList.remove('visible'); }
             }
 
             function atualizarUIBuscaLocacoes() { atualizarTabelaLocacoes(); const inputBusca = document.getElementById('input-busca-locacoes'); const clearBtn = document.getElementById('clear-search-btn'); if (termoBuscaLocacoes.trim() !== '') { clearBtn.classList.add('visible'); } else { clearBtn.classList.remove('visible'); inputBusca.value = ''; } initScrollButtons(); }
@@ -2557,7 +3273,11 @@
                 if (!confirm('Deseja encerrar esta locação? As transações do Fluxo de Caixa serão removidas.')) return;
                 await removerEntradasFluxoLocacao(locacao);
                 if (editandoLocacaoId === id) { resetarFormLocacao(); atualizarSelectsLocacao(); }
-                try { await colecoes.locacoes.doc(id).delete(); showToast('✅ Locação encerrada com sucesso!', 'info'); } catch (error) { console.error('Erro ao encerrar locação:', error); showToast('❌ Erro ao encerrar locação.', 'error'); }
+                try {
+                    await colecoes.locacoes.doc(id).delete();
+                    showToast('✅ Locação encerrada com sucesso!', 'info');
+                    registrarAuditoria('excluir', 'Locação', id, `${locacao.veiculoNome} - ${locacao.locatarioNome}`);
+                } catch (error) { console.error('Erro ao encerrar locação:', error); showToast('❌ Erro ao encerrar locação.', 'error'); }
             };
             const inputBuscaLocacoes = document.getElementById('input-busca-locacoes');
             const clearSearchBtn = document.getElementById('clear-search-btn');
@@ -2567,32 +3287,21 @@
             clearSearchBtn.addEventListener('click', function() { termoBuscaLocacoes = ''; inputBuscaLocacoes.value = ''; atualizarUIBuscaLocacoes(); inputBuscaLocacoes.focus(); });
             btnLimparFiltroLocacoes.addEventListener('click', function() { termoBuscaLocacoes = ''; inputBuscaLocacoes.value = ''; atualizarUIBuscaLocacoes(); inputBuscaLocacoes.focus(); });
 
-            // ===================== VISUALIZAÇÃO DE DOCUMENTOS DA LOCAÇÃO =====================
             window._verDocumentosLocacao = function(id) {
                 const locacao = locacoes.find(l => l.id === id);
-                if (!locacao || !locacao.documentosLocatario || locacao.documentosLocatario.length === 0) {
-                    showToast('Nenhum documento anexado.', 'info');
-                    return;
-                }
+                if (!locacao || !locacao.documentosLocatario || locacao.documentosLocatario.length === 0) { showToast('Nenhum documento anexado.', 'info'); return; }
                 const content = document.getElementById('docs-modal-content');
                 const overlay = document.getElementById('docs-modal-overlay');
                 content.innerHTML = locacao.documentosLocatario.map((doc, index) => {
                     const nomeArquivo = (doc.nome || `documento_${index+1}`).replace(/'/g, "\\'");
-                    return `<div class="doc-item">
-                        <span>📎 ${doc.nome || `Documento ${index+1}`}</span>
-                        <a href="#" onclick="event.preventDefault(); downloadDocumento('${doc.base64}', '${nomeArquivo}')" title="Baixar documento">📥 Baixar</a>
-                    </div>`;
+                    return `<div class="doc-item"><span>📎 ${doc.nome || `Documento ${index+1}`}</span><a href="#" onclick="event.preventDefault(); downloadDocumento('${doc.base64}', '${nomeArquivo}'); registrarAuditoria('download', 'Locação', '${id}', 'Download de documento')" title="Baixar documento">📥 Baixar</a></div>`;
                 }).join('');
                 overlay.classList.add('active');
             };
-            document.getElementById('docs-modal-close').addEventListener('click', function() {
-                document.getElementById('docs-modal-overlay').classList.remove('active');
-            });
-            document.getElementById('docs-modal-overlay').addEventListener('click', function(e) {
-                if (e.target === this) this.classList.remove('active');
-            });
+            document.getElementById('docs-modal-close').addEventListener('click', function() { document.getElementById('docs-modal-overlay').classList.remove('active'); });
+            document.getElementById('docs-modal-overlay').addEventListener('click', function(e) { if (e.target === this) this.classList.remove('active'); });
 
-            // ===================== FLUXO DE CAIXA (admin only) =====================
+            // ===================== FLUXO DE CAIXA =====================
             function atualizarResumoFluxoCaixa() {
                 if (!isAdmin()) return;
                 const totalEntradas = fluxoCaixa.filter(t => t.tipo === 'entrada').reduce((sum, t) => sum + (parseFloat(t.valor) || 0), 0);
@@ -2621,7 +3330,11 @@
                     const valorClass = t.tipo === 'entrada' ? 'highlight-entrada' : 'highlight-saida';
                     const categoriaLabel = categoriasLabels[t.categoria] || (t.categoria || 'Geral');
                     const dataFormatada = t.data ? new Date(t.data + 'T00:00:00').toLocaleDateString('pt-BR') : '—';
-                    return `<tr><td>${dataFormatada}</td><td>${t.descricao}</td><td>${categoriaLabel}</td><td>${tipoBadge}</td><td class="${valorClass}" style="font-weight:700;font-size:15px;">${formatarMoeda(t.valor)}</td><td>${t.observacao || '<span style="color:var(--text-muted);">—</span>'}</td><td><button class="btn-edit" onclick="window._editarFluxo('${t.id}')" title="Editar Transação">✏️</button><button class="btn-danger" onclick="window._excluirFluxo('${t.id}')" title="Excluir">🗑️</button></td></tr>`;
+                    let acoesHtml = '<td>';
+                    if (temPermissaoAcao('editar')) acoesHtml += `<button class="btn-edit" onclick="window._editarFluxo('${t.id}')" title="Editar Transação">✏️</button>`;
+                    if (temPermissaoAcao('excluir')) acoesHtml += `<button class="btn-danger" onclick="window._excluirFluxo('${t.id}')" title="Excluir">🗑️</button>`;
+                    acoesHtml += '</td>';
+                    return `<tr><td>${dataFormatada}</td><td>${t.descricao}</td><td>${categoriaLabel}</td><td>${tipoBadge}</td><td class="${valorClass}" style="font-weight:700;font-size:15px;">${formatarMoeda(t.valor)}</td><td>${t.observacao || '<span style="color:var(--text-muted);">—</span>'}</td>${acoesHtml}</tr>`;
                 }).join('');
                 initScrollButtons();
             }
@@ -2662,7 +3375,22 @@
                 const dadosFluxo = { descricao: document.getElementById('f-descricao').value.trim(), valor: parseMoedaBR(document.getElementById('f-valor').value), tipo: document.getElementById('f-tipo').value, data: document.getElementById('f-data').value, categoria: document.getElementById('f-categoria').value, observacao: document.getElementById('f-observacao').value.trim(), dataAtualizacao: new Date().toISOString() };
                 if (!dadosFluxo.descricao || !dadosFluxo.valor || !dadosFluxo.tipo || !dadosFluxo.data) { showToast('⚠️ Preencha todos os campos obrigatórios.', 'error'); return; }
                 if (dadosFluxo.valor <= 0) { showToast('⚠️ O valor deve ser maior que zero.', 'error'); return; }
-                if (editandoFluxoId) { try { await colecoes.fluxocaixa.doc(editandoFluxoId).update(dadosFluxo); resetarFormFluxo(); showToast('✅ Transação atualizada com sucesso!', 'success'); } catch (error) { console.error('Erro ao atualizar transação:', error); showToast('❌ Erro ao atualizar transação.', 'error'); } } else { const novaTransacao = { ...dadosFluxo, dataCriacao: new Date().toISOString() }; try { await colecoes.fluxocaixa.add(novaTransacao); resetarFormFluxo(); showToast('✅ Transação registrada com sucesso!', 'success'); } catch (error) { console.error('Erro ao registrar transação:', error); showToast('❌ Erro ao registrar transação.', 'error'); } }
+                if (editandoFluxoId) {
+                    try {
+                        await colecoes.fluxocaixa.doc(editandoFluxoId).update(dadosFluxo);
+                        resetarFormFluxo();
+                        showToast('✅ Transação atualizada com sucesso!', 'success');
+                        registrarAuditoria('editar', 'Fluxo de Caixa', editandoFluxoId, dadosFluxo.descricao);
+                    } catch (error) { console.error('Erro ao atualizar transação:', error); showToast('❌ Erro ao atualizar transação.', 'error'); }
+                } else {
+                    const novaTransacao = { ...dadosFluxo, dataCriacao: new Date().toISOString() };
+                    try {
+                        const docRef = await colecoes.fluxocaixa.add(novaTransacao);
+                        resetarFormFluxo();
+                        showToast('✅ Transação registrada com sucesso!', 'success');
+                        registrarAuditoria('criar', 'Fluxo de Caixa', docRef.id, dadosFluxo.descricao);
+                    } catch (error) { console.error('Erro ao registrar transação:', error); showToast('❌ Erro ao registrar transação.', 'error'); }
+                }
                 initScrollButtons();
             });
             window._editarFluxo = function(id) {
@@ -2687,8 +3415,13 @@
             window._excluirFluxo = async function(id) {
                 if (!isAdmin()) return;
                 if (!confirm('Tem certeza que deseja excluir esta transação?')) return;
+                const transacao = fluxoCaixa.find(f => f.id === id);
                 if (editandoFluxoId === id) resetarFormFluxo();
-                try { await colecoes.fluxocaixa.doc(id).delete(); showToast('🗑️ Transação excluída com sucesso!', 'info'); } catch (error) { console.error('Erro ao excluir transação:', error); showToast('❌ Erro ao excluir transação.', 'error'); }
+                try {
+                    await colecoes.fluxocaixa.doc(id).delete();
+                    showToast('🗑️ Transação excluída com sucesso!', 'info');
+                    registrarAuditoria('excluir', 'Fluxo de Caixa', id, transacao ? transacao.descricao : '');
+                } catch (error) { console.error('Erro ao excluir transação:', error); showToast('❌ Erro ao excluir transação.', 'error'); }
             };
             const inputBuscaFluxo = document.getElementById('input-busca-fluxo');
             const clearSearchBtnFluxo = document.getElementById('clear-search-btn-fluxo');
@@ -2698,7 +3431,7 @@
             clearSearchBtnFluxo.addEventListener('click', function() { termoBuscaFluxo = ''; inputBuscaFluxo.value = ''; atualizarUIBuscaFluxo(); inputBuscaFluxo.focus(); });
             btnLimparFiltroFluxo.addEventListener('click', function() { termoBuscaFluxo = ''; inputBuscaFluxo.value = ''; atualizarUIBuscaFluxo(); inputBuscaFluxo.focus(); });
 
-            // ===================== GERENCIAMENTO DE USUÁRIOS (admin only) =====================
+            // ===================== GERENCIAMENTO DE USUÁRIOS =====================
             const formUsuario = document.getElementById('form-usuario');
             const btnSubmitUsuario = document.getElementById('btn-submit-usuario');
             const btnCancelUsuario = document.getElementById('btn-cancel-usuario');
@@ -2714,6 +3447,7 @@
                 editBannerUsuario.classList.remove('show');
                 usuarioFormTitle.textContent = 'Novo Usuário';
                 atualizarPermissoesUsuarioGrid();
+                atualizarPermissoesAbasEAcoesGrid();
             }
             btnCancelUsuario.addEventListener('click', resetarFormUsuario);
             btnCancelEdicaoUsuario.addEventListener('click', function() { resetarFormUsuario(); showToast('📋 Edição cancelada.', 'info'); });
@@ -2725,24 +3459,54 @@
                 const login = document.getElementById('u-login').value.trim();
                 const senha = document.getElementById('u-senha').value;
                 if (!nome || !login || !senha) { showToast('⚠️ Preencha todos os campos.', 'error'); return; }
+
+                const abasSelecionadas = [];
+                document.querySelectorAll('.perm-abas-check:checked').forEach(ch => abasSelecionadas.push(ch.value));
+                const acoesSelecionadas = [];
+                document.querySelectorAll('.perm-acoes-check:checked').forEach(ch => acoesSelecionadas.push(ch.value));
+                const subAbasCarroSelecionadas = [];
+                document.querySelectorAll('.perm-subabas-carro-check:checked').forEach(ch => subAbasCarroSelecionadas.push(ch.value));
+                const subAbasManutencaoSelecionadas = [];
+                document.querySelectorAll('.perm-subabas-manutencao-check:checked').forEach(ch => subAbasManutencaoSelecionadas.push(ch.value));
                 const checksVeiculos = document.querySelectorAll('.perm-usuario-check');
                 const veiculosPermitidos = [];
                 checksVeiculos.forEach(ch => { if (ch.checked) veiculosPermitidos.push(ch.value); });
+
                 if (editandoUsuarioId) {
-                    const updateData = { nome, usuario: login, senha, veiculosPermitidos, dataAtualizacao: new Date().toISOString() };
+                    const updateData = {
+                        nome, usuario: login, senha,
+                        abasPermitidas: abasSelecionadas,
+                        acoesPermitidas: acoesSelecionadas,
+                        subAbasCarroPermitidas: subAbasCarroSelecionadas,
+                        subAbasManutencaoPermitidas: subAbasManutencaoSelecionadas,
+                        veiculosPermitidos,
+                        dataAtualizacao: new Date().toISOString()
+                    };
                     try {
                         await colecoes.usuarios.doc(editandoUsuarioId).update(updateData);
                         resetarFormUsuario();
                         showToast('✅ Usuário atualizado com sucesso!', 'success');
+                        registrarAuditoria('editar', 'Usuário', editandoUsuarioId, nome);
                     } catch (error) { console.error('Erro ao atualizar usuário:', error); showToast('❌ Erro ao atualizar usuário.', 'error'); }
                 } else {
                     const existe = usuarios.some(u => u.usuario === login);
                     if (existe) { showToast('⚠️ Já existe um usuário com este login.', 'error'); return; }
-                    const novoUsuario = { nome, usuario: login, senha, role: 'usuario', veiculosPermitidos, dataCriacao: new Date().toISOString(), dataAtualizacao: new Date().toISOString() };
+                    const novoUsuario = {
+                        nome, usuario: login, senha,
+                        role: 'usuario',
+                        abasPermitidas: abasSelecionadas,
+                        acoesPermitidas: acoesSelecionadas,
+                        subAbasCarroPermitidas: subAbasCarroSelecionadas,
+                        subAbasManutencaoPermitidas: subAbasManutencaoSelecionadas,
+                        veiculosPermitidos,
+                        dataCriacao: new Date().toISOString(),
+                        dataAtualizacao: new Date().toISOString()
+                    };
                     try {
-                        await colecoes.usuarios.add(novoUsuario);
+                        const docRef = await colecoes.usuarios.add(novoUsuario);
                         resetarFormUsuario();
                         showToast('✅ Usuário criado com sucesso!', 'success');
+                        registrarAuditoria('criar', 'Usuário', docRef.id, nome);
                     } catch (error) { console.error('Erro ao criar usuário:', error); showToast('❌ Erro ao criar usuário.', 'error'); }
                 }
             });
@@ -2750,15 +3514,35 @@
             function atualizarTabelaUsuarios() {
                 if (!isAdmin()) return;
                 const tbody = document.getElementById('tbody-usuarios');
-                const usuariosFiltrados = usuarios;
-                if (usuariosFiltrados.length === 0) { tbody.innerHTML = '<tr><td colspan="6" class="empty-state"><span class="icon">👤</span><br>Nenhum usuário cadastrado</td></tr>'; return; }
-                tbody.innerHTML = usuariosFiltrados.map(u => {
+                if (usuarios.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="10" class="empty-state"><span class="icon">👤</span><br>Nenhum usuário cadastrado</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = usuarios.map(u => {
                     const numVeiculos = (u.veiculosPermitidos || []).length;
                     const roleBadge = u.role === 'admin' ? '<span class="badge badge-warning">👑 Admin</span>' : '<span class="badge badge-info">👤 Usuário</span>';
                     const veiculosTexto = u.role === 'admin' ? '<span style="color:var(--text-muted);">Todos</span>' : (numVeiculos > 0 ? `<span class="badge badge-success">${numVeiculos} veículo(s)</span>` : '<span style="color:var(--danger);">Nenhum</span>');
+                    const abasTexto = u.role === 'admin' ? 'Todas' : ((u.abasPermitidas || []).length > 0 ? (u.abasPermitidas || []).join(', ') : 'Nenhuma');
+                    const subAbasTexto = u.role === 'admin' ? 'Todas' : ((u.subAbasCarroPermitidas || []).length > 0 ? (u.subAbasCarroPermitidas || []).join(', ') : 'Nenhuma');
+                    const subAbasManutencaoTexto = u.role === 'admin' ? 'Todas' : ((u.subAbasManutencaoPermitidas || []).length > 0 ? (u.subAbasManutencaoPermitidas || []).join(', ') : 'Nenhuma');
+                    const acoesTexto = u.role === 'admin' ? 'Todas' : ((u.acoesPermitidas || []).length > 0 ? (u.acoesPermitidas || []).join(', ') : 'Nenhuma');
                     const dataCriacao = u.dataCriacao ? new Date(u.dataCriacao).toLocaleDateString('pt-BR') : '—';
-                    const acoesHtml = u.role !== 'admin' ? `<button class="btn-edit" onclick="window._editarUsuario('${u.id}')" title="Editar Usuário">✏️</button><button class="btn-danger" onclick="window._excluirUsuario('${u.id}')" title="Excluir">🗑️</button>` : '<span style="color:var(--text-muted);font-size:11px;">Protegido</span>';
-                    return `<tr><td><strong>${u.nome}</strong></td><td>${u.usuario}</td><td>${roleBadge}</td><td>${veiculosTexto}</td><td>${dataCriacao}</td><td>${acoesHtml}</td></tr>`;
+                    const acoesHtml = u.role !== 'admin' ?
+                        `<button class="btn-edit" onclick="window._editarUsuario('${u.id}')" title="Editar Usuário">✏️</button>
+                         <button class="btn-danger" onclick="window._excluirUsuario('${u.id}')" title="Excluir">🗑️</button>` :
+                        '<span style="color:var(--text-muted);font-size:11px;">Protegido</span>';
+                    return `<tr>
+                        <td><strong>${u.nome}</strong></td>
+                        <td>${u.usuario}</td>
+                        <td>${roleBadge}</td>
+                        <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;" title="${abasTexto}">${abasTexto}</td>
+                        <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;" title="${subAbasTexto}">${subAbasTexto}</td>
+                        <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;" title="${subAbasManutencaoTexto}">${subAbasManutencaoTexto}</td>
+                        <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;" title="${acoesTexto}">${acoesTexto}</td>
+                        <td>${veiculosTexto}</td>
+                        <td>${dataCriacao}</td>
+                        <td>${acoesHtml}</td>
+                    </tr>`;
                 }).join('');
                 initScrollButtons();
             }
@@ -2778,71 +3562,23 @@
                 usuarioFormTitle.textContent = 'Editar Usuário';
                 document.getElementById('card-form-usuario').scrollIntoView({ behavior: 'smooth', block: 'start' });
                 atualizarPermissoesUsuarioGrid();
+                atualizarPermissoesAbasEAcoesGrid();
                 showToast('✏️ Modo de edição ativado.', 'info');
             };
-
             window._excluirUsuario = async function(id) {
                 if (!isAdmin()) return;
                 const usuario = usuarios.find(u => u.id === id);
                 if (!usuario || usuario.role === 'admin') { showToast('⚠️ Não é possível excluir o administrador.', 'error'); return; }
                 if (!confirm(`Tem certeza que deseja excluir o usuário "${usuario.nome}"?`)) return;
                 if (editandoUsuarioId === id) resetarFormUsuario();
-                try { await colecoes.usuarios.doc(id).delete(); showToast('🗑️ Usuário excluído com sucesso!', 'info'); } catch (error) { console.error('Erro ao excluir usuário:', error); showToast('❌ Erro ao excluir usuário.', 'error'); }
-            };
-
-            // ===================== GERENCIAMENTO DE PDFs (DOC PDF) =====================
-            function atualizarTabelaDocsPdf() {
-                if (!isAdmin()) return;
-                const tbody = document.getElementById('tbody-docpdf');
-                if (docsPdf.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="3" class="empty-state"><span class="icon">📄</span><br>Nenhum PDF armazenado</td></tr>';
-                    return;
-                }
-                docsPdf.sort((a, b) => new Date(b.dataCriacao) - new Date(a.dataCriacao));
-                tbody.innerHTML = docsPdf.map(doc => {
-                    const dataFormatada = doc.dataCriacao ? new Date(doc.dataCriacao).toLocaleDateString('pt-BR') + ' ' + new Date(doc.dataCriacao).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '—';
-                    const nomeArquivo = (doc.nome || 'documento.pdf').replace(/'/g, "\\'");
-                    return `<tr>
-                        <td><strong>${doc.nome || 'Sem nome'}</strong></td>
-                        <td>${dataFormatada}</td>
-                        <td>
-                            <button class="btn-pdf" onclick="event.preventDefault(); downloadDocumento('${doc.base64}', '${nomeArquivo}')" title="Baixar PDF">📥 Download</button>
-                            <button class="btn-edit" onclick="window._renomearPdf('${doc.id}')" title="Renomear">✏️ Renomear</button>
-                            <button class="btn-danger" onclick="window._excluirPdf('${doc.id}')" title="Excluir">🗑️</button>
-                        </td>
-                    </tr>`;
-                }).join('');
-                initScrollButtons();
-            }
-
-            window._renomearPdf = async function(id) {
-                if (!isAdmin()) return;
-                const doc = docsPdf.find(d => d.id === id);
-                if (!doc) return;
-                const novoNome = prompt('Digite o novo nome para o arquivo:', doc.nome || 'documento.pdf');
-                if (novoNome && novoNome.trim() !== '') {
-                    try {
-                        await colecoes.docspdf.doc(id).update({ nome: novoNome.trim(), dataAtualizacao: new Date().toISOString() });
-                        showToast('✅ Nome atualizado com sucesso!', 'success');
-                    } catch (error) {
-                        console.error('Erro ao renomear PDF:', error);
-                        showToast('❌ Erro ao renomear.', 'error');
-                    }
-                }
-            };
-
-            window._excluirPdf = async function(id) {
-                if (!isAdmin()) return;
-                if (!confirm('Tem certeza que deseja excluir este PDF?')) return;
                 try {
-                    await colecoes.docspdf.doc(id).delete();
-                    showToast('🗑️ PDF excluído com sucesso!', 'info');
-                } catch (error) {
-                    console.error('Erro ao excluir PDF:', error);
-                    showToast('❌ Erro ao excluir.', 'error');
-                }
+                    await colecoes.usuarios.doc(id).delete();
+                    showToast('🗑️ Usuário excluído com sucesso!', 'info');
+                    registrarAuditoria('excluir', 'Usuário', id, usuario.nome);
+                } catch (error) { console.error('Erro ao excluir usuário:', error); showToast('❌ Erro ao excluir usuário.', 'error'); }
             };
 
+            // ===================== GERENCIAMENTO DE PDFs =====================
             function abrirModalPdfUpload() {
                 document.getElementById('modal-pdf-overlay').classList.add('active');
                 document.getElementById('input-pdf-nome').value = '';
@@ -2851,90 +3587,583 @@
                 document.getElementById('pdf-upload-error').textContent = '';
                 setTimeout(() => document.getElementById('input-pdf-nome').focus(), 100);
             }
-
-            function fecharModalPdfUpload() {
-                document.getElementById('modal-pdf-overlay').classList.remove('active');
-            }
-
+            function fecharModalPdfUpload() { document.getElementById('modal-pdf-overlay').classList.remove('active'); }
             document.getElementById('modal-pdf-close').addEventListener('click', fecharModalPdfUpload);
-            document.getElementById('modal-pdf-overlay').addEventListener('click', function(e) {
-                if (e.target === this) fecharModalPdfUpload();
-            });
-
-            document.getElementById('btn-pdf-upload-locacao').addEventListener('click', function() {
-                if (!isAdmin()) {
-                    showToast('⚠️ Apenas o administrador pode fazer upload de PDFs.', 'error');
-                    return;
-                }
-                abrirModalPdfUpload();
-            });
-
-            document.getElementById('btn-novo-pdf-docpdf').addEventListener('click', function() {
-                abrirModalPdfUpload();
-            });
-
+            document.getElementById('modal-pdf-overlay').addEventListener('click', function(e) { if (e.target === this) fecharModalPdfUpload(); });
+            document.getElementById('btn-pdf-upload-locacao').addEventListener('click', function() { if (!isAdmin() && !temPermissaoAcao('upload')) { showToast('⚠️ Você não tem permissão para fazer upload.', 'error'); return; } abrirModalPdfUpload(); });
             document.getElementById('btn-salvar-pdf').addEventListener('click', async function() {
                 const nomeInput = document.getElementById('input-pdf-nome');
                 const fileInput = document.getElementById('input-pdf-file');
                 const errorSpan = document.getElementById('pdf-upload-error');
-
                 let nome = nomeInput.value.trim();
                 const file = fileInput.files[0];
-
-                if (!file) {
-                    errorSpan.textContent = 'Selecione um arquivo PDF.';
-                    errorSpan.style.display = 'block';
-                    return;
-                }
-                if (file.type !== 'application/pdf') {
-                    errorSpan.textContent = 'O arquivo deve ser um PDF.';
-                    errorSpan.style.display = 'block';
-                    return;
-                }
-                const MAX_SIZE = 500 * 1024;
-                if (file.size > MAX_SIZE) {
-                    errorSpan.textContent = 'Arquivo muito grande! Limite de 500KB.';
-                    errorSpan.style.display = 'block';
-                    return;
-                }
-                if (!nome) {
-                    nome = file.name.replace(/\.pdf$/i, '');
-                }
-
+                if (!file) { errorSpan.textContent = 'Selecione um arquivo PDF.'; errorSpan.style.display = 'block'; return; }
+                if (file.type !== 'application/pdf') { errorSpan.textContent = 'O arquivo deve ser um PDF.'; errorSpan.style.display = 'block'; return; }
+                if (!nome) { nome = file.name.replace(/\.pdf$/i, ''); }
                 try {
                     const base64 = await fileToBase64(file);
-                    await colecoes.docspdf.add({
-                        nome: nome,
-                        base64: base64,
-                        tamanho: file.size,
+                    const docRef = await colecoes.docspdf.add({ nome: nome, base64: base64, tamanho: file.size, dataCriacao: new Date().toISOString(), dataAtualizacao: new Date().toISOString() });
+                    fecharModalPdfUpload();
+                    showToast('✅ PDF salvo com sucesso!', 'success');
+                    registrarAuditoria('upload', 'Documento PDF', docRef.id, nome);
+                } catch (error) { console.error('Erro ao salvar PDF:', error); errorSpan.textContent = 'Erro ao processar o arquivo.'; errorSpan.style.display = 'block'; }
+            });
+
+            // ===================== SUB-ABAS DO CARRO =====================
+            function atualizarSubAbasCarro() {
+                const subAbas = ['QMK3B93', 'GIW0G03', 'QNC2C21', 'BYQ4E06'];
+                subAbas.forEach(subaba => {
+                    const listContainer = document.getElementById('carro-pdf-list-' + subaba);
+                    if (!listContainer) return;
+                    const pdfsDaSubAba = carroPdfs.filter(p => p.subaba === subaba);
+                    if (pdfsDaSubAba.length === 0) {
+                        listContainer.innerHTML = '<span style="color:var(--text-muted);">Nenhum PDF anexado a esta sub-aba.</span>';
+                    } else {
+                        listContainer.innerHTML = pdfsDaSubAba.map(pdf => {
+                            const nome = pdf.nome || 'documento.pdf';
+                            const nomeEscaped = nome.replace(/'/g, "\\'");
+                            return `
+                                <div class="carro-pdf-item">
+                                    <span>📄 ${nome}</span>
+                                    <div class="carro-pdf-actions">
+                                        <button class="btn-pdf" onclick="event.preventDefault(); downloadDocumento('${pdf.base64}', '${nomeEscaped}'); registrarAuditoria('download', 'CARRO PDF', '${pdf.id}', 'Download: ${nome}')">📥 Download</button>
+                                        <button class="btn-danger" onclick="window._excluirCarroPdf('${pdf.id}')">🗑️</button>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('');
+                    }
+                });
+                aplicarRestricoesSubAbasCarro();
+            }
+
+            window._excluirCarroPdf = async function(id) {
+                const senha = prompt('Digite a senha para excluir este PDF:');
+                if (senha !== '080888') {
+                    showToast('❌ Senha incorreta!', 'error');
+                    return;
+                }
+                const pdf = carroPdfs.find(p => p.id === id);
+                if (!confirm('Deseja realmente excluir este PDF da sub-aba?')) return;
+                try { 
+                    await colecoes.carroPdfs.doc(id).delete(); 
+                    showToast('🗑️ PDF excluído com sucesso!', 'info'); 
+                    registrarAuditoria('excluir', 'CARRO PDF', id, pdf ? pdf.nome : '');
+                } catch (error) { 
+                    console.error('Erro ao excluir PDF da sub-aba:', error); 
+                    showToast('❌ Erro ao excluir PDF.', 'error'); 
+                }
+            };
+
+            function abrirModalCarroPdf() {
+                document.getElementById('modal-carro-pdf-overlay').classList.add('active');
+                document.getElementById('input-carro-pdf-nome').value = '';
+                document.getElementById('input-carro-pdf-file').value = '';
+                document.getElementById('carro-pdf-upload-error').style.display = 'none';
+                document.getElementById('carro-pdf-upload-error').textContent = '';
+                const subTabs = document.querySelectorAll('#carro-sub-tabs .sub-tab-btn');
+                let subabaAtiva = 'QMK3B93';
+                subTabs.forEach(btn => { if (btn.classList.contains('active')) subabaAtiva = btn.getAttribute('data-subtab'); });
+                document.getElementById('select-carro-subaba').value = subabaAtiva;
+                setTimeout(() => document.getElementById('input-carro-pdf-nome').focus(), 100);
+            }
+            function fecharModalCarroPdf() { document.getElementById('modal-carro-pdf-overlay').classList.remove('active'); }
+            document.getElementById('modal-carro-pdf-close').addEventListener('click', fecharModalCarroPdf);
+            document.getElementById('modal-carro-pdf-overlay').addEventListener('click', function(e) { if (e.target === this) fecharModalCarroPdf(); });
+
+            document.getElementById('btn-upload-carro-pdf').addEventListener('click', function() {
+                if (!temPermissaoAcao('upload')) { showToast('⚠️ Você não tem permissão para fazer upload.', 'error'); return; }
+                abrirModalCarroPdf();
+            });
+
+            document.getElementById('btn-salvar-carro-pdf').addEventListener('click', async function() {
+                const nomeInput = document.getElementById('input-carro-pdf-nome');
+                const fileInput = document.getElementById('input-carro-pdf-file');
+                const selectSubaba = document.getElementById('select-carro-subaba');
+                const errorSpan = document.getElementById('carro-pdf-upload-error');
+                let nome = nomeInput.value.trim();
+                const file = fileInput.files[0];
+                const subaba = selectSubaba.value;
+                if (!file) { errorSpan.textContent = 'Selecione um arquivo PDF.'; errorSpan.style.display = 'block'; return; }
+                if (file.type !== 'application/pdf') { errorSpan.textContent = 'O arquivo deve ser um PDF.'; errorSpan.style.display = 'block'; return; }
+                if (!nome) { nome = file.name.replace(/\.pdf$/i, ''); }
+                try {
+                    const base64 = await fileToBase64(file);
+                    const docRef = await colecoes.carroPdfs.add({ subaba: subaba, nome: nome, base64: base64, dataCriacao: new Date().toISOString(), dataAtualizacao: new Date().toISOString() });
+                    fecharModalCarroPdf();
+                    showToast('✅ PDF salvo na sub-aba ' + subaba + ' com sucesso!', 'success');
+                    registrarAuditoria('upload', 'CARRO PDF', docRef.id, `${nome} (sub-aba ${subaba})`);
+                    const tabBtn = document.querySelector(`#carro-sub-tabs .sub-tab-btn[data-subtab="${subaba}"]`);
+                    if (tabBtn) tabBtn.click();
+                } catch (error) { console.error('Erro ao salvar PDF na sub-aba:', error); errorSpan.textContent = 'Erro ao processar o arquivo.'; errorSpan.style.display = 'block'; }
+            });
+
+            document.querySelectorAll('#carro-sub-tabs .sub-tab-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const subtabName = this.getAttribute('data-subtab');
+                    if (!temPermissaoSubAbaCarro(subtabName)) {
+                        showToast('⚠️ Você não tem permissão para acessar esta sub-aba.', 'error');
+                        return;
+                    }
+                    document.querySelectorAll('#carro-sub-tabs .sub-tab-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    document.querySelectorAll('#page-carro .sub-tab-content').forEach(content => content.classList.remove('active'));
+                    const targetContent = document.getElementById('subtab-' + subtabName);
+                    if (targetContent) targetContent.classList.add('active');
+                });
+            });
+
+            // ===================== MANUTENÇÃO =====================
+            function atualizarSelectManutencaoVeiculos() {
+                const select = document.getElementById('m-veiculo');
+                if (!select) return;
+                const veiculosPerm = isAdmin() ? veiculos : getVeiculosPermitidos();
+                select.innerHTML = '<option value="">Selecione um veículo...</option>' +
+                    veiculosPerm.map(v => `<option value="${v.id}">${v.marca} ${v.modelo} - Placa: ${v.placa}</option>`).join('');
+            }
+
+            function resetarFormManutencao() {
+                document.getElementById('form-manutencao').reset();
+                document.getElementById('m-data').value = new Date().toISOString().split('T')[0];
+                document.getElementById('m-registrar-fluxo').checked = false;
+                document.getElementById('m-subaba').value = '';
+                editandoManutencaoId = null;
+                document.getElementById('btn-submit-manutencao').textContent = '💾 Registrar Manutenção';
+                document.getElementById('btn-cancel-edicao-manutencao').style.display = 'none';
+                document.getElementById('edit-banner-manutencao').classList.remove('show');
+                document.getElementById('manut-form-title').textContent = 'Nova Manutenção';
+                atualizarSelectManutencaoVeiculos();
+                aplicarRestricoesSubAbasManutencao();
+            }
+
+            window._editarManutencao = function(id) {
+                const senha = prompt('Digite a senha para editar este registro de manutenção:');
+                if (senha !== '080888') {
+                    showToast('❌ Senha incorreta!', 'error');
+                    return;
+                }
+                const manut = manutencoes.find(m => m.id === id);
+                if (!manut) return;
+                editandoManutencaoId = id;
+                atualizarSelectManutencaoVeiculos();
+                document.getElementById('m-veiculo').value = manut.veiculoId || '';
+                document.getElementById('m-subaba').value = manut.veiculoPlaca || '';
+                document.getElementById('m-data').value = manut.data || '';
+                document.getElementById('m-tipo').value = manut.tipo || '';
+                document.getElementById('m-descricao').value = manut.descricao || '';
+                document.getElementById('m-valor').value = manut.valor ? formatarMoeda(manut.valor) : '';
+                document.getElementById('m-km').value = manut.km || '';
+                document.getElementById('m-observacao').value = manut.observacao || '';
+                document.getElementById('m-registrar-fluxo').checked = false;
+                document.getElementById('btn-submit-manutencao').textContent = '💾 Atualizar Manutenção';
+                document.getElementById('btn-cancel-edicao-manutencao').style.display = 'inline-block';
+                document.getElementById('edit-banner-manutencao').classList.add('show');
+                document.getElementById('edit-banner-manutencao-text').textContent = `Editando manutenção do veículo ${manut.veiculoNome || ''} (Placa: ${manut.veiculoPlaca || ''})`;
+                document.getElementById('manut-form-title').textContent = 'Editar Manutenção';
+                document.getElementById('card-form-manutencao').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                aplicarRestricoesSubAbasManutencao();
+            };
+
+            window._excluirManutencao = async function(id) {
+                const senha = prompt('Digite a senha para excluir este registro de manutenção:');
+                if (senha !== '080888') {
+                    showToast('❌ Senha incorreta!', 'error');
+                    return;
+                }
+                if (!confirm('Deseja realmente excluir este registro de manutenção?')) return;
+                const manut = manutencoes.find(m => m.id === id);
+                if (manut && manut.fluxoCaixaId) {
+                    try { await colecoes.fluxocaixa.doc(manut.fluxoCaixaId).delete(); } catch(e) { console.error('Erro ao remover despesa do fluxo:', e); }
+                }
+                if (editandoManutencaoId === id) resetarFormManutencao();
+                try {
+                    await colecoes.manutencoes.doc(id).delete();
+                    showToast('🗑️ Manutenção excluída com sucesso!', 'info');
+                    registrarAuditoria('excluir', 'Manutenção', id, manut ? manut.descricao : '');
+                } catch (error) {
+                    console.error('Erro ao excluir manutenção:', error);
+                    showToast('❌ Erro ao excluir manutenção.', 'error');
+                }
+            };
+
+            async function salvarManutencao(dados, registrarFluxo) {
+                if (editandoManutencaoId) {
+                    await colecoes.manutencoes.doc(editandoManutencaoId).update({
+                        ...dados,
+                        dataAtualizacao: new Date().toISOString()
+                    });
+                    showToast('✅ Manutenção atualizada com sucesso!', 'success');
+                    registrarAuditoria('editar', 'Manutenção', editandoManutencaoId, dados.descricao);
+                } else {
+                    const docRef = await colecoes.manutencoes.add({
+                        ...dados,
                         dataCriacao: new Date().toISOString(),
                         dataAtualizacao: new Date().toISOString()
                     });
-                    fecharModalPdfUpload();
-                    showToast('✅ PDF salvo com sucesso na aba DOC PDF!', 'success');
-                } catch (error) {
-                    console.error('Erro ao salvar PDF:', error);
-                    errorSpan.textContent = 'Erro ao processar o arquivo.';
-                    errorSpan.style.display = 'block';
+                    if (registrarFluxo && dados.valor > 0) {
+                        const fluxoRef = await colecoes.fluxocaixa.add({
+                            descricao: `Manutenção: ${dados.veiculoNome} - ${dados.descricao}`,
+                            valor: dados.valor,
+                            tipo: 'saida',
+                            data: dados.data,
+                            categoria: 'manutencao',
+                            observacao: dados.observacao || '',
+                            dataCriacao: new Date().toISOString(),
+                            dataAtualizacao: new Date().toISOString()
+                        });
+                        await colecoes.manutencoes.doc(docRef.id).update({ fluxoCaixaId: fluxoRef.id });
+                    }
+                    showToast('✅ Manutenção registrada com sucesso!', 'success');
+                    registrarAuditoria('criar', 'Manutenção', docRef.id, dados.descricao);
                 }
+            }
+
+            function destacarAbaManutencaoAtiva() {
+                const botoes = document.querySelectorAll('#manutencao-sub-tabs .sub-tab-btn');
+                botoes.forEach(btn => {
+                    btn.classList.toggle('active', btn.getAttribute('data-placa') === placaFiltroManutencao);
+                });
+            }
+
+            function atualizarTabelaManutencoes() {
+                if (!temPermissaoAba('manutencao')) return;
+                const tbody = document.getElementById('tbody-manutencao');
+                if (!tbody) return;
+                const manutencoesFiltradas = manutencoes.filter(m => m.veiculoPlaca === placaFiltroManutencao);
+                manutencoesFiltradas.sort((a, b) => new Date(b.data) - new Date(a.data));
+
+                if (manutencoesFiltradas.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="10" class="empty-state"><span class="icon">🔧</span><br>Nenhuma manutenção registrada para a placa ${placaFiltroManutencao}</td></tr>`;
+                    return;
+                }
+                const tiposLabel = {
+                    'preventiva': '🔧 Preventiva',
+                    'corretiva': '🔩 Corretiva',
+                    'revisao': '📋 Revisão',
+                    'pneus': '🛞 Pneus',
+                    'oleo': '🛢️ Troca de Óleo',
+                    'freios': '🛑 Freios',
+                    'suspensao': '🔗 Suspensão',
+                    'eletrica': '⚡ Elétrica',
+                    'lataria': '🎨 Lataria',
+                    'outros': '📌 Outros'
+                };
+                tbody.innerHTML = manutencoesFiltradas.map(m => {
+                    const fluxoInfo = m.fluxoCaixaId ? '<span class="badge badge-success">Registrado</span>' : '<span class="badge badge-warning">Não</span>';
+                    let acoesHtml = '<td>';
+                    if (temPermissaoAcao('editar')) acoesHtml += `<button class="btn-edit" onclick="window._editarManutencao('${m.id}')">✏️</button>`;
+                    if (temPermissaoAcao('excluir')) acoesHtml += `<button class="btn-danger" onclick="window._excluirManutencao('${m.id}')">🗑️</button>`;
+                    acoesHtml += '</td>';
+                    return `<tr>
+                        <td>${m.veiculoNome || '—'}</td>
+                        <td><strong>${m.veiculoPlaca || '—'}</strong></td>
+                        <td>${m.data ? new Date(m.data + 'T00:00:00').toLocaleDateString('pt-BR') : '—'}</td>
+                        <td>${tiposLabel[m.tipo] || m.tipo || '—'}</td>
+                        <td>${m.descricao || '—'}</td>
+                        <td class="highlight-valor">${formatarMoeda(m.valor || 0)}</td>
+                        <td>${m.km ? m.km.toLocaleString('pt-BR') : '—'}</td>
+                        <td>${m.observacao || '—'}</td>
+                        <td>${fluxoInfo}</td>
+                        ${acoesHtml}
+                    </tr>`;
+                }).join('');
+                initScrollButtons();
+            }
+
+            document.querySelectorAll('#manutencao-sub-tabs .sub-tab-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const placa = this.getAttribute('data-placa');
+                    if (!temPermissaoSubAbaManutencao(placa)) {
+                        showToast('⚠️ Você não tem permissão para acessar esta sub-aba de manutenção.', 'error');
+                        return;
+                    }
+                    placaFiltroManutencao = placa;
+                    destacarAbaManutencaoAtiva();
+                    atualizarTabelaManutencoes();
+                });
+            });
+
+            document.getElementById('form-manutencao').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                if (!isAdmin() && !temPermissaoAcao('criar')) {
+                    showToast('⚠️ Você não tem permissão para registrar manutenções.', 'error');
+                    return;
+                }
+                const veiculoId = document.getElementById('m-veiculo').value;
+                const subabaPlaca = document.getElementById('m-subaba').value;
+                if (!veiculoId || !subabaPlaca) {
+                    showToast('⚠️ Selecione o veículo e a sub-aba (placa).', 'error');
+                    return;
+                }
+                if (!isAdmin() && !temPermissaoSubAbaManutencao(subabaPlaca)) {
+                    showToast('⚠️ Você não tem permissão para registrar nesta sub-aba.', 'error');
+                    return;
+                }
+                const veiculo = veiculos.find(v => v.id === veiculoId);
+                const dados = {
+                    veiculoId: veiculo.id,
+                    veiculoNome: veiculo ? `${veiculo.marca} ${veiculo.modelo}` : 'Veículo não especificado',
+                    veiculoPlaca: subabaPlaca,
+                    data: document.getElementById('m-data').value,
+                    tipo: document.getElementById('m-tipo').value,
+                    descricao: document.getElementById('m-descricao').value.trim(),
+                    valor: parseMoedaBR(document.getElementById('m-valor').value),
+                    km: parseInt(document.getElementById('m-km').value) || 0,
+                    observacao: document.getElementById('m-observacao').value.trim()
+                };
+                const registrarFluxo = document.getElementById('m-registrar-fluxo').checked;
+                if (!dados.data || !dados.tipo || !dados.descricao) {
+                    showToast('⚠️ Preencha todos os campos obrigatórios.', 'error');
+                    return;
+                }
+                await salvarManutencao(dados, registrarFluxo);
+                resetarFormManutencao();
+                if (subabaPlaca === placaFiltroManutencao) {
+                    atualizarTabelaManutencoes();
+                }
+                initScrollButtons();
+            });
+
+            document.getElementById('btn-cancel-manutencao').addEventListener('click', resetarFormManutencao);
+            document.getElementById('btn-cancel-edicao-manutencao').addEventListener('click', () => {
+                resetarFormManutencao();
+                showToast('📋 Edição cancelada.', 'info');
             });
 
             // ===================== JANELA FILTRO =====================
             function abrirJanelaFiltro() {
                 const popupHTML = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Filtro de Locações - PAIZÃO RENT CAR</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Inter','Segoe UI',system-ui,sans-serif;background:#0c0f16;color:#e0e0e0;padding:20px;min-height:100vh;display:flex;flex-direction:column}.aviso-fechar{background:rgba(231,76,60,0.2);border:1px solid rgba(231,76,60,0.5);color:#ff6b6b;padding:12px 18px;border-radius:10px;font-size:14px;font-weight:600;text-align:center;margin-bottom:16px}.header-popup{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px}.header-popup h2{color:#fff;font-size:20px}.btn-fechar-popup{background:#e74c3c;color:#fff;border:none;padding:12px 24px;border-radius:10px;cursor:pointer;font-size:15px;font-weight:700}.search-input-wrapper{flex:1;min-width:250px;position:relative}.search-input-wrapper input{width:100%;padding:12px 16px 12px 44px;background:#1a1d28;border:1px solid #1e2230;border-radius:10px;color:#fff;font-size:15px;outline:none}.search-input-wrapper input:focus{border-color:#e6a817}.clear-btn{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:transparent;border:none;color:#9a9da8;font-size:18px;cursor:pointer;display:none}.clear-btn.visible{display:block}.btn-editar{background:#2d5fcf;color:#fff;border:none;padding:4px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600}table{width:100%;border-collapse:collapse;font-size:13px;min-width:750px}table thead{background:#1a1d28}table th{padding:12px 14px;text-align:left;color:#9a9da8;text-transform:uppercase;font-size:10px;border-bottom:1px solid #1e2230}table td{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.03);color:#d0d3db}.badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600}.badge-success{background:rgba(39,174,96,0.2);color:#2ecc71}.badge-warning{background:rgba(243,156,18,0.2);color:#f39c12}.badge-info{background:rgba(45,95,207,0.2);color:#5b8def}.highlight-valor{color:#e6a817;font-weight:700}</style></head><body><div class="aviso-fechar">⚠️ Para fechar, use o <strong>BOTÃO FECHAR</strong> abaixo.</div><div class="header-popup"><h2>🔍 Filtro de Locações</h2><button class="btn-fechar-popup" id="btn-fechar-popup">✕ FECHAR</button></div><div style="display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap;"><div class="search-input-wrapper"><span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);">🔍</span><input type="text" id="popup-busca" placeholder="Pesquisar por PLACA ou CPF..." autocomplete="off"><button class="clear-btn" id="popup-clear-btn">✕</button></div><span id="popup-results-info" style="font-size:13px;color:#9a9da8;">Total: <span id="popup-count" style="color:#e6a817;font-weight:700;">0</span> locações</span><button id="popup-btn-limpar" style="display:none;background:transparent;border:1px solid #1e2230;color:#9a9da8;padding:8px 16px;border-radius:8px;cursor:pointer;">🧹 Limpar</button></div><div style="overflow-x:auto;border-radius:10px;border:1px solid #1e2230;flex:1;"><table><thead><tr><th>Veículo</th><th>Placa</th><th>Locatário</th><th>CPF</th><th>Data Início</th><th>Data Fim</th><th>Valor Semanal</th><th>Caução</th><th>Status</th><th>Ações</th></tr></thead><tbody id="popup-tbody"></tbody></table></div><script>
-                    const STORAGE_KEY='paizao_locacoes';function getLocacoes(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY))||[]}catch(e){return[]}}function formatarMoeda(v){return 'R$ '+parseFloat(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}function sanitizar(s){return(s||'').replace(/[^a-zA-Z0-9]/g,'').toLowerCase()}const inputBusca=document.getElementById('popup-busca'),clearBtn=document.getElementById('popup-clear-btn'),btnLimpar=document.getElementById('popup-btn-limpar'),tbody=document.getElementById('popup-tbody'),countSpan=document.getElementById('popup-count'),resultsInfo=document.getElementById('popup-results-info'),btnFechar=document.getElementById('btn-fechar-popup');let fechamentoPermitido=false;btnFechar.addEventListener('click',function(){fechamentoPermitido=true;window.close()});window.addEventListener('beforeunload',function(e){if(!fechamentoPermitido){e.preventDefault();e.returnValue='⚠️ Use o botão FECHAR para fechar esta janela.';return e.returnValue}});function renderizar(termo){const locacoes=getLocacoes();let filtradas=locacoes;const ts=sanitizar(termo);if(termo.trim()!==''){filtradas=locacoes.filter(l=>sanitizar(l.veiculoPlaca).includes(ts)||sanitizar(l.locatarioCPF).includes(ts));resultsInfo.innerHTML='🔍 Encontradas: <span style="color:#e6a817;font-weight:700;">'+filtradas.length+'</span> de '+locacoes.length;btnLimpar.style.display='flex';clearBtn.classList.add('visible')}else{resultsInfo.innerHTML='Total: <span style="color:#e6a817;font-weight:700;">'+filtradas.length+'</span> locações';btnLimpar.style.display='none';clearBtn.classList.remove('visible')}countSpan.textContent=filtradas.length;if(filtradas.length===0){tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:40px;">🔍 Nenhuma locação encontrada.</td></tr>';return}tbody.innerHTML=filtradas.map(l=>{let caucaoHtml=formatarMoeda(l.caucao);if(l.formaCaucao==='parcelado')caucaoHtml+=' <span class="badge badge-warning">'+(l.parcelasCaucao||'?')+'x</span>';else if(l.formaCaucao==='entrada_parcelado')caucaoHtml+=' <span class="badge badge-info">Entrada '+formatarMoeda(l.valorEntradaCaucao||0)+' + '+(l.parcelasCaucao||'?')+'x</span>';else caucaoHtml+=' <span class="badge badge-success">À vista</span>';return '<tr><td>'+l.veiculoNome+'</td><td><strong>'+l.veiculoPlaca+'</strong></td><td>'+l.locatarioNome+'</td><td>'+l.locatarioCPF+'</td><td>'+new Date(l.dataInicio).toLocaleDateString('pt-BR')+'</td><td>'+new Date(l.dataFim).toLocaleDateString('pt-BR')+'</td><td class="highlight-valor">'+formatarMoeda(l.valorSemanal)+'</td><td>'+caucaoHtml+'</td><td><span class="badge badge-info">Ativa</span></td><td><button class="btn-editar" onclick="window.editarLocacaoDaJanelaFiltro('+l.id+')">✏️ Editar</button></td></tr>'}).join('')}inputBusca.addEventListener('input',function(){renderizar(this.value)});clearBtn.addEventListener('click',function(){inputBusca.value='';renderizar('');inputBusca.focus()});btnLimpar.addEventListener('click',function(){inputBusca.value='';renderizar('');inputBusca.focus()});setInterval(()=>{renderizar(inputBusca.value)},2000);inputBusca.focus();renderizar('');
+                    const STORAGE_KEY='paizao_locacoes';function getLocacoes(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY))||[]}catch(e){return[]}}function formatarMoeda(v){return 'R$ '+parseFloat(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}function sanitizar(s){return(s||'').replace(/[^a-zA-Z0-9]/g,'').toLowerCase()}const inputBusca=document.getElementById('popup-busca'),clearBtn=document.getElementById('popup-clear-btn'),btnLimpar=document.getElementById('popup-btn-limpar'),tbody=document.getElementById('popup-tbody'),countSpan=document.getElementById('popup-count'),resultsInfo=document.getElementById('popup-results-info'),btnFechar=document.getElementById('btn-fechar-popup');let fechamentoPermitido=false;btnFechar.addEventListener('click',function(){fechamentoPermitido=true;window.close()});window.addEventListener('beforeunload',function(e){if(!fechamentoPermitido){e.preventDefault();e.returnValue='⚠️ Use o botão FECHAR para fechar esta janela.';return e.returnValue}});function renderizar(termo){const locacoes=getLocacoes();let filtradas=locacoes;const ts=sanitizar(termo);if(termo.trim()!==''){filtradas=locacoes.filter(l=>sanitizar(l.veiculoPlaca).includes(ts)||sanitizar(l.locatarioCPF).includes(ts));resultsInfo.innerHTML='🔍 Encontradas: <span style="color:#e6a817;font-weight:700;">'+filtradas.length+'</span> de '+locacoes.length;btnLimpar.style.display='flex';clearBtn.classList.add('visible')}else{resultsInfo.innerHTML='Total: <span style="color:#e6a817;font-weight:700;">'+filtradas.length+'</span> locações';btnLimpar.style.display='none';clearBtn.classList.remove('visible')}countSpan.textContent=filtradas.length;if(filtradas.length===0){tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:40px;">🔍 Nenhuma locação encontrada.</td></tr>';return}tbody.innerHTML=filtradas.map(l=>{let caucaoHtml=formatarMoeda(l.caucao);if(l.formaCaucao==='parcelado')caucaoHtml+=' <span class="badge badge-warning">'+(l.parcelasCaucao||'?')+'x</span>';else if(l.formaCaucao==='entrada_parcelado')caucaoHtml+=' <span class="badge badge-info">Entrada '+formatarMoeda(l.valorEntradaCaucao||0)+' + '+(l.parcelasCaucao||'?')+'x</span>';else caucaoHtml+=' <span class="badge badge-success">À vista</span>';return '<tr><td>'+l.veiculoNome+'</td><td><strong>'+l.veiculoPlaca+'</strong></td><td>'+l.locatarioNome+'</td><td>'+l.locatarioCPF+'</td><td>'+new Date(l.dataInicio).toLocaleDateString('pt-BR')+'</td><td>'+new Date(l.dataFim).toLocaleDateString('pt-BR')+'</td><td class="highlight-valor">'+formatarMoeda(l.valorSemanal)+'</td><td>'+caucaoHtml+'</td><td><span class="badge badge-info">Ativa</span></td><td><button class="btn-editar" onclick="window.editarLocacaoDaJanelaFiltro('+l.id+')">✏️ Editar</button></td></tr>'})}inputBusca.addEventListener('input',function(){renderizar(this.value)});clearBtn.addEventListener('click',function(){inputBusca.value='';renderizar('');inputBusca.focus()});btnLimpar.addEventListener('click',function(){inputBusca.value='';renderizar('');inputBusca.focus()});setInterval(()=>{renderizar(inputBusca.value)},2000);inputBusca.focus();renderizar('');
                 <\/script></body></html>`;
                 const janela = window.open('', 'FiltroLocacoes', `width=${screen.availWidth},height=${screen.availHeight},left=0,top=0,scrollbars=yes,resizable=yes`);
                 if (janela) { janela.document.write(popupHTML); janela.document.close(); janela.focus(); } else { showToast('⚠️ Pop-up bloqueado! Permita pop-ups para abrir o filtro.', 'error'); }
             }
-            document.getElementById('btn-filtro-locacoes-nav').addEventListener('click', function(e) { e.preventDefault(); abrirJanelaFiltro(); });
-
-            function abrirJanelaSeguro() {
-                const janela = window.open('', 'SEGURO', `width=${screen.availWidth},height=${screen.availHeight},left=0,top=0,scrollbars=yes,resizable=yes`);
-                if (janela) { janela.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>SEGURO</title></head><body style="background:#0c0f16;"></body></html>'); janela.document.close(); janela.focus(); showToast('🪟 Janela SEGURO aberta!', 'success'); } else { showToast('⚠️ Pop-up bloqueado!', 'error'); }
-            }
-            document.getElementById('btn-menu-nav').addEventListener('click', function(e) { e.preventDefault(); abrirJanelaSeguro(); });
             window.editarLocacaoDaJanelaFiltro = function(locacaoId) { if (window.opener && window.opener._editarLocacao) { window.opener._editarLocacao(locacaoId); window.opener.focus(); } try { window.close(); } catch (e) {} };
+
+            // ===================== AUDITORIA - RENDERIZAÇÃO E BUSCA =====================
+            function atualizarTabelaAuditoria() {
+                if (!isAdmin()) return;
+                const tbody = document.getElementById('tbody-auditoria');
+                let logsFiltrados = auditoriaLogs;
+                if (termoBuscaAuditoria.trim() !== '') {
+                    const termo = sanitizarParaBusca(termoBuscaAuditoria);
+                    logsFiltrados = auditoriaLogs.filter(log => 
+                        sanitizarParaBusca(log.userName || '').includes(termo) ||
+                        sanitizarParaBusca(log.acao || '').includes(termo) ||
+                        sanitizarParaBusca(log.entidade || '').includes(termo) ||
+                        sanitizarParaBusca(log.descricao || '').includes(termo)
+                    );
+                }
+                logsFiltrados.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+                atualizarContadorBuscaAuditoria(logsFiltrados.length);
+
+                if (logsFiltrados.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="empty-state"><span class="icon">📋</span><br>Nenhum registro de auditoria encontrado</td></tr>`;
+                    return;
+                }
+
+                const acaoLabels = {
+                    criar: 'Criar',
+                    editar: 'Editar',
+                    excluir: 'Excluir',
+                    login: 'Login',
+                    logout: 'Logout',
+                    upload: 'Upload',
+                    download: 'Download'
+                };
+
+                tbody.innerHTML = logsFiltrados.map(log => {
+                    let dataHora = '—';
+                    if (log.timestamp && log.timestamp.seconds) {
+                        dataHora = new Date(log.timestamp.seconds * 1000).toLocaleString('pt-BR');
+                    } else if (log.timestamp) {
+                        dataHora = new Date(log.timestamp).toLocaleString('pt-BR');
+                    }
+                    const acaoClass = log.acao || '';
+                    return `
+                        <tr>
+                            <td>${dataHora}</td>
+                            <td><strong>${log.userName || 'Sistema'}</strong></td>
+                            <td><span class="badge-acao ${acaoClass}">${acaoLabels[log.acao] || log.acao}</span></td>
+                            <td>${log.entidade || '—'}</td>
+                            <td style="white-space: normal; max-width: 300px;">${log.descricao || '—'}</td>
+                        </tr>
+                    `;
+                }).join('');
+                initScrollButtons();
+            }
+
+            function atualizarContadorBuscaAuditoria(totalFiltrado) {
+                const countNum = document.getElementById('search-count-num-auditoria');
+                const resultsInfo = document.getElementById('search-results-info-auditoria');
+                const btnLimparFiltro = document.getElementById('btn-limpar-filtro-auditoria');
+                const clearBtn = document.getElementById('clear-search-btn-auditoria');
+                if (countNum) countNum.textContent = totalFiltrado;
+                if (termoBuscaAuditoria.trim() !== '') {
+                    resultsInfo.classList.add('active-filter');
+                    resultsInfo.innerHTML = `🔍 Encontrados: <strong class="highlight-count">${totalFiltrado}</strong> de ${auditoriaLogs.length} registros`;
+                    btnLimparFiltro.style.display = 'flex';
+                    clearBtn.classList.add('visible');
+                } else {
+                    resultsInfo.classList.remove('active-filter');
+                    resultsInfo.innerHTML = `Total: <strong class="highlight-count">${totalFiltrado}</strong> registros`;
+                    btnLimparFiltro.style.display = 'none';
+                    clearBtn.classList.remove('visible');
+                }
+            }
+
+            function atualizarUIBuscaAuditoria() {
+                atualizarTabelaAuditoria();
+                const inputBusca = document.getElementById('input-busca-auditoria');
+                const clearBtn = document.getElementById('clear-search-btn-auditoria');
+                if (termoBuscaAuditoria.trim() !== '') {
+                    clearBtn.classList.add('visible');
+                } else {
+                    clearBtn.classList.remove('visible');
+                    inputBusca.value = '';
+                }
+                initScrollButtons();
+            }
+
+            const inputBuscaAuditoria = document.getElementById('input-busca-auditoria');
+            const clearSearchBtnAuditoria = document.getElementById('clear-search-btn-auditoria');
+            const btnLimparFiltroAuditoria = document.getElementById('btn-limpar-filtro-auditoria');
+
+            inputBuscaAuditoria.addEventListener('input', function() {
+                termoBuscaAuditoria = this.value;
+                atualizarUIBuscaAuditoria();
+            });
+            inputBuscaAuditoria.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    termoBuscaAuditoria = '';
+                    this.value = '';
+                    atualizarUIBuscaAuditoria();
+                    this.blur();
+                }
+            });
+            clearSearchBtnAuditoria.addEventListener('click', function() {
+                termoBuscaAuditoria = '';
+                inputBuscaAuditoria.value = '';
+                atualizarUIBuscaAuditoria();
+                inputBuscaAuditoria.focus();
+            });
+            btnLimparFiltroAuditoria.addEventListener('click', function() {
+                termoBuscaAuditoria = '';
+                inputBuscaAuditoria.value = '';
+                atualizarUIBuscaAuditoria();
+                inputBuscaAuditoria.focus();
+            });
+
+            // ===================== NOVOS BOTÕES DE DOWNLOAD NA ABA SOCORRO =====================
+            // Botão JPG
+            document.getElementById('btn-socorro-download-jpg')?.addEventListener('click', () => {
+                const jpgBase64 = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAABAAEDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYI4Q/SF5SVGFiYGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD3+iiigD//2Q==';
+                downloadDocumento(jpgBase64, 'exemplo.jpg');
+                registrarAuditoria('download', 'Socorro', '', 'Download de imagem JPG de exemplo');
+                showToast('✅ Imagem JPG baixada!', 'success');
+            });
+
+            // Botão Vídeo MP4
+            document.getElementById('btn-socorro-download-video')?.addEventListener('click', () => {
+                const videoBase64 = 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMWlzb28AAAAYc29mdHdhcmUAR0VUIC5hdmMubW92aWUAAABxc2QNCQAAAAwAAABkAAAAIAAAAAEAEAIAAQCAEAACAQAQQAAABAAAAAQAAAAAABAAAAAIAAQABAiQAAABXZAAfAAAA';
+                downloadDocumento(videoBase64, 'video.mp4');
+                registrarAuditoria('download', 'Socorro', '', 'Download de vídeo MP4 de exemplo');
+                showToast('✅ Vídeo MP4 baixado!', 'success');
+            });
+
+            // ===================== ATIVAR LISTENERS =====================
+            function ativarListenersFirestore() {
+                listenersAtivos.forEach(unsub => unsub());
+                listenersAtivos = [];
+                const unsubVeiculos = colecoes.veiculos.onSnapshot((snapshot) => {
+                    veiculos = [];
+                    snapshot.forEach(doc => { veiculos.push({ id: doc.id, ...doc.data() }); });
+                    if (dadosCarregados) {
+                        atualizarTabelaVeiculos();
+                        atualizarSelectsLocacao();
+                        atualizarSelectManutencaoVeiculos();
+                        atualizarPermissoesVeiculoGrid();
+                        atualizarPermissoesUsuarioGrid();
+                    }
+                }, (error) => { console.error('Erro listener veículos:', error); });
+                listenersAtivos.push(unsubVeiculos);
+
+                const unsubLocatarios = colecoes.locatarios.onSnapshot((snapshot) => {
+                    locatarios = [];
+                    snapshot.forEach(doc => { locatarios.push({ id: doc.id, ...doc.data() }); });
+                    if (dadosCarregados) { atualizarTabelaLocatarios(); atualizarSelectsLocacao(); }
+                }, (error) => { console.error('Erro listener locatários:', error); });
+                listenersAtivos.push(unsubLocatarios);
+
+                const unsubLocacoes = colecoes.locacoes.onSnapshot((snapshot) => {
+                    locacoes = [];
+                    snapshot.forEach(doc => { locacoes.push({ id: doc.id, ...doc.data() }); });
+                    if (dadosCarregados) { atualizarTabelaLocacoes(); atualizarSelectsLocacao(); }
+                }, (error) => { console.error('Erro listener locações:', error); });
+                listenersAtivos.push(unsubLocacoes);
+
+                const unsubFluxo = colecoes.fluxocaixa.onSnapshot((snapshot) => {
+                    fluxoCaixa = [];
+                    snapshot.forEach(doc => { fluxoCaixa.push({ id: doc.id, ...doc.data() }); });
+                    if (dadosCarregados) { atualizarResumoFluxoCaixa(); atualizarTabelaFluxoCaixa(); }
+                }, (error) => { console.error('Erro listener fluxo caixa:', error); });
+                listenersAtivos.push(unsubFluxo);
+
+                const unsubUsuarios = colecoes.usuarios.onSnapshot((snapshot) => {
+                    usuarios = [];
+                    snapshot.forEach(doc => { usuarios.push({ id: doc.id, ...doc.data() }); });
+                    if (dadosCarregados) {
+                        atualizarTabelaUsuarios();
+                        atualizarPermissoesVeiculoGrid();
+                        atualizarPermissoesUsuarioGrid();
+                    }
+                }, (error) => { console.error('Erro listener usuários:', error); });
+                listenersAtivos.push(unsubUsuarios);
+
+                const unsubGaragem = colecoes.garagem.onSnapshot((snapshot) => {
+                    garagem = [];
+                    snapshot.forEach(doc => { garagem.push({ id: doc.id, ...doc.data() }); });
+                    if (dadosCarregados) { atualizarGaragem(); }
+                }, (error) => { console.error('Erro listener garagem:', error); });
+                listenersAtivos.push(unsubGaragem);
+
+                const unsubCarroPdfs = colecoes.carroPdfs.onSnapshot((snapshot) => {
+                    carroPdfs = [];
+                    snapshot.forEach(doc => { carroPdfs.push({ id: doc.id, ...doc.data() }); });
+                    if (dadosCarregados) { atualizarSubAbasCarro(); }
+                }, (error) => { console.error('Erro listener carro pdfs:', error); });
+                listenersAtivos.push(unsubCarroPdfs);
+
+                const unsubManutencoes = colecoes.manutencoes.onSnapshot((snapshot) => {
+                    manutencoes = [];
+                    snapshot.forEach(doc => { manutencoes.push({ id: doc.id, ...doc.data() }); });
+                    if (dadosCarregados) { atualizarTabelaManutencoes(); }
+                }, (error) => { console.error('Erro listener manutenções:', error); });
+                listenersAtivos.push(unsubManutencoes);
+
+                // LISTENER PARA AUDITORIA
+                const unsubAuditoria = colecoes.auditoria.orderBy('timestamp', 'desc').onSnapshot((snapshot) => {
+                    auditoriaLogs = [];
+                    snapshot.forEach(doc => { auditoriaLogs.push({ id: doc.id, ...doc.data() }); });
+                    if (dadosCarregados) {
+                        atualizarTabelaAuditoria();
+                    }
+                }, (error) => { console.error('Erro listener auditoria:', error); });
+                listenersAtivos.push(unsubAuditoria);
+
+                setTimeout(() => { if (!dadosCarregados) { dadosCarregados = true; inicializarInterface(); } }, 500);
+            }
+
+            function atualizarIndicadorSync(online) {
+                const indicador = document.getElementById('sync-indicator');
+                const syncText = document.getElementById('sync-text');
+                if (indicador && syncText) {
+                    indicador.className = 'sync-indicator ' + (online ? 'online' : 'offline');
+                    syncText.textContent = online ? 'Online' : 'Offline';
+                }
+            }
+            window.addEventListener('online', () => atualizarIndicadorSync(true));
+            window.addEventListener('offline', () => atualizarIndicadorSync(false));
 
             // ===================== INICIALIZAÇÃO =====================
             document.getElementById('mobile-menu-toggle')?.addEventListener('click', function() { document.getElementById('top-nav').classList.toggle('open'); });
@@ -2944,7 +4173,8 @@
             garantirAdminPadrao();
             console.log('🚗 PAIZÃO RENT CAR - Sistema SEM Storage (Base64 no Firestore)');
             console.log('👤 Admin: SERGIO / 080888');
-            console.log('⚠️ Limite: documentos de até 500KB (total < 1MB por documento no Firestore).');
+            console.log('✅ Auditoria ativada: todas as ações são registradas automaticamente');
+            console.log('🆘 Botões de download (JPG e MP4) adicionados na aba Socorro');
         })();
     </script>
 </body>

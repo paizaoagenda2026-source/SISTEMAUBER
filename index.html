@@ -1330,7 +1330,7 @@
             }
         }
 
-        /* Estilos para sub-abas do CARRO */
+        /* Estilos para sub-abas do DOC (antigo CARRO) */
         .sub-tabs {
             display: flex;
             gap: 8px;
@@ -1438,6 +1438,28 @@
             background: #c0392b;
             box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4);
         }
+        /* Estilos para itens do banco */
+        .banco-item {
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .banco-item .banco-dados {
+            flex: 1;
+            min-width: 200px;
+            line-height: 1.6;
+        }
+        .banco-item .banco-actions {
+            display: flex;
+            gap: 6px;
+        }
     </style>
 </head>
 <body>
@@ -1479,7 +1501,7 @@
                 <button class="active" data-page="veiculos"><span class="nav-icon">🚙</span> Veículos</button>
                 <button data-page="garagem"><span class="nav-icon">🖼️</span> Garagem</button>
                 <button data-page="socorro"><span class="nav-icon">🆘</span> Socorro</button>
-                <button data-page="carro" id="btn-menu-nav"><span class="nav-icon">🚘</span> CARRO</button>
+                <button data-page="carro" id="btn-menu-nav"><span class="nav-icon">🚘</span> DOC</button>
                 <button data-page="locatarios" class="nav-admin-only"><span class="nav-icon">👥</span> Locatários</button>
                 <button data-page="manutencao" class="nav-admin-only" style="border:1px solid var(--border);"><span class="nav-icon">🔧</span> Manutenção</button>
                 <button data-page="fluxocaixa" class="nav-admin-only" style="border:1px solid var(--border);"><span class="nav-icon">💰</span> Fluxo de Caixa</button>
@@ -1601,9 +1623,9 @@
                 </div>
             </div>
 
-            <!-- CARRO (com sub-abas) -->
+            <!-- DOC (antigo CARRO) -->
             <div class="page" id="page-carro">
-                <div class="page-header"><h2>🚘 CARRO</h2><p>Informações e sub-abas do veículo</p></div>
+                <div class="page-header"><h2>🚘 DOC</h2><p>Informações e sub-abas do veículo</p></div>
                 <div class="card">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
                         <div class="sub-tabs" id="carro-sub-tabs" style="margin-bottom: 0; padding-bottom: 0; border-bottom: none;">
@@ -1805,7 +1827,7 @@
                 </div>
             </div>
 
-            <!-- BANCO (nova aba) -->
+            <!-- BANCO (MÚLTIPLOS LANÇAMENTOS) -->
             <div class="page" id="page-banco">
                 <div class="page-header"><h2>🏦 Dados Bancários</h2><p>Cadastre as informações da conta bancária para recebimentos via Pix</p></div>
                 <div class="card" id="card-form-banco">
@@ -1836,15 +1858,15 @@
                         <div style="display:flex; gap:12px; margin-top:16px;">
                             <button type="submit" class="btn-app btn-save" id="btn-salvar-banco">💾 Salvar Dados Bancários</button>
                             <button type="button" class="btn-app btn-cancel" id="btn-cancel-banco">Limpar</button>
+                            <button type="button" class="btn-app btn-cancel" id="btn-cancel-edicao-banco" style="display:none;">❌ Cancelar Edição</button>
                         </div>
                     </form>
                 </div>
                 <div class="card" id="card-banco-visualizacao" style="display:none;">
-                    <div class="card-title"><span class="icon">📋</span> Dados Salvos</div>
+                    <div class="card-title"><span class="icon">📋</span> Contas Bancárias Cadastradas</div>
                     <div id="banco-info-display" style="color:#d0d3db; font-size:14px; line-height:2;">
                         <!-- preenchido dinamicamente -->
                     </div>
-                    <button type="button" class="btn-app btn-edit" id="btn-editar-banco" style="margin-top:12px;">✏️ Editar</button>
                 </div>
             </div>
 
@@ -1866,7 +1888,7 @@
                                     <label><input type="checkbox" class="perm-abas-check" value="veiculos"> 🚙 Veículos</label>
                                     <label><input type="checkbox" class="perm-abas-check" value="garagem"> 🖼️ Garagem</label>
                                     <label><input type="checkbox" class="perm-abas-check" value="socorro"> 🆘 Socorro</label>
-                                    <label><input type="checkbox" class="perm-abas-check" value="carro"> 🚘 CARRO</label>
+                                    <label><input type="checkbox" class="perm-abas-check" value="carro"> 🚘 DOC</label>
                                     <label><input type="checkbox" class="perm-abas-check" value="locatarios"> 👥 Locatários</label>
                                     <label><input type="checkbox" class="perm-abas-check" value="locacoes"> 📋 Locações</label>
                                     <label><input type="checkbox" class="perm-abas-check" value="manutencao"> 🔧 Manutenção</label>
@@ -1878,7 +1900,7 @@
                             </div>
                         </div>
                         <div class="section-divider">
-                            <div class="form-group-app"><label>🚘 Sub-Abas do CARRO Permitidas</label>
+                            <div class="form-group-app"><label>🚘 Sub-Abas do DOC Permitidas</label>
                                 <div class="permissoes-grid" id="permissoes-subabas-carro-grid">
                                     <label><input type="checkbox" class="perm-subabas-carro-check" value="QMK3B93"> 🔹 QMK3B93</label>
                                     <label><input type="checkbox" class="perm-subabas-carro-check" value="GIW0G03"> 🔹 GIW0G03</label>
@@ -1926,7 +1948,7 @@
                     <div class="table-wrapper" id="table-wrapper-usuarios">
                         <button class="scroll-btn scroll-btn-left" aria-label="Rolar para esquerda">◀</button>
                         <button class="scroll-btn scroll-btn-right" aria-label="Rolar para direita">▶</button>
-                        <table id="tabela-usuarios"><thead><tr><th>Nome</th><th>Login</th><th>Perfil</th><th>Abas</th><th>Sub-Abas CARRO</th><th>Sub-Abas Manutenção</th><th>Ações (Botões)</th><th>Veículos</th><th>Data Criação</th><th>Ações</th></tr></thead><tbody id="tbody-usuarios"><tr><td colspan="10" class="empty-state"><span class="icon">👤</span><br>Nenhum usuário cadastrado</td></tr></tbody></table>
+                        <table id="tabela-usuarios"><thead><tr><th>Nome</th><th>Login</th><th>Perfil</th><th>Abas</th><th>Sub-Abas DOC</th><th>Sub-Abas Manutenção</th><th>Ações (Botões)</th><th>Veículos</th><th>Data Criação</th><th>Ações</th></tr></thead><tbody id="tbody-usuarios"><tr><td colspan="10" class="empty-state"><span class="icon">👤</span><br>Nenhum usuário cadastrado</td></tr></tbody></table>
                     </div>
                 </div>
             </div>
@@ -2028,11 +2050,11 @@
         </div>
     </div>
 
-    <!-- Modal de Upload de PDF para Sub-Aba do CARRO -->
+    <!-- Modal de Upload de PDF para Sub-Aba do DOC (antigo CARRO) -->
     <div class="docs-modal-overlay" id="modal-carro-pdf-overlay">
         <div class="docs-modal">
             <div class="docs-modal-header">
-                <h3>📎 Upload de PDF para Sub-Aba do CARRO</h3>
+                <h3>📎 Upload de PDF para Sub-Aba do DOC</h3>
                 <button class="docs-modal-close" id="modal-carro-pdf-close">✕</button>
             </div>
             <div class="form-group-app">
@@ -2117,7 +2139,7 @@
             let manutencoes = [];
             let auditoriaLogs = [];
             let socorroImagens = [];
-            let dadosBanco = null;
+            let dadosBancoLista = [];
             let usuarioLogado = null;
 
             let editandoVeiculoId = null;
@@ -2126,6 +2148,7 @@
             let editandoFluxoId = null;
             let editandoUsuarioId = null;
             let editandoManutencaoId = null;
+            let editandoBancoId = null;
             let termoBuscaLocacoes = '';
             let termoBuscaFluxo = '';
             let termoBuscaAuditoria = '';
@@ -2769,7 +2792,6 @@
 
             function inicializarInterface() {
                 atualizarUIporPerfil();
-                // Após login, sempre abre na aba Garagem
                 navegarPara('garagem');
                 initScrollButtons();
                 atualizarIndicadorSync(navigator.onLine);
@@ -3813,7 +3835,7 @@
                 } catch (error) { console.error('Erro ao salvar PDF:', error); errorSpan.textContent = 'Erro ao processar o arquivo.'; errorSpan.style.display = 'block'; }
             });
 
-            // ===================== SUB-ABAS DO CARRO =====================
+            // ===================== SUB-ABAS DO DOC (ANTIGO CARRO) =====================
             function atualizarSubAbasCarro() {
                 const subAbas = ['QMK3B93', 'GIW0G03', 'QNC2C21', 'BYQ4E06'];
                 subAbas.forEach(subaba => {
@@ -3830,7 +3852,7 @@
                                 <div class="carro-pdf-item">
                                     <span>📄 ${nome}</span>
                                     <div class="carro-pdf-actions">
-                                        <button class="btn-pdf" onclick="event.preventDefault(); downloadDocumento('${pdf.base64}', '${nomeEscaped}'); registrarAuditoria('download', 'CARRO PDF', '${pdf.id}', 'Download: ${nome}')">📥 Download</button>
+                                        <button class="btn-pdf" onclick="event.preventDefault(); downloadDocumento('${pdf.base64}', '${nomeEscaped}'); registrarAuditoria('download', 'DOC PDF', '${pdf.id}', 'Download: ${nome}')">📥 Download</button>
                                         <button class="btn-danger" onclick="window._excluirCarroPdf('${pdf.id}')">🗑️</button>
                                     </div>
                                 </div>
@@ -3852,7 +3874,7 @@
                 try { 
                     await colecoes.carroPdfs.doc(id).delete(); 
                     showToast('🗑️ PDF excluído com sucesso!', 'info'); 
-                    registrarAuditoria('excluir', 'CARRO PDF', id, pdf ? pdf.nome : '');
+                    registrarAuditoria('excluir', 'DOC PDF', id, pdf ? pdf.nome : '');
                 } catch (error) { 
                     console.error('Erro ao excluir PDF da sub-aba:', error); 
                     showToast('❌ Erro ao excluir PDF.', 'error'); 
@@ -3896,7 +3918,7 @@
                     const docRef = await colecoes.carroPdfs.add({ subaba: subaba, nome: nome, base64: base64, dataCriacao: new Date().toISOString(), dataAtualizacao: new Date().toISOString() });
                     fecharModalCarroPdf();
                     showToast('✅ PDF salvo na sub-aba ' + subaba + ' com sucesso!', 'success');
-                    registrarAuditoria('upload', 'CARRO PDF', docRef.id, `${nome} (sub-aba ${subaba})`);
+                    registrarAuditoria('upload', 'DOC PDF', docRef.id, `${nome} (sub-aba ${subaba})`);
                     const tabBtn = document.querySelector(`#carro-sub-tabs .sub-tab-btn[data-subtab="${subaba}"]`);
                     if (tabBtn) tabBtn.click();
                 } catch (error) { console.error('Erro ao salvar PDF na sub-aba:', error); errorSpan.textContent = 'Erro ao processar o arquivo.'; errorSpan.style.display = 'block'; }
@@ -4293,56 +4315,108 @@
                 inputBuscaAuditoria.focus();
             });
 
-            // ===================== BANCO =====================
-            function atualizarDadosBanco() {
-                const cardVisualizacao = document.getElementById('card-banco-visualizacao');
-                const display = document.getElementById('banco-info-display');
-                if (!dadosBanco) {
-                    if (cardVisualizacao) cardVisualizacao.style.display = 'none';
-                    document.getElementById('b-banco').value = '';
-                    document.getElementById('b-agencia').value = '';
-                    document.getElementById('b-conta').value = '';
-                    document.getElementById('b-titular').value = '';
-                    document.getElementById('b-pix').value = '';
-                    return;
-                }
-                if (cardVisualizacao) cardVisualizacao.style.display = 'block';
-                if (display) {
-                    display.innerHTML = `
-                        <strong>🏦 Banco:</strong> ${dadosBanco.banco || '—'}<br>
-                        <strong>🏢 Agência:</strong> ${dadosBanco.agencia || '—'}<br>
-                        <strong>🔢 Conta:</strong> ${dadosBanco.conta || '—'}<br>
-                        <strong>👤 Titular:</strong> ${dadosBanco.titular || '—'}<br>
-                        <strong>🔑 Pix:</strong> ${dadosBanco.pix || '—'} 
-                        <button class="btn-copiar-pix" onclick="window._copiarPix()" title="Copiar apenas números do Pix">📋 Copiar</button><br>
-                        <small style="color:var(--text-muted);">Última atualização: ${dadosBanco.dataAtualizacao ? new Date(dadosBanco.dataAtualizacao).toLocaleString('pt-BR') : '—'}</small>
-                    `;
-                }
-                document.getElementById('b-banco').value = dadosBanco.banco || '';
-                document.getElementById('b-agencia').value = dadosBanco.agencia || '';
-                document.getElementById('b-conta').value = dadosBanco.conta || '';
-                document.getElementById('b-titular').value = dadosBanco.titular || '';
-                document.getElementById('b-pix').value = dadosBanco.pix || '';
+            // ===================== BANCO (MÚLTIPLOS LANÇAMENTOS, SEM SOBRESCREVER) =====================
+            function resetarFormBanco() {
+                document.getElementById('form-banco').reset();
+                editandoBancoId = null;
+                document.getElementById('btn-salvar-banco').textContent = '💾 Salvar Dados Bancários';
+                document.getElementById('btn-cancel-edicao-banco').style.display = 'none';
             }
 
-            // Função para copiar apenas os números da chave Pix
-            window._copiarPix = function() {
-                if (!dadosBanco || !dadosBanco.pix) {
-                    showToast('⚠️ Nenhuma chave Pix cadastrada.', 'error');
+            document.getElementById('btn-cancel-banco').addEventListener('click', function() {
+                resetarFormBanco();
+                showToast('📋 Campos limpos.', 'info');
+            });
+
+            document.getElementById('btn-cancel-edicao-banco').addEventListener('click', function() {
+                resetarFormBanco();
+                showToast('📋 Edição cancelada.', 'info');
+            });
+
+            function preencherFormBanco(item) {
+                document.getElementById('b-banco').value = item.banco || '';
+                document.getElementById('b-agencia').value = item.agencia || '';
+                document.getElementById('b-conta').value = item.conta || '';
+                document.getElementById('b-titular').value = item.titular || '';
+                document.getElementById('b-pix').value = item.pix || '';
+                editandoBancoId = item.id;
+                document.getElementById('btn-salvar-banco').textContent = '💾 Atualizar Conta';
+                document.getElementById('btn-cancel-edicao-banco').style.display = 'inline-block';
+                document.getElementById('card-form-banco').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                document.getElementById('b-banco').focus();
+            }
+
+            window._editarContaBanco = function(id) {
+                const item = dadosBancoLista.find(b => b.id === id);
+                if (!item) return;
+                preencherFormBanco(item);
+            };
+
+            window._excluirContaBanco = async function(id) {
+                const senha = prompt('Digite a senha para excluir esta conta:');
+                if (senha !== '080888') {
+                    showToast('❌ Senha incorreta!', 'error');
                     return;
                 }
-                const numeros = dadosBanco.pix.replace(/\D/g, '');
+                if (!confirm('Tem certeza que deseja excluir esta conta bancária?')) return;
+                try {
+                    await colecoes.banco.doc(id).delete();
+                    if (editandoBancoId === id) resetarFormBanco();
+                    showToast('🗑️ Conta excluída com sucesso!', 'info');
+                    registrarAuditoria('excluir', 'Banco', id, 'Conta bancária excluída');
+                } catch (error) {
+                    console.error('Erro ao excluir conta:', error);
+                    showToast('❌ Erro ao excluir.', 'error');
+                }
+            };
+
+            window._copiarPix = function(pix) {
+                if (!pix) {
+                    showToast('⚠️ Chave Pix não informada.', 'error');
+                    return;
+                }
+                const numeros = pix.replace(/\D/g, '');
                 if (numeros === '') {
                     showToast('⚠️ A chave Pix não contém números.', 'error');
                     return;
                 }
                 navigator.clipboard.writeText(numeros).then(() => {
                     showToast('✅ Pix copiado (somente números)!', 'success');
-                    registrarAuditoria('download', 'Banco', 'info', 'Cópia do Pix (apenas números)');
+                    registrarAuditoria('download', 'Banco', 'info', 'Cópia do Pix');
                 }).catch(() => {
-                    showToast('❌ Erro ao copiar. Tente novamente.', 'error');
+                    showToast('❌ Erro ao copiar.', 'error');
                 });
             };
+
+            function atualizarDadosBanco() {
+                const cardVisualizacao = document.getElementById('card-banco-visualizacao');
+                const display = document.getElementById('banco-info-display');
+                if (!dadosBancoLista || dadosBancoLista.length === 0) {
+                    if (cardVisualizacao) cardVisualizacao.style.display = 'none';
+                    return;
+                }
+                if (cardVisualizacao) cardVisualizacao.style.display = 'block';
+                let html = '';
+                dadosBancoLista.forEach(item => {
+                    html += `
+                        <div class="banco-item">
+                            <div class="banco-dados">
+                                <strong>🏦 Banco:</strong> ${item.banco || '—'}<br>
+                                <strong>🏢 Agência:</strong> ${item.agencia || '—'}<br>
+                                <strong>🔢 Conta:</strong> ${item.conta || '—'}<br>
+                                <strong>👤 Titular:</strong> ${item.titular || '—'}<br>
+                                <strong>🔑 Pix:</strong> ${item.pix || '—'} 
+                                <button class="btn-copiar-pix" onclick="window._copiarPix('${(item.pix || '').replace(/'/g, "\\'")}')" title="Copiar apenas números do Pix">📋 Copiar</button>
+                            </div>
+                            <div class="banco-actions">
+                                <button class="btn-edit" onclick="window._editarContaBanco('${item.id}')">✏️</button>
+                                <button class="btn-danger" onclick="window._excluirContaBanco('${item.id}')">🗑️</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                display.innerHTML = html;
+            }
 
             const formBanco = document.getElementById('form-banco');
             formBanco.addEventListener('submit', async function(e) {
@@ -4360,34 +4434,23 @@
                     dataAtualizacao: new Date().toISOString()
                 };
                 try {
-                    await colecoes.banco.doc('info').set(dados, { merge: true });
-                    formBanco.reset(); // Limpar campos após salvar
-                    showToast('✅ Dados bancários salvos com sucesso!', 'success');
-                    registrarAuditoria('editar', 'Banco', 'info', 'Dados bancários atualizados');
+                    if (editandoBancoId) {
+                        await colecoes.banco.doc(editandoBancoId).update(dados);
+                        showToast('✅ Conta atualizada com sucesso!', 'success');
+                        registrarAuditoria('editar', 'Banco', editandoBancoId, 'Conta atualizada');
+                    } else {
+                        const docRef = await colecoes.banco.add({
+                            ...dados,
+                            dataCriacao: new Date().toISOString()
+                        });
+                        showToast('✅ Nova conta bancária adicionada!', 'success');
+                        registrarAuditoria('criar', 'Banco', docRef.id, 'Nova conta bancária');
+                    }
+                    resetarFormBanco();
                 } catch (error) {
                     console.error('Erro ao salvar dados bancários:', error);
-                    showToast('❌ Erro ao salvar dados bancários.', 'error');
+                    showToast('❌ Erro ao salvar.', 'error');
                 }
-            });
-
-            document.getElementById('btn-cancel-banco').addEventListener('click', function() {
-                if (dadosBanco) {
-                    document.getElementById('b-banco').value = dadosBanco.banco || '';
-                    document.getElementById('b-agencia').value = dadosBanco.agencia || '';
-                    document.getElementById('b-conta').value = dadosBanco.conta || '';
-                    document.getElementById('b-titular').value = dadosBanco.titular || '';
-                    document.getElementById('b-pix').value = dadosBanco.pix || '';
-                } else {
-                    formBanco.reset();
-                }
-                showToast('📋 Campos restaurados.', 'info');
-            });
-
-            // BOTÃO EDITAR BANCO (NOVO)
-            document.getElementById('btn-editar-banco').addEventListener('click', function() {
-                // Rola até o formulário de edição e foca no primeiro campo
-                document.getElementById('card-form-banco').scrollIntoView({ behavior: 'smooth', block: 'start' });
-                document.getElementById('b-banco').focus();
             });
 
             // ===================== ATIVAR LISTENERS =====================
@@ -4478,12 +4541,9 @@
                 }, (error) => { console.error('Erro listener socorro imagens:', error); });
                 listenersAtivos.push(unsubSocorro);
 
-                const unsubBanco = colecoes.banco.doc('info').onSnapshot((doc) => {
-                    if (doc.exists) {
-                        dadosBanco = { id: doc.id, ...doc.data() };
-                    } else {
-                        dadosBanco = null;
-                    }
+                const unsubBanco = colecoes.banco.onSnapshot((snapshot) => {
+                    dadosBancoLista = [];
+                    snapshot.forEach(doc => { dadosBancoLista.push({ id: doc.id, ...doc.data() }); });
                     if (dadosCarregados) {
                         atualizarDadosBanco();
                     }
@@ -4517,8 +4577,8 @@
             console.log('✅ Auditoria ativada: todas as ações são registradas automaticamente');
             console.log('🆘 Upload de imagens na aba Socorro ativado');
             console.log('🗑️ Botão Limpar Log na aba Auditoria adicionado');
-            console.log('🏦 Aba Banco agora disponível para usuários com a permissão da aba "banco"');
-            console.log('🖼️ Após login, a aba Garagem é aberta por padrão');
+            console.log('🏦 Banco agora salva múltiplas contas (não sobrescreve) e lista todas');
+            console.log('📄 Aba CARRO renomeada para DOC');
         })();
     </script>
 </body>

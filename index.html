@@ -2202,8 +2202,11 @@
                     const page = btn.getAttribute('data-page');
                     if (page === 'veiculos' || page === 'garagem' || page === 'carro' || page === 'socorro') {
                         btn.style.display = '';
-                    } else if (page === 'auditoria' || page === 'banco') {
+                    } else if (page === 'auditoria') {
                         btn.style.display = isAdmin() ? '' : 'none';
+                    } else if (page === 'banco') {
+                        // Agora exibe para qualquer usuário com permissão da aba "banco"
+                        btn.style.display = temPermissaoAba('banco') ? '' : 'none';
                     } else {
                         btn.style.display = temPermissaoAba(page) ? '' : 'none';
                     }
@@ -2720,8 +2723,13 @@
                     showToast('⚠️ Você não tem permissão para acessar esta aba.', 'error');
                     return;
                 }
-                if ((pageName === 'auditoria' || pageName === 'banco') && !isAdmin()) {
+                // Permissão especial para auditoria (só admin) e banco (quem tem permissão)
+                if (pageName === 'auditoria' && !isAdmin()) {
                     showToast('⚠️ Apenas o administrador pode acessar esta aba.', 'error');
+                    return;
+                }
+                if (pageName === 'banco' && !temPermissaoAba('banco')) {
+                    showToast('⚠️ Você não tem permissão para acessar esta aba.', 'error');
                     return;
                 }
                 pages.forEach(p => p.classList.remove('active'));
@@ -2739,7 +2747,7 @@
                 if (pageName === 'locacoes' && temPermissaoAba('locacoes')) { atualizarSelectsLocacao(); atualizarTabelaLocacoes(); initScrollButtons(); if (termoBuscaLocacoes) { document.getElementById('input-busca-locacoes').value = termoBuscaLocacoes; atualizarUIBuscaLocacoes(); } }
                 if (pageName === 'manutencao' && temPermissaoAba('manutencao')) { atualizarSelectManutencaoVeiculos(); aplicarRestricoesSubAbasManutencao(); destacarAbaManutencaoAtiva(); atualizarTabelaManutencoes(); initScrollButtons(); }
                 if (pageName === 'fluxocaixa' && temPermissaoAba('fluxocaixa')) { atualizarResumoFluxoCaixa(); atualizarTabelaFluxoCaixa(); initScrollButtons(); if (termoBuscaFluxo) { document.getElementById('input-busca-fluxo').value = termoBuscaFluxo; atualizarUIBuscaFluxo(); } }
-                if (pageName === 'banco' && isAdmin()) { atualizarDadosBanco(); }
+                if (pageName === 'banco' && temPermissaoAba('banco')) { atualizarDadosBanco(); }
                 if (pageName === 'usuarios' && temPermissaoAba('usuarios')) { atualizarTabelaUsuarios(); atualizarPermissoesUsuarioGrid(); initScrollButtons(); }
                 if (pageName === 'auditoria') { atualizarTabelaAuditoria(); initScrollButtons(); if (termoBuscaAuditoria) { document.getElementById('input-busca-auditoria').value = termoBuscaAuditoria; atualizarUIBuscaAuditoria(); } }
             }
@@ -4344,8 +4352,8 @@
             const formBanco = document.getElementById('form-banco');
             formBanco.addEventListener('submit', async function(e) {
                 e.preventDefault();
-                if (!isAdmin()) {
-                    showToast('⚠️ Apenas o administrador pode alterar os dados bancários.', 'error');
+                if (!temPermissaoAcao('editar')) {
+                    showToast('⚠️ Você não tem permissão para alterar os dados bancários.', 'error');
                     return;
                 }
                 const dados = {
@@ -4358,6 +4366,7 @@
                 };
                 try {
                     await colecoes.banco.doc('info').set(dados, { merge: true });
+                    formBanco.reset(); // Limpar campos após salvar
                     showToast('✅ Dados bancários salvos com sucesso!', 'success');
                     registrarAuditoria('editar', 'Banco', 'info', 'Dados bancários atualizados');
                 } catch (error) {
@@ -4513,7 +4522,7 @@
             console.log('✅ Auditoria ativada: todas as ações são registradas automaticamente');
             console.log('🆘 Upload de imagens na aba Socorro ativado');
             console.log('🗑️ Botão Limpar Log na aba Auditoria adicionado');
-            console.log('🏦 Aba Banco adicionada com campos: Banco, Agência, Conta, Titular, Pix e botão Editar');
+            console.log('🏦 Aba Banco agora disponível para usuários com a permissão da aba "banco"');
         })();
     </script>
 </body>

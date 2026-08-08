@@ -801,7 +801,6 @@
                 <button data-page="carro" id="btn-menu-nav"><span class="nav-icon">🚘</span> DOC</button>
                 <button data-page="locatarios" class="nav-admin-only"><span class="nav-icon">👥</span> Locatários</button>
                 <button data-page="manutencao" class="nav-admin-only" style="border:1px solid var(--border);"><span class="nav-icon">🔧</span> Manutenção</button>
-                <button data-page="fluxocaixa" class="nav-admin-only" style="border:1px solid var(--border);"><span class="nav-icon">💰</span> Fluxo de Caixa</button>
                 <button data-page="banco" class="nav-admin-only" style="border:1px solid var(--border);"><span class="nav-icon">🏦</span> Banco</button>
                 <button data-page="usuarios" class="nav-admin-only" style="border:1px solid var(--accent);"><span class="nav-icon">👤</span> Usuários</button>
                 <button data-page="auditoria" class="nav-admin-only" style="border:1px solid var(--accent);"><span class="nav-icon">📋</span> Auditoria</button>
@@ -1043,7 +1042,7 @@
                     <form id="form-manutencao" autocomplete="off">
                         <div class="grid-3">
                             <div class="form-group-app"><label>Veículo (Modelo/Marca)</label><select id="m-veiculo" required><option value="">Selecione um veículo...</option></select></div>
-                            <div class="form-group-app"><label>Sub-Aba (Placa do Veículo)</label><select id="m-subaba" required><option value="">Escolha a sub-aba...</option><option value="QMK3B93">QMK3B93</option><option value="QYB4E06">QYB4E06</option><option value="QNC2C21">QNC2C21</option><option value="GIW0G03">GIW0G03</option></select></div>
+                            <div class="form-group-app"><label>Sub-Aba (Placa do Veículo)</label><select id="m-subaba" required><option value="">Escolha a sub-aba...</option><option value="QMK3B93">QMK3B93</option><option value="BYQ4E06">BYQ4E06</option><option value="QNC2C21">QNC2C21</option><option value="GIW0G03">GIW0G03</option></select></div>
                             <div class="form-group-app"><label>Data da Manutenção</label><input type="date" id="m-data" required></div>
                             <div class="form-group-app"><label>Tipo de Manutenção</label><select id="m-tipo" required><option value="">Selecione o tipo...</option><option value="preventiva">🔧 Preventiva</option><option value="corretiva">🔩 Corretiva</option><option value="revisao">📋 Revisão Programada</option><option value="pneus">🛞 Pneus</option><option value="oleo">🛢️ Troca de Óleo</option><option value="freios">🛑 Freios</option><option value="suspensao">🔗 Suspensão</option><option value="eletrica">⚡ Elétrica</option><option value="lataria">🎨 Lataria / Pintura</option><option value="outros">📌 Outros</option></select></div>
                             <div class="form-group-app"><label>Descrição do Serviço</label><input type="text" id="m-descricao" placeholder="Ex: Troca de pastilhas de freio dianteiras" required></div>
@@ -1067,7 +1066,7 @@
                     <div class="card-title"><span class="icon">📋</span> Histórico de Manutenções</div>
                     <div class="sub-tabs" id="manutencao-sub-tabs">
                         <button class="sub-tab-btn active" data-placa="QMK3B93">QMK3B93</button>
-                        <button class="sub-tab-btn" data-placa="QYB4E06">QYB4E06</button>
+                        <button class="sub-tab-btn" data-placa="BYQ4E06">BYQ4E06</button>
                         <button class="sub-tab-btn" data-placa="QNC2C21">QNC2C21</button>
                         <button class="sub-tab-btn" data-placa="GIW0G03">GIW0G03</button>
                     </div>
@@ -1082,50 +1081,7 @@
                 </div>
             </div>
 
-            <!-- Fluxo de Caixa -->
-            <div class="page" id="page-fluxocaixa">
-                <div class="page-header"><h2>💰 Fluxo de Caixa</h2><p>Registre entradas e saídas financeiras e acompanhe o saldo</p></div>
-                <div class="stats-row" id="stats-row-fluxo">
-                    <div class="stat-card entrada-card"><div class="stat-icon">📥</div><div class="stat-value" id="stat-total-entradas">R$ 0,00</div><div class="stat-label">Total de Entradas</div></div>
-                    <div class="stat-card saida-card"><div class="stat-icon">📤</div><div class="stat-value" id="stat-total-saidas">R$ 0,00</div><div class="stat-label">Total de Saídas</div></div>
-                    <div class="stat-card saldo-card" id="stat-saldo-card"><div class="stat-icon">💵</div><div class="stat-value" id="stat-saldo-atual">R$ 0,00</div><div class="stat-label">Saldo Atual</div></div>
-                </div>
-                <div class="card" id="card-form-fluxo">
-                    <div class="card-title"><span class="icon">📝</span> <span id="fluxo-form-title">Nova Transação</span></div>
-                    <div class="edit-banner" id="edit-banner-fluxo">✏️ <span id="edit-banner-fluxo-text">Você está editando uma transação existente.</span></div>
-                    <form id="form-fluxo" autocomplete="off">
-                        <div class="grid-3">
-                            <div class="form-group-app"><label>Descrição da Transação</label><input type="text" id="f-descricao" placeholder="Ex: Pagamento de aluguel, Abastecimento, etc." required></div>
-                            <div class="form-group-app"><label>Valor (R$)</label><input type="text" id="f-valor" placeholder="R$ 0,00" step="0.01" min="0.01" required oninput="formatarMoedaInput(this)" onblur="formatarMoedaInputBlur(this)"></div>
-                            <div class="form-group-app"><label>Tipo de Transação</label><select id="f-tipo" required><option value="">Selecione o tipo...</option><option value="entrada">📥 Entrada (Receita)</option><option value="saida">📤 Saída (Despesa)</option></select></div>
-                        </div>
-                        <div class="grid-3">
-                            <div class="form-group-app"><label>Data da Transação</label><input type="date" id="f-data" required></div>
-                            <div class="form-group-app"><label>Categoria (opcional)</label><select id="f-categoria"><option value="">Geral / Outros</option><option value="locacao">Locação de Veículo</option><option value="manutencao">Manutenção</option><option value="combustivel">Combustível</option><option value="imposto">Imposto / Taxa</option><option value="multa">Multa</option><option value="seguro">Seguro</option><option value="outros">Outros</option></select></div>
-                            <div class="form-group-app"><label>Observação (opcional)</label><input type="text" id="f-observacao" placeholder="Observações adicionais..."></div>
-                        </div>
-                        <div style="display:flex;gap:12px;margin-top:8px;">
-                            <button type="submit" class="btn-app btn-save" id="btn-submit-fluxo">💾 Registrar Transação</button>
-                            <button type="button" class="btn-app btn-cancel" id="btn-cancel-fluxo">Limpar</button>
-                            <button type="button" class="btn-app btn-cancel" id="btn-cancel-edicao-fluxo" style="display:none;">❌ Cancelar Edição</button>
-                        </div>
-                    </form>
-                </div>
-                <div class="card"><div class="card-title"><span class="icon">📋</span> Transações Registradas</div>
-                    <div class="search-bar-container" id="search-bar-fluxo">
-                        <div class="search-input-wrapper"><span class="search-icon">🔍</span><input type="text" id="input-busca-fluxo" placeholder="Pesquisar por descrição ou categoria..." autocomplete="off"><button class="clear-search-btn" id="clear-search-btn-fluxo" title="Limpar pesquisa" type="button">✕</button></div>
-                        <div class="search-results-info" id="search-results-info-fluxo"><span id="search-count-text-fluxo">Total: <strong class="highlight-count" id="search-count-num-fluxo">0</strong> transações</span></div>
-                        <button class="btn-limpar-filtro" id="btn-limpar-filtro-fluxo" style="display:none;" type="button">🧹 Limpar Filtro</button>
-                    </div>
-                    <div class="table-wrapper" id="table-wrapper-fluxo">
-                        <button class="scroll-btn scroll-btn-left" aria-label="Rolar para esquerda">◀</button>
-                        <button class="scroll-btn scroll-btn-right" aria-label="Rolar para direita">▶</button>
-                        <table id="tabela-fluxo"><thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Tipo</th><th>Valor</th><th>Observação</th><th>Ações</th></tr></thead><tbody id="tbody-fluxo"><tr><td colspan="7" class="empty-state"><span class="icon">💰</span><br>Nenhuma transação registrada</td></tr></tbody></table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Banco -->
+            <!-- Banco (agora com botão para mostrar Fluxo de Caixa) -->
             <div class="page" id="page-banco">
                 <div class="page-header"><h2>🏦 Dados Bancários</h2><p>Cadastre as informações da conta bancária para recebimentos via Pix</p></div>
                 <div class="card" id="card-form-banco">
@@ -1141,14 +1097,56 @@
                         <div style="display:flex; gap:12px; margin-top:16px; flex-wrap: wrap;">
                             <button type="submit" class="btn-app btn-save" id="btn-salvar-banco">💾 Salvar Dados Bancários</button>
                             <button type="button" class="btn-app btn-cancel" id="btn-cancel-banco">Limpar</button>
-                            <button type="button" class="btn-app btn-fluxo" id="btn-fluxo-from-banco">💰 Fluxo de Caixa</button>
                             <button type="button" class="btn-app btn-cancel" id="btn-cancel-edicao-banco" style="display:none;">❌ Cancelar Edição</button>
+                            <button type="button" class="btn-app btn-fluxo" id="btn-toggle-fluxo" title="Exibir / Ocultar Fluxo de Caixa">💰 Fluxo de Caixa</button>
                         </div>
                     </form>
                 </div>
                 <div class="card" id="card-banco-visualizacao" style="display:none;">
                     <div class="card-title"><span class="icon">📋</span> Contas Bancárias Cadastradas</div>
                     <div id="banco-info-display" style="color:#d0d3db; font-size:14px; line-height:2;"></div>
+                </div>
+
+                <!-- Container do Fluxo de Caixa (oculto por padrão) -->
+                <div id="fluxo-caixa-container" style="display: none;">
+                    <div class="stats-row" id="stats-row-fluxo">
+                        <div class="stat-card entrada-card"><div class="stat-icon">📥</div><div class="stat-value" id="stat-total-entradas">R$ 0,00</div><div class="stat-label">Total de Entradas</div></div>
+                        <div class="stat-card saida-card"><div class="stat-icon">📤</div><div class="stat-value" id="stat-total-saidas">R$ 0,00</div><div class="stat-label">Total de Saídas</div></div>
+                        <div class="stat-card saldo-card" id="stat-saldo-card"><div class="stat-icon">💵</div><div class="stat-value" id="stat-saldo-atual">R$ 0,00</div><div class="stat-label">Saldo Atual</div></div>
+                    </div>
+                    <div class="card" id="card-form-fluxo">
+                        <div class="card-title"><span class="icon">📝</span> <span id="fluxo-form-title">Nova Transação</span></div>
+                        <div class="edit-banner" id="edit-banner-fluxo">✏️ <span id="edit-banner-fluxo-text">Você está editando uma transação existente.</span></div>
+                        <form id="form-fluxo" autocomplete="off">
+                            <div class="grid-3">
+                                <div class="form-group-app"><label>Descrição da Transação</label><input type="text" id="f-descricao" placeholder="Ex: Pagamento de aluguel, Abastecimento, etc." required></div>
+                                <div class="form-group-app"><label>Valor (R$)</label><input type="text" id="f-valor" placeholder="R$ 0,00" step="0.01" min="0.01" required oninput="formatarMoedaInput(this)" onblur="formatarMoedaInputBlur(this)"></div>
+                                <div class="form-group-app"><label>Tipo de Transação</label><select id="f-tipo" required><option value="">Selecione o tipo...</option><option value="entrada">📥 Entrada (Receita)</option><option value="saida">📤 Saída (Despesa)</option></select></div>
+                            </div>
+                            <div class="grid-3">
+                                <div class="form-group-app"><label>Data da Transação</label><input type="date" id="f-data" required></div>
+                                <div class="form-group-app"><label>Categoria (opcional)</label><select id="f-categoria"><option value="">Geral / Outros</option><option value="locacao">Locação de Veículo</option><option value="manutencao">Manutenção</option><option value="combustivel">Combustível</option><option value="imposto">Imposto / Taxa</option><option value="multa">Multa</option><option value="seguro">Seguro</option><option value="outros">Outros</option></select></div>
+                                <div class="form-group-app"><label>Observação (opcional)</label><input type="text" id="f-observacao" placeholder="Observações adicionais..."></div>
+                            </div>
+                            <div style="display:flex;gap:12px;margin-top:8px;">
+                                <button type="submit" class="btn-app btn-save" id="btn-submit-fluxo">💾 Registrar Transação</button>
+                                <button type="button" class="btn-app btn-cancel" id="btn-cancel-fluxo">Limpar</button>
+                                <button type="button" class="btn-app btn-cancel" id="btn-cancel-edicao-fluxo" style="display:none;">❌ Cancelar Edição</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="card"><div class="card-title"><span class="icon">📋</span> Transações Registradas</div>
+                        <div class="search-bar-container" id="search-bar-fluxo">
+                            <div class="search-input-wrapper"><span class="search-icon">🔍</span><input type="text" id="input-busca-fluxo" placeholder="Pesquisar por descrição ou categoria..." autocomplete="off"><button class="clear-search-btn" id="clear-search-btn-fluxo" title="Limpar pesquisa" type="button">✕</button></div>
+                            <div class="search-results-info" id="search-results-info-fluxo"><span id="search-count-text-fluxo">Total: <strong class="highlight-count" id="search-count-num-fluxo">0</strong> transações</span></div>
+                            <button class="btn-limpar-filtro" id="btn-limpar-filtro-fluxo" style="display:none;" type="button">🧹 Limpar Filtro</button>
+                        </div>
+                        <div class="table-wrapper" id="table-wrapper-fluxo">
+                            <button class="scroll-btn scroll-btn-left" aria-label="Rolar para esquerda">◀</button>
+                            <button class="scroll-btn scroll-btn-right" aria-label="Rolar para direita">▶</button>
+                            <table id="tabela-fluxo"><thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Tipo</th><th>Valor</th><th>Observação</th><th>Ações</th></tr></thead><tbody id="tbody-fluxo"><tr><td colspan="7" class="empty-state"><span class="icon">💰</span><br>Nenhuma transação registrada</td></tr></tbody></table>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -1195,7 +1193,7 @@
                             <div class="form-group-app"><label>🔧 Sub-Abas do Histórico de Manutenção Permitidas</label>
                                 <div class="permissoes-grid" id="permissoes-subabas-manutencao-grid">
                                     <label><input type="checkbox" class="perm-subabas-manutencao-check" value="QMK3B93"> 🔹 QMK3B93</label>
-                                    <label><input type="checkbox" class="perm-subabas-manutencao-check" value="QYB4E06"> 🔹 QYB4E06</label>
+                                    <label><input type="checkbox" class="perm-subabas-manutencao-check" value="BYQ4E06"> 🔹 BYQ4E06</label>
                                     <label><input type="checkbox" class="perm-subabas-manutencao-check" value="QNC2C21"> 🔹 QNC2C21</label>
                                     <label><input type="checkbox" class="perm-subabas-manutencao-check" value="GIW0G03"> 🔹 GIW0G03</label>
                                 </div>
@@ -1533,6 +1531,8 @@
                 if (btnFiltro) btnFiltro.style.display = temPermissaoAba('filtro') ? '' : 'none';
                 const btnInserirContrato = document.getElementById('btn-inserir-contrato');
                 if (btnInserirContrato) btnInserirContrato.style.display = temPermissaoAcao('criar') ? '' : 'none';
+                const btnToggleFluxo = document.getElementById('btn-toggle-fluxo');
+                if (btnToggleFluxo) btnToggleFluxo.style.display = temPermissaoAba('fluxocaixa') ? '' : 'none';
 
                 const formVeiculoCard = document.getElementById('card-form-veiculo');
                 const sectionPermissoes = document.getElementById('section-permissoes-veiculo');
@@ -1559,8 +1559,6 @@
                 if (formLocatarioCard) formLocatarioCard.style.display = temPermissaoAcao('criar') ? '' : 'none';
                 const formLocacaoCard = document.getElementById('card-form-locacao');
                 if (formLocacaoCard) formLocacaoCard.style.display = temPermissaoAcao('criar') ? '' : 'none';
-                const formFluxoCard = document.getElementById('card-form-fluxo');
-                if (formFluxoCard) formFluxoCard.style.display = temPermissaoAcao('criar') ? '' : 'none';
                 const formManutencaoCard = document.getElementById('card-form-manutencao');
                 if (formManutencaoCard) formManutencaoCard.style.display = temPermissaoAcao('criar') ? '' : 'none';
                 const formSocorroCard = document.getElementById('card-form-socorro');
@@ -1579,11 +1577,16 @@
                 atualizarPermissoesUsuarioGrid();
                 if (dadosCarregados) {
                     atualizarTabelaVeiculos(); atualizarTabelaLocatarios(); atualizarTabelaLocacoes();
-                    atualizarTabelaFluxoCaixa(); atualizarTabelaManutencoes(); atualizarGaragem();
+                    atualizarTabelaManutencoes(); atualizarGaragem();
                     atualizarSocorro(); atualizarTabelaUsuarios(); atualizarSubAbasCarro();
                     atualizarTabelaAuditoria(); atualizarDadosBanco();
                     aplicarRestricoesSubAbasCarro(); aplicarRestricoesSubAbasManutencao();
                     destacarAbaManutencaoAtiva();
+                    // Se o container do fluxo estiver visível, atualiza
+                    if (document.getElementById('fluxo-caixa-container').style.display !== 'none') {
+                        atualizarResumoFluxoCaixa();
+                        atualizarTabelaFluxoCaixa();
+                    }
                 }
             }
 
@@ -1755,6 +1758,7 @@
                     termoBuscaLocacoes = ''; document.getElementById('input-busca-locacoes').value = ''; atualizarUIBuscaLocacoes();
                     termoBuscaFluxo = ''; document.getElementById('input-busca-fluxo').value = ''; atualizarUIBuscaFluxo();
                     termoBuscaAuditoria = ''; document.getElementById('input-busca-auditoria').value = ''; atualizarUIBuscaAuditoria();
+                    document.getElementById('fluxo-caixa-container').style.display = 'none';
                     showToast('👋 Logout realizado com sucesso!', 'info');
                 }
             });
@@ -1786,8 +1790,17 @@
                 if (pageName === 'locatarios' && temPermissaoAba('locatarios')) { atualizarTabelaLocatarios(); initScrollButtons(); }
                 if (pageName === 'locacoes' && temPermissaoAba('locacoes')) { atualizarSelectsLocacao(); atualizarTabelaLocacoes(); initScrollButtons(); if (termoBuscaLocacoes) { document.getElementById('input-busca-locacoes').value = termoBuscaLocacoes; atualizarUIBuscaLocacoes(); } }
                 if (pageName === 'manutencao' && temPermissaoAba('manutencao')) { atualizarSelectManutencaoVeiculos(); aplicarRestricoesSubAbasManutencao(); destacarAbaManutencaoAtiva(); atualizarTabelaManutencoes(); initScrollButtons(); }
-                if (pageName === 'fluxocaixa' && temPermissaoAba('fluxocaixa')) { atualizarResumoFluxoCaixa(); atualizarTabelaFluxoCaixa(); initScrollButtons(); if (termoBuscaFluxo) { document.getElementById('input-busca-fluxo').value = termoBuscaFluxo; atualizarUIBuscaFluxo(); } }
-                if (pageName === 'banco' && temPermissaoAba('banco')) { atualizarDadosBanco(); }
+                if (pageName === 'banco' && temPermissaoAba('banco')) {
+                    atualizarDadosBanco();
+                    initScrollButtons();
+                    // Se o container do fluxo estiver visível, atualiza suas tabelas
+                    const fluxoContainer = document.getElementById('fluxo-caixa-container');
+                    if (fluxoContainer && fluxoContainer.style.display !== 'none') {
+                        atualizarResumoFluxoCaixa();
+                        atualizarTabelaFluxoCaixa();
+                        if (termoBuscaFluxo) { document.getElementById('input-busca-fluxo').value = termoBuscaFluxo; atualizarUIBuscaFluxo(); }
+                    }
+                }
                 if (pageName === 'usuarios' && temPermissaoAba('usuarios')) { atualizarTabelaUsuarios(); atualizarPermissoesUsuarioGrid(); initScrollButtons(); }
                 if (pageName === 'auditoria') { atualizarTabelaAuditoria(); initScrollButtons(); if (termoBuscaAuditoria) { document.getElementById('input-busca-auditoria').value = termoBuscaAuditoria; atualizarUIBuscaAuditoria(); } }
             }
@@ -1824,7 +1837,22 @@
                 setTimeout(() => { if (temPermissaoAba('locacoes')) { navegarPara('locacoes'); const selectLocatario = document.getElementById('loc-locatario'); if (selectLocatario && editandoLocatarioId) selectLocatario.value = editandoLocatarioId; } }, 500);
             });
             document.getElementById('btn-filtro-locacoes-nav').addEventListener('click', function(e) { e.preventDefault(); if (!temPermissaoAba('filtro')) { showToast('⚠️ Sem permissão para Filtro.', 'error'); return; } abrirJanelaFiltro(); });
-            document.getElementById('btn-fluxo-from-banco').addEventListener('click', () => { if (!temPermissaoAba('fluxocaixa')) { showToast('⚠️ Sem permissão.', 'error'); return; } navegarPara('fluxocaixa'); });
+
+            // Botão toggle do Fluxo de Caixa
+            document.getElementById('btn-toggle-fluxo').addEventListener('click', function() {
+                const container = document.getElementById('fluxo-caixa-container');
+                if (container.style.display === 'none' || container.style.display === '') {
+                    container.style.display = 'block';
+                    atualizarResumoFluxoCaixa();
+                    atualizarTabelaFluxoCaixa();
+                    initScrollButtons();
+                    if (termoBuscaFluxo) { document.getElementById('input-busca-fluxo').value = termoBuscaFluxo; atualizarUIBuscaFluxo(); }
+                    this.textContent = '💰 Ocultar Fluxo';
+                } else {
+                    container.style.display = 'none';
+                    this.textContent = '💰 Fluxo de Caixa';
+                }
+            });
 
             function inicializarInterface() { atualizarUIporPerfil(); navegarPara('garagem'); initScrollButtons(); atualizarIndicadorSync(navigator.onLine); }
 
@@ -2025,9 +2053,6 @@
                 try { await colecoes.veiculos.doc(id).delete(); showToast('🗑️ Veículo excluído!', 'info'); registrarAuditoria('excluir', 'Veículo', id, veiculo ? `${veiculo.marca} ${veiculo.modelo}` : ''); } catch (error) { showToast('❌ Erro ao excluir.', 'error'); }
             };
 
-            // ... (restante do script permanece idêntico ao original, apenas a parte de navegação e sub-abas já foi ajustada)
-
-            // Continua com o restante do código original, sem alterações (locatários, locações, etc.)
             const formLocatario = document.getElementById('form-locatario');
             const inputCPF = document.getElementById('l-cpf'), inputFone = document.getElementById('l-fone'), inputCEP = document.getElementById('l-cep');
             inputCPF.addEventListener('input', function() { this.value = aplicarMascaraCPF(this.value); });
@@ -2440,7 +2465,7 @@
                 listenersAtivos.push(colecoes.veiculos.onSnapshot(snap => { veiculos = []; snap.forEach(doc => veiculos.push({ id: doc.id, ...doc.data() })); if (dadosCarregados) { atualizarTabelaVeiculos(); atualizarSelectsLocacao(); atualizarSelectManutencaoVeiculos(); atualizarPermissoesVeiculoGrid(); atualizarPermissoesUsuarioGrid(); } }));
                 listenersAtivos.push(colecoes.locatarios.onSnapshot(snap => { locatarios = []; snap.forEach(doc => locatarios.push({ id: doc.id, ...doc.data() })); if (dadosCarregados) { atualizarTabelaLocatarios(); atualizarSelectsLocacao(); } }));
                 listenersAtivos.push(colecoes.locacoes.onSnapshot(snap => { locacoes = []; snap.forEach(doc => locacoes.push({ id: doc.id, ...doc.data() })); if (dadosCarregados) { atualizarTabelaLocacoes(); atualizarSelectsLocacao(); } }));
-                listenersAtivos.push(colecoes.fluxocaixa.onSnapshot(snap => { fluxoCaixa = []; snap.forEach(doc => fluxoCaixa.push({ id: doc.id, ...doc.data() })); if (dadosCarregados) { atualizarResumoFluxoCaixa(); atualizarTabelaFluxoCaixa(); } }));
+                listenersAtivos.push(colecoes.fluxocaixa.onSnapshot(snap => { fluxoCaixa = []; snap.forEach(doc => fluxoCaixa.push({ id: doc.id, ...doc.data() })); if (dadosCarregados && document.getElementById('fluxo-caixa-container').style.display !== 'none') { atualizarResumoFluxoCaixa(); atualizarTabelaFluxoCaixa(); } }));
                 listenersAtivos.push(colecoes.usuarios.onSnapshot(snap => { usuarios = []; snap.forEach(doc => usuarios.push({ id: doc.id, ...doc.data() })); if (dadosCarregados) { atualizarTabelaUsuarios(); atualizarPermissoesVeiculoGrid(); atualizarPermissoesUsuarioGrid(); } }));
                 listenersAtivos.push(colecoes.garagem.onSnapshot(snap => { garagem = []; snap.forEach(doc => garagem.push({ id: doc.id, ...doc.data() })); if (dadosCarregados) atualizarGaragem(); }));
                 listenersAtivos.push(colecoes.carroPdfs.onSnapshot(snap => { carroPdfs = []; snap.forEach(doc => carroPdfs.push({ id: doc.id, ...doc.data() })); if (dadosCarregados) atualizarSubAbasCarro(); }));

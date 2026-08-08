@@ -645,6 +645,18 @@
         .btn-copiar-pix:active {
             transform: scale(0.96);
         }
+        .btn-fluxo {
+            background: #2d5fcf;
+            color: #fff;
+            border: 1px solid var(--accent);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-fluxo:hover {
+            background: #3b6fd4;
+            box-shadow: 0 4px 14px rgba(45, 95, 207, 0.4);
+        }
         .table-wrapper {
             overflow-x: auto;
             border-radius: 10px;
@@ -1460,6 +1472,19 @@
             display: flex;
             gap: 6px;
         }
+        /* estilo para o novo botão de inserir dados contrato */
+        .btn-inserir-contrato {
+            background: #e67e22;
+            color: #fff;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-inserir-contrato:hover {
+            background: #d35400;
+            box-shadow: 0 4px 14px rgba(230, 126, 34, 0.4);
+        }
     </style>
 </head>
 <body>
@@ -1684,6 +1709,8 @@
                         <div style="display:flex;gap:12px;margin-top:8px; flex-wrap: wrap; align-items: center;">
                             <button type="submit" class="btn-app btn-save" id="btn-submit-locatario">💾 Salvar Locatário</button>
                             <button type="button" class="btn-app btn-cancel" id="btn-cancel-locatario">Limpar</button>
+                            <!-- NOVO BOTÃO INSERIR DADOS CONTRATO -->
+                            <button type="button" class="btn-app btn-inserir-contrato" id="btn-inserir-contrato" title="Inserir dados do contrato">📄 Inserir Dados Contrato</button>
                             <button type="button" class="btn-app btn-ir-locacoes" id="btn-ir-locacoes" title="Ir para Locações">📋 Locações</button>
                             <button type="button" class="btn-app btn-cancel" id="btn-cancel-edicao-locatario" style="display:none;">❌ Cancelar Edição</button>
                         </div>
@@ -1827,7 +1854,7 @@
                 </div>
             </div>
 
-            <!-- BANCO (MÚLTIPLOS LANÇAMENTOS) -->
+            <!-- BANCO (com botão FLUXO DE CAIXA adicionado) -->
             <div class="page" id="page-banco">
                 <div class="page-header"><h2>🏦 Dados Bancários</h2><p>Cadastre as informações da conta bancária para recebimentos via Pix</p></div>
                 <div class="card" id="card-form-banco">
@@ -1855,9 +1882,10 @@
                                 <input type="text" id="b-pix" placeholder="Ex: CPF, e-mail, telefone ou chave aleatória" required>
                             </div>
                         </div>
-                        <div style="display:flex; gap:12px; margin-top:16px;">
+                        <div style="display:flex; gap:12px; margin-top:16px; flex-wrap: wrap;">
                             <button type="submit" class="btn-app btn-save" id="btn-salvar-banco">💾 Salvar Dados Bancários</button>
                             <button type="button" class="btn-app btn-cancel" id="btn-cancel-banco">Limpar</button>
+                            <button type="button" class="btn-app btn-fluxo" id="btn-fluxo-from-banco">💰 Fluxo de Caixa</button>
                             <button type="button" class="btn-app btn-cancel" id="btn-cancel-edicao-banco" style="display:none;">❌ Cancelar Edição</button>
                         </div>
                     </form>
@@ -2242,6 +2270,11 @@
                 const btnFiltro = document.getElementById('btn-filtro-locacoes-nav');
                 if (btnFiltro) {
                     btnFiltro.style.display = temPermissaoAba('filtro') ? '' : 'none';
+                }
+
+                const btnInserirContrato = document.getElementById('btn-inserir-contrato');
+                if (btnInserirContrato) {
+                    btnInserirContrato.style.display = temPermissaoAcao('criar') ? '' : 'none';
                 }
 
                 const formVeiculoCard = document.getElementById('card-form-veiculo');
@@ -2781,6 +2814,37 @@
                 navegarPara('locacoes');
             });
 
+            // Botão Inserir Dados Contrato
+            document.getElementById('btn-inserir-contrato').addEventListener('click', function() {
+                if (!temPermissaoAcao('criar')) {
+                    showToast('⚠️ Você não tem permissão para inserir dados de contrato.', 'error');
+                    return;
+                }
+                // Verifica se os campos obrigatórios do locatário estão preenchidos
+                const nome = document.getElementById('l-nome').value.trim();
+                const cpf = document.getElementById('l-cpf').value.trim();
+                if (!nome || !cpf) {
+                    showToast('⚠️ Preencha ao menos o Nome e CPF do locatário antes de inserir os dados do contrato.', 'error');
+                    return;
+                }
+                // Salva o locatário se for novo, depois redireciona para locações com dados preenchidos
+                if (!editandoLocatarioId) {
+                    // Força o salvamento do locatário primeiro
+                    document.getElementById('form-locatario').dispatchEvent(new Event('submit', { cancelable: true }));
+                }
+                // Navega para a aba de locações com o locatário selecionado (se possível)
+                setTimeout(() => {
+                    if (temPermissaoAba('locacoes')) {
+                        navegarPara('locacoes');
+                        // Tenta pré-selecionar o locatário
+                        const selectLocatario = document.getElementById('loc-locatario');
+                        if (selectLocatario && editandoLocatarioId) {
+                            selectLocatario.value = editandoLocatarioId;
+                        }
+                    }
+                }, 500);
+            });
+
             document.getElementById('btn-filtro-locacoes-nav').addEventListener('click', function(e) {
                 e.preventDefault();
                 if (!temPermissaoAba('filtro')) {
@@ -2788,6 +2852,15 @@
                     return;
                 }
                 abrirJanelaFiltro();
+            });
+
+            // Botão Fluxo de Caixa na aba Banco
+            document.getElementById('btn-fluxo-from-banco').addEventListener('click', function() {
+                if (!temPermissaoAba('fluxocaixa')) {
+                    showToast('⚠️ Você não tem permissão para acessar o Fluxo de Caixa.', 'error');
+                    return;
+                }
+                navegarPara('fluxocaixa');
             });
 
             function inicializarInterface() {
@@ -3225,6 +3298,7 @@
                     const novoLocatario = { ...dadosLocatario, dataCadastro: new Date().toISOString() };
                     try {
                         const docRef = await colecoes.locatarios.add(novoLocatario);
+                        editandoLocatarioId = docRef.id; // guarda o id para uso no botão inserir contrato
                         resetarFormLocatario();
                         showToast('✅ Locatário cadastrado com sucesso!', 'success');
                         registrarAuditoria('criar', 'Locatário', docRef.id, dadosLocatario.nome);
@@ -4156,15 +4230,29 @@
                 showToast('📋 Edição cancelada.', 'info');
             });
 
-            // ===================== JANELA FILTRO =====================
+            // ===================== JANELA FILTRO (CORRIGIDA) =====================
             function abrirJanelaFiltro() {
-                const popupHTML = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Filtro de Locações - PAIZÃO RENT CAR</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Inter','Segoe UI',system-ui,sans-serif;background:#0c0f16;color:#e0e0e0;padding:20px;min-height:100vh;display:flex;flex-direction:column}.aviso-fechar{background:rgba(231,76,60,0.2);border:1px solid rgba(231,76,60,0.5);color:#ff6b6b;padding:12px 18px;border-radius:10px;font-size:14px;font-weight:600;text-align:center;margin-bottom:16px}.header-popup{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px}.header-popup h2{color:#fff;font-size:20px}.btn-fechar-popup{background:#e74c3c;color:#fff;border:none;padding:12px 24px;border-radius:10px;cursor:pointer;font-size:15px;font-weight:700}.search-input-wrapper{flex:1;min-width:250px;position:relative}.search-input-wrapper input{width:100%;padding:12px 16px 12px 44px;background:#1a1d28;border:1px solid #1e2230;border-radius:10px;color:#fff;font-size:15px;outline:none}.search-input-wrapper input:focus{border-color:#e6a817}.clear-btn{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:transparent;border:none;color:#9a9da8;font-size:18px;cursor:pointer;display:none}.clear-btn.visible{display:block}.btn-editar{background:#2d5fcf;color:#fff;border:none;padding:4px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600}table{width:100%;border-collapse:collapse;font-size:13px;min-width:750px}table thead{background:#1a1d28}table th{padding:12px 14px;text-align:left;color:#9a9da8;text-transform:uppercase;font-size:10px;border-bottom:1px solid #1e2230}table td{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.03);color:#d0d3db}.badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600}.badge-success{background:rgba(39,174,96,0.2);color:#2ecc71}.badge-warning{background:rgba(243,156,18,0.2);color:#f39c12}.badge-info{background:rgba(45,95,207,0.2);color:#5b8def}.highlight-valor{color:#e6a817;font-weight:700}</style></head><body><div class="aviso-fechar">⚠️ Para fechar, use o <strong>BOTÃO FECHAR</strong> abaixo.</div><div class="header-popup"><h2>🔍 Filtro de Locações</h2><button class="btn-fechar-popup" id="btn-fechar-popup">✕ FECHAR</button></div><div style="display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap;"><div class="search-input-wrapper"><span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);">🔍</span><input type="text" id="popup-busca" placeholder="Pesquisar por PLACA ou CPF..." autocomplete="off"><button class="clear-btn" id="popup-clear-btn">✕</button></div><span id="popup-results-info" style="font-size:13px;color:#9a9da8;">Total: <span id="popup-count" style="color:#e6a817;font-weight:700;">0</span> locações</span><button id="popup-btn-limpar" style="display:none;background:transparent;border:1px solid #1e2230;color:#9a9da8;padding:8px 16px;border-radius:8px;cursor:pointer;">🧹 Limpar</button></div><div style="overflow-x:auto;border-radius:10px;border:1px solid #1e2230;flex:1;"><table><thead><tr><th>Veículo</th><th>Placa</th><th>Locatário</th><th>CPF</th><th>Data Início</th><th>Data Fim</th><th>Valor Semanal</th><th>Caução</th><th>Status</th><th>Ações</th></tr></thead><tbody id="popup-tbody"></tbody></table></div><script>
-                    const STORAGE_KEY='paizao_locacoes';function getLocacoes(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY))||[]}catch(e){return[]}}function formatarMoeda(v){return 'R$ '+parseFloat(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}function sanitizar(s){return(s||'').replace(/[^a-zA-Z0-9]/g,'').toLowerCase()}const inputBusca=document.getElementById('popup-busca'),clearBtn=document.getElementById('popup-clear-btn'),btnLimpar=document.getElementById('popup-btn-limpar'),tbody=document.getElementById('popup-tbody'),countSpan=document.getElementById('popup-count'),resultsInfo=document.getElementById('popup-results-info'),btnFechar=document.getElementById('btn-fechar-popup');let fechamentoPermitido=false;btnFechar.addEventListener('click',function(){fechamentoPermitido=true;window.close()});window.addEventListener('beforeunload',function(e){if(!fechamentoPermitido){e.preventDefault();e.returnValue='⚠️ Use o botão FECHAR para fechar esta janela.';return e.returnValue}});function renderizar(termo){const locacoes=getLocacoes();let filtradas=locacoes;const ts=sanitizar(termo);if(termo.trim()!==''){filtradas=locacoes.filter(l=>sanitizar(l.veiculoPlaca).includes(ts)||sanitizar(l.locatarioCPF).includes(ts));resultsInfo.innerHTML='🔍 Encontradas: <span style="color:#e6a817;font-weight:700;">'+filtradas.length+'</span> de '+locacoes.length;btnLimpar.style.display='flex';clearBtn.classList.add('visible')}else{resultsInfo.innerHTML='Total: <span style="color:#e6a817;font-weight:700;">'+filtradas.length+'</span> locações';btnLimpar.style.display='none';clearBtn.classList.remove('visible')}countSpan.textContent=filtradas.length;if(filtradas.length===0){tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:40px;">🔍 Nenhuma locação encontrada.</td></tr>';return}tbody.innerHTML=filtradas.map(l=>{let caucaoHtml=formatarMoeda(l.caucao);if(l.formaCaucao==='parcelado')caucaoHtml+=' <span class="badge badge-warning">'+(l.parcelasCaucao||'?')+'x</span>';else if(l.formaCaucao==='entrada_parcelado')caucaoHtml+=' <span class="badge badge-info">Entrada '+formatarMoeda(l.valorEntradaCaucao||0)+' + '+(l.parcelasCaucao||'?')+'x</span>';else caucaoHtml+=' <span class="badge badge-success">À vista</span>';return '<tr><td>'+l.veiculoNome+'</td><td><strong>'+l.veiculoPlaca+'</strong></td><td>'+l.locatarioNome+'</td><td>'+l.locatarioCPF+'</td><td>'+new Date(l.dataInicio).toLocaleDateString('pt-BR')+'</td><td>'+new Date(l.dataFim).toLocaleDateString('pt-BR')+'</td><td class="highlight-valor">'+formatarMoeda(l.valorSemanal)+'</td><td>'+caucaoHtml+'</td><td><span class="badge badge-info">Ativa</span></td><td><button class="btn-editar" onclick="window.editarLocacaoDaJanelaFiltro('+l.id+')">✏️ Editar</button></td></tr>'})}inputBusca.addEventListener('input',function(){renderizar(this.value)});clearBtn.addEventListener('click',function(){inputBusca.value='';renderizar('');inputBusca.focus()});btnLimpar.addEventListener('click',function(){inputBusca.value='';renderizar('');inputBusca.focus()});setInterval(()=>{renderizar(inputBusca.value)},2000);inputBusca.focus();renderizar('');
+                localStorage.setItem('paizao_locacoes', JSON.stringify(locacoes));
+                const popupHTML = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Filtro de Locações - PAIZÃO RENT CAR</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Inter','Segoe UI',system-ui,sans-serif;background:#0c0f16;color:#e0e0e0;padding:20px;min-height:100vh;display:flex;flex-direction:column}.aviso-fechar{background:rgba(39,174,96,0.2);border:1px solid rgba(39,174,96,0.5);color:#2ecc71;padding:12px 18px;border-radius:10px;font-size:14px;font-weight:600;text-align:center;margin-bottom:16px}.header-popup{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px}.header-popup h2{color:#fff;font-size:20px}.btn-fechar-popup{background:#e74c3c;color:#fff;border:none;padding:12px 24px;border-radius:10px;cursor:pointer;font-size:15px;font-weight:700}.search-input-wrapper{flex:1;min-width:250px;position:relative}.search-input-wrapper input{width:100%;padding:12px 16px 12px 44px;background:#1a1d28;border:1px solid #1e2230;border-radius:10px;color:#fff;font-size:15px;outline:none}.search-input-wrapper input:focus{border-color:#e6a817}.clear-btn{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:transparent;border:none;color:#9a9da8;font-size:18px;cursor:pointer;display:none}.clear-btn.visible{display:block}.btn-editar{background:#2d5fcf;color:#fff;border:none;padding:4px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600}table{width:100%;border-collapse:collapse;font-size:13px;min-width:750px}table thead{background:#1a1d28}table th{padding:12px 14px;text-align:left;color:#9a9da8;text-transform:uppercase;font-size:10px;border-bottom:1px solid #1e2230}table td{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.03);color:#d0d3db}.badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600}.badge-success{background:rgba(39,174,96,0.2);color:#2ecc71}.badge-warning{background:rgba(243,156,18,0.2);color:#f39c12}.badge-info{background:rgba(45,95,207,0.2);color:#5b8def}.highlight-valor{color:#e6a817;font-weight:700}</style></head><body><div class="aviso-fechar">✅ Use o <strong>BOTÃO FECHAR</strong> para fechar esta janela. Todas as locações estão listadas.</div><div class="header-popup"><h2>🔍 Filtro de Locações</h2><button class="btn-fechar-popup" id="btn-fechar-popup">✕ FECHAR</button></div><div style="display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap;"><div class="search-input-wrapper"><span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);">🔍</span><input type="text" id="popup-busca" placeholder="Pesquisar por PLACA ou CPF..." autocomplete="off"><button class="clear-btn" id="popup-clear-btn">✕</button></div><span id="popup-results-info" style="font-size:13px;color:#9a9da8;">Total: <span id="popup-count" style="color:#e6a817;font-weight:700;">0</span> locações</span><button id="popup-btn-limpar" style="display:none;background:transparent;border:1px solid #1e2230;color:#9a9da8;padding:8px 16px;border-radius:8px;cursor:pointer;">🧹 Limpar</button></div><div style="overflow-x:auto;border-radius:10px;border:1px solid #1e2230;flex:1;"><table><thead><tr><th>Veículo</th><th>Placa</th><th>Locatário</th><th>CPF</th><th>Data Início</th><th>Data Fim</th><th>Valor Semanal</th><th>Caução</th><th>Status</th><th>Ações</th></tr></thead><tbody id="popup-tbody"></tbody></table></div><script>
+                    const STORAGE_KEY='paizao_locacoes';function getLocacoes(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY))||[]}catch(e){return[]}}function formatarMoeda(v){return 'R$ '+parseFloat(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}function sanitizar(s){return(s||'').replace(/[^a-zA-Z0-9]/g,'').toLowerCase()}const inputBusca=document.getElementById('popup-busca'),clearBtn=document.getElementById('popup-clear-btn'),btnLimpar=document.getElementById('popup-btn-limpar'),tbody=document.getElementById('popup-tbody'),countSpan=document.getElementById('popup-count'),resultsInfo=document.getElementById('popup-results-info'),btnFechar=document.getElementById('btn-fechar-popup');btnFechar.addEventListener('click',function(){window.close()});function renderizar(termo){const locacoes=getLocacoes();let filtradas=locacoes;const ts=sanitizar(termo);if(termo.trim()!==''){filtradas=locacoes.filter(l=>sanitizar(l.veiculoPlaca).includes(ts)||sanitizar(l.locatarioCPF).includes(ts));resultsInfo.innerHTML='🔍 Encontradas: <span style="color:#e6a817;font-weight:700;">'+filtradas.length+'</span> de '+locacoes.length;btnLimpar.style.display='flex';clearBtn.classList.add('visible')}else{resultsInfo.innerHTML='Total: <span style="color:#e6a817;font-weight:700;">'+filtradas.length+'</span> locações';btnLimpar.style.display='none';clearBtn.classList.remove('visible')}countSpan.textContent=filtradas.length;if(filtradas.length===0){tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:40px;">🔍 Nenhuma locação encontrada.</td></tr>';return}tbody.innerHTML=filtradas.map(l=>{let caucaoHtml=formatarMoeda(l.caucao);if(l.formaCaucao==='parcelado')caucaoHtml+=' <span class="badge badge-warning">'+(l.parcelasCaucao||'?')+'x</span>';else if(l.formaCaucao==='entrada_parcelado')caucaoHtml+=' <span class="badge badge-info">Entrada '+formatarMoeda(l.valorEntradaCaucao||0)+' + '+(l.parcelasCaucao||'?')+'x</span>';else caucaoHtml+=' <span class="badge badge-success">À vista</span>';return '<tr><td>'+l.veiculoNome+'</td><td><strong>'+l.veiculoPlaca+'</strong></td><td>'+l.locatarioNome+'</td><td>'+l.locatarioCPF+'</td><td>'+new Date(l.dataInicio).toLocaleDateString('pt-BR')+'</td><td>'+new Date(l.dataFim).toLocaleDateString('pt-BR')+'</td><td class="highlight-valor">'+formatarMoeda(l.valorSemanal)+'</td><td>'+caucaoHtml+'</td><td><span class="badge badge-info">Ativa</span></td><td><button class="btn-editar" onclick="window.editarLocacaoDaJanelaFiltro('+l.id+')">✏️ Editar</button></td></tr>'})}inputBusca.addEventListener('input',function(){renderizar(this.value)});clearBtn.addEventListener('click',function(){inputBusca.value='';renderizar('');inputBusca.focus()});btnLimpar.addEventListener('click',function(){inputBusca.value='';renderizar('');inputBusca.focus()});inputBusca.focus();renderizar('');
                 <\/script></body></html>`;
                 const janela = window.open('', 'FiltroLocacoes', `width=${screen.availWidth},height=${screen.availHeight},left=0,top=0,scrollbars=yes,resizable=yes`);
-                if (janela) { janela.document.write(popupHTML); janela.document.close(); janela.focus(); } else { showToast('⚠️ Pop-up bloqueado! Permita pop-ups para abrir o filtro.', 'error'); }
+                if (janela) {
+                    janela.document.write(popupHTML);
+                    janela.document.close();
+                    janela.focus();
+                } else {
+                    showToast('⚠️ Pop-up bloqueado! Permita pop-ups para abrir o filtro.', 'error');
+                }
             }
-            window.editarLocacaoDaJanelaFiltro = function(locacaoId) { if (window.opener && window.opener._editarLocacao) { window.opener._editarLocacao(locacaoId); window.opener.focus(); } try { window.close(); } catch (e) {} };
+
+            window.editarLocacaoDaJanelaFiltro = function(locacaoId) {
+                if (window.opener && window.opener._editarLocacao) {
+                    window.opener._editarLocacao(locacaoId);
+                    window.opener.focus();
+                }
+                try { window.close(); } catch (e) {}
+            };
 
             // ===================== AUDITORIA - RENDERIZAÇÃO E BUSCA =====================
             function atualizarTabelaAuditoria() {
@@ -4251,7 +4339,6 @@
                 initScrollButtons();
             }
 
-            // BOTÃO LIMPAR LOG DE ATIVIDADES
             document.getElementById('btn-limpar-auditoria').addEventListener('click', async function() {
                 if (!isAdmin()) {
                     showToast('⚠️ Apenas o administrador pode limpar o log.', 'error');
@@ -4579,6 +4666,8 @@
             console.log('🗑️ Botão Limpar Log na aba Auditoria adicionado');
             console.log('🏦 Banco agora salva múltiplas contas (não sobrescreve) e lista todas');
             console.log('📄 Aba CARRO renomeada para DOC');
+            console.log('💰 Botão "Fluxo de Caixa" adicionado na aba Banco');
+            console.log('📄 Botão "Inserir Dados Contrato" adicionado na aba Locatários');
         })();
     </script>
 </body>

@@ -1521,7 +1521,6 @@
                     else if (page === 'banco') btn.style.display = temPermissaoAba('banco') ? '' : 'none';
                     else btn.style.display = temPermissaoAba(page) ? '' : 'none';
                 });
-                // Exibe/oculta a sub-aba Veículos na Garagem
                 const subTabVeiculos = document.querySelector('#garagem-sub-tabs .sub-tab-btn[data-subtab="garagem-veiculos"]');
                 if (subTabVeiculos) subTabVeiculos.style.display = temPermissaoAba('veiculos') ? '' : 'none';
 
@@ -1582,7 +1581,6 @@
                     atualizarTabelaAuditoria(); atualizarDadosBanco();
                     aplicarRestricoesSubAbasCarro(); aplicarRestricoesSubAbasManutencao();
                     destacarAbaManutencaoAtiva();
-                    // Se o container do fluxo estiver visível, atualiza
                     if (document.getElementById('fluxo-caixa-container').style.display !== 'none') {
                         atualizarResumoFluxoCaixa();
                         atualizarTabelaFluxoCaixa();
@@ -1723,6 +1721,14 @@
             function aplicarMascaraPlaca(valor) { valor = valor.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 7); if (valor.length >= 4) valor = valor.substring(0, 3) + '-' + valor.substring(3); return valor; }
             function sanitizarParaBusca(str) { if (!str) return ''; return str.replace(/[^a-zA-Z0-9]/g, '').toLowerCase(); }
 
+            // CONVERSÃO AUTOMÁTICA PARA MAIÚSCULAS NO CAMPO DE USUÁRIO
+            const loginUserInput = document.getElementById('login-user');
+            if (loginUserInput) {
+                loginUserInput.addEventListener('input', function() {
+                    this.value = this.value.toUpperCase();
+                });
+            }
+
             loginForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
                 const userInput = document.getElementById('login-user').value.trim();
@@ -1774,7 +1780,6 @@
                 const activeBtn = document.querySelector(`.top-nav button[data-page="${pageName}"]`);
                 if (activeBtn) activeBtn.classList.add('active');
                 if (pageName === 'garagem') {
-                    // Ativar sub-aba Imagens por padrão
                     document.querySelectorAll('#garagem-sub-tabs .sub-tab-btn').forEach(b => b.classList.remove('active'));
                     const defaultBtn = document.querySelector('#garagem-sub-tabs .sub-tab-btn[data-subtab="garagem-imagens"]');
                     if (defaultBtn) defaultBtn.classList.add('active');
@@ -1782,7 +1787,7 @@
                     const defaultContent = document.getElementById('subtab-garagem-imagens');
                     if (defaultContent) defaultContent.classList.add('active');
                     atualizarGaragem();
-                    atualizarTabelaVeiculos(); // também atualiza a tabela de veículos para quando a sub-aba for acessada
+                    atualizarTabelaVeiculos();
                     initScrollButtons();
                 }
                 if (pageName === 'socorro') { atualizarSocorro(); }
@@ -1793,7 +1798,6 @@
                 if (pageName === 'banco' && temPermissaoAba('banco')) {
                     atualizarDadosBanco();
                     initScrollButtons();
-                    // Se o container do fluxo estiver visível, atualiza suas tabelas
                     const fluxoContainer = document.getElementById('fluxo-caixa-container');
                     if (fluxoContainer && fluxoContainer.style.display !== 'none') {
                         atualizarResumoFluxoCaixa();
@@ -1805,7 +1809,6 @@
                 if (pageName === 'auditoria') { atualizarTabelaAuditoria(); initScrollButtons(); if (termoBuscaAuditoria) { document.getElementById('input-busca-auditoria').value = termoBuscaAuditoria; atualizarUIBuscaAuditoria(); } }
             }
 
-            // Tratamento das sub-abas da Garagem
             document.querySelectorAll('#garagem-sub-tabs .sub-tab-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const subtab = this.getAttribute('data-subtab');
@@ -1838,7 +1841,6 @@
             });
             document.getElementById('btn-filtro-locacoes-nav').addEventListener('click', function(e) { e.preventDefault(); if (!temPermissaoAba('filtro')) { showToast('⚠️ Sem permissão para Filtro.', 'error'); return; } abrirJanelaFiltro(); });
 
-            // Botão toggle do Fluxo de Caixa
             document.getElementById('btn-toggle-fluxo').addEventListener('click', function() {
                 const container = document.getElementById('fluxo-caixa-container');
                 if (container.style.display === 'none' || container.style.display === '') {
@@ -2455,7 +2457,13 @@
             function preencherFormBanco(item) { document.getElementById('b-banco').value = item.banco || ''; document.getElementById('b-agencia').value = item.agencia || ''; document.getElementById('b-conta').value = item.conta || ''; document.getElementById('b-titular').value = item.titular || ''; document.getElementById('b-pix').value = item.pix || ''; editandoBancoId = item.id; document.getElementById('btn-salvar-banco').textContent = '💾 Atualizar Conta'; document.getElementById('btn-cancel-edicao-banco').style.display = 'inline-block'; document.getElementById('card-form-banco').scrollIntoView({ behavior: 'smooth' }); document.getElementById('b-banco').focus(); }
             window._editarContaBanco = function(id) { const item = dadosBancoLista.find(b => b.id === id); if (item) preencherFormBanco(item); };
             window._excluirContaBanco = async function(id) { const senha = prompt('Senha para excluir conta:'); if (senha !== '080888') { showToast('❌ Senha incorreta!', 'error'); return; } if (!confirm('Excluir conta bancária?')) return; try { await colecoes.banco.doc(id).delete(); if (editandoBancoId === id) resetarFormBanco(); showToast('🗑️ Conta excluída!', 'info'); registrarAuditoria('excluir', 'Banco', id, 'Conta excluída'); } catch (error) { showToast('❌ Erro.', 'error'); } };
-            window._copiarPix = function(pix) { if (!pix) { showToast('⚠️ Chave Pix não informada.', 'error'); return; } const numeros = pix.replace(/\D/g, ''); if (numeros === '') { showToast('⚠️ A chave Pix não contém números.', 'error'); return; } navigator.clipboard.writeText(numeros).then(() => { showToast('✅ Pix copiado (somente números)!', 'success'); registrarAuditoria('download', 'Banco', 'info', 'Cópia do Pix'); }).catch(() => showToast('❌ Erro ao copiar.', 'error')); };
+            window._copiarPix = function(pix) {
+                if (!pix) { showToast('⚠️ Chave Pix não informada.', 'error'); return; }
+                navigator.clipboard.writeText(pix).then(() => {
+                    showToast('✅ Pix copiado!', 'success');
+                    registrarAuditoria('download', 'Banco', 'info', 'Cópia do Pix');
+                }).catch(() => showToast('❌ Erro ao copiar.', 'error'));
+            };
             function atualizarDadosBanco() { const card = document.getElementById('card-banco-visualizacao'), display = document.getElementById('banco-info-display'); if (!dadosBancoLista || dadosBancoLista.length === 0) { if (card) card.style.display = 'none'; return; } if (card) card.style.display = 'block'; let html = ''; dadosBancoLista.forEach(item => { html += `<div class="banco-item"><div class="banco-dados"><strong>🏦 Banco:</strong> ${item.banco || '—'}<br><strong>🏢 Agência:</strong> ${item.agencia || '—'}<br><strong>🔢 Conta:</strong> ${item.conta || '—'}<br><strong>👤 Titular:</strong> ${item.titular || '—'}<br><strong>🔑 Pix:</strong> ${item.pix || '—'} <button class="btn-copiar-pix" onclick="window._copiarPix('${(item.pix || '').replace(/'/g, "\\'")}')">📋 Copiar</button></div><div class="banco-actions"><button class="btn-edit" onclick="window._editarContaBanco('${item.id}')">✏️</button><button class="btn-danger" onclick="window._excluirContaBanco('${item.id}')">🗑️</button></div></div>`; }); display.innerHTML = html; }
             const formBanco = document.getElementById('form-banco');
             formBanco.addEventListener('submit', async function(e) { e.preventDefault(); if (!temPermissaoAcao('editar')) { showToast('⚠️ Sem permissão para alterar banco.', 'error'); return; } const dados = { banco: document.getElementById('b-banco').value.trim(), agencia: document.getElementById('b-agencia').value.trim(), conta: document.getElementById('b-conta').value.trim(), titular: document.getElementById('b-titular').value.trim(), pix: document.getElementById('b-pix').value.trim(), dataAtualizacao: new Date().toISOString() }; try { if (editandoBancoId) { await colecoes.banco.doc(editandoBancoId).update(dados); showToast('✅ Conta atualizada!', 'success'); registrarAuditoria('editar', 'Banco', editandoBancoId, 'Conta atualizada'); } else { const docRef = await colecoes.banco.add({ ...dados, dataCriacao: new Date().toISOString() }); showToast('✅ Nova conta bancária adicionada!', 'success'); registrarAuditoria('criar', 'Banco', docRef.id, 'Nova conta'); } resetarFormBanco(); } catch (error) { showToast('❌ Erro.', 'error'); } });

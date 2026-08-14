@@ -331,7 +331,7 @@
                                 <div class="form-group-app"><label>Valor Locação Semanal (R$)</label><input type="text" id="v-valor-semanal" placeholder="R$ 0,00" required oninput="formatarMoedaInput(this)" onblur="formatarMoedaInputBlur(this)"></div>
                                 <div class="form-group-app"><label>Valor do Caução (R$)</label><input type="text" id="v-caucao" placeholder="R$ 0,00" required oninput="formatarMoedaInput(this)" onblur="formatarMoedaInputBlur(this)"></div>
                                 <div class="form-group-app"><label>Proprietário</label><input type="text" id="v-proprietario" placeholder="Nome do proprietário"></div>
-                                <div class="form-group-app"><label>Anexar Documento (PDF)</label><input type="file" id="v-documento" accept=".pdf"></div>
+                                <div class="form-group-app"><label>CPF Proprietário</label><input type="text" id="v-proprietario-cpf" placeholder="000.000.000-00" maxlength="14"></div>
                             </div>
                             <div class="form-group-app" style="margin-top:4px;"><label>Opcionais do Veículo</label><div class="opcionais-group"><label><input type="checkbox" id="v-op-ar"> ❄️ Ar Condicionado</label><label><input type="checkbox" id="v-op-vidros"> 🪟 Vidros Elétricos</label><label><input type="checkbox" id="v-op-multimidia"> 📺 Multimídia</label><label><input type="checkbox" id="v-op-rodas"> 🛞 Rodas de Liga Leve</label></div></div>
                             <div class="section-divider" id="section-permissoes-veiculo"><div class="form-group-app"><label>👤 Usuários com Acesso a este Veículo</label><div class="permissoes-grid" id="permissoes-veiculo-grid"></div></div></div>
@@ -1096,7 +1096,6 @@
             }
 
             // ===================== CÓDIGO ORIGINAL DO APP (funções de permissão, eventos, etc.) =====================
-            // Início do código fornecido pelo usuário (sem a abertura da IIFE, pois já estamos dentro dela)
             function getVeiculosPermitidos() {
                 if (!usuarioLogado) return [];
                 if (usuarioLogado.role === 'admin') return veiculos;
@@ -1234,15 +1233,12 @@
                     }
                 };
 
-                // Obter dados completos
                 const locatario = locatarios.find(l => l.id === locacao.locatarioId);
                 const veiculo = veiculos.find(v => v.id === locacao.veiculoId);
                 if (!locatario || !veiculo) return;
 
-                // Montar endereço completo
                 const enderecoCompleto = `${locatario.endereco || ''} ${locatario.bairro || ''} ${locatario.cidade || ''} ${locatario.estado || ''}`.trim();
 
-                // Dados do Locatário
                 setVal('nomeLocatario', locatario.nome);
                 setVal('foneLocatario', locatario.fone);
                 setVal('cepLocatario', locatario.cep);
@@ -1259,7 +1255,6 @@
                     }
                 }
 
-                // Dados do Veículo
                 setVal('marcaVeiculo', veiculo.marca);
                 setVal('modeloVeiculo', veiculo.modelo);
                 setVal('corVeiculo', veiculo.cor);
@@ -1267,11 +1262,9 @@
                 setVal('anoFab', veiculo.anoFabricacao);
                 setVal('anoModelo', veiculo.anoModelo);
 
-                // Valores
                 setVal('valorSemanal', formatarMoeda(veiculo.valorSemanal || 0));
                 setVal('valorCaucao', formatarMoeda(veiculo.caucao || 0));
 
-                // Datas (usar data de início da locação)
                 const dataInicio = new Date(locacao.dataInicio + 'T00:00:00');
                 const dia = String(dataInicio.getDate()).padStart(2, '0');
                 const ano = dataInicio.getFullYear();
@@ -1280,26 +1273,23 @@
                 setVal('diaContrato', dia);
                 setVal('mesContrato', mesExtenso);
                 setVal('anoContrato', ano.toString());
-                // Termo: usar a mesma data de início
                 setVal('diaTermo', dia);
                 setVal('mesTermo', mesExtenso);
                 setVal('anoTermo', ano.toString());
 
-                // Número do contrato: sequencial baseado na quantidade de locações + 1
                 const numContrato = String(locacoes.length + 1).padStart(4, '0');
                 setVal('numContrato', numContrato);
 
-                // Proprietária (se existir no veículo)
                 if (veiculo.proprietario) {
                     setVal('nomeProprietaria', veiculo.proprietario);
                 }
-                // cpfProprietaria não é preenchido pois não temos esse dado
+                // Preencher CPF do proprietário no Gerador de Contrato
+                if (veiculo.proprietarioCpf) {
+                    setVal('cpfProprietaria', veiculo.proprietarioCpf);
+                }
             }
 
             // ========== FIM DA NOVA FUNÇÃO ==========
-
-            // Restante do código original (funções e eventos) ...
-            // (Incluído abaixo para completar a IIFE)
 
             function aplicarRestricoesSubAbasManutencao() {
                 if (isAdmin()) {
@@ -1405,8 +1395,16 @@
             function parseMoedaBR(valorString) { if (!valorString) return 0; let limpo = valorString.replace(/[^\d,]/g, '').replace(',', '.'); return parseFloat(limpo) || 0; }
             function formatarMoeda(valor) { return 'R$ ' + parseFloat(valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
             function aplicarMascaraCPF(valor) { valor = valor.replace(/\D/g, '').substring(0, 11); return valor.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4'); }
-            function aplicarMascaraTelefone(valor) { valor = valor.replace(/\D/g, '').substring(0, 11); if (valor.length <= 10) return valor.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3'); return valor.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$4'); }
-            function aplicarMascaraCEP(valor) { valor = valor.replace(/\D/g, '').substring(0, 8); return valor.replace(/(\d{5})(\d{3})/, '$1-$2'); }
+            function aplicarMascaraTelefone(valor) {
+                // Corrigido: usa slice e concatenação, evitando o bug do "$4"
+                valor = valor.replace(/\D/g, '').substring(0, 11);
+                if (valor.length <= 10) {
+                    return `(${valor.slice(0,2)}) ${valor.slice(2,6)}${valor.length > 6 ? '-' + valor.slice(6) : ''}`;
+                } else {
+                    return `(${valor.slice(0,2)}) ${valor.slice(2,7)}-${valor.slice(7)}`;
+                }
+            }
+            function aplicarMascaraCEP(valor) { valor = valor.replace(/\D/g, '').substring(0, 8); return valor.length > 5 ? `${valor.slice(0,5)}-${valor.slice(5)}` : valor; }
             function aplicarMascaraPlaca(valor) { valor = valor.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 7); if (valor.length >= 4) valor = valor.substring(0, 3) + '-' + valor.substring(3); return valor; }
             function sanitizarParaBusca(str) { if (!str) return ''; return str.replace(/[^a-zA-Z0-9]/g, '').toLowerCase(); }
 
@@ -1646,6 +1644,8 @@
             const formVeiculo = document.getElementById('form-veiculo');
             const inputPlaca = document.getElementById('v-placa');
             inputPlaca.addEventListener('input', function() { this.value = aplicarMascaraPlaca(this.value); });
+            const inputProprietarioCpf = document.getElementById('v-proprietario-cpf');
+            inputProprietarioCpf.addEventListener('input', function() { this.value = aplicarMascaraCPF(this.value); });
             const btnSubmitVeiculo = document.getElementById('btn-submit-veiculo'), btnCancelVeiculo = document.getElementById('btn-cancel-veiculo'), btnCancelEdicaoVeiculo = document.getElementById('btn-cancel-edicao-veiculo');
             const editBannerVeiculo = document.getElementById('edit-banner-veiculo'), veicFormTitle = document.getElementById('veic-form-title');
 
@@ -1662,8 +1662,9 @@
             function resetarFormVeiculo() {
                 formVeiculo.reset(); document.getElementById('v-op-ar').checked = false; document.getElementById('v-op-vidros').checked = false;
                 document.getElementById('v-op-multimidia').checked = false; document.getElementById('v-op-rodas').checked = false;
-                document.getElementById('v-documento').value = ''; document.getElementById('v-fipe').value = ''; document.getElementById('v-valor-semanal').value = ''; document.getElementById('v-caucao').value = '';
+                document.getElementById('v-fipe').value = ''; document.getElementById('v-valor-semanal').value = ''; document.getElementById('v-caucao').value = '';
                 document.getElementById('v-ano-fabricacao').value = ''; document.getElementById('v-ano-modelo').value = ''; document.getElementById('v-proprietario').value = '';
+                document.getElementById('v-proprietario-cpf').value = '';
                 editandoVeiculoId = null; btnSubmitVeiculo.textContent = '💾 Salvar Veículo'; btnCancelEdicaoVeiculo.style.display = 'none';
                 editBannerVeiculo.classList.remove('show'); veicFormTitle.textContent = 'Novo Veículo'; atualizarPermissoesVeiculoGrid();
             }
@@ -1673,9 +1674,8 @@
             formVeiculo.addEventListener('submit', async function(e) {
                 if (!isAdmin()) { showToast('⚠️ Apenas administrador.', 'error'); return; }
                 e.preventDefault();
-                const documentoInput = document.getElementById('v-documento'), documentoFile = documentoInput.files[0];
                 const opcionais = { ar: document.getElementById('v-op-ar').checked, vidros: document.getElementById('v-op-vidros').checked, multimidia: document.getElementById('v-op-multimidia').checked, rodas: document.getElementById('v-op-rodas').checked };
-                async function salvarVeiculo(docBase64 = null, docNome = null) {
+                async function salvarVeiculo() {
                     const dadosVeiculo = {
                         marca: document.getElementById('v-marca').value.trim(), modelo: document.getElementById('v-modelo').value.trim(), cor: document.getElementById('v-cor').value.trim(),
                         potencia: document.getElementById('v-potencia').value.trim(), placa: document.getElementById('v-placa').value.trim(), km: parseInt(document.getElementById('v-km').value) || 0,
@@ -1684,17 +1684,17 @@
                         valorSemanal: parseMoedaBR(document.getElementById('v-valor-semanal').value), caucao: parseMoedaBR(document.getElementById('v-caucao').value),
                         anoFabricacao: document.getElementById('v-ano-fabricacao').value.trim(), anoModelo: document.getElementById('v-ano-modelo').value.trim(),
                         proprietario: document.getElementById('v-proprietario').value.trim(),
+                        proprietarioCpf: document.getElementById('v-proprietario-cpf').value.trim(),
                         opcionais: opcionais, dataAtualizacao: new Date().toISOString()
                     };
                     if (editandoVeiculoId) {
-                        if (docBase64) { dadosVeiculo.documentoBase64 = docBase64; dadosVeiculo.documentoNome = docNome; } else { const v = veiculos.find(v => v.id === editandoVeiculoId); dadosVeiculo.documentoBase64 = v?.documentoBase64 || null; dadosVeiculo.documentoNome = v?.documentoNome || null; }
                         try { await colecoes.veiculos.doc(editandoVeiculoId).update(dadosVeiculo); await sincronizarPermissoesVeiculo(editandoVeiculoId); resetarFormVeiculo(); showToast('✅ Veículo atualizado!', 'success'); registrarAuditoria('editar', 'Veículo', editandoVeiculoId, `${dadosVeiculo.marca} ${dadosVeiculo.modelo}`); await syncLocacoesVeiculo(editandoVeiculoId); } catch (error) { showToast('❌ Erro ao atualizar.', 'error'); }
                     } else {
-                        const novoVeiculo = { ...dadosVeiculo, documentoBase64: docBase64, documentoNome: docNome, dataCadastro: new Date().toISOString() };
+                        const novoVeiculo = { ...dadosVeiculo, dataCadastro: new Date().toISOString() };
                         try { const docRef = await colecoes.veiculos.add(novoVeiculo); await sincronizarPermissoesVeiculo(docRef.id); resetarFormVeiculo(); showToast('✅ Veículo cadastrado!', 'success'); registrarAuditoria('criar', 'Veículo', docRef.id, `${dadosVeiculo.marca} ${dadosVeiculo.modelo}`); await syncLocacoesVeiculo(docRef.id); } catch (error) { showToast('❌ Erro ao cadastrar.', 'error'); }
                     }
                 }
-                if (documentoFile) { showToast('⏳ Processando documento...', 'info'); try { const base64 = await fileToBase64(documentoFile); await salvarVeiculo(base64, documentoFile.name); } catch (error) { showToast('❌ Erro ao processar documento.', 'error'); } } else { await salvarVeiculo(null, null); }
+                await salvarVeiculo();
             });
 
             function atualizarTabelaVeiculos() {
@@ -1724,9 +1724,10 @@
                 document.getElementById('v-fipe').value = veiculo.fipe ? formatarMoeda(veiculo.fipe) : '';
                 document.getElementById('v-valor-semanal').value = formatarMoeda(veiculo.valorSemanal || 0); document.getElementById('v-caucao').value = formatarMoeda(veiculo.caucao || 0);
                 document.getElementById('v-proprietario').value = veiculo.proprietario || '';
+                document.getElementById('v-proprietario-cpf').value = veiculo.proprietarioCpf || '';
                 document.getElementById('v-op-ar').checked = veiculo.opcionais?.ar || false; document.getElementById('v-op-vidros').checked = veiculo.opcionais?.vidros || false;
                 document.getElementById('v-op-multimidia').checked = veiculo.opcionais?.multimidia || false; document.getElementById('v-op-rodas').checked = veiculo.opcionais?.rodas || false;
-                document.getElementById('v-documento').value = ''; btnSubmitVeiculo.textContent = '💾 Atualizar Veículo'; btnCancelEdicaoVeiculo.style.display = 'inline-block';
+                btnSubmitVeiculo.textContent = '💾 Atualizar Veículo'; btnCancelEdicaoVeiculo.style.display = 'inline-block';
                 editBannerVeiculo.classList.add('show'); document.getElementById('edit-banner-veiculo-text').textContent = `Editando: ${veiculo.marca} ${veiculo.modelo} - ${veiculo.placa}`;
                 veicFormTitle.textContent = 'Editar Veículo'; document.getElementById('card-form-veiculo').scrollIntoView({ behavior: 'smooth' }); atualizarPermissoesVeiculoGrid(); showToast('✏️ Modo edição.', 'info');
             };
@@ -2671,6 +2672,24 @@
             }
             window.addEventListener('online', () => atualizarIndicadorSync(true));
             window.addEventListener('offline', () => atualizarIndicadorSync(false));
+
+            // ========== NOVO: Enter pula para o próximo campo (apenas após login) ==========
+            document.addEventListener('keydown', function(e) {
+                if (e.key !== 'Enter') return;
+                const appAtivo = document.getElementById('app-screen') && document.getElementById('app-screen').classList.contains('active');
+                if (!appAtivo) return;
+                const target = e.target;
+                if (!target || !['INPUT','SELECT','TEXTAREA'].includes(target.tagName)) return;
+                e.preventDefault();
+                const form = target.form;
+                const scope = form || document;
+                const focusable = Array.from(scope.querySelectorAll('input:not([type="hidden"]):not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled])')).filter(el => el.tabIndex >= 0 && el.offsetParent !== null);
+                const idx = focusable.indexOf(target);
+                if (idx > -1 && idx < focusable.length - 1) {
+                    focusable[idx + 1].focus();
+                }
+            });
+            // ========================================================================
 
             document.getElementById('mobile-menu-toggle')?.addEventListener('click', function() { document.getElementById('top-nav').classList.toggle('open'); });
             loginScreen.style.display = 'flex'; appScreen.classList.remove('active');

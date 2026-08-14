@@ -264,6 +264,9 @@
         .banco-item .banco-actions { display:flex; gap:6px; }
         .btn-inserir-contrato { background:#e67e22; color:#fff; border:none; display:inline-flex; align-items:center; gap:6px; }
         .btn-inserir-contrato:hover { background:#d35400; box-shadow:0 4px 14px rgba(230,126,34,0.4); }
+        /* ========== NOVO: Estilo para o iframe do gerador de contrato ========== */
+        #page-gerador-contrato .page-header { margin-bottom:20px; }
+        #iframe-gerador-contrato { width:100%; height:calc(100vh - var(--header-height) - 80px); border:none; border-radius:12px; background:#f0f2f5; /* cor de fundo clara para o iframe */ }
     </style>
 </head>
 <body>
@@ -285,6 +288,7 @@
                 <button data-page="garagem"><span class="nav-icon">🖼️</span> Garagem</button>
                 <button data-page="socorro"><span class="nav-icon">🆘</span> Socorro</button>
                 <button data-page="carro" id="btn-menu-nav"><span class="nav-icon">🚘</span> DOC</button>
+                <button data-page="gerador-contrato"><span class="nav-icon">📄</span> Gerador de Contrato</button>
                 <button data-page="locatarios" class="nav-admin-only"><span class="nav-icon">👥</span> Locatários</button>
                 <button data-page="manutencao" class="nav-admin-only" style="border:1px solid var(--border);"><span class="nav-icon">🔧</span> Manutenção</button>
                 <button data-page="banco" class="nav-admin-only" style="border:1px solid var(--border);"><span class="nav-icon">🏦</span> Banco</button>
@@ -345,6 +349,11 @@
             <div class="page" id="page-carro">
                 <div class="page-header"><h2>🚘 DOC</h2><p>Documentos e sub-abas dos veículos</p></div>
                 <div class="card"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;"><div class="sub-tabs" id="carro-sub-tabs" style="margin-bottom:0; padding-bottom:0; border-bottom:none;"></div><button class="btn-app btn-save" id="btn-upload-carro-pdf" style="display:inline-flex; align-items:center; gap:6px;">📎 Upload PDF</button></div><div id="carro-sub-content"></div></div>
+            </div>
+            <!-- NOVA PÁGINA: Gerador de Contrato -->
+            <div class="page" id="page-gerador-contrato">
+                <div class="page-header"><h2>📄 Gerador de Contrato</h2><p>Gere e personalize contratos de locação de veículos</p></div>
+                <iframe id="iframe-gerador-contrato" title="Gerador de Contrato"></iframe>
             </div>
             <div class="page" id="page-locatarios">
                 <div class="page-header"><h2>👥 Cadastro de Locatários</h2><p>Gerencie os dados pessoais dos locatários</p></div>
@@ -639,7 +648,455 @@
                     }
                 } catch (error) { console.error('Erro ao garantir admin padrão:', error); }
             }
+            // ===================== NOVO: HTML do Gerador de Contrato (armazenado como string) =====================
+            const contratoHtml = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Contrato de Locação de Veículos</title>
+    <style>
+        :root {
+            --bg: #f0f2f5;
+            --card-bg: #ffffff;
+            --primary: #1a3c5e;
+            --primary-light: #2c5f8a;
+            --accent: #c9a84c;
+            --text: #2c2c2c;
+            --text-light: #555;
+            --border: #d0d5dd;
+            --input-bg: #f9fafb;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.10);
+            --radius: 10px;
+            --radius-sm: 6px;
+            --transition: 0.2s ease;
+            --font-mono: 'SF Mono', 'Cascadia Code', 'Consolas', 'Monaco', monospace;
+            --font-sans: 'Segoe UI', 'Inter', system-ui, -apple-system, sans-serif;
+            --font-serif: 'Georgia', 'Times New Roman', 'Merriweather', serif;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: var(--bg); font-family: var(--font-sans); color: var(--text); line-height: 1.6; min-height: 100vh; }
+        .app-header { background: var(--primary); color: #fff; padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15); }
+        .app-header h1 { font-size: 1.3rem; font-weight: 600; letter-spacing: -0.3px; display: flex; align-items: center; gap: 10px; }
+        .app-header h1 .icon { font-size: 1.6rem; }
+        .header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn { padding: 10px 20px; border: none; border-radius: var(--radius-sm); cursor: pointer; font-weight: 600; font-size: 0.9rem; letter-spacing: 0.2px; transition: var(--transition); display: flex; align-items: center; gap: 7px; white-space: nowrap; }
+        .btn-print { background: #fff; color: var(--primary); }
+        .btn-print:hover { background: #e8ecf1; transform: translateY(-1px); box-shadow: var(--shadow); }
+        .btn-toggle { background: transparent; color: #fff; border: 2px solid rgba(255, 255, 255, 0.5); }
+        .btn-toggle:hover { background: rgba(255, 255, 255, 0.1); border-color: #fff; }
+        .btn-reset { background: #c0392b; color: #fff; }
+        .btn-reset:hover { background: #a93226; }
+        .main-container { display: flex; gap: 0; max-width: 1500px; margin: 0 auto; min-height: calc(100vh - 130px); }
+        .sidebar { width: 440px; min-width: 440px; background: var(--card-bg); border-right: 1px solid var(--border); overflow-y: auto; max-height: calc(100vh - 130px); position: sticky; top: 70px; transition: var(--transition); box-shadow: var(--shadow-lg); z-index: 50; }
+        .sidebar.collapsed { min-width: 0; width: 0; overflow: hidden; border-right: none; box-shadow: none; }
+        .sidebar-inner { padding: 18px 16px; display: flex; flex-direction: column; gap: 8px; min-width: 400px; }
+        .sidebar h2 { font-size: 1.05rem; color: var(--primary); margin-bottom: 2px; font-weight: 700; letter-spacing: -0.2px; }
+        .section-card { background: #fafbfc; border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; transition: var(--transition); }
+        .section-card:hover { border-color: #b0b8c4; }
+        .section-card h3 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.6px; color: var(--primary-light); margin-bottom: 10px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; user-select: none; font-weight: 700; }
+        .section-card h3 .arrow { transition: transform 0.25s ease; font-size: 0.7rem; }
+        .section-card h3.open .arrow { transform: rotate(90deg); }
+        .section-card .fields { display: flex; flex-direction: column; gap: 8px; transition: max-height 0.35s ease, opacity 0.3s ease; overflow: hidden; }
+        .section-card .fields.collapsed { max-height: 0; opacity: 0; margin: 0; }
+        .section-card .fields.expanded { max-height: 2000px; opacity: 1; }
+        .form-group { display: flex; flex-direction: column; gap: 3px; }
+        .form-group label { font-size: 0.78rem; font-weight: 600; color: #444; letter-spacing: 0.1px; }
+        .form-group input, .form-group textarea { padding: 9px 12px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 0.88rem; font-family: var(--font-sans); background: var(--input-bg); transition: var(--transition); width: 100%; color: var(--text); }
+        .form-group input:focus, .form-group textarea:focus { outline: none; border-color: var(--primary-light); box-shadow: 0 0 0 3px rgba(44, 95, 138, 0.08); background: #fff; }
+        .form-group textarea { resize: vertical; min-height: 40px; font-size: 0.82rem; }
+        .form-row { display: flex; gap: 8px; }
+        .form-row .form-group { flex: 1; }
+        .form-row .form-group.small { flex: 0.5; min-width: 60px; }
+        .preview-area { flex: 1; padding: 24px 28px; overflow-y: auto; max-height: calc(100vh - 130px); position: sticky; top: 70px; background: #e8ecf1; }
+        .preview-area h2 { text-align: center; color: #555; font-weight: 400; font-size: 0.9rem; letter-spacing: 0.5px; margin-bottom: 16px; text-transform: uppercase; }
+        .document-sheet { background: #fff; max-width: 850px; margin: 0 auto; padding: 50px 55px; box-shadow: var(--shadow-lg); border-radius: 4px; font-family: var(--font-serif); font-size: 0.9rem; line-height: 1.7; color: #1a1a1a; position: relative; }
+        .document-sheet h2.doc-title { text-align: center; font-size: 1.1rem; font-weight: 700; letter-spacing: 0.3px; margin-bottom: 20px; color: #000; text-transform: uppercase; font-family: var(--font-serif); }
+        .document-sheet h3.doc-subtitle { text-align: center; font-size: 0.95rem; font-weight: 700; margin: 30px 0 16px; color: #000; text-transform: uppercase; font-family: var(--font-serif); border-top: 1px solid #ccc; padding-top: 20px; }
+        .document-sheet .clause-title { font-weight: 700; text-transform: uppercase; margin-top: 14px; margin-bottom: 4px; font-size: 0.88rem; letter-spacing: 0.2px; }
+        .document-sheet p { margin-bottom: 6px; text-align: justify; }
+        .document-sheet .highlight { background: #fffde7; padding: 2px 5px; border-radius: 3px; border-bottom: 1.5px dashed #c9a84c; cursor: default; transition: var(--transition); font-weight: 500; color: #1a1a1a; white-space: nowrap; }
+        .document-sheet .highlight:hover { background: #fff9c4; border-bottom-color: #b8960a; }
+        .document-sheet .signature-line { display: flex; justify-content: space-between; margin-top: 30px; gap: 20px; flex-wrap: wrap; }
+        .document-sheet .sig-block { text-align: center; flex: 1; min-width: 180px; }
+        .document-sheet .sig-line { border-top: 1px solid #000; margin: 40px auto 6px; width: 80%; }
+        .document-sheet .sig-name { font-weight: 600; font-size: 0.85rem; }
+        .document-sheet .sig-doc { font-size: 0.75rem; color: #555; }
+        .document-sheet .page-break { page-break-before: always; border-top: 2px dashed #ccc; margin-top: 40px; padding-top: 20px; }
+        .document-sheet .promissory-box { border: 2px solid #000; padding: 20px 24px; margin: 16px 0; border-radius: 4px; background: #fdfdfd; }
+        .document-sheet .promissory-box h3 { text-align: center; font-weight: 700; font-size: 1rem; margin-bottom: 10px; text-transform: uppercase; }
+        .document-sheet .center-text { text-align: center; }
+        .document-sheet .bold { font-weight: 700; }
+        .document-sheet .italic { font-style: italic; }
+        .toast { position: fixed; bottom: 24px; right: 24px; background: #1a3c5e; color: #fff; padding: 12px 20px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; z-index: 999; opacity: 0; transform: translateY(20px); pointer-events: none; transition: opacity 0.35s, transform 0.35s; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3); }
+        .toast.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+        @media (max-width: 1100px) {
+            .main-container { flex-direction: column; }
+            .sidebar { width: 100%; min-width: 100%; max-height: none; position: relative; top: auto; border-right: none; border-bottom: 2px solid var(--border); }
+            .sidebar.collapsed { width: 100%; min-width: 100%; max-height: 60px; overflow: hidden; }
+            .sidebar-inner { min-width: auto; }
+            .preview-area { max-height: none; position: relative; top: auto; padding: 16px 10px; }
+            .document-sheet { padding: 30px 20px; font-size: 0.8rem; }
+            .app-header h1 { font-size: 1rem; }
+        }
+        @media (max-width: 600px) {
+            .document-sheet { padding: 20px 14px; font-size: 0.75rem; }
+            .document-sheet h2.doc-title { font-size: 0.95rem; }
+            .document-sheet .sig-line { width: 90%; margin-top: 25px; }
+            .btn { padding: 8px 14px; font-size: 0.78rem; }
+            .form-row { flex-direction: column; }
+            .sidebar-inner { padding: 10px 8px; }
+            .section-card { padding: 10px 12px; }
+        }
+        @media print {
+            body { background: #fff !important; }
+            .app-header, .sidebar, .preview-area h2, .btn, .toast, .no-print { display: none !important; }
+            .main-container { display: block !important; max-width: 100% !important; }
+            .preview-area { padding: 0 !important; max-height: none !important; position: static !important; background: #fff !important; overflow: visible !important; }
+            .document-sheet { box-shadow: none !important; padding: 0 !important; max-width: 100% !important; font-size: 0.82rem !important; line-height: 1.5 !important; border-radius: 0 !important; page-break-after: always; }
+            .document-sheet .highlight { background: transparent !important; border-bottom: none !important; font-weight: 500 !important; color: #000 !important; }
+            .document-sheet .page-break { page-break-before: always; border-top: 1px solid #000; }
+            @page { margin: 2cm; size: A4; }
+        }
+    </style>
+</head>
+<body>
+    <header class="app-header no-print">
+        <h1><span class="icon">📋</span> Gerador de Contrato de Locação</h1>
+        <div class="header-actions">
+            <button class="btn btn-toggle" id="btnToggleSidebar" title="Mostrar/Ocultar formulário">☰ Formulário</button>
+            <button class="btn btn-reset" id="btnReset" title="Restaurar valores padrão">↺ Resetar</button>
+            <button class="btn btn-print" id="btnPrint" title="Imprimir contrato">🖨️ Imprimir / PDF</button>
+        </div>
+    </header>
+    <div class="main-container">
+        <aside class="sidebar no-print" id="sidebar">
+            <div class="sidebar-inner">
+                <h2>📝 Dados Editáveis</h2>
+                <p style="font-size:0.75rem;color:#888;margin-bottom:6px;">Todos os campos entre <em>aspas</em> no documento original podem ser alterados abaixo. A pré-visualização atualiza automaticamente.</p>
+                <div class="section-card">
+                    <h3 class="open" data-section="locador">🏢 Dados do Locador <span class="arrow">▶</span></h3>
+                    <div class="fields expanded" id="fields-locador">
+                        <div class="form-group"><label>Nome/Razão Social do Locador</label><input type="text" id="nomeLocador" value="PAIZAO COMERCIO DE AUTO PEÇAS EIRELI ME" data-bind="nomeLocador"></div>
+                        <div class="form-group"><label>CNPJ do Locador</label><input type="text" id="cnpjLocador" value="74.410.606.0001-31" data-bind="cnpjLocador"></div>
+                        <div class="form-group"><label>Endereço do Locador</label><textarea id="enderecoLocador" data-bind="enderecoLocador" rows="2">AV. Vila Ema 5445 Vila Ema São Paulo SP</textarea></div>
+                        <div class="form-group"><label>Nome do Gestor do Contrato</label><input type="text" id="nomeGestor" value="SERGIO PEREIRA DA SILVA" data-bind="nomeGestor"></div>
+                    </div>
+                </div>
+                <div class="section-card">
+                    <h3 class="open" data-section="locatario">👤 Dados do Locatário <span class="arrow">▶</span></h3>
+                    <div class="fields expanded" id="fields-locatario">
+                        <div class="form-group"><label>Nome Completo</label><input type="text" id="nomeLocatario" value="MARIA CLARA APARECIDA SILVA LEITE" data-bind="nomeLocatario"></div>
+                        <div class="form-row">
+                            <div class="form-group"><label>Telefone</label><input type="text" id="foneLocatario" value="11 94631 7079" data-bind="foneLocatario"></div>
+                            <div class="form-group"><label>CEP</label><input type="text" id="cepLocatario" value="08030-590" data-bind="cepLocatario"></div>
+                        </div>
+                        <div class="form-group"><label>Endereço Completo</label><textarea id="enderecoLocatario" data-bind="enderecoLocatario" rows="2">OSORIO FRANCO VILHELA 1250 BLOCO A AP 405 VILA NOVA CURUÇA São Paulo SP</textarea></div>
+                        <div class="form-row">
+                            <div class="form-group"><label>Cidade</label><input type="text" id="cidadeLocatario" value="COTIA" data-bind="cidadeLocatario"></div>
+                            <div class="form-group small"><label>Estado</label><input type="text" id="estadoLocatario" value="SP" data-bind="estadoLocatario" maxlength="2"></div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group"><label>RG</label><input type="text" id="rgLocatario" value="54.733.140-X" data-bind="rgLocatario"></div>
+                            <div class="form-group"><label>CPF</label><input type="text" id="cpfLocatario" value="463.899.688-41" data-bind="cpfLocatario"></div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group"><label>CNH - Nº Registro</label><input type="text" id="cnhLocatario" value="07189252073" data-bind="cnhLocatario"></div>
+                            <div class="form-group"><label>Validade CNH</label><input type="text" id="validadeCNH" value="07/05/2033" data-bind="validadeCNH"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="section-card">
+                    <h3 class="open" data-section="veiculo">🚗 Dados do Veículo <span class="arrow">▶</span></h3>
+                    <div class="fields expanded" id="fields-veiculo">
+                        <div class="form-row">
+                            <div class="form-group"><label>Marca</label><input type="text" id="marcaVeiculo" value="HYUNDAI" data-bind="marcaVeiculo"></div>
+                            <div class="form-group"><label>Modelo</label><input type="text" id="modeloVeiculo" value="HB 20" data-bind="modeloVeiculo"></div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group"><label>Cor</label><input type="text" id="corVeiculo" value="BRANCO" data-bind="corVeiculo"></div>
+                            <div class="form-group"><label>Placas</label><input type="text" id="placasVeiculo" value="GIW0G03" data-bind="placasVeiculo"></div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group"><label>Ano Fabricação</label><input type="text" id="anoFab" value="2018" data-bind="anoFab"></div>
+                            <div class="form-group"><label>Ano Modelo</label><input type="text" id="anoModelo" value="2019" data-bind="anoModelo"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="section-card">
+                    <h3 class="open" data-section="valores">💰 Valores e Datas <span class="arrow">▶</span></h3>
+                    <div class="fields expanded" id="fields-valores">
+                        <div class="form-row">
+                            <div class="form-group"><label>Valor Semanal do Aluguel</label><input type="text" id="valorSemanal" value="R$ 700,00" data-bind="valorSemanal"></div>
+                            <div class="form-group"><label>Valor da Caução</label><input type="text" id="valorCaucao" value="R$ 1.500,00" data-bind="valorCaucao"></div>
+                        </div>
+                        <div class="form-group"><label>Valor da Nota Promissória</label><input type="text" id="valorNota" value="R$ 2.500,00" data-bind="valorNota"></div>
+                        <div class="form-group"><label>Valor por Extenso (Nota Promissória)</label><input type="text" id="valorNotaExtenso" value="dois mil e quinhentos reais" data-bind="valorNotaExtenso"></div>
+                        <div class="form-group"><label>Número do Contrato</label><input type="text" id="numContrato" value="0003" data-bind="numContrato"></div>
+                        <div class="form-row">
+                            <div class="form-group small"><label>Dia Contrato</label><input type="text" id="diaContrato" value="22" data-bind="diaContrato"></div>
+                            <div class="form-group"><label>Mês Contrato</label><input type="text" id="mesContrato" value="julho" data-bind="mesContrato"></div>
+                            <div class="form-group small"><label>Ano Contrato</label><input type="text" id="anoContrato" value="2026" data-bind="anoContrato"></div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group small"><label>Dia Termo/Nota</label><input type="text" id="diaTermo" value="27" data-bind="diaTermo"></div>
+                            <div class="form-group"><label>Mês Termo/Nota</label><input type="text" id="mesTermo" value="julho" data-bind="mesTermo"></div>
+                            <div class="form-group small"><label>Ano Termo/Nota</label><input type="text" id="anoTermo" value="2026" data-bind="anoTermo"></div>
+                        </div>
+                        <div class="form-group"><label>Nome Proprietária (p/ Termo)</label><input type="text" id="nomeProprietaria" value="EDNA ORTI" data-bind="nomeProprietaria"></div>
+                        <div class="form-group"><label>CPF Proprietária (p/ Termo)</label><input type="text" id="cpfProprietaria" value="112.233.348-05" data-bind="cpfProprietaria"></div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        <div class="preview-area" id="previewArea">
+            <h2 class="no-print">📄 Pré-visualização do Documento</h2>
+            <div class="document-sheet" id="documentSheet">
+                <h2 class="doc-title">INSTRUMENTO PARTICULAR DE CONTRATO DE LOCAÇÃO DE VEÍCULOS</h2>
+                <p><strong>Contrato Número:</strong> "<span class="highlight" data-bind="numContrato">0003</span>"</p>
+                <p>Pelo presente Instrumento Particular de Contrato de Locação de Veículos, número 001220, e na melhor forma de direito, de um lado, <strong><span class="highlight" data-bind="nomeLocador">PAIZAO COMERCIO DE AUTO PEÇAS EIRELI ME</span></strong>, com sede na <strong><span class="highlight" data-bind="enderecoLocador">AV. Vila Ema 5445 Vila Ema São Paulo SP</span></strong>, inscrita no CNPJ sob o nº <strong><span class="highlight" data-bind="cnpjLocador">74.410.606.0001-31</span></strong>, doravante denominada <strong>LOCADORA</strong>, e, de outro lado, "<strong><span class="highlight" data-bind="nomeLocatario">MARIA CLARA APARECIDA SILVA LEITE</span></strong>", FONE "<span class="highlight" data-bind="foneLocatario">11 94631 7079</span>" residente e domiciliado à Rua "<span class="highlight" data-bind="enderecoLocatario">OSORIO FRANCO VILHELA 1250 BLOCO A AP 405 VILA NOVA CURUÇA São Paulo SP</span>", CEP "<span class="highlight" data-bind="cepLocatario">08030-590</span>", CIDADE "<span class="highlight" data-bind="cidadeLocatario">COTIA</span>" ESTADO "<span class="highlight" data-bind="estadoLocatario">SP</span>" portador do RG nº "<span class="highlight" data-bind="rgLocatario">54.733.140-X</span>" e inscrito no CPF sob o nº "<span class="highlight" data-bind="cpfLocatario">463.899.688-41</span>", e CNH número de registro: "<span class="highlight" data-bind="cnhLocatario">07189252073</span>" validade "<span class="highlight" data-bind="validadeCNH">07/05/2033</span>" doravante denominado <strong>LOCATÁRIO</strong>, têm, entre si, justo e contratado o presente, o qual se regerá pelas cláusulas e condições que a seguir se aduzem, com inteira submissão às disposições legais e regulamentares atinentes à espécie.</p>
+                <p class="clause-title">CLÁUSULA PRIMEIRA - DO OBJETO.</p>
+                <p>1. O presente contrato tem por objeto a locação do veículo "<span class="highlight" data-bind="marcaVeiculo">HYUNDAI</span>" "<span class="highlight" data-bind="modeloVeiculo">HB 20</span>", cor "<span class="highlight" data-bind="corVeiculo">BRANCO</span>", placas "<span class="highlight" data-bind="placasVeiculo">GIW0G03</span>", quatro portas, com ar-condicionado, direção hidráulica, trava elétrica, vidro elétrico e sistema de som com multimidia, ano de fabricação "<span class="highlight" data-bind="anoFab">2018</span>" e ano modelo "<span class="highlight" data-bind="anoModelo">2019</span>".</p>
+                <p class="clause-title">CLÁUSULA SEGUNDA - DAS OBRIGAÇÕES DO LOCADOR</p>
+                <p>2. É dever do locador manter em dia o pagamento dos impostos, tais como IPVA, DPVAT e licenciamento.</p>
+                <p>3. Manter o seguro do veículo vigente.</p>
+                <p>4. É dever do locador providenciar a manutenção do automóvel locado tão logo seja identificada falha dos sistemas ou pane em geral, admitindo que o custo da manutenção ou reparo seja suportado por ele, salvo em caso de este não ter dado causa à ocorrência.</p>
+                <p>5. As revisões preventivas do veículo serão custeadas pelo locador, que indicará ao locatário o local onde o veículo deverá ser conduzido.</p>
+                <p>6. As revisões periódicas obrigatórias que se fizerem necessárias serão procedidas em oficina credenciada ou indicada pelo locador. Contudo, não haverá desconto no valor do aluguel, exceto se o veículo necessitar permanecer na oficina por mais de vinte e quatro horas, hipótese em que serão descontadas as diárias correspondentes até a efetiva entrega do veículo.</p>
+                <p class="clause-title">CLÁUSULA TERCEIRA - DAS OBRIGAÇÕES DO LOCATÁRIO</p>
+                <p>6.1 O locatário se compromete a utilizar o veículo de forma pessoal e exclusiva para o transporte em aplicativos de transporte remunerado privado individual de passageiros em conformidade com a Lei nº 12.587/2012, sendo expressamente proibido o empréstimo, compartilhamento, cessão ou sublocação a terceiros.</p>
+                <p>7. É de responsabilidade do locatário zelar pelo veículo, guardando-o e protegendo-o, utilizá-lo de maneira correta durante o período da locação.</p>
+                <p>7.1 O locatário compromete-se a utilizar o veículo de forma adequada, em conformidade com as leis de trânsito e as normas de segurança pública, abstendo-se de exceder a lotação e o peso suportado pelo veículo e de praticar atos que possam causar danos ou prejuízos ao veículo ou a terceiros.</p>
+                <p>8. É vedado ao LOCATÁRIO: * Utilizar o veículo para fins comerciais de competição ou para qualquer outra finalidade não prevista neste contrato. * É vedado conduzir o veículo sob a influência de álcool, drogas ou substâncias psicoativas que possam comprometer sua capacidade de condução. É vedado emprestar, sublocar, ceder ou transferir, de qualquer forma, o veículo a terceiros. O locatário se compromete a não realizar modificações, reparos ou adaptações no veículo sem autorização prévia e expressa do Locador.</p>
+                <p>9. O locatário será o único responsável por eventuais multas, taxas, impostos e outras despesas decorrentes do uso do veículo durante o período de locação.</p>
+                <p>9.1 Considerando o prazo estendido deste contrato de locação, e com o propósito de o veículo manter-se em condições de uso, o locatário assumirá a responsabilidade de realizar checklist semanal, verificando e informando à empresa sobre as condições dos seguintes itens: Nível de óleo do motor; Parte elétrica; Freios; Nível de água; Pneus; A omissão de informação ou a sua prestação inverídica sobre a situação do veículo poderá dar causa à rescisão contratual, e as avarias oportunamente identificadas, e seus respectivos consertos, correrão por conta do locatário.</p>
+                <p>10. O locatário se compromete a utilizar o veículo somente em território nacional e dentro do Estado da Federação em que foi locado, sendo expressamente proibido ultrapassar qualquer fronteira ou limite geográfico diverso deste aqui mencionado. 10.1 As partes ajustam que, havendo necessidade de deslocamento do veículo para além de cem quilômetros a partir desta cidade, o locatário deverá informar previamente o locador.</p>
+                <p>11. Em relação às multas de trânsito, o Locatário, sendo responsável pelo cometimento delas, obriga-se a fornecer, no prazo de 3 (três) dias após ser comunicado, uma cópia da CNH contendo sua assinatura, bem como de arcar com os custos operacionais e administrativos para transferência dos pontos.</p>
+                <p>12. A inobservância das Cláusulas 3.1 e 3.2 ensejará a imediata devolução do veículo locado, e sua retenção imotivada poderá configurar apropriação indébita. 12.1 É de inteira responsabilidade do Locatário os custos de pagamento das multas de trânsito e custos administrativos decorrentes das infrações durante o período em que estiver na posse do veículo, salvo se tais multas ou penalidades forem imputáveis à Locadora por irregularidade na documentação do veículo.</p>
+                <p>12.2 A taxa administrativa por multa será R$ 100,00, que deverá ser paga junto com o valor da multa apresentada.</p>
+                <p>13. Sobrevindo algum sinistro durante a condução do automóvel, o Locatário deverá providenciar Boletim de Ocorrência encaminhando-o imediatamente à Locadora.</p>
+                <p>14. A apresentação do Boletim de Ocorrência citado na cláusula 3.4 deste Contrato, não exime o Locatário de arcar com todas as despesas decorrentes do evento danoso.</p>
+                <p>15. O locatário se compromete a arcar com as despesas inerentes à utilização de combustível, conserto de pneus, câmaras de ar, lâmpadas e troca de peças de reposição por mal uso.</p>
+                <p>16. Devolver o veículo nas mesmas condições de conservação nas quais lhe foram entregues no ato da retirada, inclusive devolvendo-o limpo, no endereço indicado pelo gestor do contrato, Sr. <strong><span class="highlight" data-bind="nomeGestor">SERGIO PEREIRA DA SILVA</span></strong>.</p>
+                <p class="clause-title">CLÁUSULA QUARTA - DO ACOMPANHAMENTO E FISCALIZAÇÃO</p>
+                <p>17. O acompanhamento e a vistoria a serem exercidos pelo Locador, por meio de seus prepostos, consistirão no direito de vistoriar o veículo quando de sua restituição e durante o período de vigência do contrato, mediante prévia comunicação.</p>
+                <p>18. As partes ajustam que a vistoria obrigatória ocorrerá a cada 15 dias em local situado na <span class="highlight" data-bind="enderecoLocador">AV. VILA EMA 5445 VILA EMA SÃO PAULO</span>, por sua vez a recusa no cumprimento desta condição poderá dar ensejo à rescisão do contrato com a retenção do valor dado em caução.</p>
+                <p>19. O Locador se compromete a utilizar o veículo em conformidade com as regras aqui estabelecidas e em obediência às especificidades do veículo, ditadas pela montadora.</p>
+                <p>20. Havendo sinistro, independentemente de culpa exclusiva de terceiros, o Locatário se compromete a arcar com os custos do reparo conduzindo o veículo ao estado original.</p>
+                <p>21. Optando o Locatário por não acionar o seguro mediante o pagamento de franquia para reparar o veículo, o Locador apresentará a ele três orçamentos para que escolha a oficina e proceda ao pagamento.</p>
+                <p>22. Em caso de necessidade de remoção do veículo em decorrência de acidente, o locatário arcará com o pagamento de eventuais custas e estadias em pátio até sua liberação.</p>
+                <p class="clause-title">CLÁUSULA QUINTA - DO PRAZO DE LOCAÇÃO E VIGÊNCIA</p>
+                <p>23. O presente Contrato tem vigência de 180 (cento e oitenta) dias, com início na data de sua assinatura, podendo ser prorrogado automaticamente e sua rescisão antecipada ensejará a cobrança de multa de R$ 2.500,00 (dois e quinhentos reais). 23.1. Após os primeiros 90 dias de contrato o LOCATARIO poderá se achar necessário solicitar a troca de veículo para outra categoria (se houver veículo disponível) sem a necessidade de fazer o cancelamento do contrato e cumprir os próximos 90 dias, pagando apenas uma taxa de troca de veículo no valor de R$ 600,00 (seiscentos reais).</p>
+                <p>24. A seu critério, o Locador poderá rescindir o contrato devendo, no entanto, restituir o valor pago referente à semana vigente, bem como a caução no prazo estipulado neste contrato.</p>
+                <p>25. Após o vencimento do primeiro prazo, o contrato passará a ter duração de 30 (trinta) dias, podendo ser rescindido sem gerar ônus, desde que previamente comunicada a outra parte com antecedência de 30 (trinta) dias.</p>
+                <p class="clause-title">CLÁUSULA SEXTA - DO PREÇO.</p>
+                <p>26. Preço da Locação: O valor ajustado entre as partes neste contrato é de "<span class="highlight" data-bind="valorSemanal">R$ 700,00</span>" semanais, bem como de que o limite de quilometragem estabelecido será de 1.750 km por semana, e que por quilômetro excedente o locatário pagará o equivalente a R$ 0,90 centavos. As partes ajustam ainda neste contrato que a caução no valor de "<span class="highlight" data-bind="valorCaucao">R$ 1.500,00</span>", deverá ser dividida em 10 semanas e a primeira parcela deverá ser paga na retirada do veículo e somente será devolvido 60 dias após o término do contrato o valor de "<span class="highlight" data-bind="valorCaucao">R$ 1.500,00</span>" não havendo multas e nenhuma avaria no veículo. O locatário outorga Nota Promissória prévia garantindo ao locador ressarcimento de eventuais gastos futuros, ocasião em que de comum acordo as partes inserirão o valor a ser confessado. Não havendo gastos a serem descontados, o título será restituído ao locatário em até sessenta dias após a entrega do veículo.</p>
+                <p>27. Estão inclusos no preço: Manutenção preventiva (por desgaste) Documentação atualizada Seguro Troca de óleo Pneus Pastilha de freio</p>
+                <p>28. Não estão inclusos nos preços: Motorista Combustível Troca de sonda lambda Peças de suspensão do veículo Lâmpadas Bomba de combustível Pré-filtro de combustível Taxa administrativa para cobrir despesas de transferência de pontos referentes a multas que o Locatário levar.</p>
+                <p>29. Todas as multas deverão ser pagas na semana seguinte à sua comunicação.</p>
+                <p>30. O declara ter ciência de que os valores das multas e penalidades variam de acordo com o município de sua ocorrência.</p>
+                <p class="clause-title">CLÁUSULA SÉTIMA – DO FATURAMENTO E PAGAMENTO</p>
+                <p>31. O locatário concorda com que sua conta vinculada à Uber seja vinculada à conta do Sr. <strong><span class="highlight" data-bind="nomeGestor">SERGIO PEREIRA DA SILVA</span></strong> para que em caso de o saldo de débito não cobrir as despesas do aluguel, esta poderá ser utilizada até o limite das despesas, e em caso de ainda remanescer dívida, o locatário deverá proceder ao complemento do valor.</p>
+                <p>31.1. CASO O VALOR DO ALUGUEL NÃO SEJA FEITO EM SUA TOTALIDADE PELO APLICATIVO DA UBER, DEVERÁ SER FEITO O PAGAMENTO DA DIFERENÇA VIA PIX ATÉ AS 13:00 DA SEGUNDA FEIRA.</p>
+                <p>32. O não pagamento do aluguel semanal e outros débitos em sua totalidade permitirá ao Locador rescindir o contrato imediatamente, incidindo a multa de R$ 2.500,00 (dois mil quinhentos reais).</p>
+                <p class="clause-title">CLÁUSULA OITAVA - DA RESCISÃO</p>
+                <p>33. Este Contrato poderá ser rescindido pelo LOCADOR a qualquer momento, mediante notificação escrita, desde que a comunicação seja feita com antecedência mínima de 7(sete) dias, eximindo a parte de multas pela rescisão, excetuando-se eventuais dívidas inerentes a infrações, saldo de locação e avarias. No ato da rescisão, será cobrada taxa de R$220,00 caso seja necessária a higienização do veículo. O locatário poderá entregar o veículo em local diverso do ajustado, porém será cobrada taxa no valor de R$ 500,00 (quinhentos reais).</p>
+                <p>34. A inobservância da notificação prévia obriga a parte a pagar o valor referente aos dias de locação não pagos.</p>
+                <p>35. O não cumprimento de qualquer uma das cláusulas constantes neste contrato por parte do Locatário dará o direito à rescisão sem aviso prévio e aplicação de multa no valor de R$ 2.500,00 (dois mil e quinhentos reais).</p>
+                <p>36. Este contrato permanecerá vigente até seu integral cumprimento com a prestação de contas.</p>
+                <p>37. O veículo possui cobertura para a atividade comercial de passageiros. Havendo necessidade de acionamento do seguro, o locatário arcará com os custos da franquia que corresponde a 10% (dez por cento) da tabela Fipe. Em caso de necessidade de acionamento da franquia para terceiros, será cobrado do locatário o equivalente a 2% da tabela Fipe do veículo.</p>
+                <p>38. Motivos que podem levar à rescisão contratual sem a necessidade de prévio aviso: Inadimplência no pagamento semanal; Perda ou suspensão da habilitação (conforme legislação de trânsito vigente); emprestar ou dividir o veículo com outro motorista sem autorização da empresa; deixar o veículo pernoitar na rua, sem acomodá-lo em garagem; Promover alterações no veículo sem prévia autorização do locador; deixar de comparecer à vistoria previamente agendada; Não comparecer para manutenções programadas; Omitir o registro semanal de quilometragem até as 10:00; Informar endereço diverso do que reside.</p>
+                <p class="clause-title">CLÁUSULA NONA - DO FORO</p>
+                <p>39. Fica eleito o Foro da Comarca de Vila Prudente como o único competente para a solução de questões oriundas do presente Contrato, renunciando a outro por mais privilegiado que seja, arcando a parte vencida, em caso de demanda, com todas as despesas processuais e honorários advocatícios.</p>
+                <p>E, por estarem assim justas e contratadas, as partes assinam o presente Contrato em duas vias de igual teor, forma e idêntico valor jurídico, para um só efeito, na presença das testemunhas abaixo assinadas dando tudo por bom, firme e valioso.</p>
+                <p><strong>São Paulo, <span class="highlight" data-bind="diaContrato">22</span> de <span class="highlight" data-bind="mesContrato">julho</span> de <span class="highlight" data-bind="anoContrato">2026</span></strong></p>
+                <div class="signature-line">
+                    <div class="sig-block"><div class="sig-line"></div><div class="sig-name"><span class="highlight" data-bind="nomeLocador">PAIZAO COMERCIO DE AUTOPEÇAS EIRELI ME</span></div><div class="sig-doc">CNPJ nº <span class="highlight" data-bind="cnpjLocador">74.410.606.0001-31</span> (Locador)</div></div>
+                    <div class="sig-block"><div class="sig-line"></div><div class="sig-name"><span class="highlight" data-bind="nomeLocatario">MARIA CLARA APARECIDA SILVA LEITE</span></div><div class="sig-doc">CPF nº <span class="highlight" data-bind="cpfLocatario">463.899.688-41</span> (Locatário)</div></div>
+                </div>
+                <div class="signature-line" style="margin-top:30px;">
+                    <div class="sig-block"><div class="sig-line"></div><div class="sig-name">Testemunha 1</div></div>
+                    <div class="sig-block"><div class="sig-line"></div><div class="sig-name">Testemunha 2</div></div>
+                </div>
+                <div class="page-break"></div>
+                <h3 class="doc-subtitle">TERMO DE RESPONSABILIDADE E AUTORIZAÇÃO DE TRANSFERÊNCIA DE PONTUAÇÕES</h3>
+                <p><strong>NÚMERO <span class="highlight" data-bind="numContrato">003</span></strong></p>
+                <p>Eu, <strong><span class="highlight" data-bind="nomeLocatario">MARIA CLARA APARECIDA SILVA LEITE</span></strong>, portador da cédula de identidade RG nº <span class="highlight" data-bind="rgLocatario">54.733.140-X</span> e inscrito no CPF sob o nº <span class="highlight" data-bind="cpfLocatario">463.899.688-41</span>, CNH número de registro: <span class="highlight" data-bind="cnhLocatario">07189252073</span> validade <span class="highlight" data-bind="validadeCNH">07/05/2033</span> que sou contratante do veículo de marca <strong><span class="highlight" data-bind="marcaVeiculo">HYUNDAI</span> <span class="highlight" data-bind="modeloVeiculo">HB 20</span></strong>, placas <strong><span class="highlight" data-bind="placasVeiculo">GIW0G03</span></strong> de propriedade da Sra. <strong><span class="highlight" data-bind="nomeProprietaria">EDNA ORTI</span></strong>, devidamente inscrita no C.P.F N. <strong><span class="highlight" data-bind="cpfProprietaria">112.233.348-05</span></strong>, assumo qualquer responsabilidade civil, criminal e judicial, responsabilizo-me também pelas penalidades pecuniárias ou de pontuação caso venha cometer qualquer infração que viole o código de trânsito brasileiro, autorizando a transferência de pontos das mesmas com o veículo acima descrito e de 90 dias a contar da assinatura do mesmo. Sem mais.</p>
+                <p><strong>São Paulo, <span class="highlight" data-bind="diaTermo">27</span> de <span class="highlight" data-bind="mesTermo">julho</span> de <span class="highlight" data-bind="anoTermo">2026</span></strong></p>
+                <p>Atenciosamente,</p>
+                <br>
+                <div class="sig-block" style="text-align:left;">
+                    <div class="sig-line" style="margin-left:0;width:60%;"></div>
+                    <div class="sig-name"><span class="highlight" data-bind="nomeLocatario">MARIA CLARA APARECIDA SILVA LEITE</span></div>
+                    <div class="sig-doc">CPF nº <span class="highlight" data-bind="cpfLocatario">463.899.688-41</span></div>
+                    <div class="sig-doc">RG nº <span class="highlight" data-bind="rgLocatario">54.733.140-X</span></div>
+                    <div class="sig-doc">CNH: <span class="highlight" data-bind="cnhLocatario">07189252073</span></div>
+                </div>
+                <div class="page-break"></div>
+                <div class="promissory-box">
+                    <h3>NOTA PROMISSÓRIA</h3>
+                    <p><strong>Nº: <span class="highlight" data-bind="numContrato">0003</span></strong></p>
+                    <p><strong>Vencimento: <span class="highlight" data-bind="diaTermo">27</span> de <span class="highlight" data-bind="mesTermo">julho</span> de <span class="highlight" data-bind="anoTermo">2026</span></strong></p>
+                    <p><strong>Valor: <span class="highlight" data-bind="valorNota">R$ 2.500,00</span></strong></p>
+                    <p>Aos <strong><span class="highlight" data-bind="diaTermo">27</span> de <span class="highlight" data-bind="mesTermo">julho</span> de <span class="highlight" data-bind="anoTermo">2026</span></strong>, pagarei por esta única via de NOTA PROMISSÓRIA a <strong><span class="highlight" data-bind="nomeLocador">PAIZAO COMERCIO DE AUTOPEÇAS EIRELI ME</span></strong>, CNPJ nº <strong><span class="highlight" data-bind="cnpjLocador">74.410.606.0001-31</span></strong>, ou a sua ordem, a quantia de <strong><span class="highlight" data-bind="valorNotaExtenso">dois mil e quinhentos reais</span></strong>, em moeda corrente nacional. Pagável em: São Paulo (SP).</p>
+                    <p><strong>EMITENTE:</strong> Nome <strong><span class="highlight" data-bind="nomeLocatario">MARIA CLARA APARECIDA SILVA LEITE</span></strong>,</p>
+                    <p>CPF nº <strong><span class="highlight" data-bind="cpfLocatario">463.899.688-41</span></strong></p>
+                    <p>Documento de identificação: Carteira Nacional de Habilitação (CNH) n. <strong><span class="highlight" data-bind="cnhLocatario">07189252073</span></strong>, expedida por DETRAN SP</p>
+                    <p>Endereço: Rua <strong><span class="highlight" data-bind="enderecoLocatario">OSORIO FRANCO VILHELA 1250 BLOCO A AP 405 VILA NOVA CURUÇA São Paulo SP</span></strong>,</p>
+                    <p>CEP <strong><span class="highlight" data-bind="cepLocatario">08030-590</span></strong></p>
+                    <br>
+                    <p><em>Cartório de Registro Civil de Sapopemba</em></p>
+                    <p><strong>São Paulo, <span class="highlight" data-bind="diaTermo">27</span> de <span class="highlight" data-bind="mesTermo">julho</span> de <span class="highlight" data-bind="anoTermo">2026</span></strong></p>
+                    <br>
+                    <div class="sig-block" style="text-align:left;">
+                        <div class="sig-line" style="margin-left:0;width:60%;"></div>
+                        <div class="sig-name"><span class="highlight" data-bind="nomeLocatario">MARIA CLARA APARECIDA SILVA LEITE</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="toast" id="toast"></div>
+    <script>
+        (function() {
+            const sidebar = document.getElementById('sidebar');
+            const btnToggleSidebar = document.getElementById('btnToggleSidebar');
+            const btnPrint = document.getElementById('btnPrint');
+            const btnReset = document.getElementById('btnReset');
+            const toast = document.getElementById('toast');
+            const allInputs = document.querySelectorAll('input[data-bind], textarea[data-bind]');
+            const allHighlightSpans = document.querySelectorAll('.highlight[data-bind]');
+            let toastTimer;
+            function showToast(message, duration = 2000) {
+                clearTimeout(toastTimer);
+                toast.textContent = message;
+                toast.classList.add('show');
+                toastTimer = setTimeout(() => { toast.classList.remove('show'); }, duration);
+            }
+            function updateAllBindings() {
+                const values = {};
+                allInputs.forEach(input => {
+                    const bindKey = input.getAttribute('data-bind');
+                    if (bindKey) values[bindKey] = input.value;
+                });
+                allHighlightSpans.forEach(span => {
+                    const bindKey = span.getAttribute('data-bind');
+                    if (bindKey && values[bindKey] !== undefined) span.textContent = values[bindKey];
+                });
+            }
+            allInputs.forEach(input => {
+                input.addEventListener('input', updateAllBindings);
+                input.addEventListener('change', updateAllBindings);
+            });
+            updateAllBindings();
+            let sidebarVisible = true;
+            btnToggleSidebar.addEventListener('click', function() {
+                sidebarVisible = !sidebarVisible;
+                if (sidebarVisible) {
+                    sidebar.classList.remove('collapsed');
+                    btnToggleSidebar.textContent = '☰ Formulário';
+                } else {
+                    sidebar.classList.add('collapsed');
+                    btnToggleSidebar.textContent = '☰ Mostrar Formulário';
+                }
+                showToast(sidebarVisible ? 'Formulário visível' : 'Formulário oculto');
+            });
+            btnPrint.addEventListener('click', function() {
+                updateAllBindings();
+                showToast('Abrindo janela de impressão...', 1800);
+                setTimeout(() => { window.print(); }, 300);
+            });
+            btnReset.addEventListener('click', function() {
+                if (confirm('Tem certeza que deseja restaurar todos os valores padrão?')) {
+                    const defaultValues = {
+                        'nomeLocador': 'PAIZAO COMERCIO DE AUTO PEÇAS EIRELI ME',
+                        'cnpjLocador': '74.410.606.0001-31',
+                        'enderecoLocador': 'AV. Vila Ema 5445 Vila Ema São Paulo SP',
+                        'nomeGestor': 'SERGIO PEREIRA DA SILVA',
+                        'nomeLocatario': 'MARIA CLARA APARECIDA SILVA LEITE',
+                        'foneLocatario': '11 94631 7079',
+                        'cepLocatario': '08030-590',
+                        'enderecoLocatario': 'OSORIO FRANCO VILHELA 1250 BLOCO A AP 405 VILA NOVA CURUÇA São Paulo SP',
+                        'cidadeLocatario': 'COTIA',
+                        'estadoLocatario': 'SP',
+                        'rgLocatario': '54.733.140-X',
+                        'cpfLocatario': '463.899.688-41',
+                        'cnhLocatario': '07189252073',
+                        'validadeCNH': '07/05/2033',
+                        'marcaVeiculo': 'HYUNDAI',
+                        'modeloVeiculo': 'HB 20',
+                        'corVeiculo': 'BRANCO',
+                        'placasVeiculo': 'GIW0G03',
+                        'anoFab': '2018',
+                        'anoModelo': '2019',
+                        'valorSemanal': 'R$ 700,00',
+                        'valorCaucao': 'R$ 1.500,00',
+                        'valorNota': 'R$ 2.500,00',
+                        'valorNotaExtenso': 'dois mil e quinhentos reais',
+                        'numContrato': '0003',
+                        'diaContrato': '22',
+                        'mesContrato': 'julho',
+                        'anoContrato': '2026',
+                        'diaTermo': '27',
+                        'mesTermo': 'julho',
+                        'anoTermo': '2026',
+                        'nomeProprietaria': 'EDNA ORTI',
+                        'cpfProprietaria': '112.233.348-05'
+                    };
+                    allInputs.forEach(input => {
+                        const bindKey = input.getAttribute('data-bind');
+                        if (bindKey && defaultValues[bindKey] !== undefined) input.value = defaultValues[bindKey];
+                    });
+                    updateAllBindings();
+                    showToast('✅ Valores restaurados com sucesso!');
+                }
+            });
+            const sectionHeaders = document.querySelectorAll('.section-card h3[data-section]');
+            sectionHeaders.forEach(header => {
+                header.addEventListener('click', function() {
+                    const sectionId = this.getAttribute('data-section');
+                    const fieldsDiv = document.getElementById('fields-' + sectionId);
+                    if (fieldsDiv) {
+                        const isExpanded = fieldsDiv.classList.contains('expanded');
+                        if (isExpanded) {
+                            fieldsDiv.classList.remove('expanded');
+                            fieldsDiv.classList.add('collapsed');
+                            this.classList.remove('open');
+                        } else {
+                            fieldsDiv.classList.remove('collapsed');
+                            fieldsDiv.classList.add('expanded');
+                            this.classList.add('open');
+                        }
+                    }
+                });
+                const sectionId = header.getAttribute('data-section');
+                const fieldsDiv = document.getElementById('fields-' + sectionId);
+                if (fieldsDiv) {
+                    fieldsDiv.classList.add('expanded');
+                    header.classList.add('open');
+                }
+            });
+            document.addEventListener('keydown', function(e) {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'p') { updateAllBindings(); }
+                if ((e.ctrlKey || e.metaKey) && e.key === 'b') { e.preventDefault(); btnToggleSidebar.click(); }
+            });
+            console.log('✅ Gerador de Contrato de Locação inicializado com sucesso!');
+        })();
+    <\/script>
+</body>
+</html>`;
 
+            // Atribui o HTML ao iframe
+            const iframeGeradorContrato = document.getElementById('iframe-gerador-contrato');
+            if (iframeGeradorContrato) {
+                iframeGeradorContrato.srcdoc = contratoHtml;
+            } else {
+                console.warn('Elemento iframe do gerador não encontrado.');
+            }
+
+            // ===================== CÓDIGO ORIGINAL DO APP (funções de permissão, eventos, etc.) =====================
+            // Início do código fornecido pelo usuário (sem a abertura da IIFE, pois já estamos dentro dela)
             function getVeiculosPermitidos() {
                 if (!usuarioLogado) return [];
                 if (usuarioLogado.role === 'admin') return veiculos;
@@ -682,7 +1139,7 @@
                 const navButtons = document.querySelectorAll('.top-nav button[data-page]');
                 navButtons.forEach(btn => {
                     const page = btn.getAttribute('data-page');
-                    if (page === 'garagem' || page === 'carro' || page === 'socorro') btn.style.display = '';
+                    if (page === 'garagem' || page === 'carro' || page === 'socorro' || page === 'gerador-contrato') btn.style.display = '';
                     else if (page === 'auditoria') btn.style.display = isAdmin() ? '' : 'none';
                     else if (page === 'banco') btn.style.display = temPermissaoAba('banco') ? '' : 'none';
                     else btn.style.display = temPermissaoAba(page) ? '' : 'none';
@@ -756,6 +1213,93 @@
                     }
                 }
             }
+
+            // ========== NOVA FUNÇÃO: preencherGeradorContrato ==========
+            function preencherGeradorContrato(locacao, locacaoId) {
+                const iframe = document.getElementById('iframe-gerador-contrato');
+                if (!iframe) return;
+                const doc = iframe.contentDocument || iframe.contentWindow?.document;
+                if (!doc) {
+                    console.warn('Iframe ainda não carregado, tentando novamente...');
+                    setTimeout(() => preencherGeradorContrato(locacao, locacaoId), 500);
+                    return;
+                }
+
+                const setVal = (id, valor) => {
+                    const el = doc.getElementById(id);
+                    if (el) {
+                        el.value = valor;
+                        el.dispatchEvent(new Event('input', { bubbles: true }));
+                        el.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                };
+
+                // Obter dados completos
+                const locatario = locatarios.find(l => l.id === locacao.locatarioId);
+                const veiculo = veiculos.find(v => v.id === locacao.veiculoId);
+                if (!locatario || !veiculo) return;
+
+                // Montar endereço completo
+                const enderecoCompleto = `${locatario.endereco || ''} ${locatario.bairro || ''} ${locatario.cidade || ''} ${locatario.estado || ''}`.trim();
+
+                // Dados do Locatário
+                setVal('nomeLocatario', locatario.nome);
+                setVal('foneLocatario', locatario.fone);
+                setVal('cepLocatario', locatario.cep);
+                setVal('enderecoLocatario', enderecoCompleto);
+                setVal('cidadeLocatario', locatario.cidade);
+                setVal('estadoLocatario', locatario.estado);
+                setVal('rgLocatario', locatario.rg);
+                setVal('cpfLocatario', locatario.cpf);
+                setVal('cnhLocatario', locatario.cnh);
+                if (locatario.validadeCNH) {
+                    const partes = locatario.validadeCNH.split('-');
+                    if (partes.length === 3) {
+                        setVal('validadeCNH', `${partes[2]}/${partes[1]}/${partes[0]}`);
+                    }
+                }
+
+                // Dados do Veículo
+                setVal('marcaVeiculo', veiculo.marca);
+                setVal('modeloVeiculo', veiculo.modelo);
+                setVal('corVeiculo', veiculo.cor);
+                setVal('placasVeiculo', veiculo.placa);
+                setVal('anoFab', veiculo.anoFabricacao);
+                setVal('anoModelo', veiculo.anoModelo);
+
+                // Valores
+                setVal('valorSemanal', formatarMoeda(veiculo.valorSemanal || 0));
+                setVal('valorCaucao', formatarMoeda(veiculo.caucao || 0));
+
+                // Datas (usar data de início da locação)
+                const dataInicio = new Date(locacao.dataInicio + 'T00:00:00');
+                const dia = String(dataInicio.getDate()).padStart(2, '0');
+                const ano = dataInicio.getFullYear();
+                const meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+                const mesExtenso = meses[dataInicio.getMonth()];
+                setVal('diaContrato', dia);
+                setVal('mesContrato', mesExtenso);
+                setVal('anoContrato', ano.toString());
+                // Termo: usar a mesma data de início
+                setVal('diaTermo', dia);
+                setVal('mesTermo', mesExtenso);
+                setVal('anoTermo', ano.toString());
+
+                // Número do contrato: sequencial baseado na quantidade de locações + 1
+                const numContrato = String(locacoes.length + 1).padStart(4, '0');
+                setVal('numContrato', numContrato);
+
+                // Proprietária (se existir no veículo)
+                if (veiculo.proprietario) {
+                    setVal('nomeProprietaria', veiculo.proprietario);
+                }
+                // cpfProprietaria não é preenchido pois não temos esse dado
+            }
+
+            // ========== FIM DA NOVA FUNÇÃO ==========
+
+            // Restante do código original (funções e eventos) ...
+            // (Incluído abaixo para completar a IIFE)
 
             function aplicarRestricoesSubAbasManutencao() {
                 if (isAdmin()) {
@@ -910,7 +1454,7 @@
             });
 
             function navegarPara(pageName) {
-                if (!temPermissaoAba(pageName) && pageName !== 'auditoria' && pageName !== 'banco') { showToast('⚠️ Você não tem permissão para acessar esta aba.', 'error'); return; }
+                if (!temPermissaoAba(pageName) && pageName !== 'auditoria' && pageName !== 'banco' && pageName !== 'gerador-contrato') { showToast('⚠️ Você não tem permissão para acessar esta aba.', 'error'); return; }
                 if (pageName === 'auditoria' && !isAdmin()) { showToast('⚠️ Apenas o administrador pode acessar esta aba.', 'error'); return; }
                 if (pageName === 'banco' && !temPermissaoAba('banco')) { showToast('⚠️ Você não tem permissão para acessar esta aba.', 'error'); return; }
                 pages.forEach(p => p.classList.remove('active'));
@@ -932,6 +1476,7 @@
                 }
                 if (pageName === 'socorro') { atualizarSocorro(); }
                 if (pageName === 'carro') { renderizarSubAbasCarro(); }
+                if (pageName === 'gerador-contrato') { /* O iframe já está carregado */ }
                 if (pageName === 'locatarios' && temPermissaoAba('locatarios')) { atualizarTabelaLocatarios(); initScrollButtons(); }
                 if (pageName === 'locacoes' && temPermissaoAba('locacoes')) { atualizarSelectsLocacao(); atualizarTabelaLocacoes(); initScrollButtons(); if (termoBuscaLocacoes) { document.getElementById('input-busca-locacoes').value = termoBuscaLocacoes; atualizarUIBuscaLocacoes(); } }
                 if (pageName === 'manutencao' && temPermissaoAba('manutencao')) { atualizarSelectManutencaoVeiculos(); renderizarSubAbasManutencao(); aplicarRestricoesSubAbasManutencao(); destacarAbaManutencaoAtiva(); atualizarTabelaManutencoes(); initScrollButtons(); }
@@ -1413,7 +1958,7 @@
                         dataInicio, dataFim, documentosLocatario: [],
                         status: 'ativa', dataCriacao: new Date().toISOString(), dataAtualizacao: new Date().toISOString()
                     };
-                    try { const docRef = await colecoes.locacoes.add(novaLocacao); const fluxoCaixaIds = await criarEntradasFluxoLocacao({ ...novaLocacao, id: docRef.id }); await colecoes.locacoes.doc(docRef.id).update({ fluxoCaixaIds }); formLocacao.reset(); grupoParcelasLoc.style.display = 'none'; grupoEntradaCaucaoLoc.style.display = 'none'; document.getElementById('loc-parcelas').value = '2'; document.getElementById('loc-entrada-caucao').value = ''; divValorParcela.style.display = 'none'; atualizarSelectsLocacao(); showToast('✅ Locação registrada!', 'success'); registrarAuditoria('criar', 'Locação', docRef.id, descricaoAudit); } catch (error) { showToast('❌ Erro.', 'error'); }
+                    try { const docRef = await colecoes.locacoes.add(novaLocacao); const fluxoCaixaIds = await criarEntradasFluxoLocacao({ ...novaLocacao, id: docRef.id }); await colecoes.locacoes.doc(docRef.id).update({ fluxoCaixaIds }); formLocacao.reset(); grupoParcelasLoc.style.display = 'none'; grupoEntradaCaucaoLoc.style.display = 'none'; document.getElementById('loc-parcelas').value = '2'; document.getElementById('loc-entrada-caucao').value = ''; divValorParcela.style.display = 'none'; atualizarSelectsLocacao(); showToast('✅ Locação registrada!', 'success'); registrarAuditoria('criar', 'Locação', docRef.id, descricaoAudit); preencherGeradorContrato(novaLocacao, docRef.id); } catch (error) { showToast('❌ Erro.', 'error'); }
                 }
                 initScrollButtons();
             });

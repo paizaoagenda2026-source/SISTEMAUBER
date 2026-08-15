@@ -264,9 +264,8 @@
         .banco-item .banco-actions { display:flex; gap:6px; }
         .btn-inserir-contrato { background:#e67e22; color:#fff; border:none; display:inline-flex; align-items:center; gap:6px; }
         .btn-inserir-contrato:hover { background:#d35400; box-shadow:0 4px 14px rgba(230,126,34,0.4); }
-        /* ========== NOVO: Estilo para o iframe do gerador de contrato ========== */
         #page-gerador-contrato .page-header { margin-bottom:20px; }
-        #iframe-gerador-contrato { width:100%; height:calc(100vh - var(--header-height) - 80px); border:none; border-radius:12px; background:#f0f2f5; /* cor de fundo clara para o iframe */ }
+        #iframe-gerador-contrato { width:100%; height:calc(100vh - var(--header-height) - 80px); border:none; border-radius:12px; background:#f0f2f5; }
     </style>
 </head>
 <body>
@@ -351,7 +350,6 @@
                 <div class="page-header"><h2>🚘 DOC</h2><p>Documentos e sub-abas dos veículos</p></div>
                 <div class="card"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;"><div class="sub-tabs" id="carro-sub-tabs" style="margin-bottom:0; padding-bottom:0; border-bottom:none;"></div><button class="btn-app btn-save" id="btn-upload-carro-pdf" style="display:inline-flex; align-items:center; gap:6px;">📎 Upload PDF</button></div><div id="carro-sub-content"></div></div>
             </div>
-            <!-- NOVA PÁGINA: Gerador de Contrato -->
             <div class="page" id="page-gerador-contrato">
                 <div class="page-header"><h2>📄 Gerador de Contrato</h2><p>Gere e personalize contratos de locação de veículos</p></div>
                 <iframe id="iframe-gerador-contrato" title="Gerador de Contrato"></iframe>
@@ -453,7 +451,6 @@
                 <div class="card" id="card-form-manutencao"><div class="card-title"><span class="icon">📝</span> <span id="manut-form-title">Nova Manutenção</span></div><div class="edit-banner" id="edit-banner-manutencao">✏️ <span id="edit-banner-manutencao-text">Você está editando um registro de manutenção.</span></div><form id="form-manutencao" autocomplete="off"><div class="grid-3"><div class="form-group-app"><label>Veículo (Modelo/Marca)</label><select id="m-veiculo" required><option value="">Selecione um veículo...</option></select></div><div class="form-group-app"><label>Placa do Veículo</label><select id="m-subaba" required><option value="">Escolha a placa...</option></select></div><div class="form-group-app"><label>Data da Manutenção</label><input type="date" id="m-data" required></div><div class="form-group-app"><label>Tipo de Manutenção</label><select id="m-tipo" required><option value="">Selecione o tipo...</option><option value="preventiva">🔧 Preventiva</option><option value="corretiva">🔩 Corretiva</option><option value="revisao">📋 Revisão Programada</option><option value="pneus">🛞 Pneus</option><option value="oleo">🛢️ Troca de Óleo</option><option value="freios">🛑 Freios</option><option value="suspensao">🔗 Suspensão</option><option value="eletrica">⚡ Elétrica</option><option value="lataria">🎨 Lataria / Pintura</option><option value="outros">📌 Outros</option></select></div><div class="form-group-app"><label>Descrição do Serviço</label><input type="text" id="m-descricao" placeholder="Ex: Troca de pastilhas de freio dianteiras" required></div><div class="form-group-app"><label>Valor Gasto (R$)</label><input type="text" id="m-valor" placeholder="R$ 0,00" oninput="formatarMoedaInput(this)" onblur="formatarMoedaInputBlur(this)"></div><div class="form-group-app"><label>KM Atual no Momento</label><input type="number" id="m-km" placeholder="Ex: 55000"></div><div class="form-group-app"><label>Observação</label><input type="text" id="m-observacao" placeholder="Observações adicionais..."></div></div><div class="form-group-app" style="margin-top:8px;"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" id="m-registrar-fluxo" style="width:auto;accent-color:var(--success);"> Registrar automaticamente como despesa no Fluxo de Caixa</label></div><div style="display:flex;gap:12px;margin-top:8px;"><button type="submit" class="btn-app btn-save" id="btn-submit-manutencao">💾 Registrar Manutenção</button><button type="button" class="btn-app btn-cancel" id="btn-cancel-manutencao">Limpar</button><button type="button" class="btn-app btn-cancel" id="btn-cancel-edicao-manutencao" style="display:none;">❌ Cancelar Edição</button></div></form></div>
                 <div class="card"><div class="card-title"><span class="icon">📋</span> Histórico de Manutenções</div><div class="sub-tabs" id="manutencao-sub-tabs"></div><div class="table-wrapper" id="table-wrapper-manutencao"><button class="scroll-btn scroll-btn-left">◀</button><button class="scroll-btn scroll-btn-right">▶</button><table id="tabela-manutencao"><thead><tr><th>Veículo</th><th>Placa</th><th>Data</th><th>Tipo</th><th>Descrição</th><th>Valor</th><th>KM</th><th>Observação</th><th>Fluxo Caixa</th><th>Ações</th></tr></thead><tbody id="tbody-manutencao"></tbody></table></div></div>
             </div>
-            <!-- NOVA PÁGINA: Área do Mecânico -->
             <div class="page" id="page-mecanico">
                 <div class="page-header"><h2>🔧 Área do Mecânico</h2><p>Registre os serviços mecânicos realizados nos veículos</p></div>
                 <div class="card" id="card-form-mecanico">
@@ -503,7 +500,7 @@
             </div>
             <div class="page" id="page-usuarios">
                 <div class="page-header"><h2>👤 Gerenciamento de Usuários</h2><p>Crie e gerencie usuários com acesso limitado</p></div>
-                <div class="card" id="card-form-usuario"><div class="card-title"><span class="icon">📝</span> <span id="usuario-form-title">Novo Usuário</span></div><div class="edit-banner" id="edit-banner-usuario">✏️ <span id="edit-banner-usuario-text">Você está editando um usuário existente.</span></div><form id="form-usuario" autocomplete="off"><div class="grid-3"><div class="form-group-app"><label>Nome do Usuário</label><input type="text" id="u-nome" placeholder="Nome completo" required></div><div class="form-group-app"><label>Login (Usuário)</label><input type="text" id="u-login" placeholder="Nome de usuário para login" required autocomplete="off"></div><div class="form-group-app"><label>Senha</label><input type="password" id="u-senha" placeholder="Senha de acesso" required autocomplete="off"></div></div><div class="section-divider"><div class="form-group-app"><label>📑 Abas Permitidas</label><div class="permissoes-grid" id="permissoes-abas-grid"><label><input type="checkbox" class="perm-abas-check" value="veiculos"> 🚙 Veículos</label><label><input type="checkbox" class="perm-abas-check" value="garagem"> 🖼️ Garagem</label><label><input type="checkbox" class="perm-abas-check" value="socorro"> 🆘 Socorro</label><label><input type="checkbox" class="perm-abas-check" value="carro"> 🚘 DOC</label><label><input type="checkbox" class="perm-abas-check" value="locatarios"> 👥 Locatários</label><label><input type="checkbox" class="perm-abas-check" value="locacoes"> 📋 Locações</label><label><input type="checkbox" class="perm-abas-check" value="manutencao"> 🔧 Manutenção</label><label><input type="checkbox" class="perm-abas-check" value="mecanico"> 🔧 Mecânico</label><label><input type="checkbox" class="perm-abas-check" value="fluxocaixa"> 💰 Fluxo de Caixa</label><label><input type="checkbox" class="perm-abas-check" value="banco"> 🏦 Banco</label><label><input type="checkbox" class="perm-abas-check" value="usuarios"> 👤 Usuários</label><label><input type="checkbox" class="perm-abas-check" value="filtro"> 🔍 Filtro</label></div></div></div><div class="section-divider"><div class="form-group-app"><label>🔧 Sub-Abas do Histórico de Manutenção Permitidas</label><div class="permissoes-grid" id="permissoes-subabas-manutencao-grid"></div></div></div><div class="section-divider"><div class="form-group-app"><label>🔘 Ações Permitidas (Botões)</label><div class="permissoes-grid" id="permissoes-acoes-grid"><label><input type="checkbox" class="perm-acoes-check" value="criar"> ➕ Criar / Adicionar</label><label><input type="checkbox" class="perm-acoes-check" value="editar"> ✏️ Editar</label><label><input type="checkbox" class="perm-acoes-check" value="excluir"> 🗑️ Excluir</label><label><input type="checkbox" class="perm-acoes-check" value="upload"> 📤 Upload (PDFs/Imagens)</label><label><input type="checkbox" class="perm-acoes-check" value="download"> 📥 Download de Documentos</label></div></div></div><div class="section-divider"><div class="form-group-app"><label>🚙 Veículos Permitidos para este Usuário</label><div class="permissoes-grid" id="permissoes-usuario-grid"></div></div></div><div style="display:flex;gap:12px;margin-top:8px;"><button type="submit" class="btn-app btn-save" id="btn-submit-usuario">💾 Salvar Usuário</button><button type="button" class="btn-app btn-cancel" id="btn-cancel-usuario">Limpar</button><button type="button" class="btn-app btn-cancel" id="btn-cancel-edicao-usuario" style="display:none;">❌ Cancelar Edição</button></div></form></div>
+                <div class="card" id="card-form-usuario"><div class="card-title"><span class="icon">📝</span> <span id="usuario-form-title">Novo Usuário</span></div><div class="edit-banner" id="edit-banner-usuario">✏️ <span id="edit-banner-usuario-text">Você está editando um usuário existente.</span></div><form id="form-usuario" autocomplete="off"><div class="grid-3"><div class="form-group-app"><label>Nome do Usuário</label><input type="text" id="u-nome" placeholder="Nome completo" required></div><div class="form-group-app"><label>Login (Usuário)</label><input type="text" id="u-login" placeholder="Nome de usuário para login" required autocomplete="off"></div><div class="form-group-app"><label>Senha</label><input type="password" id="u-senha" placeholder="Senha de acesso" required autocomplete="off"></div></div><div class="section-divider"><div class="form-group-app"><label>📑 Abas Permitidas</label><div class="permissoes-grid" id="permissoes-abas-grid"><label><input type="checkbox" class="perm-abas-check" value="veiculos"> 🚙 Veículos</label><label><input type="checkbox" class="perm-abas-check" value="garagem"> 🖼️ Garagem</label><label><input type="checkbox" class="perm-abas-check" value="socorro"> 🆘 Socorro</label><label><input type="checkbox" class="perm-abas-check" value="carro"> 🚘 DOC</label><label><input type="checkbox" class="perm-abas-check" value="locatarios"> 👥 Locatários</label><label><input type="checkbox" class="perm-abas-check" value="locacoes"> 📋 Locações</label><label><input type="checkbox" class="perm-abas-check" value="manutencao"> 🔧 Manutenção</label><label><input type="checkbox" class="perm-abas-check" value="mecanico"> 🔧 Mecânico</label><label><input type="checkbox" class="perm-abas-check" value="fluxocaixa"> 💰 Fluxo de Caixa</label><label><input type="checkbox" class="perm-abas-check" value="banco"> 🏦 Banco</label><label><input type="checkbox" class="perm-abas-check" value="usuarios"> 👤 Usuários</label><label><input type="checkbox" class="perm-abas-check" value="filtro"> 🔍 Filtro</label><label><input type="checkbox" class="perm-abas-check" value="gerador-contrato"> 📄 Gerador de Contrato</label></div></div></div><div class="section-divider"><div class="form-group-app"><label>🔧 Sub-Abas do Histórico de Manutenção Permitidas</label><div class="permissoes-grid" id="permissoes-subabas-manutencao-grid"></div></div></div><div class="section-divider"><div class="form-group-app"><label>🔘 Ações Permitidas (Botões)</label><div class="permissoes-grid" id="permissoes-acoes-grid"><label><input type="checkbox" class="perm-acoes-check" value="criar"> ➕ Criar / Adicionar</label><label><input type="checkbox" class="perm-acoes-check" value="editar"> ✏️ Editar</label><label><input type="checkbox" class="perm-acoes-check" value="excluir"> 🗑️ Excluir</label><label><input type="checkbox" class="perm-acoes-check" value="upload"> 📤 Upload (PDFs/Imagens)</label><label><input type="checkbox" class="perm-acoes-check" value="download"> 📥 Download de Documentos</label><label><input type="checkbox" class="perm-acoes-check" value="salvar_servico"> 💾 Salvar Serviço</label></div></div></div><div class="section-divider"><div class="form-group-app"><label>🚙 Veículos Permitidos para este Usuário</label><div class="permissoes-grid" id="permissoes-usuario-grid"></div></div></div><div style="display:flex;gap:12px;margin-top:8px;"><button type="submit" class="btn-app btn-save" id="btn-submit-usuario">💾 Salvar Usuário</button><button type="button" class="btn-app btn-cancel" id="btn-cancel-usuario">Limpar</button><button type="button" class="btn-app btn-cancel" id="btn-cancel-edicao-usuario" style="display:none;">❌ Cancelar Edição</button></div></form></div>
                 <div class="card"><div class="card-title"><span class="icon">📋</span> Usuários Cadastrados</div><div class="table-wrapper" id="table-wrapper-usuarios"><button class="scroll-btn scroll-btn-left">◀</button><button class="scroll-btn scroll-btn-right">▶</button><table id="tabela-usuarios"><thead><tr><th>Nome</th><th>Login</th><th>Perfil</th><th>Abas</th><th>Sub-Abas Manutenção</th><th>Ações (Botões)</th><th>Veículos</th><th>Data Criação</th><th>Ações</th></tr></thead><tbody id="tbody-usuarios"></tbody></table></div></div>
             </div>
             <div class="page" id="page-auditoria">
@@ -1178,10 +1175,17 @@
                 const navButtons = document.querySelectorAll('.top-nav button[data-page]');
                 navButtons.forEach(btn => {
                     const page = btn.getAttribute('data-page');
-                    if (page === 'garagem' || page === 'carro' || page === 'socorro' || page === 'gerador-contrato') btn.style.display = '';
-                    else if (page === 'auditoria') btn.style.display = isAdmin() ? '' : 'none';
-                    else if (page === 'banco') btn.style.display = temPermissaoAba('banco') ? '' : 'none';
-                    else btn.style.display = temPermissaoAba(page) ? '' : 'none';
+                    if (page === 'garagem' || page === 'carro' || page === 'socorro') {
+                        btn.style.display = '';
+                    } else if (page === 'gerador-contrato') {
+                        btn.style.display = temPermissaoAba('gerador-contrato') ? '' : 'none';
+                    } else if (page === 'auditoria') {
+                        btn.style.display = isAdmin() ? '' : 'none';
+                    } else if (page === 'banco') {
+                        btn.style.display = temPermissaoAba('banco') ? '' : 'none';
+                    } else {
+                        btn.style.display = temPermissaoAba(page) ? '' : 'none';
+                    }
                 });
                 const subTabVeiculos = document.querySelector('#garagem-sub-tabs .sub-tab-btn[data-subtab="garagem-veiculos"]');
                 if (subTabVeiculos) subTabVeiculos.style.display = temPermissaoAba('veiculos') ? '' : 'none';
@@ -1230,6 +1234,9 @@
                 if (btnPdfUploadLocacao) btnPdfUploadLocacao.style.display = temPermissaoAcao('upload') ? '' : 'none';
                 const btnUploadCarroPdf = document.getElementById('btn-upload-carro-pdf');
                 if (btnUploadCarroPdf) btnUploadCarroPdf.style.display = temPermissaoAcao('upload') ? '' : 'none';
+                // Novo: controle do formulário de mecânico
+                const formMecanicoCard = document.getElementById('card-form-mecanico');
+                if (formMecanicoCard) formMecanicoCard.style.display = temPermissaoAcao('salvar_servico') ? '' : 'none';
                 atualizarPermissoesVeiculoGrid();
                 atualizarPermissoesUsuarioGrid();
                 if (dadosCarregados) {
@@ -1244,6 +1251,7 @@
                     renderizarSubAbasManutencao();
                     atualizarTabelaAuditoria();
                     atualizarDadosBanco();
+                    atualizarTabelaMecanico(); // Novo: atualiza tabela de mecânico independente de isAdmin
                     aplicarRestricoesSubAbasManutencao();
                     destacarAbaManutencaoAtiva();
                     if (document.getElementById('fluxo-caixa-container').style.display !== 'none') {
@@ -1323,7 +1331,6 @@
                 if (veiculo.proprietario) {
                     setVal('nomeProprietaria', veiculo.proprietario);
                 }
-                // Preencher CPF do proprietário no Gerador de Contrato
                 if (veiculo.proprietarioCpf) {
                     setVal('cpfProprietaria', veiculo.proprietarioCpf);
                 }
@@ -1436,7 +1443,6 @@
             function formatarMoeda(valor) { return 'R$ ' + parseFloat(valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
             function aplicarMascaraCPF(valor) { valor = valor.replace(/\D/g, '').substring(0, 11); return valor.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4'); }
             function aplicarMascaraTelefone(valor) {
-                // Corrigido: usa slice e concatenação, evitando o bug do "$4"
                 valor = valor.replace(/\D/g, '').substring(0, 11);
                 if (valor.length <= 10) {
                     return `(${valor.slice(0,2)}) ${valor.slice(2,6)}${valor.length > 6 ? '-' + valor.slice(6) : ''}`;
@@ -1492,10 +1498,11 @@
             });
 
             function navegarPara(pageName) {
-                if (!temPermissaoAba(pageName) && pageName !== 'auditoria' && pageName !== 'banco' && pageName !== 'gerador-contrato') { showToast('⚠️ Você não tem permissão para acessar esta aba.', 'error'); return; }
-                if (pageName === 'auditoria' && !isAdmin()) { showToast('⚠️ Apenas o administrador pode acessar esta aba.', 'error'); return; }
-                if (pageName === 'banco' && !temPermissaoAba('banco')) { showToast('⚠️ Você não tem permissão para acessar esta aba.', 'error'); return; }
-                if (pageName === 'mecanico' && !isAdmin()) { showToast('⚠️ Apenas administrador pode acessar esta aba.', 'error'); return; }
+                if (pageName === 'auditoria') {
+                    if (!isAdmin()) { showToast('⚠️ Apenas o administrador pode acessar esta aba.', 'error'); return; }
+                } else {
+                    if (!temPermissaoAba(pageName)) { showToast('⚠️ Você não tem permissão para acessar esta aba.', 'error'); return; }
+                }
                 pages.forEach(p => p.classList.remove('active'));
                 const targetPage = document.getElementById('page-' + pageName);
                 if (targetPage) targetPage.classList.add('active');
@@ -2555,7 +2562,7 @@
 
             document.getElementById('form-mecanico').addEventListener('submit', async function(e) {
                 e.preventDefault();
-                if (!isAdmin()) { showToast('⚠️ Apenas administrador.', 'error'); return; }
+                if (!temPermissaoAcao('salvar_servico')) { showToast('⚠️ Sem permissão para salvar serviço.', 'error'); return; }
                 const carroId = document.getElementById('mec-carro').value;
                 const placa = document.getElementById('mec-placa').value;
                 if (!carroId || !placa) { showToast('⚠️ Selecione carro e placa.', 'error'); return; }
@@ -2580,7 +2587,7 @@
             });
 
             window._editarMecanico = function(id) {
-                if (!isAdmin()) { showToast('⚠️ Apenas administrador.', 'error'); return; }
+                if (!temPermissaoAcao('editar')) { showToast('⚠️ Sem permissão para editar.', 'error'); return; }
                 const servico = mecanicos.find(m => m.id === id);
                 if (!servico) return;
                 editandoMecanicoId = id;
@@ -2600,14 +2607,14 @@
             };
 
             window._excluirMecanico = async function(id) {
-                if (!isAdmin()) { showToast('⚠️ Apenas administrador.', 'error'); return; }
+                if (!temPermissaoAcao('excluir')) { showToast('⚠️ Sem permissão para excluir.', 'error'); return; }
                 const servico = mecanicos.find(m => m.id === id);
                 if (!confirm('Excluir este serviço mecânico?')) return;
                 try { await colecoes.mecanico.doc(id).delete(); if (editandoMecanicoId === id) resetarFormMecanico(); showToast('🗑️ Serviço excluído!', 'info'); registrarAuditoria('excluir', 'Mecânico', id, servico ? servico.servico : ''); } catch (error) { showToast('❌ Erro.', 'error'); }
             };
 
             function atualizarTabelaMecanico() {
-                if (!isAdmin()) return;
+                if (!temPermissaoAba('mecanico')) return;
                 const tbody = document.getElementById('tbody-mecanico');
                 const lista = mecanicos.sort((a,b) => new Date(b.data) - new Date(a.data));
                 if (lista.length === 0) {
@@ -2617,8 +2624,8 @@
                 tbody.innerHTML = lista.map(m => {
                     const dataFormatada = m.data ? new Date(m.data + 'T00:00:00').toLocaleDateString('pt-BR') : '—';
                     let acoesHtml = '<td>';
-                    acoesHtml += `<button class="btn-edit" onclick="window._editarMecanico('${m.id}')">✏️</button>`;
-                    acoesHtml += `<button class="btn-danger" onclick="window._excluirMecanico('${m.id}')">🗑️</button>`;
+                    if (temPermissaoAcao('editar')) acoesHtml += `<button class="btn-edit" onclick="window._editarMecanico('${m.id}')">✏️</button>`;
+                    if (temPermissaoAcao('excluir')) acoesHtml += `<button class="btn-danger" onclick="window._excluirMecanico('${m.id}')">🗑️</button>`;
                     acoesHtml += '</td>';
                     return `<tr>
                         <td>${dataFormatada}</td>
@@ -2831,7 +2838,7 @@
                 listenersAtivos.push(colecoes.garagem.onSnapshot(snap => { garagem = []; snap.forEach(doc => garagem.push({ id: doc.id, ...doc.data() })); if (dadosCarregados) atualizarGaragem(); }));
                 listenersAtivos.push(colecoes.carroPdfs.onSnapshot(snap => { carroPdfs = []; snap.forEach(doc => carroPdfs.push({ id: doc.id, ...doc.data() })); if (dadosCarregados) renderizarSubAbasCarro(); }));
                 listenersAtivos.push(colecoes.manutencoes.onSnapshot(snap => { manutencoes = []; snap.forEach(doc => manutencoes.push({ id: doc.id, ...doc.data() })); if (dadosCarregados) atualizarTabelaManutencoes(); }));
-                listenersAtivos.push(colecoes.mecanico.onSnapshot(snap => { mecanicos = []; snap.forEach(doc => mecanicos.push({ id: doc.id, ...doc.data() })); if (dadosCarregados && isAdmin()) atualizarTabelaMecanico(); }));
+                listenersAtivos.push(colecoes.mecanico.onSnapshot(snap => { mecanicos = []; snap.forEach(doc => mecanicos.push({ id: doc.id, ...doc.data() })); if (dadosCarregados) atualizarTabelaMecanico(); }));
                 listenersAtivos.push(colecoes.auditoria.orderBy('timestamp', 'desc').onSnapshot(snap => { auditoriaLogs = []; snap.forEach(doc => auditoriaLogs.push({ id: doc.id, ...doc.data() })); if (dadosCarregados) atualizarTabelaAuditoria(); }));
                 listenersAtivos.push(colecoes.socorroImagens.onSnapshot(snap => { socorroImagens = []; snap.forEach(doc => socorroImagens.push({ id: doc.id, ...doc.data() })); if (dadosCarregados) atualizarSocorro(); }));
                 listenersAtivos.push(colecoes.banco.onSnapshot(snap => { dadosBancoLista = []; snap.forEach(doc => dadosBancoLista.push({ id: doc.id, ...doc.data() })); if (dadosCarregados) atualizarDadosBanco(); }));
@@ -2848,7 +2855,6 @@
             window.addEventListener('online', () => atualizarIndicadorSync(true));
             window.addEventListener('offline', () => atualizarIndicadorSync(false));
 
-            // ========== NOVO: Enter pula para o próximo campo (apenas após login) ==========
             document.addEventListener('keydown', function(e) {
                 if (e.key !== 'Enter') return;
                 const appAtivo = document.getElementById('app-screen') && document.getElementById('app-screen').classList.contains('active');
@@ -2864,7 +2870,6 @@
                     focusable[idx + 1].focus();
                 }
             });
-            // ========================================================================
 
             document.getElementById('mobile-menu-toggle')?.addEventListener('click', function() { document.getElementById('top-nav').classList.toggle('open'); });
             loginScreen.style.display = 'flex'; appScreen.classList.remove('active');

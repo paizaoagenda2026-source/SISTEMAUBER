@@ -307,6 +307,7 @@
         </header>
         <main class="main-content" id="main-content">
             <div class="page active" id="page-garagem">
+                <!-- Conteúdo da página Garagem (inalterado) -->
                 <div class="page-header"><h2>🖼️ Garagem</h2><p>Imagens da garagem e cadastro de veículos</p></div>
                 <div class="sub-tabs" id="garagem-sub-tabs"><button class="sub-tab-btn active" data-subtab="garagem-imagens">🖼️ Imagens</button><button class="sub-tab-btn" data-subtab="garagem-veiculos">🚙 Veículos</button></div>
                 <div class="sub-tab-content active" id="subtab-garagem-imagens">
@@ -344,11 +345,13 @@
                 </div>
             </div>
             <div class="page" id="page-socorro">
+                <!-- Conteúdo da página Socorro (inalterado) -->
                 <div class="page-header"><h2>🆘 Socorro</h2><p>Upload de imagens para a central de ajuda</p></div>
                 <div class="card" id="card-form-socorro"><div class="card-title"><span class="icon">📤</span> Enviar Imagem para o Socorro</div><div class="grid-2"><div class="form-group-app"><label>Nome da Imagem (opcional)</label><input type="text" id="socorro-nome" placeholder="Ex: Foto do problema"></div><div class="form-group-app"><label>Selecionar Imagem</label><input type="file" id="socorro-file" accept="image/*"></div></div><div style="display:flex; gap:12px; margin-top:8px;"><button class="btn-app btn-save" id="btn-upload-socorro">⬆️ Enviar Imagem</button><button class="btn-app btn-cancel" id="btn-cancel-socorro">Limpar</button></div><span id="socorro-upload-error" style="color:var(--danger);font-size:12px;display:none;margin-top:8px;"></span></div>
                 <div class="card"><div class="card-title"><span class="icon">🖼️</span> Imagens Enviadas para o Socorro</div><div class="socorro-grid" id="socorro-grid"></div></div>
             </div>
             <div class="page" id="page-carro">
+                <!-- Conteúdo da página DOC (inalterado) -->
                 <div class="page-header"><h2>🚘 DOC</h2><p>Documentos e sub-abas dos veículos</p></div>
                 <div class="card"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;"><div class="sub-tabs" id="carro-sub-tabs" style="margin-bottom:0; padding-bottom:0; border-bottom:none;"></div><button class="btn-app btn-save" id="btn-upload-carro-pdf" style="display:inline-flex; align-items:center; gap:6px;">📎 Upload PDF</button></div><div id="carro-sub-content"></div></div>
             </div>
@@ -357,6 +360,7 @@
                 <iframe id="iframe-gerador-contrato" title="Gerador de Contrato"></iframe>
             </div>
             <div class="page" id="page-locatarios">
+                <!-- Conteúdo da página Locatários (inalterado) -->
                 <div class="page-header"><h2>👥 Cadastro de Locatários</h2><p>Gerencie os dados pessoais dos locatários</p></div>
                 <div class="card" id="card-form-locatario">
                     <div class="card-title"><span class="icon">📝</span> <span id="locat-form-title">Novo Locatário</span></div>
@@ -407,6 +411,7 @@
                 </div>
             </div>
             <div class="page" id="page-locacoes">
+                <!-- Conteúdo da página Locações (inalterado) -->
                 <div class="page-header"><h2>📋 Locações</h2><p>Vincule locatários a veículos e gerencie as locações</p></div>
                 <div class="card" id="card-form-locacao">
                     <div class="card-title"><span class="icon">🔗</span> <span id="loc-form-title">Nova Locação</span></div>
@@ -474,48 +479,73 @@
                 </div>
             </div>
             <div class="page" id="page-manutencao">
+                <!-- Conteúdo da página Manutenção (inalterado) -->
                 <div class="page-header"><h2>🔧 Manutenção de Veículos</h2><p>Registre e acompanhe as manutenções</p></div>
                 <div class="card" id="card-form-manutencao"><div class="card-title"><span class="icon">📝</span> <span id="manut-form-title">Nova Manutenção</span></div><div class="edit-banner" id="edit-banner-manutencao">✏️ <span id="edit-banner-manutencao-text">Você está editando um registro de manutenção.</span></div><form id="form-manutencao" autocomplete="off"><div class="grid-3"><div class="form-group-app"><label>Veículo (Modelo/Marca)</label><select id="m-veiculo" required><option value="">Selecione um veículo...</option></select></div><div class="form-group-app"><label>Placa do Veículo</label><select id="m-subaba" required><option value="">Escolha a placa...</option></select></div><div class="form-group-app"><label>Data da Manutenção</label><input type="date" id="m-data" required></div><div class="form-group-app"><label>Tipo de Manutenção</label><select id="m-tipo" required><option value="">Selecione o tipo...</option><option value="preventiva">🔧 Preventiva</option><option value="corretiva">🔩 Corretiva</option><option value="revisao">📋 Revisão Programada</option><option value="pneus">🛞 Pneus</option><option value="oleo">🛢️ Troca de Óleo</option><option value="freios">🛑 Freios</option><option value="suspensao">🔗 Suspensão</option><option value="eletrica">⚡ Elétrica</option><option value="lataria">🎨 Lataria / Pintura</option><option value="outros">📌 Outros</option></select></div><div class="form-group-app"><label>Descrição do Serviço</label><input type="text" id="m-descricao" placeholder="Ex: Troca de pastilhas de freio dianteiras" required></div><div class="form-group-app"><label>Valor Gasto (R$)</label><input type="text" id="m-valor" placeholder="R$ 0,00" oninput="formatarMoedaInput(this)" onblur="formatarMoedaInputBlur(this)"></div><div class="form-group-app"><label>KM Atual no Momento</label><input type="number" id="m-km" placeholder="Ex: 55000"></div><div class="form-group-app"><label>Observação</label><input type="text" id="m-observacao" placeholder="Observações adicionais..."></div></div><div class="form-group-app" style="margin-top:8px;"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" id="m-registrar-fluxo" style="width:auto;accent-color:var(--success);"> Registrar automaticamente como despesa no Fluxo de Caixa</label></div><div style="display:flex;gap:12px;margin-top:8px;"><button type="submit" class="btn-app btn-save" id="btn-submit-manutencao">💾 Registrar Manutenção</button><button type="button" class="btn-app btn-cancel" id="btn-cancel-manutencao">Limpar</button><button type="button" class="btn-app btn-cancel" id="btn-cancel-edicao-manutencao" style="display:none;">❌ Cancelar Edição</button></div></form></div>
                 <div class="card"><div class="card-title"><span class="icon">📋</span> Histórico de Manutenções</div><div class="sub-tabs" id="manutencao-sub-tabs"></div><div class="table-wrapper" id="table-wrapper-manutencao"><button class="scroll-btn scroll-btn-left">◀</button><button class="scroll-btn scroll-btn-right">▶</button><table id="tabela-manutencao"><thead><tr><th>Veículo</th><th>Placa</th><th>Data</th><th>Tipo</th><th>Descrição</th><th>Valor</th><th>KM</th><th>Observação</th><th>Fluxo Caixa</th><th>Ações</th></tr></thead><tbody id="tbody-manutencao"></tbody></table></div></div>
             </div>
             <div class="page" id="page-mecanico">
                 <div class="page-header"><h2>🔧 Área do Mecânico</h2><p>Registre os serviços mecânicos realizados nos veículos</p></div>
-                <div class="card" id="card-form-mecanico">
-                    <div class="card-title"><span class="icon">📝</span> <span id="mecanico-form-title">Novo Serviço Mecânico</span></div>
-                    <div class="edit-banner" id="edit-banner-mecanico">✏️ <span id="edit-banner-mecanico-text">Você está editando um serviço mecânico existente.</span></div>
-                    <form id="form-mecanico" autocomplete="off">
-                        <div class="grid-2">
-                            <div class="form-group-app"><label>Data</label><input type="date" id="mec-data" required></div>
-                            <div class="form-group-app"><label>Serviço</label><input type="text" id="mec-servico" placeholder="Ex: Troca de óleo" required></div>
-                        </div>
-                        <div class="grid-2">
-                            <div class="form-group-app"><label>Carro</label><select id="mec-carro" required><option value="">Selecione um veículo...</option></select></div>
-                            <div class="form-group-app"><label>Placa</label><select id="mec-placa" required><option value="">Selecione a placa...</option></select></div>
-                        </div>
-                        <div class="grid-2">
-                            <div class="form-group-app"><label>Valor (R$)</label><input type="text" id="mec-valor" placeholder="R$ 0,00" oninput="formatarMoedaInput(this)" onblur="formatarMoedaInputBlur(this)"></div>
-                            <div class="form-group-app"><label>Observação</label><input type="text" id="mec-observacao" placeholder="Observações adicionais..."></div>
-                        </div>
-                        <div style="display:flex;gap:12px;margin-top:8px;">
-                            <button type="submit" class="btn-app btn-save" id="btn-submit-mecanico">💾 Salvar Serviço</button>
-                            <button type="button" class="btn-app btn-cancel" id="btn-cancel-mecanico">Limpar</button>
-                            <button type="button" class="btn-app btn-cancel" id="btn-cancel-edicao-mecanico" style="display:none;">❌ Cancelar Edição</button>
-                        </div>
-                    </form>
+                <div class="sub-tabs" id="mecanico-sub-tabs">
+                    <button class="sub-tab-btn active" data-mecanico-tab="servicos">📋 Serviços</button>
+                    <button class="sub-tab-btn" data-mecanico-tab="fechamento">📊 Fechamento Serviços</button>
                 </div>
-                <div class="card">
-                    <div class="card-title"><span class="icon">📋</span> Serviços Mecânicos Registrados</div>
-                    <div class="table-wrapper" id="table-wrapper-mecanico">
-                        <button class="scroll-btn scroll-btn-left">◀</button>
-                        <button class="scroll-btn scroll-btn-right">▶</button>
-                        <table id="tabela-mecanico">
-                            <thead><tr><th>Data</th><th>Carro</th><th>Placa</th><th>Serviço</th><th>Valor</th><th>Observação</th><th>Ações</th></tr></thead>
-                            <tbody id="tbody-mecanico"></tbody>
-                        </table>
+                <div class="sub-tab-content active" id="subtab-mecanico-servicos">
+                    <div class="card" id="card-form-mecanico">
+                        <div class="card-title"><span class="icon">📝</span> <span id="mecanico-form-title">Novo Serviço Mecânico</span></div>
+                        <div class="edit-banner" id="edit-banner-mecanico">✏️ <span id="edit-banner-mecanico-text">Você está editando um serviço mecânico existente.</span></div>
+                        <form id="form-mecanico" autocomplete="off">
+                            <div class="grid-2">
+                                <div class="form-group-app"><label>Data</label><input type="date" id="mec-data" required></div>
+                                <div class="form-group-app"><label>Oficina</label><input type="text" id="mec-oficina" placeholder="Ex: Oficina do Zé"></div>
+                                <div class="form-group-app"><label>Mecânico</label><input type="text" id="mec-mecanico" placeholder="Ex: João"></div>
+                                <div class="form-group-app"><label>Serviço</label><input type="text" id="mec-servico" placeholder="Ex: Troca de óleo" required></div>
+                            </div>
+                            <div class="grid-2">
+                                <div class="form-group-app"><label>Carro</label><select id="mec-carro" required><option value="">Selecione um veículo...</option></select></div>
+                                <div class="form-group-app"><label>Placa</label><select id="mec-placa" required><option value="">Selecione a placa...</option></select></div>
+                            </div>
+                            <div class="grid-2">
+                                <div class="form-group-app"><label>Valor (R$)</label><input type="text" id="mec-valor" placeholder="R$ 0,00" oninput="formatarMoedaInput(this)" onblur="formatarMoedaInputBlur(this)"></div>
+                                <div class="form-group-app"><label>Observação</label><input type="text" id="mec-observacao" placeholder="Observações adicionais..."></div>
+                            </div>
+                            <div style="display:flex;gap:12px;margin-top:8px;">
+                                <button type="submit" class="btn-app btn-save" id="btn-submit-mecanico">💾 Salvar Serviço</button>
+                                <button type="button" class="btn-app btn-cancel" id="btn-cancel-mecanico">Limpar</button>
+                                <button type="button" class="btn-app btn-cancel" id="btn-cancel-edicao-mecanico" style="display:none;">❌ Cancelar Edição</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="card">
+                        <div class="card-title"><span class="icon">📋</span> Serviços Mecânicos Registrados</div>
+                        <div class="table-wrapper" id="table-wrapper-mecanico">
+                            <button class="scroll-btn scroll-btn-left">◀</button>
+                            <button class="scroll-btn scroll-btn-right">▶</button>
+                            <table id="tabela-mecanico">
+                                <thead><tr><th>Data</th><th>Oficina</th><th>Mecânico</th><th>Carro</th><th>Placa</th><th>Serviço</th><th>Valor</th><th>Observação</th><th>Ações</th></tr></thead>
+                                <tbody id="tbody-mecanico"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="sub-tab-content" id="subtab-mecanico-fechamento">
+                    <div class="card">
+                        <div class="card-title"><span class="icon">🔍</span> Filtro de Serviços para Fechamento</div>
+                        <div class="grid-4">
+                            <div class="form-group-app"><label>Data Início</label><input type="date" id="filtro-mec-data-inicio"></div>
+                            <div class="form-group-app"><label>Data Fim</label><input type="date" id="filtro-mec-data-fim"></div>
+                            <div class="form-group-app"><label>Placa</label><input type="text" id="filtro-mec-placa" list="placas-mec" placeholder="Digite a placa" autocomplete="off"><datalist id="placas-mec"></datalist></div>
+                            <div class="form-group-app"><label>Oficina</label><input type="text" id="filtro-mec-oficina" list="oficinas-mec" placeholder="Digite a oficina" autocomplete="off"><datalist id="oficinas-mec"></datalist></div>
+                        </div>
+                        <div style="display:flex; gap:12px; margin-top:16px; flex-wrap:wrap;">
+                            <button class="btn-app btn-save" id="btn-filtrar-fechamento" style="display:inline-flex; align-items:center; gap:6px;">🔍 Filtrar e Gerar PDF</button>
+                            <button class="btn-app btn-cancel" id="btn-limpar-filtro-fechamento">🧹 Limpar Filtros</button>
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="page" id="page-banco">
+                <!-- Conteúdo da página Banco (inalterado) -->
                 <div class="page-header"><h2>🏦 Dados Bancários</h2><p>Cadastre as informações da conta bancária para recebimentos via Pix</p></div>
                 <div class="card" id="card-form-banco"><div class="card-title"><span class="icon">🏦</span> Informações do Banco</div><form id="form-banco" autocomplete="off"><div class="grid-2"><div class="form-group-app"><label>Banco</label><input type="text" id="b-banco" placeholder="Ex: Nubank, Banco do Brasil, Itaú..." required></div><div class="form-group-app"><label>Agência</label><input type="text" id="b-agencia" placeholder="Ex: 0001" required></div><div class="form-group-app"><label>Conta</label><input type="text" id="b-conta" placeholder="Ex: 123456-7" required></div><div class="form-group-app"><label>Titular</label><input type="text" id="b-titular" placeholder="Nome do titular da conta" required></div><div class="form-group-app"><label>Pix (Chave)</label><input type="text" id="b-pix" placeholder="Ex: CPF, e-mail, telefone ou chave aleatória" required></div></div><div style="display:flex; gap:12px; margin-top:16px; flex-wrap:wrap;"><button type="submit" class="btn-app btn-save" id="btn-salvar-banco">💾 Salvar Dados Bancários</button><button type="button" class="btn-app btn-cancel" id="btn-cancel-banco">Limpar</button><button type="button" class="btn-app btn-cancel" id="btn-cancel-edicao-banco" style="display:none;">❌ Cancelar Edição</button><button type="button" class="btn-app btn-fluxo" id="btn-toggle-fluxo" title="Exibir / Ocultar Fluxo de Caixa">💰 Fluxo de Caixa</button></div></form></div>
                 <div class="card" id="card-banco-visualizacao" style="display:none;"><div class="card-title"><span class="icon">📋</span> Contas Bancárias Cadastradas</div><div id="banco-info-display" style="color:#d0d3db; font-size:14px; line-height:2;"></div></div>
@@ -526,11 +556,13 @@
                 </div>
             </div>
             <div class="page" id="page-usuarios">
+                <!-- Conteúdo da página Usuários (inalterado) -->
                 <div class="page-header"><h2>👤 Gerenciamento de Usuários</h2><p>Crie e gerencie usuários com acesso limitado</p></div>
                 <div class="card" id="card-form-usuario"><div class="card-title"><span class="icon">📝</span> <span id="usuario-form-title">Novo Usuário</span></div><div class="edit-banner" id="edit-banner-usuario">✏️ <span id="edit-banner-usuario-text">Você está editando um usuário existente.</span></div><form id="form-usuario" autocomplete="off"><div class="grid-3"><div class="form-group-app"><label>Nome do Usuário</label><input type="text" id="u-nome" placeholder="Nome completo" required></div><div class="form-group-app"><label>Login (Usuário)</label><input type="text" id="u-login" placeholder="Nome de usuário para login" required autocomplete="off"></div><div class="form-group-app"><label>Senha</label><input type="password" id="u-senha" placeholder="Senha de acesso" required autocomplete="off"></div></div><div class="section-divider"><div class="form-group-app"><label>📑 Abas Permitidas</label><div class="permissoes-grid" id="permissoes-abas-grid"><label><input type="checkbox" class="perm-abas-check" value="veiculos"> 🚙 Veículos</label><label><input type="checkbox" class="perm-abas-check" value="garagem"> 🖼️ Garagem</label><label><input type="checkbox" class="perm-abas-check" value="socorro"> 🆘 Socorro</label><label><input type="checkbox" class="perm-abas-check" value="carro"> 🚘 DOC</label><label><input type="checkbox" class="perm-abas-check" value="locatarios"> 👥 Locatários</label><label><input type="checkbox" class="perm-abas-check" value="locacoes"> 📋 Locações</label><label><input type="checkbox" class="perm-abas-check" value="manutencao"> 🔧 Manutenção</label><label><input type="checkbox" class="perm-abas-check" value="mecanico"> 🔧 Mecânico</label><label><input type="checkbox" class="perm-abas-check" value="fluxocaixa"> 💰 Fluxo de Caixa</label><label><input type="checkbox" class="perm-abas-check" value="banco"> 🏦 Banco</label><label><input type="checkbox" class="perm-abas-check" value="usuarios"> 👤 Usuários</label><label><input type="checkbox" class="perm-abas-check" value="filtro"> 🔍 Filtro</label><label><input type="checkbox" class="perm-abas-check" value="gerador-contrato"> 📄 Gerador de Contrato</label></div></div></div><div class="section-divider"><div class="form-group-app"><label>🔧 Sub-Abas do Histórico de Manutenção Permitidas</label><div class="permissoes-grid" id="permissoes-subabas-manutencao-grid"></div></div></div><div class="section-divider"><div class="form-group-app"><label>🔘 Ações Permitidas (Botões)</label><div class="permissoes-grid" id="permissoes-acoes-grid"><label><input type="checkbox" class="perm-acoes-check" value="criar"> ➕ Criar / Adicionar</label><label><input type="checkbox" class="perm-acoes-check" value="editar"> ✏️ Editar</label><label><input type="checkbox" class="perm-acoes-check" value="excluir"> 🗑️ Excluir</label><label><input type="checkbox" class="perm-acoes-check" value="upload"> 📤 Upload (PDFs/Imagens)</label><label><input type="checkbox" class="perm-acoes-check" value="download"> 📥 Download de Documentos</label><label><input type="checkbox" class="perm-acoes-check" value="salvar_servico"> 💾 Salvar Serviço</label></div></div></div><div class="section-divider"><div class="form-group-app"><label>🚙 Veículos Permitidos para este Usuário</label><div class="permissoes-grid" id="permissoes-usuario-grid"></div></div></div><div style="display:flex;gap:12px;margin-top:8px;"><button type="submit" class="btn-app btn-save" id="btn-submit-usuario">💾 Salvar Usuário</button><button type="button" class="btn-app btn-cancel" id="btn-cancel-usuario">Limpar</button><button type="button" class="btn-app btn-cancel" id="btn-cancel-edicao-usuario" style="display:none;">❌ Cancelar Edição</button></div></form></div>
                 <div class="card"><div class="card-title"><span class="icon">📋</span> Usuários Cadastrados</div><div class="table-wrapper" id="table-wrapper-usuarios"><button class="scroll-btn scroll-btn-left">◀</button><button class="scroll-btn scroll-btn-right">▶</button><table id="tabela-usuarios"><thead><tr><th>Nome</th><th>Login</th><th>Perfil</th><th>Abas</th><th>Sub-Abas Manutenção</th><th>Ações (Botões)</th><th>Veículos</th><th>Data Criação</th><th>Ações</th></tr></thead><tbody id="tbody-usuarios"></tbody></table></div></div>
             </div>
             <div class="page" id="page-auditoria">
+                <!-- Conteúdo da página Auditoria (inalterado) -->
                 <div class="page-header"><h2>📋 Auditoria</h2><p>Registro de todas as ações realizadas pelos usuários</p></div>
                 <div class="card"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;"><div class="card-title" style="margin-bottom:0; padding-bottom:0; border-bottom:none;"><span class="icon">📋</span> Log de Atividades</div><button class="btn-limpar-auditoria" id="btn-limpar-auditoria">🗑️ Limpar Log</button></div><div class="search-bar-container" id="search-bar-auditoria"><div class="search-input-wrapper"><span class="search-icon">🔍</span><input type="text" id="input-busca-auditoria" placeholder="Pesquisar por usuário, ação ou entidade..." autocomplete="off"><button class="clear-search-btn" id="clear-search-btn-auditoria">✕</button></div><div class="search-results-info" id="search-results-info-auditoria"><span id="search-count-text-auditoria">Total: <strong class="highlight-count" id="search-count-num-auditoria">0</strong> registros</span></div><button class="btn-limpar-filtro" id="btn-limpar-filtro-auditoria" style="display:none;">🧹 Limpar Filtro</button></div><div class="table-wrapper" id="table-wrapper-auditoria"><button class="scroll-btn scroll-btn-left">◀</button><button class="scroll-btn scroll-btn-right">▶</button><table id="tabela-auditoria"><thead><tr><th>Data/Hora</th><th>Usuário</th><th>Ação</th><th>Entidade</th><th>Descrição</th></tr></thead><tbody id="tbody-auditoria"></tbody></table></div></div>
             </div>
@@ -1307,7 +1339,6 @@
                         el.dispatchEvent(new Event('change', { bubbles: true }));
                     }
                 };
-
                 const locatario = locatarios.find(l => l.id === locacao.locatarioId);
                 const veiculo = veiculos.find(v => v.id === locacao.veiculoId);
                 if (!locatario || !veiculo) return;
@@ -1552,7 +1583,6 @@
                 if (pageName === 'gerador-contrato') { /* O iframe já está carregado */ }
                 if (pageName === 'locatarios' && temPermissaoAba('locatarios')) { atualizarTabelaLocatarios(); initScrollButtons(); }
                 if (pageName === 'locacoes' && temPermissaoAba('locacoes')) { 
-                    // Garante que a sub-tab ativa esteja correta
                     document.querySelectorAll('#locacoes-sub-tabs .sub-tab-btn').forEach(b => {
                         b.classList.toggle('active', b.getAttribute('data-locacao-tab') === abaLocacoesAtiva);
                     });
@@ -1600,6 +1630,20 @@
                     this.classList.add('active');
                     atualizarTabelaLocacoes();
                     atualizarUIBuscaLocacoes();
+                });
+            });
+
+            // Event listeners para sub-tabs do mecânico
+            document.querySelectorAll('#mecanico-sub-tabs .sub-tab-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const tab = this.getAttribute('data-mecanico-tab');
+                    document.querySelectorAll('#mecanico-sub-tabs .sub-tab-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    document.querySelectorAll('#page-mecanico .sub-tab-content').forEach(c => c.classList.remove('active'));
+                    document.getElementById('subtab-mecanico-' + tab).classList.add('active');
+                    if (tab === 'fechamento') {
+                        preencherDatalistsFechamento();
+                    }
                 });
             });
 
@@ -1968,7 +2012,6 @@
             function atualizarSelectsLocacao() {
                 if (!isAdmin()) return;
                 const selectVeiculo = document.getElementById('loc-veiculo'), selectLocatario = document.getElementById('loc-locatario');
-                // Somente locações ativas bloqueiam veículo/locatário
                 const locacoesAtivas = locacoes.filter(l => l.id !== editandoLocacaoId && l.status !== 'encerrada');
                 const veiculosLocadosIds = locacoesAtivas.map(l => l.veiculoId);
                 const veiculosDisp = veiculos.filter(v => !veiculosLocadosIds.includes(v.id));
@@ -2183,7 +2226,6 @@
                 if (!locacao || locacao.status === 'encerrada') { showToast('⚠️ Locação já encerrada.', 'error'); return; }
                 if (!confirm(`Encerrar a locação de ${locacao.veiculoNome} para ${locacao.locatarioNome}?`)) return;
                 try {
-                    // Calcular valor apurado com base nas semanas desde o início
                     const dataInicio = new Date(locacao.dataInicio + 'T00:00:00');
                     const dataEncerramento = new Date();
                     const diffTime = Math.abs(dataEncerramento - dataInicio);
@@ -2221,8 +2263,7 @@
             document.getElementById('docs-modal-close').addEventListener('click', () => { document.getElementById('docs-modal-overlay').classList.remove('active'); });
             document.getElementById('docs-modal-overlay').addEventListener('click', function(e) { if (e.target === this) this.classList.remove('active'); });
 
-            // As funções abaixo (fluxo de caixa, banco, etc.) permanecem idênticas ao original, pois não foram afetadas.
-            // Continuação do código original...
+            // ===================== FLUXO DE CAIXA (mantido) =====================
             function atualizarResumoFluxoCaixa() {
                 if (!isAdmin()) return;
                 const entradas = fluxoCaixa.filter(t => t.tipo === 'entrada').reduce((sum, t) => sum + (parseFloat(t.valor) || 0), 0);
@@ -2297,6 +2338,7 @@
             clearSearchBtnFluxo.addEventListener('click', () => { termoBuscaFluxo = ''; inputBuscaFluxo.value = ''; atualizarUIBuscaFluxo(); inputBuscaFluxo.focus(); });
             btnLimparFiltroFluxo.addEventListener('click', () => { termoBuscaFluxo = ''; inputBuscaFluxo.value = ''; atualizarUIBuscaFluxo(); inputBuscaFluxo.focus(); });
 
+            // ===================== USUÁRIOS (mantido) =====================
             const formUsuario = document.getElementById('form-usuario'), btnSubmitUsuario = document.getElementById('btn-submit-usuario'), btnCancelUsuario = document.getElementById('btn-cancel-usuario'), btnCancelEdicaoUsuario = document.getElementById('btn-cancel-edicao-usuario'), editBannerUsuario = document.getElementById('edit-banner-usuario'), usuarioFormTitle = document.getElementById('usuario-form-title');
             function resetarFormUsuario() { formUsuario.reset(); editandoUsuarioId = null; btnSubmitUsuario.textContent = '💾 Salvar Usuário'; btnCancelEdicaoUsuario.style.display = 'none'; editBannerUsuario.classList.remove('show'); usuarioFormTitle.textContent = 'Novo Usuário'; atualizarPermissoesUsuarioGrid(); atualizarPermissoesSubAbasManutencaoGrid(); }
             btnCancelUsuario.addEventListener('click', resetarFormUsuario);
@@ -2733,6 +2775,8 @@
                 const veiculo = veiculos.find(v => v.id === carroId);
                 const dados = {
                     data: document.getElementById('mec-data').value,
+                    oficina: document.getElementById('mec-oficina').value.trim(),
+                    mecanico: document.getElementById('mec-mecanico').value.trim(),
                     carroId,
                     carroNome: veiculo ? `${veiculo.marca} ${veiculo.modelo}` : '',
                     placa,
@@ -2759,6 +2803,8 @@
                 document.getElementById('mec-carro').value = servico.carroId || '';
                 document.getElementById('mec-placa').value = servico.placa || '';
                 document.getElementById('mec-data').value = servico.data || '';
+                document.getElementById('mec-oficina').value = servico.oficina || '';
+                document.getElementById('mec-mecanico').value = servico.mecanico || '';
                 document.getElementById('mec-servico').value = servico.servico || '';
                 document.getElementById('mec-valor').value = servico.valor ? formatarMoeda(servico.valor) : '';
                 document.getElementById('mec-observacao').value = servico.observacao || '';
@@ -2782,7 +2828,7 @@
                 const tbody = document.getElementById('tbody-mecanico');
                 const lista = mecanicos.sort((a,b) => new Date(b.data) - new Date(a.data));
                 if (lista.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="7" class="empty-state">🔧 Nenhum serviço mecânico registrado</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="9" class="empty-state">🔧 Nenhum serviço mecânico registrado</td></tr>';
                     return;
                 }
                 tbody.innerHTML = lista.map(m => {
@@ -2793,6 +2839,8 @@
                     acoesHtml += '</td>';
                     return `<tr>
                         <td>${dataFormatada}</td>
+                        <td>${m.oficina || '—'}</td>
+                        <td>${m.mecanico || '—'}</td>
                         <td>${m.carroNome || '—'}</td>
                         <td><strong>${m.placa || '—'}</strong></td>
                         <td>${m.servico}</td>
@@ -2803,6 +2851,152 @@
                 }).join('');
                 initScrollButtons();
             }
+
+            // ===================== NOVAS FUNÇÕES PARA FECHAMENTO =====================
+            function preencherDatalistsFechamento() {
+                const placas = [...new Set(mecanicos.map(m => m.placa).filter(Boolean))].sort();
+                const oficinas = [...new Set(mecanicos.map(m => m.oficina).filter(Boolean))].sort();
+                const dataListPlacas = document.getElementById('placas-mec');
+                const dataListOficinas = document.getElementById('oficinas-mec');
+                if (dataListPlacas) dataListPlacas.innerHTML = placas.map(p => `<option value="${p}">`).join('');
+                if (dataListOficinas) dataListOficinas.innerHTML = oficinas.map(o => `<option value="${o}">`).join('');
+            }
+
+            function aplicarFiltroFechamento() {
+                const dataInicio = document.getElementById('filtro-mec-data-inicio').value;
+                const dataFim = document.getElementById('filtro-mec-data-fim').value;
+                const placa = document.getElementById('filtro-mec-placa').value.trim().toUpperCase();
+                const oficina = document.getElementById('filtro-mec-oficina').value.trim();
+
+                let filtrados = mecanicos;
+
+                if (dataInicio) {
+                    filtrados = filtrados.filter(m => m.data && m.data >= dataInicio);
+                }
+                if (dataFim) {
+                    filtrados = filtrados.filter(m => m.data && m.data <= dataFim);
+                }
+                if (placa) {
+                    filtrados = filtrados.filter(m => m.placa && m.placa.toUpperCase().includes(placa));
+                }
+                if (oficina) {
+                    filtrados = filtrados.filter(m => m.oficina && m.oficina.toLowerCase().includes(oficina.toLowerCase()));
+                }
+
+                if (filtrados.length === 0) {
+                    showToast('⚠️ Nenhum serviço encontrado com os filtros informados.', 'error');
+                    return;
+                }
+
+                gerarPDFFechamento(filtrados, dataInicio, dataFim, placa, oficina);
+            }
+
+            function gerarPDFFechamento(filtrados, dataInicio, dataFim, placa, oficina) {
+                const total = filtrados.reduce((sum, m) => sum + (parseFloat(m.valor) || 0), 0);
+
+                const htmlContent = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Fechamento de Serviços - PAIZÃO RENT CAR</title>
+                    <style>
+                        * { margin:0; padding:0; box-sizing:border-box; }
+                        body { font-family: 'Segoe UI', Arial, sans-serif; background: #fff; color: #333; padding: 30px; }
+                        .header { text-align:center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 15px; }
+                        .header h1 { font-size: 22px; margin-bottom: 5px; }
+                        .header .subtitle { font-size: 14px; color: #666; }
+                        .filter-info { margin-bottom: 20px; padding: 10px 15px; background: #f5f5f5; border-radius: 6px; font-size: 13px; }
+                        .filter-info strong { margin-right: 5px; }
+                        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+                        th { background: #f0f0f0; text-align: left; padding: 10px; border-bottom: 2px solid #333; }
+                        td { padding: 10px; border-bottom: 1px solid #ddd; }
+                        .total-row td { font-weight: bold; font-size: 15px; background: #fafafa; border-top: 2px solid #333; }
+                        .print-btn { display: inline-block; margin-bottom: 20px; padding: 10px 20px; background: #333; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
+                        .print-btn:hover { background: #555; }
+                        @media print {
+                            .print-btn { display: none; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <button class="print-btn" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
+                    <div class="header">
+                        <h1>PAIZÃO RENT CAR</h1>
+                        <div class="subtitle">Fechamento de Serviços Mecânicos</div>
+                    </div>
+                    <div class="filter-info">
+                        <strong>Filtros aplicados:</strong>
+                        ${dataInicio ? `Data Início: ${dataInicio} | ` : ''}
+                        ${dataFim ? `Data Fim: ${dataFim} | ` : ''}
+                        ${placa ? `Placa: ${placa} | ` : ''}
+                        ${oficina ? `Oficina: ${oficina}` : ''}
+                        ${!dataInicio && !dataFim && !placa && !oficina ? 'Nenhum filtro (todos os registros)' : ''}
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Oficina</th>
+                                <th>Mecânico</th>
+                                <th>Carro</th>
+                                <th>Placa</th>
+                                <th>Serviço</th>
+                                <th>Valor</th>
+                                <th>Observação</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${filtrados.map(m => `
+                                <tr>
+                                    <td>${m.data ? new Date(m.data + 'T00:00:00').toLocaleDateString('pt-BR') : '—'}</td>
+                                    <td>${m.oficina || '—'}</td>
+                                    <td>${m.mecanico || '—'}</td>
+                                    <td>${m.carroNome || '—'}</td>
+                                    <td>${m.placa || '—'}</td>
+                                    <td>${m.servico || '—'}</td>
+                                    <td>${formatarMoeda(m.valor)}</td>
+                                    <td>${m.observacao || '—'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                        <tfoot>
+                            <tr class="total-row">
+                                <td colspan="6" style="text-align:right;">TOTAL:</td>
+                                <td>${formatarMoeda(total)}</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                    <script>
+                        // Auto print after load
+                        window.onload = function() {
+                            setTimeout(function() { window.print(); }, 500);
+                        };
+                    <\/script>
+                </body>
+                </html>
+                `;
+
+                const janela = window.open('', '_blank', 'width=1000,height=700');
+                if (!janela) {
+                    showToast('⚠️ Pop-up bloqueado! Permita pop-ups para gerar o PDF.', 'error');
+                    return;
+                }
+                janela.document.write(htmlContent);
+                janela.document.close();
+            }
+
+            document.getElementById('btn-filtrar-fechamento').addEventListener('click', function() {
+                aplicarFiltroFechamento();
+            });
+
+            document.getElementById('btn-limpar-filtro-fechamento').addEventListener('click', function() {
+                document.getElementById('filtro-mec-data-inicio').value = '';
+                document.getElementById('filtro-mec-data-fim').value = '';
+                document.getElementById('filtro-mec-placa').value = '';
+                document.getElementById('filtro-mec-oficina').value = '';
+            });
 
             function atualizarTabelaAuditoria() {
                 if (!isAdmin()) return;
@@ -3002,7 +3196,7 @@
                 listenersAtivos.push(colecoes.garagem.onSnapshot(snap => { garagem = []; snap.forEach(doc => garagem.push({ id: doc.id, ...doc.data() })); if (dadosCarregados) atualizarGaragem(); }));
                 listenersAtivos.push(colecoes.carroPdfs.onSnapshot(snap => { carroPdfs = []; snap.forEach(doc => carroPdfs.push({ id: doc.id, ...doc.data() })); if (dadosCarregados) renderizarSubAbasCarro(); }));
                 listenersAtivos.push(colecoes.manutencoes.onSnapshot(snap => { manutencoes = []; snap.forEach(doc => manutencoes.push({ id: doc.id, ...doc.data() })); if (dadosCarregados) atualizarTabelaManutencoes(); }));
-                listenersAtivos.push(colecoes.mecanico.onSnapshot(snap => { mecanicos = []; snap.forEach(doc => mecanicos.push({ id: doc.id, ...doc.data() })); if (dadosCarregados) atualizarTabelaMecanico(); }));
+                listenersAtivos.push(colecoes.mecanico.onSnapshot(snap => { mecanicos = []; snap.forEach(doc => mecanicos.push({ id: doc.id, ...doc.data() })); if (dadosCarregados) { atualizarTabelaMecanico(); } }));
                 listenersAtivos.push(colecoes.auditoria.orderBy('timestamp', 'desc').onSnapshot(snap => { auditoriaLogs = []; snap.forEach(doc => auditoriaLogs.push({ id: doc.id, ...doc.data() })); if (dadosCarregados) atualizarTabelaAuditoria(); }));
                 listenersAtivos.push(colecoes.socorroImagens.onSnapshot(snap => { socorroImagens = []; snap.forEach(doc => socorroImagens.push({ id: doc.id, ...doc.data() })); if (dadosCarregados) atualizarSocorro(); }));
                 listenersAtivos.push(colecoes.banco.onSnapshot(snap => { dadosBancoLista = []; snap.forEach(doc => dadosBancoLista.push({ id: doc.id, ...doc.data() })); if (dadosCarregados) atualizarDadosBanco(); }));

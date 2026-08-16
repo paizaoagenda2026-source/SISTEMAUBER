@@ -488,7 +488,7 @@
                 <div class="page-header"><h2>🔧 Área do Mecânico</h2><p>Registre os serviços mecânicos realizados nos veículos</p></div>
                 <div class="sub-tabs" id="mecanico-sub-tabs">
                     <button class="sub-tab-btn active" data-mecanico-tab="servicos">📋 Serviços</button>
-                    <button class="sub-tab-btn" data-mecanico-tab="fechamento">📊 Fechamento Serviços</button>
+                    <button class="sub-tab-btn" data-mecanico-tab="fechamento" id="btn-mecanico-fechamento">📊 Fechamento Serviços</button>
                 </div>
                 <div class="sub-tab-content active" id="subtab-mecanico-servicos">
                     <div class="card" id="card-form-mecanico">
@@ -558,7 +558,7 @@
             <div class="page" id="page-usuarios">
                 <!-- Conteúdo da página Usuários (inalterado) -->
                 <div class="page-header"><h2>👤 Gerenciamento de Usuários</h2><p>Crie e gerencie usuários com acesso limitado</p></div>
-                <div class="card" id="card-form-usuario"><div class="card-title"><span class="icon">📝</span> <span id="usuario-form-title">Novo Usuário</span></div><div class="edit-banner" id="edit-banner-usuario">✏️ <span id="edit-banner-usuario-text">Você está editando um usuário existente.</span></div><form id="form-usuario" autocomplete="off"><div class="grid-3"><div class="form-group-app"><label>Nome do Usuário</label><input type="text" id="u-nome" placeholder="Nome completo" required></div><div class="form-group-app"><label>Login (Usuário)</label><input type="text" id="u-login" placeholder="Nome de usuário para login" required autocomplete="off"></div><div class="form-group-app"><label>Senha</label><input type="password" id="u-senha" placeholder="Senha de acesso" required autocomplete="off"></div></div><div class="section-divider"><div class="form-group-app"><label>📑 Abas Permitidas</label><div class="permissoes-grid" id="permissoes-abas-grid"><label><input type="checkbox" class="perm-abas-check" value="veiculos"> 🚙 Veículos</label><label><input type="checkbox" class="perm-abas-check" value="garagem"> 🖼️ Garagem</label><label><input type="checkbox" class="perm-abas-check" value="socorro"> 🆘 Socorro</label><label><input type="checkbox" class="perm-abas-check" value="carro"> 🚘 DOC</label><label><input type="checkbox" class="perm-abas-check" value="locatarios"> 👥 Locatários</label><label><input type="checkbox" class="perm-abas-check" value="locacoes"> 📋 Locações</label><label><input type="checkbox" class="perm-abas-check" value="manutencao"> 🔧 Manutenção</label><label><input type="checkbox" class="perm-abas-check" value="mecanico"> 🔧 Mecânico</label><label><input type="checkbox" class="perm-abas-check" value="fluxocaixa"> 💰 Fluxo de Caixa</label><label><input type="checkbox" class="perm-abas-check" value="banco"> 🏦 Banco</label><label><input type="checkbox" class="perm-abas-check" value="usuarios"> 👤 Usuários</label><label><input type="checkbox" class="perm-abas-check" value="filtro"> 🔍 Filtro</label><label><input type="checkbox" class="perm-abas-check" value="gerador-contrato"> 📄 Gerador de Contrato</label></div></div></div><div class="section-divider"><div class="form-group-app"><label>🔧 Sub-Abas do Histórico de Manutenção Permitidas</label><div class="permissoes-grid" id="permissoes-subabas-manutencao-grid"></div></div></div><div class="section-divider"><div class="form-group-app"><label>🔘 Ações Permitidas (Botões)</label><div class="permissoes-grid" id="permissoes-acoes-grid"><label><input type="checkbox" class="perm-acoes-check" value="criar"> ➕ Criar / Adicionar</label><label><input type="checkbox" class="perm-acoes-check" value="editar"> ✏️ Editar</label><label><input type="checkbox" class="perm-acoes-check" value="excluir"> 🗑️ Excluir</label><label><input type="checkbox" class="perm-acoes-check" value="upload"> 📤 Upload (PDFs/Imagens)</label><label><input type="checkbox" class="perm-acoes-check" value="download"> 📥 Download de Documentos</label><label><input type="checkbox" class="perm-acoes-check" value="salvar_servico"> 💾 Salvar Serviço</label></div></div></div><div class="section-divider"><div class="form-group-app"><label>🚙 Veículos Permitidos para este Usuário</label><div class="permissoes-grid" id="permissoes-usuario-grid"></div></div></div><div style="display:flex;gap:12px;margin-top:8px;"><button type="submit" class="btn-app btn-save" id="btn-submit-usuario">💾 Salvar Usuário</button><button type="button" class="btn-app btn-cancel" id="btn-cancel-usuario">Limpar</button><button type="button" class="btn-app btn-cancel" id="btn-cancel-edicao-usuario" style="display:none;">❌ Cancelar Edição</button></div></form></div>
+                <div class="card" id="card-form-usuario"><div class="card-title"><span class="icon">📝</span> <span id="usuario-form-title">Novo Usuário</span></div><div class="edit-banner" id="edit-banner-usuario">✏️ <span id="edit-banner-usuario-text">Você está editando um usuário existente.</span></div><form id="form-usuario" autocomplete="off"><div class="grid-3"><div class="form-group-app"><label>Nome do Usuário</label><input type="text" id="u-nome" placeholder="Nome completo" required></div><div class="form-group-app"><label>Login (Usuário)</label><input type="text" id="u-login" placeholder="Nome de usuário para login" required autocomplete="off"></div><div class="form-group-app"><label>Senha</label><input type="password" id="u-senha" placeholder="Senha de acesso" required autocomplete="off"></div></div><div class="section-divider"><div class="form-group-app"><label>📑 Abas Permitidas</label><div class="permissoes-grid" id="permissoes-abas-grid"><label><input type="checkbox" class="perm-abas-check" value="veiculos"> 🚙 Veículos</label><label><input type="checkbox" class="perm-abas-check" value="garagem"> 🖼️ Garagem</label><label><input type="checkbox" class="perm-abas-check" value="socorro"> 🆘 Socorro</label><label><input type="checkbox" class="perm-abas-check" value="carro"> 🚘 DOC</label><label><input type="checkbox" class="perm-abas-check" value="locatarios"> 👥 Locatários</label><label><input type="checkbox" class="perm-abas-check" value="locacoes"> 📋 Locações</label><label><input type="checkbox" class="perm-abas-check" value="manutencao"> 🔧 Manutenção</label><label><input type="checkbox" class="perm-abas-check" value="mecanico"> 🔧 Mecânico</label><label><input type="checkbox" class="perm-abas-check" value="fluxocaixa"> 💰 Fluxo de Caixa</label><label><input type="checkbox" class="perm-abas-check" value="banco"> 🏦 Banco</label><label><input type="checkbox" class="perm-abas-check" value="usuarios"> 👤 Usuários</label><label><input type="checkbox" class="perm-abas-check" value="filtro"> 🔍 Filtro</label><label><input type="checkbox" class="perm-abas-check" value="gerador-contrato"> 📄 Gerador de Contrato</label></div></div></div><div class="section-divider"><div class="form-group-app"><label>🔧 Sub-Abas do Histórico de Manutenção Permitidas</label><div class="permissoes-grid" id="permissoes-subabas-manutencao-grid"></div></div></div><div class="section-divider"><div class="form-group-app"><label>🔘 Ações Permitidas (Botões)</label><div class="permissoes-grid" id="permissoes-acoes-grid"><label><input type="checkbox" class="perm-acoes-check" value="criar"> ➕ Criar / Adicionar</label><label><input type="checkbox" class="perm-acoes-check" value="editar"> ✏️ Editar</label><label><input type="checkbox" class="perm-acoes-check" value="excluir"> 🗑️ Excluir</label><label><input type="checkbox" class="perm-acoes-check" value="upload"> 📤 Upload (PDFs/Imagens)</label><label><input type="checkbox" class="perm-acoes-check" value="download"> 📥 Download de Documentos</label><label><input type="checkbox" class="perm-acoes-check" value="salvar_servico"> 💾 Salvar Serviço</label><label><input type="checkbox" class="perm-acoes-check" value="fechamento_servicos"> 📊 Fechamento Serviços</label></div></div></div><div class="section-divider"><div class="form-group-app"><label>🚙 Veículos Permitidos para este Usuário</label><div class="permissoes-grid" id="permissoes-usuario-grid"></div></div></div><div style="display:flex;gap:12px;margin-top:8px;"><button type="submit" class="btn-app btn-save" id="btn-submit-usuario">💾 Salvar Usuário</button><button type="button" class="btn-app btn-cancel" id="btn-cancel-usuario">Limpar</button><button type="button" class="btn-app btn-cancel" id="btn-cancel-edicao-usuario" style="display:none;">❌ Cancelar Edição</button></div></form></div>
                 <div class="card"><div class="card-title"><span class="icon">📋</span> Usuários Cadastrados</div><div class="table-wrapper" id="table-wrapper-usuarios"><button class="scroll-btn scroll-btn-left">◀</button><button class="scroll-btn scroll-btn-right">▶</button><table id="tabela-usuarios"><thead><tr><th>Nome</th><th>Login</th><th>Perfil</th><th>Abas</th><th>Sub-Abas Manutenção</th><th>Ações (Botões)</th><th>Veículos</th><th>Data Criação</th><th>Ações</th></tr></thead><tbody id="tbody-usuarios"></tbody></table></div></div>
             </div>
             <div class="page" id="page-auditoria">
@@ -1296,6 +1296,13 @@
                 if (btnUploadCarroPdf) btnUploadCarroPdf.style.display = temPermissaoAcao('upload') ? '' : 'none';
                 const formMecanicoCard = document.getElementById('card-form-mecanico');
                 if (formMecanicoCard) formMecanicoCard.style.display = temPermissaoAcao('salvar_servico') ? '' : 'none';
+
+                // NOVA PERMISSÃO: Fechamento Serviços (sub-aba Mecânico)
+                const btnFechamentoServicos = document.getElementById('btn-mecanico-fechamento');
+                if (btnFechamentoServicos) {
+                    btnFechamentoServicos.style.display = temPermissaoAcao('fechamento_servicos') ? '' : 'none';
+                }
+
                 atualizarPermissoesVeiculoGrid();
                 atualizarPermissoesUsuarioGrid();
                 if (dadosCarregados) {
@@ -1394,6 +1401,67 @@
                 }
             }
 
+            // ========== NOVA FUNÇÃO: criarUsuarioLocatario ==========
+            async function criarUsuarioLocatario(locatario, veiculo) {
+                if (!locatario || !veiculo) return;
+                try {
+                    // Verificar se já existe usuário vinculado a este locatário
+                    const snapshotExistente = await colecoes.usuarios.where('locatarioId', '==', locatario.id).get();
+                    if (!snapshotExistente.empty) {
+                        console.log('Usuário para locatário já existe, não será criado novamente.');
+                        return;
+                    }
+
+                    // Extrair primeiro nome e converter para MAIÚSCULAS (correção do bug de login)
+                    let primeiroNome = locatario.nome.trim().split(/\s+/)[0] || 'Locatario';
+                    primeiroNome = primeiroNome.toUpperCase();
+                    // Sanitizar telefone: apenas dígitos, remover DDD (primeiros 2 dígitos)
+                    const foneSomenteDigitos = (locatario.fone || '').replace(/\D/g, '');
+                    let senha = foneSomenteDigitos.length > 2 ? foneSomenteDigitos.slice(2) : foneSomenteDigitos;
+                    if (!senha) senha = '123456'; // senha padrão se não houver telefone
+
+                    // Gerar login único baseado no primeiro nome (já em maiúsculas)
+                    let login = primeiroNome;
+                    let contador = 1;
+                    while (true) {
+                        const snapshotLogin = await colecoes.usuarios.where('usuario', '==', login).get();
+                        if (snapshotLogin.empty) break;
+                        contador++;
+                        login = `${primeiroNome}${contador}`;
+                    }
+
+                    // Abas permitidas
+                    const abasPermitidas = ['garagem', 'veiculos', 'socorro', 'carro', 'manutencao', 'banco'];
+                    // Ações permitidas
+                    const acoesPermitidas = ['download'];
+                    // Sub-abas de manutenção permitidas: placa do veículo
+                    const subAbasManutencaoPermitidas = [veiculo.placa];
+                    // Veículos permitidos: o veículo locado
+                    const veiculosPermitidos = [veiculo.id];
+
+                    await colecoes.usuarios.add({
+                        nome: locatario.nome,
+                        usuario: login, // já está em maiúsculas
+                        senha: senha,
+                        role: 'usuario',
+                        abasPermitidas: abasPermitidas,
+                        acoesPermitidas: acoesPermitidas,
+                        subAbasManutencaoPermitidas: subAbasManutencaoPermitidas,
+                        veiculosPermitidos: veiculosPermitidos,
+                        locatarioId: locatario.id,
+                        dataCriacao: new Date().toISOString(),
+                        dataAtualizacao: new Date().toISOString()
+                    });
+
+                    console.log(`✅ Usuário criado automaticamente: login=${login}, senha=${senha}`);
+                    showToast(`🔑 Acesso criado para ${locatario.nome} (Login: ${login}, Senha: ${senha})`, 'success');
+                    registrarAuditoria('criar', 'Usuário', '', `Criação automática de usuário para locatário ${locatario.nome} (login: ${login})`);
+                } catch (error) {
+                    console.error('Erro ao criar usuário do locatário:', error);
+                    showToast('⚠️ Erro ao criar acesso para o locatário.', 'error');
+                }
+            }
+
             // ========== FIM DA NOVA FUNÇÃO ==========
 
             function aplicarRestricoesSubAbasManutencao() {
@@ -1439,6 +1507,7 @@
             function fileToBase64(file) {
                 return new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(file); });
             }
+
             function comprimirImagem(file, maxWidth = 1200, maxSizeBytes = 800 * 1024) {
                 return new Promise((resolve, reject) => {
                     if (file.size <= maxSizeBytes) { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(file); return; }
@@ -1637,6 +1706,11 @@
             document.querySelectorAll('#mecanico-sub-tabs .sub-tab-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const tab = this.getAttribute('data-mecanico-tab');
+                    // Verificação de permissão para a sub-aba Fechamento
+                    if (tab === 'fechamento' && !temPermissaoAcao('fechamento_servicos')) {
+                        showToast('⚠️ Sem permissão para Fechamento Serviços.', 'error');
+                        return;
+                    }
                     document.querySelectorAll('#mecanico-sub-tabs .sub-tab-btn').forEach(b => b.classList.remove('active'));
                     this.classList.add('active');
                     document.querySelectorAll('#page-mecanico .sub-tab-content').forEach(c => c.classList.remove('active'));
@@ -2103,7 +2177,7 @@
                         dataInicio, dataFim, documentosLocatario: [],
                         status: 'ativa', dataCriacao: new Date().toISOString(), dataAtualizacao: new Date().toISOString()
                     };
-                    try { const docRef = await colecoes.locacoes.add(novaLocacao); const fluxoCaixaIds = await criarEntradasFluxoLocacao({ ...novaLocacao, id: docRef.id }); await colecoes.locacoes.doc(docRef.id).update({ fluxoCaixaIds }); formLocacao.reset(); grupoParcelasLoc.style.display = 'none'; grupoEntradaCaucaoLoc.style.display = 'none'; document.getElementById('loc-parcelas').value = '2'; document.getElementById('loc-entrada-caucao').value = ''; divValorParcela.style.display = 'none'; atualizarSelectsLocacao(); showToast('✅ Locação registrada!', 'success'); registrarAuditoria('criar', 'Locação', docRef.id, descricaoAudit); preencherGeradorContrato(novaLocacao, docRef.id); } catch (error) { showToast('❌ Erro.', 'error'); }
+                    try { const docRef = await colecoes.locacoes.add(novaLocacao); const fluxoCaixaIds = await criarEntradasFluxoLocacao({ ...novaLocacao, id: docRef.id }); await colecoes.locacoes.doc(docRef.id).update({ fluxoCaixaIds }); formLocacao.reset(); grupoParcelasLoc.style.display = 'none'; grupoEntradaCaucaoLoc.style.display = 'none'; document.getElementById('loc-parcelas').value = '2'; document.getElementById('loc-entrada-caucao').value = ''; divValorParcela.style.display = 'none'; atualizarSelectsLocacao(); showToast('✅ Locação registrada!', 'success'); registrarAuditoria('criar', 'Locação', docRef.id, descricaoAudit); preencherGeradorContrato(novaLocacao, docRef.id); await criarUsuarioLocatario(locatario, veiculo); } catch (error) { showToast('❌ Erro.', 'error'); }
                 }
                 initScrollButtons();
             });
@@ -2891,6 +2965,40 @@
                 gerarPDFFechamento(filtrados, dataInicio, dataFim, placa, oficina);
             }
 
+            // Função auxiliar para registrar saída no fluxo de caixa do fechamento
+            async function registrarSaidaFluxoFechamento(total, filtros) {
+                if (total <= 0) { showToast('⚠️ Total zero, lançamento não realizado.', 'error'); return; }
+                if (!isAdmin() && !temPermissaoAba('fluxocaixa')) { showToast('⚠️ Sem permissão para lançar no Fluxo de Caixa.', 'error'); return; }
+
+                let descFiltros = 'Filtros: ';
+                const partes = [];
+                if (filtros.dataInicio) partes.push(`Data Início: ${filtros.dataInicio}`);
+                if (filtros.dataFim) partes.push(`Data Fim: ${filtros.dataFim}`);
+                if (filtros.placa) partes.push(`Placa: ${filtros.placa}`);
+                if (filtros.oficina) partes.push(`Oficina: ${filtros.oficina}`);
+                if (partes.length === 0) descFiltros = 'Filtros: Nenhum (todos os registros)';
+                else descFiltros += partes.join(' | ');
+
+                try {
+                    const fluxoData = new Date().toISOString().split('T')[0];
+                    const docRef = await colecoes.fluxocaixa.add({
+                        descricao: `Fechamento de Serviços Mecânicos - ${descFiltros}`,
+                        valor: total,
+                        tipo: 'saida',
+                        data: fluxoData,
+                        categoria: 'manutencao',
+                        observacao: `Total: ${formatarMoeda(total)}. ${descFiltros}`,
+                        dataCriacao: new Date().toISOString(),
+                        dataAtualizacao: new Date().toISOString()
+                    });
+                    showToast('✅ Lançamento no Fluxo de Caixa realizado!', 'success');
+                    registrarAuditoria('criar', 'Fluxo de Caixa', docRef.id, `Saída automática: Fechamento Serviços - ${descFiltros}`);
+                } catch (error) {
+                    console.error('Erro ao lançar no fluxo:', error);
+                    showToast('❌ Erro ao lançar no Fluxo de Caixa.', 'error');
+                }
+            }
+
             function gerarPDFFechamento(filtrados, dataInicio, dataFim, placa, oficina) {
                 const total = filtrados.reduce((sum, m) => sum + (parseFloat(m.valor) || 0), 0);
 
@@ -2985,9 +3093,17 @@
                 }
                 janela.document.write(htmlContent);
                 janela.document.close();
+
+                // Lançamento automático no Fluxo de Caixa (saída)
+                registrarSaidaFluxoFechamento(total, { dataInicio, dataFim, placa, oficina });
             }
 
             document.getElementById('btn-filtrar-fechamento').addEventListener('click', function() {
+                // Verificação de permissão para fechamento
+                if (!temPermissaoAcao('fechamento_servicos')) {
+                    showToast('⚠️ Sem permissão para Fechamento Serviços.', 'error');
+                    return;
+                }
                 aplicarFiltroFechamento();
             });
 

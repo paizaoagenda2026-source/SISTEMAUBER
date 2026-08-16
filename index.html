@@ -40,6 +40,8 @@
         .login-logo h1 { font-size:26px; font-weight:700; color:#fff; letter-spacing:-0.5px; }
         .login-logo h1 span { color:var(--primary); }
         .login-logo p { color:var(--text-muted); font-size:13px; margin-top:4px; letter-spacing:1px; text-transform:uppercase; }
+        .login-logo .icon img { width:48px; height:48px; object-fit:contain; border-radius:8px; }
+        .brand-icon img { width:28px; height:28px; object-fit:contain; border-radius:4px; }
         .form-group { margin-bottom:20px; position:relative; }
         .form-group label { display:block; font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); margin-bottom:6px; }
         .form-group input { width:100%; padding:14px 16px; padding-left:44px; background:var(--input-bg); border:1px solid var(--border); border-radius:10px; color:#fff; font-size:15px; transition:all 0.3s; outline:none; }
@@ -273,7 +275,11 @@
 <body>
     <div id="login-screen">
         <div class="login-container">
-            <div class="login-logo"><div class="icon">🚗</div><h1>PAIZÃO <span>RENT CAR</span></h1><p>Sistema de Locação de Veículos</p></div>
+            <div class="login-logo">
+                <div class="icon" id="login-logo-icon">🚗</div>
+                <h1 id="login-nome-sistema">PAIZÃO <span>RENT CAR</span></h1>
+                <p id="login-subtitulo">Sistema de Locação de Veículos</p>
+            </div>
             <div class="login-error" id="login-error">Usuário ou senha inválidos!</div>
             <form id="login-form" autocomplete="off">
                 <div class="form-group"><label for="login-user">Usuário</label><input type="text" id="login-user" placeholder="Digite o usuário" autocomplete="off" autofocus><span class="input-icon" style="position:absolute; left:14px; bottom:14px;">👤</span></div>
@@ -284,7 +290,13 @@
     </div>
     <div id="app-screen">
         <header class="top-header">
-            <div class="brand"><div class="brand-icon">🚗</div><div class="brand-text"><h2>PAIZÃO <span>RENT CAR</span></h2><small>Gestão de Frotas</small></div></div>
+            <div class="brand">
+                <div class="brand-icon" id="brand-logo">🚗</div>
+                <div class="brand-text">
+                    <h2 id="app-nome-sistema">PAIZÃO <span>RENT CAR</span></h2>
+                    <small id="app-subtitulo">Gestão de Frotas</small>
+                </div>
+            </div>
             <nav class="top-nav" id="top-nav">
                 <button data-page="garagem"><span class="nav-icon">🖼️</span> Garagem</button>
                 <button data-page="socorro"><span class="nav-icon">🆘</span> Socorro</button>
@@ -296,6 +308,7 @@
                 <button data-page="banco" class="nav-admin-only" style="border:1px solid var(--border);"><span class="nav-icon">🏦</span> Banco</button>
                 <button data-page="usuarios" class="nav-admin-only" style="border:1px solid var(--accent);"><span class="nav-icon">👤</span> Usuários</button>
                 <button data-page="auditoria" class="nav-admin-only" style="border:1px solid var(--accent);"><span class="nav-icon">📋</span> Auditoria</button>
+                <button data-page="configuracoes" class="nav-admin-only" style="border:1px solid var(--accent);"><span class="nav-icon">⚙️</span> Configurações</button>
             </nav>
             <div class="top-user">
                 <span class="sync-indicator online" id="sync-indicator" title="Status da sincronização com Firebase"><span class="sync-dot"></span> <span id="sync-text">Online</span></span>
@@ -557,6 +570,51 @@
                 <div class="page-header"><h2>📋 Auditoria</h2><p>Registro de todas as ações realizadas pelos usuários</p></div>
                 <div class="card"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;"><div class="card-title" style="margin-bottom:0; padding-bottom:0; border-bottom:none;"><span class="icon">📋</span> Log de Atividades</div><button class="btn-limpar-auditoria" id="btn-limpar-auditoria">🗑️ Limpar Log</button></div><div class="search-bar-container" id="search-bar-auditoria"><div class="search-input-wrapper"><span class="search-icon">🔍</span><input type="text" id="input-busca-auditoria" placeholder="Pesquisar por usuário, ação ou entidade..." autocomplete="off"><button class="clear-search-btn" id="clear-search-btn-auditoria">✕</button></div><div class="search-results-info" id="search-results-info-auditoria"><span id="search-count-text-auditoria">Total: <strong class="highlight-count" id="search-count-num-auditoria">0</strong> registros</span></div><button class="btn-limpar-filtro" id="btn-limpar-filtro-auditoria" style="display:none;">🧹 Limpar Filtro</button></div><div class="table-wrapper" id="table-wrapper-auditoria"><button class="scroll-btn scroll-btn-left">◀</button><button class="scroll-btn scroll-btn-right">▶</button><table id="tabela-auditoria"><thead><tr><th>Data/Hora</th><th>Usuário</th><th>Ação</th><th>Entidade</th><th>Descrição</th></tr></thead><tbody id="tbody-auditoria"></tbody></table></div></div>
             </div>
+            <div class="page" id="page-configuracoes">
+                <div class="page-header">
+                    <h2>⚙️ Configurações do Sistema</h2>
+                    <p>Personalize o nome e a logo exibidos no login e no cabeçalho</p>
+                </div>
+                <div class="card">
+                    <div class="card-title"><span class="icon">🖼️</span> Logo e Nome</div>
+                    <form id="form-configuracoes" autocomplete="off">
+                        <div class="grid-2">
+                            <div class="form-group-app">
+                                <label>Nome do Sistema</label>
+                                <input type="text" id="config-nome-sistema" placeholder="Ex: PAIZÃO RENT CAR">
+                            </div>
+                            <div class="form-group-app">
+                                <label>Subtítulo (Tela de Login)</label>
+                                <input type="text" id="config-subtitulo-login" placeholder="Ex: Sistema de Locação de Veículos">
+                            </div>
+                        </div>
+                        <div class="grid-2">
+                            <div class="form-group-app">
+                                <label>Subtítulo (Cabeçalho do App)</label>
+                                <input type="text" id="config-subtitulo-app" placeholder="Ex: Gestão de Frotas">
+                            </div>
+                            <div class="form-group-app">
+                                <label>Logo (Imagem)</label>
+                                <input type="file" id="config-logo-file" accept="image/*">
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:12px; margin-top:8px; align-items:center; flex-wrap:wrap;">
+                            <button type="submit" class="btn-app btn-save">💾 Salvar Configurações</button>
+                            <button type="button" id="btn-restaurar-config" class="btn-app btn-cancel">🔄 Restaurar Padrão</button>
+                        </div>
+                        <div id="config-preview" style="margin-top:16px;">
+                            <h3 style="color:#fff;">Prévia Atual</h3>
+                            <div style="display:flex; align-items:center; gap:10px; background:var(--bg-dark); padding:16px; border-radius:8px;">
+                                <span id="config-preview-logo" style="font-size:40px;">🚗</span>
+                                <div>
+                                    <h4 id="config-preview-nome" style="color:#fff; font-size:22px;">PAIZÃO RENT CAR</h4>
+                                    <small id="config-preview-subtitulo" style="color:var(--text-muted);">Sistema de Locação de Veículos</small>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </main>
     </div>
     <div class="docs-modal-overlay" id="docs-modal-overlay"><div class="docs-modal"><div class="docs-modal-header"><h3>📎 Documentos da Locação</h3><button class="docs-modal-close" id="docs-modal-close">✕</button></div><div id="docs-modal-content"></div></div></div>
@@ -564,6 +622,7 @@
     <div class="docs-modal-overlay" id="modal-imagem-overlay"><div class="docs-modal"><div class="docs-modal-header"><h3>🖼️ Upload de Imagem para Garagem</h3><button class="docs-modal-close" id="modal-imagem-close">✕</button></div><div class="form-group-app"><label>Nome da Imagem</label><input type="text" id="input-imagem-nome" placeholder="Digite um nome para a imagem"></div><div class="form-group-app"><label>Arquivo de Imagem</label><input type="file" id="input-imagem-file" accept="image/*"></div><button class="btn-app btn-save" id="btn-salvar-imagem" style="width:100%; margin-top:8px;">💾 Salvar Imagem</button><span id="imagem-upload-error" style="color:var(--danger);font-size:12px;display:none;margin-top:8px;"></span></div></div>
     <div class="docs-modal-overlay" id="modal-carro-pdf-overlay"><div class="docs-modal"><div class="docs-modal-header"><h3>📎 Upload de PDF para Sub-Aba do DOC</h3><button class="docs-modal-close" id="modal-carro-pdf-close">✕</button></div><div class="form-group-app"><label>Escolha a Sub-Aba de Destino</label><select id="select-carro-subaba"></select></div><div class="form-group-app"><label>Nome do Arquivo</label><input type="text" id="input-carro-pdf-nome" placeholder="Digite um nome para o arquivo"></div><div class="form-group-app"><label>Arquivo PDF</label><input type="file" id="input-carro-pdf-file" accept=".pdf"></div><button class="btn-app btn-save" id="btn-salvar-carro-pdf" style="width:100%; margin-top:8px;">💾 Salvar PDF na Sub-Aba</button><span id="carro-pdf-upload-error" style="color:var(--danger);font-size:12px;display:none;margin-top:8px;"></span></div></div>
     <script>
+        // Script completo original + novas funções de configuração, sem truncamentos.
         (function() {
             const firebaseConfig = {
                 apiKey: "AIzaSyA5Tn3ebMjJGFDcPJC6PaK2I5cl75DY2T4",
@@ -597,7 +656,8 @@
                 mecanico: db.collection('mecanico'),
                 auditoria: db.collection('auditoria'),
                 socorroImagens: db.collection('socorro_imagens'),
-                banco: db.collection('banco')
+                banco: db.collection('banco'),
+                configuracoes: db.collection('configuracoes')
             };
 
             let veiculos = [], locatarios = [], locacoes = [], fluxoCaixa = [], usuarios = [], garagem = [], carroPdfs = [], manutencoes = [], mecanicos = [], auditoriaLogs = [], socorroImagens = [], dadosBancoLista = [], usuarioLogado = null;
@@ -605,6 +665,106 @@
             let termoBuscaLocacoes = '', termoBuscaFluxo = '', termoBuscaAuditoria = '', dadosCarregados = false, listenersAtivos = [], placaFiltroManutencao = '';
             let subAbaCarroAtiva = '';
             let abaLocacoesAtiva = 'ativas';
+
+            let configuracaoGlobal = {
+                logoBase64: null,
+                nomeSistema: 'PAIZÃO RENT CAR',
+                subtituloLogin: 'Sistema de Locação de Veículos',
+                subtituloApp: 'Gestão de Frotas'
+            };
+
+            function aplicarConfiguracoes() {
+                if (!configuracaoGlobal) return;
+                const { logoBase64, nomeSistema, subtituloLogin, subtituloApp } = configuracaoGlobal;
+
+                const loginLogo = document.getElementById('login-logo-icon');
+                const loginNome = document.getElementById('login-nome-sistema');
+                const loginSubtitulo = document.getElementById('login-subtitulo');
+                if (loginLogo) {
+                    if (logoBase64) {
+                        loginLogo.innerHTML = `<img src="${logoBase64}" alt="Logo" style="width:48px;height:48px;object-fit:contain;border-radius:8px;">`;
+                    } else {
+                        loginLogo.textContent = '🚗';
+                    }
+                }
+                if (loginNome) {
+                    const partes = (nomeSistema || 'PAIZÃO RENT CAR').trim().split(/\s+/);
+                    if (partes.length > 1) {
+                        const ultima = partes.pop();
+                        loginNome.innerHTML = `${partes.join(' ')} <span style="color:var(--primary);">${ultima}</span>`;
+                    } else {
+                        loginNome.textContent = nomeSistema;
+                    }
+                }
+                if (loginSubtitulo) loginSubtitulo.textContent = subtituloLogin;
+
+                const brandLogo = document.getElementById('brand-logo');
+                const appNome = document.getElementById('app-nome-sistema');
+                const appSubtitulo = document.getElementById('app-subtitulo');
+                if (brandLogo) {
+                    if (logoBase64) {
+                        brandLogo.innerHTML = `<img src="${logoBase64}" alt="Logo" style="width:28px;height:28px;object-fit:contain;border-radius:4px;">`;
+                    } else {
+                        brandLogo.textContent = '🚗';
+                    }
+                }
+                if (appNome) {
+                    const partes = (nomeSistema || 'PAIZÃO RENT CAR').trim().split(/\s+/);
+                    if (partes.length > 1) {
+                        const ultima = partes.pop();
+                        appNome.innerHTML = `${partes.join(' ')} <span style="color:var(--primary);">${ultima}</span>`;
+                    } else {
+                        appNome.textContent = nomeSistema;
+                    }
+                }
+                if (appSubtitulo) appSubtitulo.textContent = subtituloApp;
+
+                const previewLogo = document.getElementById('config-preview-logo');
+                const previewNome = document.getElementById('config-preview-nome');
+                const previewSubtitulo = document.getElementById('config-preview-subtitulo');
+                if (previewLogo) {
+                    if (logoBase64) previewLogo.innerHTML = `<img src="${logoBase64}" alt="Logo" style="width:40px;height:40px;object-fit:contain;">`;
+                    else previewLogo.textContent = '🚗';
+                }
+                if (previewNome) previewNome.textContent = nomeSistema;
+                if (previewSubtitulo) previewSubtitulo.textContent = subtituloLogin;
+            }
+
+            function preencherFormConfiguracoes() {
+                const nomeInput = document.getElementById('config-nome-sistema');
+                const subtLogin = document.getElementById('config-subtitulo-login');
+                const subtApp = document.getElementById('config-subtitulo-app');
+                if (nomeInput) nomeInput.value = configuracaoGlobal.nomeSistema;
+                if (subtLogin) subtLogin.value = configuracaoGlobal.subtituloLogin;
+                if (subtApp) subtApp.value = configuracaoGlobal.subtituloApp;
+                const fileInput = document.getElementById('config-logo-file');
+                if (fileInput) fileInput.value = '';
+            }
+
+            function carregarConfiguracoes() {
+                colecoes.configuracoes.doc('global').onSnapshot((doc) => {
+                    if (doc.exists) {
+                        const data = doc.data();
+                        configuracaoGlobal = {
+                            logoBase64: data.logoBase64 || null,
+                            nomeSistema: data.nomeSistema || 'PAIZÃO RENT CAR',
+                            subtituloLogin: data.subtituloLogin || 'Sistema de Locação de Veículos',
+                            subtituloApp: data.subtituloApp || 'Gestão de Frotas'
+                        };
+                    } else {
+                        configuracaoGlobal = {
+                            logoBase64: null,
+                            nomeSistema: 'PAIZÃO RENT CAR',
+                            subtituloLogin: 'Sistema de Locação de Veículos',
+                            subtituloApp: 'Gestão de Frotas'
+                        };
+                    }
+                    aplicarConfiguracoes();
+                    preencherFormConfiguracoes();
+                }, (error) => {
+                    console.error('Erro ao carregar configurações:', error);
+                });
+            }
 
             async function registrarAuditoria(acao, entidade, entidadeId, descricao) {
                 if (!usuarioLogado) return;
@@ -1232,6 +1392,8 @@
                         btn.style.display = isAdmin() ? '' : 'none';
                     } else if (page === 'banco') {
                         btn.style.display = temPermissaoAba('banco') ? '' : 'none';
+                    } else if (page === 'configuracoes') {
+                        btn.style.display = isAdmin() ? '' : 'none';
                     } else {
                         btn.style.display = temPermissaoAba(page) ? '' : 'none';
                     }
@@ -1430,7 +1592,6 @@
                         dataCriacao: new Date().toISOString(),
                         dataAtualizacao: new Date().toISOString()
                     });
-
                     console.log(`✅ Usuário criado automaticamente: login=${login}, senha=${senha}`);
                     showToast(`🔑 Acesso criado para ${locatario.nome} (Login: ${login}, Senha: ${senha})`, 'success');
                     registrarAuditoria('criar', 'Usuário', '', `Criação automática de usuário para locatário ${locatario.nome} (login: ${login})`);
@@ -1603,6 +1764,8 @@
             function navegarPara(pageName) {
                 if (pageName === 'auditoria') {
                     if (!isAdmin()) { showToast('⚠️ Apenas o administrador pode acessar esta aba.', 'error'); return; }
+                } else if (pageName === 'configuracoes') {
+                    if (!isAdmin()) { showToast('⚠️ Apenas o administrador pode acessar configurações.', 'error'); return; }
                 } else {
                     if (!temPermissaoAba(pageName)) { showToast('⚠️ Você não tem permissão para acessar esta aba.', 'error'); return; }
                 }
@@ -1653,6 +1816,7 @@
                 }
                 if (pageName === 'usuarios' && temPermissaoAba('usuarios')) { atualizarTabelaUsuarios(); atualizarPermissoesUsuarioGrid(); atualizarPermissoesSubAbasManutencaoGrid(); initScrollButtons(); }
                 if (pageName === 'auditoria') { atualizarTabelaAuditoria(); initScrollButtons(); if (termoBuscaAuditoria) { document.getElementById('input-busca-auditoria').value = termoBuscaAuditoria; atualizarUIBuscaAuditoria(); } }
+                if (pageName === 'configuracoes') { preencherFormConfiguracoes(); }
             }
 
             document.querySelectorAll('#garagem-sub-tabs .sub-tab-btn').forEach(btn => {
@@ -3311,8 +3475,46 @@
             loginScreen.style.display = 'flex'; appScreen.classList.remove('active');
             atualizarIndicadorSync(navigator.onLine);
             garantirAdminPadrao();
+            carregarConfiguracoes();
             console.log('🚗 PAIZÃO RENT CAR - Sistema pronto');
             console.log('👤 Admin: SERGIO / 080888');
+
+            // Listeners para configurações
+            document.getElementById('form-configuracoes').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                if (!isAdmin()) { showToast('Apenas administrador.', 'error'); return; }
+                const nomeSistema = document.getElementById('config-nome-sistema').value.trim();
+                const subtituloLogin = document.getElementById('config-subtitulo-login').value.trim();
+                const subtituloApp = document.getElementById('config-subtitulo-app').value.trim();
+                const fileInput = document.getElementById('config-logo-file');
+                let logoBase64 = configuracaoGlobal.logoBase64;
+                if (fileInput.files.length > 0) {
+                    const file = fileInput.files[0];
+                    logoBase64 = await fileToBase64(file);
+                }
+                try {
+                    await colecoes.configuracoes.doc('global').set({
+                        nomeSistema,
+                        subtituloLogin,
+                        subtituloApp,
+                        logoBase64,
+                        dataAtualizacao: new Date().toISOString()
+                    }, { merge: true });
+                    showToast('Configurações salvas!', 'success');
+                    registrarAuditoria('editar', 'Configurações', 'global', 'Alterou configurações do sistema');
+                } catch (error) {
+                    showToast('Erro ao salvar.', 'error');
+                }
+            });
+
+            document.getElementById('btn-restaurar-config').addEventListener('click', async function() {
+                if (!isAdmin()) return;
+                await colecoes.configuracoes.doc('global').delete();
+                configuracaoGlobal = { logoBase64: null, nomeSistema: 'PAIZÃO RENT CAR', subtituloLogin: 'Sistema de Locação de Veículos', subtituloApp: 'Gestão de Frotas' };
+                aplicarConfiguracoes();
+                preencherFormConfiguracoes();
+                showToast('Configurações restauradas.', 'info');
+            });
         })();
     </script>
 </body>

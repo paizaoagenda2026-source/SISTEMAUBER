@@ -307,7 +307,6 @@
         </header>
         <main class="main-content" id="main-content">
             <div class="page active" id="page-garagem">
-                <!-- Conteúdo da página Garagem (inalterado) -->
                 <div class="page-header"><h2>🖼️ Garagem</h2><p>Imagens da garagem e cadastro de veículos</p></div>
                 <div class="sub-tabs" id="garagem-sub-tabs"><button class="sub-tab-btn active" data-subtab="garagem-imagens">🖼️ Imagens</button><button class="sub-tab-btn" data-subtab="garagem-veiculos">🚙 Veículos</button></div>
                 <div class="sub-tab-content active" id="subtab-garagem-imagens">
@@ -345,13 +344,11 @@
                 </div>
             </div>
             <div class="page" id="page-socorro">
-                <!-- Conteúdo da página Socorro (inalterado) -->
                 <div class="page-header"><h2>🆘 Socorro</h2><p>Upload de imagens para a central de ajuda</p></div>
                 <div class="card" id="card-form-socorro"><div class="card-title"><span class="icon">📤</span> Enviar Imagem para o Socorro</div><div class="grid-2"><div class="form-group-app"><label>Nome da Imagem (opcional)</label><input type="text" id="socorro-nome" placeholder="Ex: Foto do problema"></div><div class="form-group-app"><label>Selecionar Imagem</label><input type="file" id="socorro-file" accept="image/*"></div></div><div style="display:flex; gap:12px; margin-top:8px;"><button class="btn-app btn-save" id="btn-upload-socorro">⬆️ Enviar Imagem</button><button class="btn-app btn-cancel" id="btn-cancel-socorro">Limpar</button></div><span id="socorro-upload-error" style="color:var(--danger);font-size:12px;display:none;margin-top:8px;"></span></div>
                 <div class="card"><div class="card-title"><span class="icon">🖼️</span> Imagens Enviadas para o Socorro</div><div class="socorro-grid" id="socorro-grid"></div></div>
             </div>
             <div class="page" id="page-carro">
-                <!-- Conteúdo da página DOC (inalterado) -->
                 <div class="page-header"><h2>🚘 DOC</h2><p>Documentos e sub-abas dos veículos</p></div>
                 <div class="card"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;"><div class="sub-tabs" id="carro-sub-tabs" style="margin-bottom:0; padding-bottom:0; border-bottom:none;"></div><button class="btn-app btn-save" id="btn-upload-carro-pdf" style="display:inline-flex; align-items:center; gap:6px;">📎 Upload PDF</button></div><div id="carro-sub-content"></div></div>
             </div>
@@ -360,7 +357,6 @@
                 <iframe id="iframe-gerador-contrato" title="Gerador de Contrato"></iframe>
             </div>
             <div class="page" id="page-locatarios">
-                <!-- Conteúdo da página Locatários (inalterado) -->
                 <div class="page-header"><h2>👥 Cadastro de Locatários</h2><p>Gerencie os dados pessoais dos locatários</p></div>
                 <div class="card" id="card-form-locatario">
                     <div class="card-title"><span class="icon">📝</span> <span id="locat-form-title">Novo Locatário</span></div>
@@ -411,7 +407,6 @@
                 </div>
             </div>
             <div class="page" id="page-locacoes">
-                <!-- Conteúdo da página Locações (inalterado) -->
                 <div class="page-header"><h2>📋 Locações</h2><p>Vincule locatários a veículos e gerencie as locações</p></div>
                 <div class="card" id="card-form-locacao">
                     <div class="card-title"><span class="icon">🔗</span> <span id="loc-form-title">Nova Locação</span></div>
@@ -479,7 +474,6 @@
                 </div>
             </div>
             <div class="page" id="page-manutencao">
-                <!-- Conteúdo da página Manutenção (inalterado) -->
                 <div class="page-header"><h2>🔧 Manutenção de Veículos</h2><p>Registre e acompanhe as manutenções</p></div>
                 <div class="card" id="card-form-manutencao"><div class="card-title"><span class="icon">📝</span> <span id="manut-form-title">Nova Manutenção</span></div><div class="edit-banner" id="edit-banner-manutencao">✏️ <span id="edit-banner-manutencao-text">Você está editando um registro de manutenção.</span></div><form id="form-manutencao" autocomplete="off"><div class="grid-3"><div class="form-group-app"><label>Veículo (Modelo/Marca)</label><select id="m-veiculo" required><option value="">Selecione um veículo...</option></select></div><div class="form-group-app"><label>Placa do Veículo</label><select id="m-subaba" required><option value="">Escolha a placa...</option></select></div><div class="form-group-app"><label>Data da Manutenção</label><input type="date" id="m-data" required></div><div class="form-group-app"><label>Tipo de Manutenção</label><select id="m-tipo" required><option value="">Selecione o tipo...</option><option value="preventiva">🔧 Preventiva</option><option value="corretiva">🔩 Corretiva</option><option value="revisao">📋 Revisão Programada</option><option value="pneus">🛞 Pneus</option><option value="oleo">🛢️ Troca de Óleo</option><option value="freios">🛑 Freios</option><option value="suspensao">🔗 Suspensão</option><option value="eletrica">⚡ Elétrica</option><option value="lataria">🎨 Lataria / Pintura</option><option value="outros">📌 Outros</option></select></div><div class="form-group-app"><label>Descrição do Serviço</label><input type="text" id="m-descricao" placeholder="Ex: Troca de pastilhas de freio dianteiras" required></div><div class="form-group-app"><label>Valor Gasto (R$)</label><input type="text" id="m-valor" placeholder="R$ 0,00" oninput="formatarMoedaInput(this)" onblur="formatarMoedaInputBlur(this)"></div><div class="form-group-app"><label>KM Atual no Momento</label><input type="number" id="m-km" placeholder="Ex: 55000"></div><div class="form-group-app"><label>Observação</label><input type="text" id="m-observacao" placeholder="Observações adicionais..."></div></div><div class="form-group-app" style="margin-top:8px;"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" id="m-registrar-fluxo" style="width:auto;accent-color:var(--success);"> Registrar automaticamente como despesa no Fluxo de Caixa</label></div><div style="display:flex;gap:12px;margin-top:8px;"><button type="submit" class="btn-app btn-save" id="btn-submit-manutencao">💾 Registrar Manutenção</button><button type="button" class="btn-app btn-cancel" id="btn-cancel-manutencao">Limpar</button><button type="button" class="btn-app btn-cancel" id="btn-cancel-edicao-manutencao" style="display:none;">❌ Cancelar Edição</button></div></form></div>
                 <div class="card"><div class="card-title"><span class="icon">📋</span> Histórico de Manutenções</div><div class="sub-tabs" id="manutencao-sub-tabs"></div><div class="table-wrapper" id="table-wrapper-manutencao"><button class="scroll-btn scroll-btn-left">◀</button><button class="scroll-btn scroll-btn-right">▶</button><table id="tabela-manutencao"><thead><tr><th>Veículo</th><th>Placa</th><th>Data</th><th>Tipo</th><th>Descrição</th><th>Valor</th><th>KM</th><th>Observação</th><th>Fluxo Caixa</th><th>Ações</th></tr></thead><tbody id="tbody-manutencao"></tbody></table></div></div>
@@ -545,7 +539,6 @@
                 </div>
             </div>
             <div class="page" id="page-banco">
-                <!-- Conteúdo da página Banco (inalterado) -->
                 <div class="page-header"><h2>🏦 Dados Bancários</h2><p>Cadastre as informações da conta bancária para recebimentos via Pix</p></div>
                 <div class="card" id="card-form-banco"><div class="card-title"><span class="icon">🏦</span> Informações do Banco</div><form id="form-banco" autocomplete="off"><div class="grid-2"><div class="form-group-app"><label>Banco</label><input type="text" id="b-banco" placeholder="Ex: Nubank, Banco do Brasil, Itaú..." required></div><div class="form-group-app"><label>Agência</label><input type="text" id="b-agencia" placeholder="Ex: 0001" required></div><div class="form-group-app"><label>Conta</label><input type="text" id="b-conta" placeholder="Ex: 123456-7" required></div><div class="form-group-app"><label>Titular</label><input type="text" id="b-titular" placeholder="Nome do titular da conta" required></div><div class="form-group-app"><label>Pix (Chave)</label><input type="text" id="b-pix" placeholder="Ex: CPF, e-mail, telefone ou chave aleatória" required></div></div><div style="display:flex; gap:12px; margin-top:16px; flex-wrap:wrap;"><button type="submit" class="btn-app btn-save" id="btn-salvar-banco">💾 Salvar Dados Bancários</button><button type="button" class="btn-app btn-cancel" id="btn-cancel-banco">Limpar</button><button type="button" class="btn-app btn-cancel" id="btn-cancel-edicao-banco" style="display:none;">❌ Cancelar Edição</button><button type="button" class="btn-app btn-fluxo" id="btn-toggle-fluxo" title="Exibir / Ocultar Fluxo de Caixa">💰 Fluxo de Caixa</button></div></form></div>
                 <div class="card" id="card-banco-visualizacao" style="display:none;"><div class="card-title"><span class="icon">📋</span> Contas Bancárias Cadastradas</div><div id="banco-info-display" style="color:#d0d3db; font-size:14px; line-height:2;"></div></div>
@@ -556,13 +549,11 @@
                 </div>
             </div>
             <div class="page" id="page-usuarios">
-                <!-- Conteúdo da página Usuários (inalterado) -->
                 <div class="page-header"><h2>👤 Gerenciamento de Usuários</h2><p>Crie e gerencie usuários com acesso limitado</p></div>
                 <div class="card" id="card-form-usuario"><div class="card-title"><span class="icon">📝</span> <span id="usuario-form-title">Novo Usuário</span></div><div class="edit-banner" id="edit-banner-usuario">✏️ <span id="edit-banner-usuario-text">Você está editando um usuário existente.</span></div><form id="form-usuario" autocomplete="off"><div class="grid-3"><div class="form-group-app"><label>Nome do Usuário</label><input type="text" id="u-nome" placeholder="Nome completo" required></div><div class="form-group-app"><label>Login (Usuário)</label><input type="text" id="u-login" placeholder="Nome de usuário para login" required autocomplete="off"></div><div class="form-group-app"><label>Senha</label><input type="password" id="u-senha" placeholder="Senha de acesso" required autocomplete="off"></div></div><div class="section-divider"><div class="form-group-app"><label>📑 Abas Permitidas</label><div class="permissoes-grid" id="permissoes-abas-grid"><label><input type="checkbox" class="perm-abas-check" value="veiculos"> 🚙 Veículos</label><label><input type="checkbox" class="perm-abas-check" value="garagem"> 🖼️ Garagem</label><label><input type="checkbox" class="perm-abas-check" value="socorro"> 🆘 Socorro</label><label><input type="checkbox" class="perm-abas-check" value="carro"> 🚘 DOC</label><label><input type="checkbox" class="perm-abas-check" value="locatarios"> 👥 Locatários</label><label><input type="checkbox" class="perm-abas-check" value="locacoes"> 📋 Locações</label><label><input type="checkbox" class="perm-abas-check" value="manutencao"> 🔧 Manutenção</label><label><input type="checkbox" class="perm-abas-check" value="mecanico"> 🔧 Mecânico</label><label><input type="checkbox" class="perm-abas-check" value="fluxocaixa"> 💰 Fluxo de Caixa</label><label><input type="checkbox" class="perm-abas-check" value="banco"> 🏦 Banco</label><label><input type="checkbox" class="perm-abas-check" value="usuarios"> 👤 Usuários</label><label><input type="checkbox" class="perm-abas-check" value="filtro"> 🔍 Filtro</label><label><input type="checkbox" class="perm-abas-check" value="gerador-contrato"> 📄 Gerador de Contrato</label></div></div></div><div class="section-divider"><div class="form-group-app"><label>🔧 Sub-Abas do Histórico de Manutenção Permitidas</label><div class="permissoes-grid" id="permissoes-subabas-manutencao-grid"></div></div></div><div class="section-divider"><div class="form-group-app"><label>🔘 Ações Permitidas (Botões)</label><div class="permissoes-grid" id="permissoes-acoes-grid"><label><input type="checkbox" class="perm-acoes-check" value="criar"> ➕ Criar / Adicionar</label><label><input type="checkbox" class="perm-acoes-check" value="editar"> ✏️ Editar</label><label><input type="checkbox" class="perm-acoes-check" value="excluir"> 🗑️ Excluir</label><label><input type="checkbox" class="perm-acoes-check" value="upload"> 📤 Upload (PDFs/Imagens)</label><label><input type="checkbox" class="perm-acoes-check" value="download"> 📥 Download de Documentos</label><label><input type="checkbox" class="perm-acoes-check" value="salvar_servico"> 💾 Salvar Serviço</label><label><input type="checkbox" class="perm-acoes-check" value="fechamento_servicos"> 📊 Fechamento Serviços</label></div></div></div><div class="section-divider"><div class="form-group-app"><label>🚙 Veículos Permitidos para este Usuário</label><div class="permissoes-grid" id="permissoes-usuario-grid"></div></div></div><div style="display:flex;gap:12px;margin-top:8px;"><button type="submit" class="btn-app btn-save" id="btn-submit-usuario">💾 Salvar Usuário</button><button type="button" class="btn-app btn-cancel" id="btn-cancel-usuario">Limpar</button><button type="button" class="btn-app btn-cancel" id="btn-cancel-edicao-usuario" style="display:none;">❌ Cancelar Edição</button></div></form></div>
                 <div class="card"><div class="card-title"><span class="icon">📋</span> Usuários Cadastrados</div><div class="table-wrapper" id="table-wrapper-usuarios"><button class="scroll-btn scroll-btn-left">◀</button><button class="scroll-btn scroll-btn-right">▶</button><table id="tabela-usuarios"><thead><tr><th>Nome</th><th>Login</th><th>Perfil</th><th>Abas</th><th>Sub-Abas Manutenção</th><th>Ações (Botões)</th><th>Veículos</th><th>Data Criação</th><th>Ações</th></tr></thead><tbody id="tbody-usuarios"></tbody></table></div></div>
             </div>
             <div class="page" id="page-auditoria">
-                <!-- Conteúdo da página Auditoria (inalterado) -->
                 <div class="page-header"><h2>📋 Auditoria</h2><p>Registro de todas as ações realizadas pelos usuários</p></div>
                 <div class="card"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;"><div class="card-title" style="margin-bottom:0; padding-bottom:0; border-bottom:none;"><span class="icon">📋</span> Log de Atividades</div><button class="btn-limpar-auditoria" id="btn-limpar-auditoria">🗑️ Limpar Log</button></div><div class="search-bar-container" id="search-bar-auditoria"><div class="search-input-wrapper"><span class="search-icon">🔍</span><input type="text" id="input-busca-auditoria" placeholder="Pesquisar por usuário, ação ou entidade..." autocomplete="off"><button class="clear-search-btn" id="clear-search-btn-auditoria">✕</button></div><div class="search-results-info" id="search-results-info-auditoria"><span id="search-count-text-auditoria">Total: <strong class="highlight-count" id="search-count-num-auditoria">0</strong> registros</span></div><button class="btn-limpar-filtro" id="btn-limpar-filtro-auditoria" style="display:none;">🧹 Limpar Filtro</button></div><div class="table-wrapper" id="table-wrapper-auditoria"><button class="scroll-btn scroll-btn-left">◀</button><button class="scroll-btn scroll-btn-right">▶</button><table id="tabela-auditoria"><thead><tr><th>Data/Hora</th><th>Usuário</th><th>Ação</th><th>Entidade</th><th>Descrição</th></tr></thead><tbody id="tbody-auditoria"></tbody></table></div></div>
             </div>
@@ -613,7 +604,7 @@
             let editandoVeiculoId = null, editandoLocatarioId = null, editandoLocacaoId = null, editandoFluxoId = null, editandoUsuarioId = null, editandoManutencaoId = null, editandoMecanicoId = null, editandoBancoId = null;
             let termoBuscaLocacoes = '', termoBuscaFluxo = '', termoBuscaAuditoria = '', dadosCarregados = false, listenersAtivos = [], placaFiltroManutencao = '';
             let subAbaCarroAtiva = '';
-            let abaLocacoesAtiva = 'ativas'; // 'ativas' ou 'encerradas'
+            let abaLocacoesAtiva = 'ativas';
 
             async function registrarAuditoria(acao, entidade, entidadeId, descricao) {
                 if (!usuarioLogado) return;
@@ -745,7 +736,7 @@
                     }
                 } catch (error) { console.error('Erro ao garantir admin padrão:', error); }
             }
-            // ===================== HTML do Gerador de Contrato (armazenado como string) =====================
+
             const contratoHtml = `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -1184,7 +1175,6 @@
 </body>
 </html>`;
 
-            // Atribui o HTML ao iframe
             const iframeGeradorContrato = document.getElementById('iframe-gerador-contrato');
             if (iframeGeradorContrato) {
                 iframeGeradorContrato.srcdoc = contratoHtml;
@@ -1192,7 +1182,6 @@
                 console.warn('Elemento iframe do gerador não encontrado.');
             }
 
-            // ===================== CÓDIGO ORIGINAL DO APP (funções de permissão, eventos, etc.) =====================
             function getVeiculosPermitidos() {
                 if (!usuarioLogado) return [];
                 if (usuarioLogado.role === 'admin') return veiculos;
@@ -1297,7 +1286,6 @@
                 const formMecanicoCard = document.getElementById('card-form-mecanico');
                 if (formMecanicoCard) formMecanicoCard.style.display = temPermissaoAcao('salvar_servico') ? '' : 'none';
 
-                // NOVA PERMISSÃO: Fechamento Serviços (sub-aba Mecânico)
                 const btnFechamentoServicos = document.getElementById('btn-mecanico-fechamento');
                 if (btnFechamentoServicos) {
                     btnFechamentoServicos.style.display = temPermissaoAcao('fechamento_servicos') ? '' : 'none';
@@ -1327,7 +1315,6 @@
                 }
             }
 
-            // ========== NOVA FUNÇÃO: preencherGeradorContrato ==========
             function preencherGeradorContrato(locacao, locacaoId) {
                 const iframe = document.getElementById('iframe-gerador-contrato');
                 if (!iframe) return;
@@ -1401,26 +1388,21 @@
                 }
             }
 
-            // ========== NOVA FUNÇÃO: criarUsuarioLocatario ==========
             async function criarUsuarioLocatario(locatario, veiculo) {
                 if (!locatario || !veiculo) return;
                 try {
-                    // Verificar se já existe usuário vinculado a este locatário
                     const snapshotExistente = await colecoes.usuarios.where('locatarioId', '==', locatario.id).get();
                     if (!snapshotExistente.empty) {
                         console.log('Usuário para locatário já existe, não será criado novamente.');
                         return;
                     }
 
-                    // Extrair primeiro nome e converter para MAIÚSCULAS (correção do bug de login)
                     let primeiroNome = locatario.nome.trim().split(/\s+/)[0] || 'Locatario';
                     primeiroNome = primeiroNome.toUpperCase();
-                    // Sanitizar telefone: apenas dígitos, remover DDD (primeiros 2 dígitos)
                     const foneSomenteDigitos = (locatario.fone || '').replace(/\D/g, '');
                     let senha = foneSomenteDigitos.length > 2 ? foneSomenteDigitos.slice(2) : foneSomenteDigitos;
-                    if (!senha) senha = '123456'; // senha padrão se não houver telefone
+                    if (!senha) senha = '123456';
 
-                    // Gerar login único baseado no primeiro nome (já em maiúsculas)
                     let login = primeiroNome;
                     let contador = 1;
                     while (true) {
@@ -1430,18 +1412,14 @@
                         login = `${primeiroNome}${contador}`;
                     }
 
-                    // Abas permitidas
                     const abasPermitidas = ['garagem', 'veiculos', 'socorro', 'carro', 'manutencao', 'banco'];
-                    // Ações permitidas
                     const acoesPermitidas = ['download'];
-                    // Sub-abas de manutenção permitidas: placa do veículo
                     const subAbasManutencaoPermitidas = [veiculo.placa];
-                    // Veículos permitidos: o veículo locado
                     const veiculosPermitidos = [veiculo.id];
 
                     await colecoes.usuarios.add({
                         nome: locatario.nome,
-                        usuario: login, // já está em maiúsculas
+                        usuario: login,
                         senha: senha,
                         role: 'usuario',
                         abasPermitidas: abasPermitidas,
@@ -1461,8 +1439,6 @@
                     showToast('⚠️ Erro ao criar acesso para o locatário.', 'error');
                 }
             }
-
-            // ========== FIM DA NOVA FUNÇÃO ==========
 
             function aplicarRestricoesSubAbasManutencao() {
                 if (isAdmin()) {
@@ -1691,7 +1667,6 @@
                 });
             });
 
-            // Event listeners para sub-tabs de locações
             document.querySelectorAll('#locacoes-sub-tabs .sub-tab-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     abaLocacoesAtiva = this.getAttribute('data-locacao-tab');
@@ -1702,11 +1677,9 @@
                 });
             });
 
-            // Event listeners para sub-tabs do mecânico
             document.querySelectorAll('#mecanico-sub-tabs .sub-tab-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const tab = this.getAttribute('data-mecanico-tab');
-                    // Verificação de permissão para a sub-aba Fechamento
                     if (tab === 'fechamento' && !temPermissaoAcao('fechamento_servicos')) {
                         showToast('⚠️ Sem permissão para Fechamento Serviços.', 'error');
                         return;
@@ -2182,14 +2155,13 @@
                 initScrollButtons();
             });
 
-            // Função para calcular valor apurado da locação (semanas * valor semanal)
             function calcularValorApurado(locacao) {
                 if (!locacao.dataInicio || !locacao.valorSemanal) return 0;
                 const dataInicio = new Date(locacao.dataInicio + 'T00:00:00');
                 const dataEncerramento = locacao.dataEncerramento ? new Date(locacao.dataEncerramento) : new Date();
                 const diffTime = Math.abs(dataEncerramento - dataInicio);
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                const semanas = Math.ceil(diffDays / 7); // arredonda para cima para cobrir período parcial
+                const semanas = Math.ceil(diffDays / 7);
                 return semanas * (parseFloat(locacao.valorSemanal) || 0);
             }
 
@@ -2198,7 +2170,6 @@
                 const tbody = document.getElementById('tbody-locacoes');
                 let locacoesPermitidas = getLocacoesPermitidas();
 
-                // Filtra por status conforme sub-tab ativa
                 const locacoesBase = abaLocacoesAtiva === 'ativas' 
                     ? locacoesPermitidas.filter(l => l.status !== 'encerrada')
                     : locacoesPermitidas.filter(l => l.status === 'encerrada');
@@ -2230,7 +2201,6 @@
                     let dataEncerramentoHtml = l.status === 'encerrada' && l.dataEncerramento 
                         ? new Date(l.dataEncerramento).toLocaleDateString('pt-BR') 
                         : '—';
-                    // Calcular valor apurado para locações encerradas
                     let valorApuradoHtml = '—';
                     if (l.status === 'encerrada') {
                         const valorApurado = l.valorApurado || calcularValorApurado(l);
@@ -2337,7 +2307,6 @@
             document.getElementById('docs-modal-close').addEventListener('click', () => { document.getElementById('docs-modal-overlay').classList.remove('active'); });
             document.getElementById('docs-modal-overlay').addEventListener('click', function(e) { if (e.target === this) this.classList.remove('active'); });
 
-            // ===================== FLUXO DE CAIXA (mantido) =====================
             function atualizarResumoFluxoCaixa() {
                 if (!isAdmin()) return;
                 const entradas = fluxoCaixa.filter(t => t.tipo === 'entrada').reduce((sum, t) => sum + (parseFloat(t.valor) || 0), 0);
@@ -2412,7 +2381,6 @@
             clearSearchBtnFluxo.addEventListener('click', () => { termoBuscaFluxo = ''; inputBuscaFluxo.value = ''; atualizarUIBuscaFluxo(); inputBuscaFluxo.focus(); });
             btnLimparFiltroFluxo.addEventListener('click', () => { termoBuscaFluxo = ''; inputBuscaFluxo.value = ''; atualizarUIBuscaFluxo(); inputBuscaFluxo.focus(); });
 
-            // ===================== USUÁRIOS (mantido) =====================
             const formUsuario = document.getElementById('form-usuario'), btnSubmitUsuario = document.getElementById('btn-submit-usuario'), btnCancelUsuario = document.getElementById('btn-cancel-usuario'), btnCancelEdicaoUsuario = document.getElementById('btn-cancel-edicao-usuario'), editBannerUsuario = document.getElementById('edit-banner-usuario'), usuarioFormTitle = document.getElementById('usuario-form-title');
             function resetarFormUsuario() { formUsuario.reset(); editandoUsuarioId = null; btnSubmitUsuario.textContent = '💾 Salvar Usuário'; btnCancelEdicaoUsuario.style.display = 'none'; editBannerUsuario.classList.remove('show'); usuarioFormTitle.textContent = 'Novo Usuário'; atualizarPermissoesUsuarioGrid(); atualizarPermissoesSubAbasManutencaoGrid(); }
             btnCancelUsuario.addEventListener('click', resetarFormUsuario);
@@ -2788,7 +2756,6 @@
                 showToast('📋 Edição cancelada.', 'info');
             });
 
-            // ===================== ÁREA DO MECÂNICO =====================
             function atualizarSelectMecanicoVeiculos() {
                 const selectCarro = document.getElementById('mec-carro');
                 const selectPlaca = document.getElementById('mec-placa');
@@ -2926,7 +2893,6 @@
                 initScrollButtons();
             }
 
-            // ===================== NOVAS FUNÇÕES PARA FECHAMENTO =====================
             function preencherDatalistsFechamento() {
                 const placas = [...new Set(mecanicos.map(m => m.placa).filter(Boolean))].sort();
                 const oficinas = [...new Set(mecanicos.map(m => m.oficina).filter(Boolean))].sort();
@@ -2965,7 +2931,6 @@
                 gerarPDFFechamento(filtrados, dataInicio, dataFim, placa, oficina);
             }
 
-            // Função auxiliar para registrar saída no fluxo de caixa do fechamento
             async function registrarSaidaFluxoFechamento(total, filtros) {
                 if (total <= 0) { showToast('⚠️ Total zero, lançamento não realizado.', 'error'); return; }
                 if (!isAdmin() && !temPermissaoAba('fluxocaixa')) { showToast('⚠️ Sem permissão para lançar no Fluxo de Caixa.', 'error'); return; }
@@ -3077,7 +3042,6 @@
                         </tfoot>
                     </table>
                     <script>
-                        // Auto print after load
                         window.onload = function() {
                             setTimeout(function() { window.print(); }, 500);
                         };
@@ -3094,12 +3058,10 @@
                 janela.document.write(htmlContent);
                 janela.document.close();
 
-                // Lançamento automático no Fluxo de Caixa (saída)
                 registrarSaidaFluxoFechamento(total, { dataInicio, dataFim, placa, oficina });
             }
 
             document.getElementById('btn-filtrar-fechamento').addEventListener('click', function() {
-                // Verificação de permissão para fechamento
                 if (!temPermissaoAcao('fechamento_servicos')) {
                     showToast('⚠️ Sem permissão para Fechamento Serviços.', 'error');
                     return;

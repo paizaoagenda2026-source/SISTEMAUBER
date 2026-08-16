@@ -1738,6 +1738,17 @@
                             atualizarUIporPerfil();
                             if (!dadosCarregados) { ativarListenersFirestore(); } else { inicializarInterface(); }
                             showToast(`✅ Bem-vindo, ${usuarioLogado.nome}!`, 'success');
+                            
+                            // Após login bem-sucedido, tentar entrar em tela cheia para ocultar a barra de endereços
+                            try {
+                                if (document.documentElement.requestFullscreen) {
+                                    await document.documentElement.requestFullscreen();
+                                }
+                            } catch (fullscreenError) {
+                                // Ignorar erro de fullscreen (ex: se não for permitido)
+                            }
+                            // Rolagem para o topo para garantir que a barra de endereços seja ocultada
+                            window.scrollTo(0, 0);
                         } else {
                             loginError.classList.add('show'); document.getElementById('login-pass').value = ''; document.getElementById('login-pass').focus(); setTimeout(() => loginError.classList.remove('show'), 3000);
                         }
@@ -1758,6 +1769,8 @@
                     termoBuscaAuditoria = ''; document.getElementById('input-busca-auditoria').value = ''; atualizarUIBuscaAuditoria();
                     document.getElementById('fluxo-caixa-container').style.display = 'none';
                     showToast('👋 Logout realizado com sucesso!', 'info');
+                    // Ao fazer logout, a tela de login é exibida, então rolar para o topo novamente
+                    window.scrollTo(0, 0);
                 }
             });
 
@@ -1817,6 +1830,8 @@
                 if (pageName === 'usuarios' && temPermissaoAba('usuarios')) { atualizarTabelaUsuarios(); atualizarPermissoesUsuarioGrid(); atualizarPermissoesSubAbasManutencaoGrid(); initScrollButtons(); }
                 if (pageName === 'auditoria') { atualizarTabelaAuditoria(); initScrollButtons(); if (termoBuscaAuditoria) { document.getElementById('input-busca-auditoria').value = termoBuscaAuditoria; atualizarUIBuscaAuditoria(); } }
                 if (pageName === 'configuracoes') { preencherFormConfiguracoes(); }
+                // Sempre rolar para o topo ao navegar para qualquer página
+                window.scrollTo(0, 0);
             }
 
             document.querySelectorAll('#garagem-sub-tabs .sub-tab-btn').forEach(btn => {
@@ -3478,6 +3493,18 @@
             carregarConfiguracoes();
             console.log('🚗 PAIZÃO RENT CAR - Sistema pronto');
             console.log('👤 Admin: SERGIO / 080888');
+
+            // Ocultar barra de endereços ao iniciar (scroll para o topo)
+            window.addEventListener('DOMContentLoaded', function() {
+                window.scrollTo(0, 0);
+            });
+            // Também ao redimensionar ou orientação mudar, manter scroll no topo
+            window.addEventListener('resize', function() {
+                window.scrollTo(0, 0);
+            });
+            window.addEventListener('orientationchange', function() {
+                setTimeout(() => window.scrollTo(0, 0), 300);
+            });
 
             // Listeners para configurações
             document.getElementById('form-configuracoes').addEventListener('submit', async function(e) {

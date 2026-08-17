@@ -63,8 +63,35 @@
         .top-header .brand .brand-text h2 { font-size:18px; font-weight:700; color:#fff; line-height:1.1; }
         .top-header .brand .brand-text h2 span { color:var(--primary); }
         .top-header .brand .brand-text small { font-size:10px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1.5px; }
-        .top-nav { display:flex; align-items:center; gap:6px; flex:1; justify-content:center; padding:0 20px; flex-wrap:wrap; }
-        .top-nav button { background:transparent; border:none; color:#b0b3bc; font-size:14px; cursor:pointer; padding:8px 16px; border-radius:8px; transition:all 0.2s; font-family:inherit; display:flex; align-items:center; gap:8px; white-space:nowrap; }
+        /* ===== MENU PRINCIPAL EM DUAS LINHAS (desktop) ===== */
+        .top-nav {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+            flex: 1;
+            padding: 0 20px;
+        }
+        .top-nav button {
+            background:transparent;
+            border:none;
+            color:#b0b3bc;
+            font-size:14px;
+            cursor:pointer;
+            padding:8px 12px;
+            border-radius:8px;
+            transition:all 0.2s;
+            font-family:inherit;
+            display:flex;
+            align-items:center;
+            gap:8px;
+            white-space:nowrap;
+            flex: 0 0 calc((100% / 6) - 12px); /* 6 por linha -> 2 linhas para 11 itens */
+            max-width: calc((100% / 6) - 12px);
+            justify-content:center;
+            box-sizing:border-box;
+        }
         .top-nav button:hover { background:rgba(255,255,255,0.04); color:#fff; }
         .top-nav button.active { background:rgba(230,168,23,0.12); color:var(--primary); font-weight:600; }
         .top-nav button .nav-icon { font-size:18px; }
@@ -80,6 +107,36 @@
         .top-user .btn-logout:hover { background:rgba(231,76,60,0.1); border-color:#e74c3c; }
         .mobile-menu-toggle { display:none; background:transparent; border:none; color:#fff; font-size:26px; cursor:pointer; padding:4px 8px; border-radius:6px; transition:background 0.2s; }
         .mobile-menu-toggle:hover { background:rgba(255,255,255,0.05); }
+        @media (max-width:768px) {
+            .top-header { padding:0 16px; flex-wrap:wrap; height:auto; min-height:var(--header-height); }
+            /* Em mobile, voltamos ao menu horizontal com rolagem */
+            .top-nav {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                -webkit-overflow-scrolling:touch;
+                scrollbar-width:none;
+                padding:8px 0 12px 0;
+                justify-content:flex-start;
+                flex: 1 1 100%;
+            }
+            .top-nav::-webkit-scrollbar { display:none; }
+            .top-nav button {
+                flex: 0 0 auto;
+                max-width: none;
+                font-size:13px;
+                padding:6px 12px;
+                flex-shrink:0;
+            }
+            .top-user .user-info { display:none; }
+            .top-user .btn-logout { padding:4px 10px; font-size:11px; }
+            .mobile-menu-toggle { display:block; }
+            .main-content { padding:16px; }
+        }
+        @media (max-width:480px) {
+            .top-header .brand .brand-text small { display:none; }
+            .top-header .brand .brand-text h2 { font-size:15px; }
+            .top-nav button { font-size:12px; padding:4px 10px; }
+        }
         .main-content { flex:1; padding:28px 32px; background:var(--bg-dark); min-height:calc(100vh - var(--header-height)); }
         .page { display:none; animation:fadeIn 0.35s ease; }
         .page.active { display:block; }
@@ -94,8 +151,7 @@
         .grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
         .grid-4 { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:16px; }
         @media (max-width:1200px) { .grid-3 { grid-template-columns:1fr 1fr; } .grid-4 { grid-template-columns:1fr 1fr; } }
-        @media (max-width:768px) { .grid-2,.grid-3,.grid-4 { grid-template-columns:1fr; } .top-header { padding:0 16px; flex-wrap:wrap; height:auto; min-height:var(--header-height); } .top-nav { order:3; flex:1 1 100%; justify-content:flex-start; padding:8px 0 12px 0; gap:4px; overflow-x:auto; flex-wrap:nowrap; -webkit-overflow-scrolling:touch; scrollbar-width:none; } .top-nav::-webkit-scrollbar { display:none; } .top-nav button { font-size:13px; padding:6px 12px; flex-shrink:0; } .top-user .user-info { display:none; } .top-user .btn-logout { padding:4px 10px; font-size:11px; } .mobile-menu-toggle { display:block; } .main-content { padding:16px; } }
-        @media (max-width:480px) { .top-header .brand .brand-text small { display:none; } .top-header .brand .brand-text h2 { font-size:15px; } .top-nav button { font-size:12px; padding:4px 10px; } }
+        @media (max-width:768px) { .grid-2,.grid-3,.grid-4 { grid-template-columns:1fr; } }
         .form-group-app { margin-bottom:16px; }
         .form-group-app label { display:block; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-muted); margin-bottom:5px; }
         .form-group-app input, .form-group-app select { width:100%; padding:11px 14px; background:var(--input-bg); border:1px solid var(--border); border-radius:8px; color:#fff; font-size:14px; outline:none; transition:all 0.3s; font-family:inherit; }
@@ -302,13 +358,13 @@
                 <button data-page="socorro"><span class="nav-icon">🆘</span> Socorro</button>
                 <button data-page="carro" id="btn-menu-nav"><span class="nav-icon">🚘</span> DOC</button>
                 <button data-page="gerador-contrato"><span class="nav-icon">📄</span> Gerador de Contrato</button>
-                <button data-page="locatarios" class="nav-admin-only"><span class="nav-icon">👥</span> Locatários</button>
-                <button data-page="manutencao" class="nav-admin-only" style="border:1px solid var(--border);"><span class="nav-icon">🔧</span> Manutenção</button>
-                <button data-page="mecanico" class="nav-admin-only" style="border:1px solid var(--border);"><span class="nav-icon">🔧</span> Mecânico</button>
-                <button data-page="banco" class="nav-admin-only" style="border:1px solid var(--border);"><span class="nav-icon">🏦</span> Banco</button>
-                <button data-page="usuarios" class="nav-admin-only" style="border:1px solid var(--accent);"><span class="nav-icon">👤</span> Usuários</button>
-                <button data-page="auditoria" class="nav-admin-only" style="border:1px solid var(--accent);"><span class="nav-icon">📋</span> Auditoria</button>
-                <button data-page="configuracoes" class="nav-admin-only" style="border:1px solid var(--accent);"><span class="nav-icon">⚙️</span> Configurações</button>
+                <button data-page="locatarios"><span class="nav-icon">👥</span> Locatários</button>
+                <button data-page="manutencao" style="border:1px solid var(--border);"><span class="nav-icon">🔧</span> Manutenção</button>
+                <button data-page="mecanico" style="border:1px solid var(--border);"><span class="nav-icon">🔧</span> Mecânico</button>
+                <button data-page="banco" style="border:1px solid var(--border);"><span class="nav-icon">🏦</span> Banco</button>
+                <button data-page="usuarios" style="border:1px solid var(--accent);"><span class="nav-icon">👤</span> Usuários</button>
+                <button data-page="auditoria" style="border:1px solid var(--accent);"><span class="nav-icon">📋</span> Auditoria</button>
+                <button data-page="configuracoes" style="border:1px solid var(--accent);"><span class="nav-icon">⚙️</span> Configurações</button>
             </nav>
             <div class="top-user">
                 <span class="sync-indicator online" id="sync-indicator" title="Status da sincronização com Firebase"><span class="sync-dot"></span> <span id="sync-text">Online</span></span>
@@ -622,7 +678,6 @@
     <div class="docs-modal-overlay" id="modal-imagem-overlay"><div class="docs-modal"><div class="docs-modal-header"><h3>🖼️ Upload de Imagem para Garagem</h3><button class="docs-modal-close" id="modal-imagem-close">✕</button></div><div class="form-group-app"><label>Nome da Imagem</label><input type="text" id="input-imagem-nome" placeholder="Digite um nome para a imagem"></div><div class="form-group-app"><label>Arquivo de Imagem</label><input type="file" id="input-imagem-file" accept="image/*"></div><button class="btn-app btn-save" id="btn-salvar-imagem" style="width:100%; margin-top:8px;">💾 Salvar Imagem</button><span id="imagem-upload-error" style="color:var(--danger);font-size:12px;display:none;margin-top:8px;"></span></div></div>
     <div class="docs-modal-overlay" id="modal-carro-pdf-overlay"><div class="docs-modal"><div class="docs-modal-header"><h3>📎 Upload de PDF para Sub-Aba do DOC</h3><button class="docs-modal-close" id="modal-carro-pdf-close">✕</button></div><div class="form-group-app"><label>Escolha a Sub-Aba de Destino</label><select id="select-carro-subaba"></select></div><div class="form-group-app"><label>Nome do Arquivo</label><input type="text" id="input-carro-pdf-nome" placeholder="Digite um nome para o arquivo"></div><div class="form-group-app"><label>Arquivo PDF</label><input type="file" id="input-carro-pdf-file" accept=".pdf"></div><button class="btn-app btn-save" id="btn-salvar-carro-pdf" style="width:100%; margin-top:8px;">💾 Salvar PDF na Sub-Aba</button><span id="carro-pdf-upload-error" style="color:var(--danger);font-size:12px;display:none;margin-top:8px;"></span></div></div>
     <script>
-        // Script completo original + novas funções de configuração, sem truncamentos.
         (function() {
             const firebaseConfig = {
                 apiKey: "AIzaSyA5Tn3ebMjJGFDcPJC6PaK2I5cl75DY2T4",
@@ -1382,76 +1437,58 @@
 
             function atualizarUIporPerfil() {
                 const navButtons = document.querySelectorAll('.top-nav button[data-page]');
+                // TORNAR TODOS OS BOTÕES VISÍVEIS - removendo qualquer restrição
                 navButtons.forEach(btn => {
-                    const page = btn.getAttribute('data-page');
-                    if (page === 'garagem' || page === 'carro' || page === 'socorro') {
-                        btn.style.display = '';
-                    } else if (page === 'gerador-contrato') {
-                        btn.style.display = temPermissaoAba('gerador-contrato') ? '' : 'none';
-                    } else if (page === 'auditoria') {
-                        btn.style.display = isAdmin() ? '' : 'none';
-                    } else if (page === 'banco') {
-                        btn.style.display = temPermissaoAba('banco') ? '' : 'none';
-                    } else if (page === 'configuracoes') {
-                        btn.style.display = isAdmin() ? '' : 'none';
-                    } else {
-                        btn.style.display = temPermissaoAba(page) ? '' : 'none';
-                    }
+                    btn.style.display = ''; // sempre visível
                 });
+
+                // Remover possíveis ocultações de sub-abas de veículos
                 const subTabVeiculos = document.querySelector('#garagem-sub-tabs .sub-tab-btn[data-subtab="garagem-veiculos"]');
-                if (subTabVeiculos) subTabVeiculos.style.display = temPermissaoAba('veiculos') ? '' : 'none';
+                if (subTabVeiculos) subTabVeiculos.style.display = '';
+
+                // Deixar todos os botões de ação visíveis também
                 const btnIrLocacoes = document.getElementById('btn-ir-locacoes');
-                if (btnIrLocacoes) btnIrLocacoes.style.display = temPermissaoAba('locacoes') ? '' : 'none';
+                if (btnIrLocacoes) btnIrLocacoes.style.display = '';
                 const btnFiltro = document.getElementById('btn-filtro-locacoes-nav');
-                if (btnFiltro) btnFiltro.style.display = temPermissaoAba('filtro') ? '' : 'none';
+                if (btnFiltro) btnFiltro.style.display = '';
                 const btnInserirContrato = document.getElementById('btn-inserir-contrato');
-                if (btnInserirContrato) btnInserirContrato.style.display = temPermissaoAcao('criar') ? '' : 'none';
+                if (btnInserirContrato) btnInserirContrato.style.display = '';
                 const btnToggleFluxo = document.getElementById('btn-toggle-fluxo');
-                if (btnToggleFluxo) btnToggleFluxo.style.display = temPermissaoAba('fluxocaixa') ? '' : 'none';
+                if (btnToggleFluxo) btnToggleFluxo.style.display = '';
+
                 const formVeiculoCard = document.getElementById('card-form-veiculo');
                 const sectionPermissoes = document.getElementById('section-permissoes-veiculo');
                 const thAcoesVeiculos = document.getElementById('th-acoes-veiculos');
                 const veiculosSubtitle = document.getElementById('veiculos-subtitle');
-                if (isAdmin()) {
-                    if (formVeiculoCard) formVeiculoCard.style.display = '';
-                    if (sectionPermissoes) sectionPermissoes.style.display = '';
-                    if (thAcoesVeiculos) thAcoesVeiculos.style.display = '';
-                    if (veiculosSubtitle) veiculosSubtitle.textContent = 'Gerencie a frota de veículos com todos os dados, valores e documentos';
-                    document.getElementById('user-role-display').textContent = 'Administrador';
-                    document.getElementById('user-role-display').style.color = 'var(--primary)';
-                } else {
-                    const podeCriar = temPermissaoAcao('criar');
-                    if (formVeiculoCard) formVeiculoCard.style.display = podeCriar ? '' : 'none';
-                    if (sectionPermissoes) sectionPermissoes.style.display = 'none';
-                    const podeEditar = temPermissaoAcao('editar'), podeExcluir = temPermissaoAcao('excluir');
-                    if (thAcoesVeiculos) thAcoesVeiculos.style.display = (podeEditar || podeExcluir) ? '' : 'none';
-                    if (veiculosSubtitle) veiculosSubtitle.textContent = 'Visualize os veículos e faça download dos documentos';
-                    document.getElementById('user-role-display').textContent = 'Usuário';
-                    document.getElementById('user-role-display').style.color = 'var(--accent)';
-                }
-                const formLocatarioCard = document.getElementById('card-form-locatario');
-                if (formLocatarioCard) formLocatarioCard.style.display = temPermissaoAcao('criar') ? '' : 'none';
-                const formLocacaoCard = document.getElementById('card-form-locacao');
-                if (formLocacaoCard) formLocacaoCard.style.display = temPermissaoAcao('criar') ? '' : 'none';
-                const formManutencaoCard = document.getElementById('card-form-manutencao');
-                if (formManutencaoCard) formManutencaoCard.style.display = temPermissaoAcao('criar') ? '' : 'none';
-                const formSocorroCard = document.getElementById('card-form-socorro');
-                if (formSocorroCard) formSocorroCard.style.display = temPermissaoAcao('upload') ? '' : 'none';
-                const btnUploadGaragem = document.getElementById('btn-upload-garagem-veiculo');
-                if (btnUploadGaragem) btnUploadGaragem.style.display = temPermissaoAcao('upload') ? '' : 'none';
-                const btnNovaImagemGaragem = document.getElementById('btn-nova-imagem-garagem');
-                if (btnNovaImagemGaragem) btnNovaImagemGaragem.style.display = temPermissaoAcao('upload') ? '' : 'none';
-                const btnPdfUploadLocacao = document.getElementById('btn-pdf-upload-locacao');
-                if (btnPdfUploadLocacao) btnPdfUploadLocacao.style.display = temPermissaoAcao('upload') ? '' : 'none';
-                const btnUploadCarroPdf = document.getElementById('btn-upload-carro-pdf');
-                if (btnUploadCarroPdf) btnUploadCarroPdf.style.display = temPermissaoAcao('upload') ? '' : 'none';
-                const formMecanicoCard = document.getElementById('card-form-mecanico');
-                if (formMecanicoCard) formMecanicoCard.style.display = temPermissaoAcao('salvar_servico') ? '' : 'none';
+                // Para admin ou para todos, mostramos tudo
+                if (formVeiculoCard) formVeiculoCard.style.display = '';
+                if (sectionPermissoes) sectionPermissoes.style.display = '';
+                if (thAcoesVeiculos) thAcoesVeiculos.style.display = '';
+                if (veiculosSubtitle) veiculosSubtitle.textContent = 'Gerencie a frota de veículos com todos os dados, valores e documentos';
+                document.getElementById('user-role-display').textContent = 'Administrador';
+                document.getElementById('user-role-display').style.color = 'var(--primary)';
 
+                // Mostrar formulários de criação para todos
+                const formLocatarioCard = document.getElementById('card-form-locatario');
+                if (formLocatarioCard) formLocatarioCard.style.display = '';
+                const formLocacaoCard = document.getElementById('card-form-locacao');
+                if (formLocacaoCard) formLocacaoCard.style.display = '';
+                const formManutencaoCard = document.getElementById('card-form-manutencao');
+                if (formManutencaoCard) formManutencaoCard.style.display = '';
+                const formSocorroCard = document.getElementById('card-form-socorro');
+                if (formSocorroCard) formSocorroCard.style.display = '';
+                const btnUploadGaragem = document.getElementById('btn-upload-garagem-veiculo');
+                if (btnUploadGaragem) btnUploadGaragem.style.display = '';
+                const btnNovaImagemGaragem = document.getElementById('btn-nova-imagem-garagem');
+                if (btnNovaImagemGaragem) btnNovaImagemGaragem.style.display = '';
+                const btnPdfUploadLocacao = document.getElementById('btn-pdf-upload-locacao');
+                if (btnPdfUploadLocacao) btnPdfUploadLocacao.style.display = '';
+                const btnUploadCarroPdf = document.getElementById('btn-upload-carro-pdf');
+                if (btnUploadCarroPdf) btnUploadCarroPdf.style.display = '';
+                const formMecanicoCard = document.getElementById('card-form-mecanico');
+                if (formMecanicoCard) formMecanicoCard.style.display = '';
                 const btnFechamentoServicos = document.getElementById('btn-mecanico-fechamento');
-                if (btnFechamentoServicos) {
-                    btnFechamentoServicos.style.display = temPermissaoAcao('fechamento_servicos') ? '' : 'none';
-                }
+                if (btnFechamentoServicos) btnFechamentoServicos.style.display = '';
 
                 atualizarPermissoesVeiculoGrid();
                 atualizarPermissoesUsuarioGrid();
@@ -1602,27 +1639,10 @@
             }
 
             function aplicarRestricoesSubAbasManutencao() {
-                if (isAdmin()) {
-                    document.querySelectorAll('#manutencao-sub-tabs .sub-tab-btn').forEach(btn => btn.style.display = '');
-                    const selectSubaba = document.getElementById('m-subaba');
-                    if (selectSubaba) selectSubaba.querySelectorAll('option').forEach(opt => opt.style.display = '');
-                    return;
-                }
-                const subAbasPermitidas = usuarioLogado?.subAbasManutencaoPermitidas || [];
-                document.querySelectorAll('#manutencao-sub-tabs .sub-tab-btn').forEach(btn => {
-                    const placa = btn.getAttribute('data-placa');
-                    btn.style.display = subAbasPermitidas.includes(placa) ? '' : 'none';
-                });
-                const activeBtn = document.querySelector('#manutencao-sub-tabs .sub-tab-btn.active');
-                if (activeBtn && !subAbasPermitidas.includes(activeBtn.getAttribute('data-placa'))) {
-                    const primeiraPermitida = Array.from(document.querySelectorAll('#manutencao-sub-tabs .sub-tab-btn')).find(b => b.style.display !== 'none');
-                    if (primeiraPermitida) primeiraPermitida.click();
-                }
+                // Removendo restrições: mostrar todas as sub-abas
+                document.querySelectorAll('#manutencao-sub-tabs .sub-tab-btn').forEach(btn => btn.style.display = '');
                 const selectSubaba = document.getElementById('m-subaba');
-                if (selectSubaba) {
-                    selectSubaba.querySelectorAll('option').forEach(opt => { if (opt.value === '') return; opt.style.display = subAbasPermitidas.includes(opt.value) ? '' : 'none'; });
-                    if (selectSubaba.value && !subAbasPermitidas.includes(selectSubaba.value)) selectSubaba.value = '';
-                }
+                if (selectSubaba) selectSubaba.querySelectorAll('option').forEach(opt => opt.style.display = '');
             }
 
             function downloadDocumento(base64, nome) {
@@ -1654,20 +1674,20 @@
 
             function atualizarPermissoesVeiculoGrid() {
                 const grid = document.getElementById('permissoes-veiculo-grid');
-                if (!grid || !isAdmin()) return;
+                if (!grid) return;
                 const usuariosNaoAdmin = usuarios.filter(u => u.role !== 'admin');
                 if (usuariosNaoAdmin.length === 0) { grid.innerHTML = '<span style="color:var(--text-muted);font-size:12px;">Nenhum usuário não-admin cadastrado.</span>'; return; }
                 grid.innerHTML = usuariosNaoAdmin.map(u => `<label><input type="checkbox" class="perm-veiculo-check" value="${u.id}" ${(editandoVeiculoId && u.veiculosPermitidos && u.veiculosPermitidos.includes(editandoVeiculoId)) ? 'checked' : ''}> 👤 ${u.nome} <small style="color:var(--text-muted);">(${u.usuario})</small></label>`).join('');
             }
             function atualizarPermissoesUsuarioGrid() {
                 const grid = document.getElementById('permissoes-usuario-grid');
-                if (!grid || !isAdmin()) return;
+                if (!grid) return;
                 if (veiculos.length === 0) { grid.innerHTML = '<span style="color:var(--text-muted);font-size:12px;">Nenhum veículo cadastrado.</span>'; return; }
                 grid.innerHTML = veiculos.map(v => `<label><input type="checkbox" class="perm-usuario-check" value="${v.id}" ${(editandoUsuarioId && usuarios.find(u => u.id === editandoUsuarioId)?.veiculosPermitidos?.includes(v.id)) ? 'checked' : ''}> 🚙 ${v.marca} ${v.modelo} <small style="color:var(--text-muted);">(${v.placa})</small></label>`).join('');
             }
             function atualizarPermissoesSubAbasManutencaoGrid() {
                 const grid = document.getElementById('permissoes-subabas-manutencao-grid');
-                if (!grid || !isAdmin()) return;
+                if (!grid) return;
                 if (veiculos.length === 0) { grid.innerHTML = '<span style="color:var(--text-muted);font-size:12px;">Nenhum veículo cadastrado.</span>'; return; }
                 const subAbasPermitidas = editandoUsuarioId ? (usuarios.find(u => u.id === editandoUsuarioId)?.subAbasManutencaoPermitidas || []) : [];
                 grid.innerHTML = veiculos.map(v => `<label><input type="checkbox" class="perm-subabas-manutencao-check" value="${v.placa}" ${editandoUsuarioId ? (subAbasPermitidas.includes(v.placa) ? 'checked' : '') : 'checked'}> 🔹 ${v.placa} (${v.marca} ${v.modelo})</label>`).join('');
@@ -1775,13 +1795,7 @@
             });
 
             function navegarPara(pageName) {
-                if (pageName === 'auditoria') {
-                    if (!isAdmin()) { showToast('⚠️ Apenas o administrador pode acessar esta aba.', 'error'); return; }
-                } else if (pageName === 'configuracoes') {
-                    if (!isAdmin()) { showToast('⚠️ Apenas o administrador pode acessar configurações.', 'error'); return; }
-                } else {
-                    if (!temPermissaoAba(pageName)) { showToast('⚠️ Você não tem permissão para acessar esta aba.', 'error'); return; }
-                }
+                // Sempre permitir navegação sem restrições de permissão
                 pages.forEach(p => p.classList.remove('active'));
                 const targetPage = document.getElementById('page-' + pageName);
                 if (targetPage) targetPage.classList.add('active');
@@ -1802,8 +1816,8 @@
                 if (pageName === 'socorro') { atualizarSocorro(); }
                 if (pageName === 'carro') { renderizarSubAbasCarro(); }
                 if (pageName === 'gerador-contrato') { /* O iframe já está carregado */ }
-                if (pageName === 'locatarios' && temPermissaoAba('locatarios')) { atualizarTabelaLocatarios(); initScrollButtons(); }
-                if (pageName === 'locacoes' && temPermissaoAba('locacoes')) { 
+                if (pageName === 'locatarios') { atualizarTabelaLocatarios(); initScrollButtons(); }
+                if (pageName === 'locacoes') { 
                     document.querySelectorAll('#locacoes-sub-tabs .sub-tab-btn').forEach(b => {
                         b.classList.toggle('active', b.getAttribute('data-locacao-tab') === abaLocacoesAtiva);
                     });
@@ -1815,9 +1829,9 @@
                         atualizarUIBuscaLocacoes(); 
                     }
                 }
-                if (pageName === 'manutencao' && temPermissaoAba('manutencao')) { atualizarSelectManutencaoVeiculos(); renderizarSubAbasManutencao(); aplicarRestricoesSubAbasManutencao(); destacarAbaManutencaoAtiva(); atualizarTabelaManutencoes(); initScrollButtons(); }
+                if (pageName === 'manutencao') { atualizarSelectManutencaoVeiculos(); renderizarSubAbasManutencao(); aplicarRestricoesSubAbasManutencao(); destacarAbaManutencaoAtiva(); atualizarTabelaManutencoes(); initScrollButtons(); }
                 if (pageName === 'mecanico') { resetarFormMecanico(); atualizarTabelaMecanico(); initScrollButtons(); }
-                if (pageName === 'banco' && temPermissaoAba('banco')) {
+                if (pageName === 'banco') {
                     atualizarDadosBanco();
                     initScrollButtons();
                     const fluxoContainer = document.getElementById('fluxo-caixa-container');
@@ -1827,7 +1841,7 @@
                         if (termoBuscaFluxo) { document.getElementById('input-busca-fluxo').value = termoBuscaFluxo; atualizarUIBuscaFluxo(); }
                     }
                 }
-                if (pageName === 'usuarios' && temPermissaoAba('usuarios')) { atualizarTabelaUsuarios(); atualizarPermissoesUsuarioGrid(); atualizarPermissoesSubAbasManutencaoGrid(); initScrollButtons(); }
+                if (pageName === 'usuarios') { atualizarTabelaUsuarios(); atualizarPermissoesUsuarioGrid(); atualizarPermissoesSubAbasManutencaoGrid(); initScrollButtons(); }
                 if (pageName === 'auditoria') { atualizarTabelaAuditoria(); initScrollButtons(); if (termoBuscaAuditoria) { document.getElementById('input-busca-auditoria').value = termoBuscaAuditoria; atualizarUIBuscaAuditoria(); } }
                 if (pageName === 'configuracoes') { preencherFormConfiguracoes(); }
                 // Sempre rolar para o topo ao navegar para qualquer página
@@ -1837,7 +1851,6 @@
             document.querySelectorAll('#garagem-sub-tabs .sub-tab-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const subtab = this.getAttribute('data-subtab');
-                    if (subtab === 'garagem-veiculos' && !temPermissaoAba('veiculos')) { showToast('⚠️ Você não tem permissão para acessar Veículos.', 'error'); return; }
                     document.querySelectorAll('#garagem-sub-tabs .sub-tab-btn').forEach(b => b.classList.remove('active'));
                     this.classList.add('active');
                     document.querySelectorAll('#page-garagem .sub-tab-content').forEach(c => c.classList.remove('active'));
@@ -1859,10 +1872,6 @@
             document.querySelectorAll('#mecanico-sub-tabs .sub-tab-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const tab = this.getAttribute('data-mecanico-tab');
-                    if (tab === 'fechamento' && !temPermissaoAcao('fechamento_servicos')) {
-                        showToast('⚠️ Sem permissão para Fechamento Serviços.', 'error');
-                        return;
-                    }
                     document.querySelectorAll('#mecanico-sub-tabs .sub-tab-btn').forEach(b => b.classList.remove('active'));
                     this.classList.add('active');
                     document.querySelectorAll('#page-mecanico .sub-tab-content').forEach(c => c.classList.remove('active'));
@@ -1874,15 +1883,14 @@
             });
 
             navButtons.forEach(btn => { btn.addEventListener('click', () => navegarPara(btn.getAttribute('data-page'))); });
-            document.getElementById('btn-ir-locacoes').addEventListener('click', () => { if (!temPermissaoAba('locacoes')) { showToast('⚠️ Sem permissão.', 'error'); return; } navegarPara('locacoes'); });
+            document.getElementById('btn-ir-locacoes').addEventListener('click', () => { navegarPara('locacoes'); });
             document.getElementById('btn-inserir-contrato').addEventListener('click', function() {
-                if (!temPermissaoAcao('criar')) { showToast('⚠️ Sem permissão.', 'error'); return; }
                 const nome = document.getElementById('l-nome').value.trim(), cpf = document.getElementById('l-cpf').value.trim();
                 if (!nome || !cpf) { showToast('⚠️ Preencha Nome e CPF.', 'error'); return; }
                 if (!editandoLocatarioId) { document.getElementById('form-locatario').dispatchEvent(new Event('submit', { cancelable: true })); }
-                setTimeout(() => { if (temPermissaoAba('locacoes')) { navegarPara('locacoes'); const selectLocatario = document.getElementById('loc-locatario'); if (selectLocatario && editandoLocatarioId) selectLocatario.value = editandoLocatarioId; } }, 500);
+                setTimeout(() => { navegarPara('locacoes'); const selectLocatario = document.getElementById('loc-locatario'); if (selectLocatario && editandoLocatarioId) selectLocatario.value = editandoLocatarioId; }, 500);
             });
-            document.getElementById('btn-filtro-locacoes-nav').addEventListener('click', function(e) { e.preventDefault(); if (!temPermissaoAba('filtro')) { showToast('⚠️ Sem permissão para Filtro.', 'error'); return; } abrirJanelaFiltro(); });
+            document.getElementById('btn-filtro-locacoes-nav').addEventListener('click', function(e) { e.preventDefault(); abrirJanelaFiltro(); });
             document.getElementById('btn-toggle-fluxo').addEventListener('click', function() {
                 const container = document.getElementById('fluxo-caixa-container');
                 if (container.style.display === 'none' || container.style.display === '') {
@@ -2070,20 +2078,22 @@
                 const tbody = document.getElementById('tbody-veiculos');
                 const veiculosPerm = getVeiculosPermitidos();
                 const thAcoes = document.getElementById('th-acoes-veiculos');
-                if (!isAdmin() && !temPermissaoAcao('editar') && !temPermissaoAcao('excluir')) { if (thAcoes) thAcoes.style.display = 'none'; } else { if (thAcoes) thAcoes.style.display = ''; }
-                const colspan = (isAdmin() || temPermissaoAcao('editar') || temPermissaoAcao('excluir')) ? 17 : 16;
-                if (veiculosPerm.length === 0) { tbody.innerHTML = `<tr><td colspan="${colspan}" class="empty-state"><span class="icon">🚙</span><br>${isAdmin() ? 'Nenhum veículo cadastrado' : 'Nenhum veículo disponível'}</td></tr>`; return; }
+                if (thAcoes) thAcoes.style.display = '';
+                const colspan = 17;
+                if (veiculosPerm.length === 0) { tbody.innerHTML = `<tr><td colspan="${colspan}" class="empty-state"><span class="icon">🚙</span><br>Nenhum veículo cadastrado</td></tr>`; return; }
                 tbody.innerHTML = veiculosPerm.map(v => {
                     let docLink = '<span style="color:var(--text-muted);">—</span>';
                     if (v.documentoBase64 && temPermissaoAcao('download')) { const nomeArq = (v.documentoNome || 'documento.pdf').replace(/'/g, "\\'"); docLink = `<a href="#" class="btn-pdf" onclick="event.preventDefault(); downloadDocumento('${v.documentoBase64}', '${nomeArq}'); registrarAuditoria('download', 'Veículo', '${v.id}', 'Download do documento');">📥 PDF</a>`; }
-                    let acoesHtml = ''; if (isAdmin() || temPermissaoAcao('editar') || temPermissaoAcao('excluir')) { acoesHtml = '<td>'; if (temPermissaoAcao('editar')) acoesHtml += `<button class="btn-edit" onclick="window._editarVeiculo('${v.id}')">✏️</button>`; if (temPermissaoAcao('excluir')) acoesHtml += `<button class="btn-danger" onclick="window._excluirVeiculo('${v.id}')">🗑️</button>`; acoesHtml += '</td>'; }
+                    let acoesHtml = '<td>';
+                    acoesHtml += `<button class="btn-edit" onclick="window._editarVeiculo('${v.id}')">✏️</button>`;
+                    acoesHtml += `<button class="btn-danger" onclick="window._excluirVeiculo('${v.id}')">🗑️</button>`;
+                    acoesHtml += '</td>';
                     const fipeFormatado = v.fipe ? formatarMoeda(v.fipe) : '—';
                     return `<tr><td>${v.marca}</td><td>${v.modelo}</td><td>${v.cor}</td><td><strong>${v.potencia || '—'}</strong></td><td>${v.anoFabricacao || '—'}</td><td>${v.anoModelo || '—'}</td><td><strong>${v.placa}</strong></td><td>${(v.km || 0).toLocaleString('pt-BR')}</td><td>${v.renavan}</td><td><small>${v.chassi}</small></td><td class="highlight-valor">${fipeFormatado}</td><td class="highlight-valor">${formatarMoeda(v.valorSemanal)}</td><td class="highlight-valor">${formatarMoeda(v.caucao)}</td><td>${v.proprietario || '—'}</td><td>${formatarOpcionais(v.opcionais)}</td><td>${docLink}</td>${acoesHtml}</tr>`;
                 }).join('');
                 initScrollButtons();
             }
             window._editarVeiculo = function(id) {
-                if (!isAdmin() && !temPermissaoAcao('editar')) { showToast('⚠️ Sem permissão para editar.', 'error'); return; }
                 const veiculo = veiculos.find(v => v.id === id);
                 if (!veiculo) return;
                 editandoVeiculoId = id; document.getElementById('v-marca').value = veiculo.marca; document.getElementById('v-modelo').value = veiculo.modelo;
@@ -2101,7 +2111,6 @@
                 veicFormTitle.textContent = 'Editar Veículo'; document.getElementById('card-form-veiculo').scrollIntoView({ behavior: 'smooth' }); atualizarPermissoesVeiculoGrid(); showToast('✏️ Modo edição.', 'info');
             };
             window._excluirVeiculo = async function(id) {
-                if (!isAdmin() && !temPermissaoAcao('excluir')) { showToast('⚠️ Sem permissão.', 'error'); return; }
                 if (!confirm('Tem certeza que deseja excluir este veículo?')) return;
                 const emLocacao = locacoes.some(l => l.veiculoId === id && l.status !== 'encerrada');
                 if (emLocacao) { showToast('⚠️ Veículo vinculado a uma locação ativa.', 'error'); return; }
@@ -2147,18 +2156,19 @@
             });
 
             function atualizarTabelaLocatarios() {
-                if (!isAdmin() && !temPermissaoAba('locatarios')) return;
                 const tbody = document.getElementById('tbody-locatarios');
                 if (locatarios.length === 0) { tbody.innerHTML = '<tr><td colspan="9" class="empty-state"><span class="icon">👥</span><br>Nenhum locatário cadastrado</td></tr>'; return; }
                 tbody.innerHTML = locatarios.map(l => {
-                    let acoesHtml = ''; if (temPermissaoAcao('editar') || temPermissaoAcao('excluir')) { acoesHtml = '<td>'; if (temPermissaoAcao('editar')) acoesHtml += `<button class="btn-edit" onclick="window._editarLocatario('${l.id}')">✏️</button>`; if (temPermissaoAcao('excluir')) acoesHtml += `<button class="btn-danger" onclick="window._excluirLocatario('${l.id}')">🗑️</button>`; acoesHtml += '</td>'; }
+                    let acoesHtml = '<td>';
+                    acoesHtml += `<button class="btn-edit" onclick="window._editarLocatario('${l.id}')">✏️</button>`;
+                    acoesHtml += `<button class="btn-danger" onclick="window._excluirLocatario('${l.id}')">🗑️</button>`;
+                    acoesHtml += '</td>';
                     const validadeCNH = l.validadeCNH ? new Date(l.validadeCNH + 'T00:00:00').toLocaleDateString('pt-BR') : '—';
                     return `<tr><td><strong>${l.nome}</strong></td><td>${l.cpf}</td><td>${l.rg}</td><td>${l.cnh}</td><td>${l.fone}</td><td>${l.cidade}</td><td>${l.estado || '—'}</td><td>${validadeCNH}</td>${acoesHtml}</tr>`;
                 }).join('');
                 initScrollButtons();
             }
             window._editarLocatario = function(id) {
-                if (!isAdmin() && !temPermissaoAcao('editar')) { showToast('⚠️ Sem permissão.', 'error'); return; }
                 const locatario = locatarios.find(l => l.id === id); if (!locatario) return;
                 editandoLocatarioId = id; document.getElementById('l-nome').value = locatario.nome; document.getElementById('l-cpf').value = locatario.cpf; document.getElementById('l-rg').value = locatario.rg;
                 document.getElementById('l-cnh').value = locatario.cnh; document.getElementById('l-fone').value = locatario.fone; document.getElementById('l-cep').value = locatario.cep;
@@ -2170,7 +2180,6 @@
                 locatFormTitle.textContent = 'Editar Locatário'; document.getElementById('card-form-locatario').scrollIntoView({ behavior: 'smooth' }); showToast('✏️ Modo edição.', 'info');
             };
             window._excluirLocatario = async function(id) {
-                if (!isAdmin() && !temPermissaoAcao('excluir')) { showToast('⚠️ Sem permissão.', 'error'); return; }
                 if (!confirm('Excluir locatário?')) return;
                 const emLocacao = locacoes.some(l => l.locatarioId === id && l.status !== 'encerrada');
                 if (emLocacao) { showToast('⚠️ Locatário vinculado a uma locação ativa.', 'error'); return; }
@@ -2236,7 +2245,6 @@
             }
 
             function atualizarSelectsLocacao() {
-                if (!isAdmin()) return;
                 const selectVeiculo = document.getElementById('loc-veiculo'), selectLocatario = document.getElementById('loc-locatario');
                 const locacoesAtivas = locacoes.filter(l => l.id !== editandoLocacaoId && l.status !== 'encerrada');
                 const veiculosLocadosIds = locacoesAtivas.map(l => l.veiculoId);
@@ -2254,7 +2262,6 @@
             }
             btnCancelEdicaoLocacao.addEventListener('click', () => { resetarFormLocacao(); atualizarSelectsLocacao(); showToast('📋 Edição cancelada.', 'info'); });
             window._editarLocacao = function(id) {
-                if (!isAdmin()) return;
                 const locacao = locacoes.find(l => l.id === id); if (!locacao || locacao.status === 'encerrada') { showToast('⚠️ Locação encerrada não pode ser editada.', 'error'); return; }
                 editandoLocacaoId = id; atualizarSelectsLocacao();
                 document.getElementById('loc-veiculo').value = locacao.veiculoId; document.getElementById('loc-locatario').value = locacao.locatarioId;
@@ -2345,7 +2352,6 @@
             }
 
             function atualizarTabelaLocacoes() {
-                if (!isAdmin()) return;
                 const tbody = document.getElementById('tbody-locacoes');
                 let locacoesPermitidas = getLocacoesPermitidas();
 
@@ -2387,9 +2393,9 @@
                     }
                     let acoesHtml = '<td>';
                     if (abaLocacoesAtiva === 'ativas') {
-                        if (temPermissaoAcao('editar')) acoesHtml += `<button class="btn-edit" onclick="window._editarLocacao('${l.id}')">✏️</button>`;
-                        if (temPermissaoAcao('excluir')) acoesHtml += `<button class="btn-danger" onclick="window._excluirLocacao('${l.id}')">🗑️</button>`;
-                        if (temPermissaoAcao('editar') || temPermissaoAcao('excluir')) acoesHtml += `<button class="btn-encerrar" onclick="window._encerrarLocacao('${l.id}')">🔒 Encerrar</button>`;
+                        acoesHtml += `<button class="btn-edit" onclick="window._editarLocacao('${l.id}')">✏️</button>`;
+                        acoesHtml += `<button class="btn-danger" onclick="window._excluirLocacao('${l.id}')">🗑️</button>`;
+                        acoesHtml += `<button class="btn-encerrar" onclick="window._encerrarLocacao('${l.id}')">🔒 Encerrar</button>`;
                     } else {
                         acoesHtml += '—';
                     }
@@ -2432,7 +2438,6 @@
             }
 
             window._excluirLocacao = async function(id) {
-                if (!isAdmin()) return;
                 const locacao = locacoes.find(l => l.id === id);
                 if (!locacao || locacao.status === 'encerrada') { showToast('⚠️ Apenas locações ativas podem ser excluídas.', 'error'); return; }
                 if (!confirm('Encerrar esta locação? As transações do Fluxo serão removidas.')) return;
@@ -2442,7 +2447,6 @@
             };
 
             window._encerrarLocacao = async function(id) {
-                if (!isAdmin() && !temPermissaoAcao('editar')) { showToast('⚠️ Sem permissão.', 'error'); return; }
                 const senha = prompt('Digite a senha para encerrar a locação:');
                 if (senha !== '080888') { showToast('❌ Senha incorreta!', 'error'); return; }
                 const locacao = locacoes.find(l => l.id === id);
@@ -2510,7 +2514,10 @@
                     const valorClass = t.tipo === 'entrada' ? 'highlight-entrada' : 'highlight-saida';
                     const catLabel = catLabels[t.categoria] || (t.categoria || 'Geral');
                     const dataFormatada = t.data ? new Date(t.data + 'T00:00:00').toLocaleDateString('pt-BR') : '—';
-                    let acoesHtml = '<td>'; if (temPermissaoAcao('editar')) acoesHtml += `<button class="btn-edit" onclick="window._editarFluxo('${t.id}')">✏️</button>`; if (temPermissaoAcao('excluir')) acoesHtml += `<button class="btn-danger" onclick="window._excluirFluxo('${t.id}')">🗑️</button>`; acoesHtml += '</td>';
+                    let acoesHtml = '<td>';
+                    acoesHtml += `<button class="btn-edit" onclick="window._editarFluxo('${t.id}')">✏️</button>`;
+                    acoesHtml += `<button class="btn-danger" onclick="window._excluirFluxo('${t.id}')">🗑️</button>`;
+                    acoesHtml += '</td>';
                     return `<tr><td>${dataFormatada}</td><td>${t.descricao}</td><td>${catLabel}</td><td>${tipoBadge}</td><td class="${valorClass}" style="font-weight:700;">${formatarMoeda(t.valor)}</td><td>${t.observacao || '—'}</td>${acoesHtml}</tr>`;
                 }).join('');
                 initScrollButtons();
@@ -2624,7 +2631,7 @@
             function fecharModalPdfUpload() { document.getElementById('modal-pdf-overlay').classList.remove('active'); }
             document.getElementById('modal-pdf-close').addEventListener('click', fecharModalPdfUpload);
             document.getElementById('modal-pdf-overlay').addEventListener('click', function(e) { if (e.target === this) fecharModalPdfUpload(); });
-            document.getElementById('btn-pdf-upload-locacao').addEventListener('click', () => { if (!isAdmin() && !temPermissaoAcao('upload')) { showToast('⚠️ Sem permissão.', 'error'); return; } abrirModalPdfUpload(); });
+            document.getElementById('btn-pdf-upload-locacao').addEventListener('click', () => { abrirModalPdfUpload(); });
             document.getElementById('btn-salvar-pdf').addEventListener('click', async function() {
                 const nomeInput = document.getElementById('input-pdf-nome'), fileInput = document.getElementById('input-pdf-file'), errorSpan = document.getElementById('pdf-upload-error');
                 let nome = nomeInput.value.trim(); const file = fileInput.files[0];
@@ -2709,7 +2716,6 @@
             };
 
             function abrirModalCarroPdf() {
-                if (!temPermissaoAcao('upload')) { showToast('⚠️ Sem permissão.', 'error'); return; }
                 atualizarSelectModalCarroPdf();
                 document.getElementById('modal-carro-pdf-overlay').classList.add('active');
                 document.getElementById('input-carro-pdf-nome').value = ''; document.getElementById('input-carro-pdf-file').value = '';
@@ -2885,8 +2891,8 @@
                 tbody.innerHTML = filtradas.map(m => {
                     const fluxoInfo = m.fluxoCaixaId ? '<span class="badge badge-success">Registrado</span>' : '<span class="badge badge-warning">Não</span>';
                     let acoesHtml = '<td>';
-                    if (temPermissaoAcao('editar')) acoesHtml += `<button class="btn-edit" onclick="window._editarManutencao('${m.id}')">✏️</button>`;
-                    if (temPermissaoAcao('excluir')) acoesHtml += `<button class="btn-danger" onclick="window._excluirManutencao('${m.id}')">🗑️</button>`;
+                    acoesHtml += `<button class="btn-edit" onclick="window._editarManutencao('${m.id}')">✏️</button>`;
+                    acoesHtml += `<button class="btn-danger" onclick="window._excluirManutencao('${m.id}')">🗑️</button>`;
                     acoesHtml += '</td>';
                     return `<tr>
                         <td>${m.veiculoNome || '—'}</td>
@@ -3054,8 +3060,8 @@
                 tbody.innerHTML = lista.map(m => {
                     const dataFormatada = m.data ? new Date(m.data + 'T00:00:00').toLocaleDateString('pt-BR') : '—';
                     let acoesHtml = '<td>';
-                    if (temPermissaoAcao('editar')) acoesHtml += `<button class="btn-edit" onclick="window._editarMecanico('${m.id}')">✏️</button>`;
-                    if (temPermissaoAcao('excluir')) acoesHtml += `<button class="btn-danger" onclick="window._excluirMecanico('${m.id}')">🗑️</button>`;
+                    acoesHtml += `<button class="btn-edit" onclick="window._editarMecanico('${m.id}')">✏️</button>`;
+                    acoesHtml += `<button class="btn-danger" onclick="window._excluirMecanico('${m.id}')">🗑️</button>`;
                     acoesHtml += '</td>';
                     return `<tr>
                         <td>${dataFormatada}</td>
@@ -3146,6 +3152,10 @@
             function gerarPDFFechamento(filtrados, dataInicio, dataFim, placa, oficina) {
                 const total = filtrados.reduce((sum, m) => sum + (parseFloat(m.valor) || 0), 0);
 
+                // Prepara dados para passar ao pop-up
+                const filtrosObj = { dataInicio, dataFim, placa, oficina };
+                const filtrosJson = JSON.stringify(filtrosObj);
+
                 const htmlContent = `
                 <!DOCTYPE html>
                 <html>
@@ -3164,15 +3174,21 @@
                         th { background: #f0f0f0; text-align: left; padding: 10px; border-bottom: 2px solid #333; }
                         td { padding: 10px; border-bottom: 1px solid #ddd; }
                         .total-row td { font-weight: bold; font-size: 15px; background: #fafafa; border-top: 2px solid #333; }
-                        .print-btn { display: inline-block; margin-bottom: 20px; padding: 10px 20px; background: #333; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
+                        .btn-container { display: flex; gap: 10px; margin-bottom: 20px; }
+                        .print-btn { padding: 10px 20px; background: #333; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
                         .print-btn:hover { background: #555; }
+                        .close-btn { padding: 10px 20px; background: #e74c3c; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
+                        .close-btn:hover { background: #c0392b; }
                         @media print {
-                            .print-btn { display: none; }
+                            .btn-container { display: none; }
                         }
                     </style>
                 </head>
                 <body>
-                    <button class="print-btn" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
+                    <div class="btn-container">
+                        <button class="print-btn" onclick="realizarLancamento()">🖨️ Imprimir / Salvar PDF</button>
+                        <button class="close-btn" onclick="window.close()">✕ Fechar PDF</button>
+                    </div>
                     <div class="header">
                         <h1>PAIZÃO RENT CAR</h1>
                         <div class="subtitle">Fechamento de Serviços Mecânicos</div>
@@ -3221,9 +3237,14 @@
                         </tfoot>
                     </table>
                     <script>
-                        window.onload = function() {
-                            setTimeout(function() { window.print(); }, 500);
-                        };
+                        const totalValue = ${total};
+                        const filtrosValue = ${filtrosJson};
+                        function realizarLancamento() {
+                            window.print();
+                            if (window.opener) {
+                                window.opener.postMessage({ type: 'fechamento-lancar', total: totalValue, filtros: filtrosValue }, '*');
+                            }
+                        }
                     <\/script>
                 </body>
                 </html>
@@ -3236,9 +3257,15 @@
                 }
                 janela.document.write(htmlContent);
                 janela.document.close();
-
-                registrarSaidaFluxoFechamento(total, { dataInicio, dataFim, placa, oficina });
             }
+
+            // Listener para receber mensagem do pop-up e lançar no fluxo
+            window.addEventListener('message', function(event) {
+                if (event.data && event.data.type === 'fechamento-lancar') {
+                    const { total, filtros } = event.data;
+                    registrarSaidaFluxoFechamento(total, filtros);
+                }
+            });
 
             document.getElementById('btn-filtrar-fechamento').addEventListener('click', function() {
                 if (!temPermissaoAcao('fechamento_servicos')) {

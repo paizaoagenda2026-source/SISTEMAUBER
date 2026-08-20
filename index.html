@@ -7,6 +7,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <style>
         :root {
             --bg-dark: #0c0f16;
@@ -63,7 +64,6 @@
         .top-header .brand .brand-text h2 { font-size:18px; font-weight:700; color:#fff; line-height:1.1; }
         .top-header .brand .brand-text h2 span { color:var(--primary); }
         .top-header .brand .brand-text small { font-size:10px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1.5px; }
-        /* ===== MENU PRINCIPAL EM DUAS LINHAS (desktop) ===== */
         .top-nav {
             display: flex;
             flex-wrap: wrap;
@@ -87,8 +87,8 @@
             align-items:center;
             gap:8px;
             white-space:nowrap;
-            flex: 0 0 calc((100% / 6) - 12px); /* 6 por linha -> 2 linhas para 11 itens */
-            max-width: calc((100% / 6) - 12px);
+            flex: 0 0 calc((100% / 7) - 12px);
+            max-width: calc((100% / 7) - 12px);
             justify-content:center;
             box-sizing:border-box;
         }
@@ -109,7 +109,6 @@
         .mobile-menu-toggle:hover { background:rgba(255,255,255,0.05); }
         @media (max-width:768px) {
             .top-header { padding:0 16px; flex-wrap:wrap; height:auto; min-height:var(--header-height); }
-            /* Em mobile, voltamos ao menu horizontal com rolagem */
             .top-nav {
                 flex-wrap: nowrap;
                 overflow-x: auto;
@@ -365,6 +364,8 @@
                 <button data-page="usuarios" style="border:1px solid var(--accent);"><span class="nav-icon">👤</span> Usuários</button>
                 <button data-page="auditoria" style="border:1px solid var(--accent);"><span class="nav-icon">📋</span> Auditoria</button>
                 <button data-page="configuracoes" style="border:1px solid var(--accent);"><span class="nav-icon">⚙️</span> Configurações</button>
+                <button data-page="comprovantes"><span class="nav-icon">🧾</span> Comprovantes</button>
+                <button data-page="pagamentos"><span class="nav-icon">💳</span> Pagamentos</button>
             </nav>
             <div class="top-user">
                 <span class="sync-indicator online" id="sync-indicator" title="Status da sincronização com Firebase"><span class="sync-dot"></span> <span id="sync-text">Online</span></span>
@@ -511,6 +512,7 @@
                             <button type="submit" class="btn-app btn-save" id="btn-submit-locacao">✅ Confirmar Locação</button>
                             <button type="button" class="btn-app btn-cancel" id="btn-pdf-upload-locacao" style="display:inline-flex; align-items:center; gap:6px;">📎 PDF</button>
                             <button type="button" class="btn-app btn-filtro-locacao" id="btn-filtro-locacoes-nav" style="display:inline-flex; align-items:center; gap:6px;">🔍 Filtro</button>
+                            <button type="button" class="btn-app btn-cancel" id="btn-ler-pdf-contrato" style="display:inline-flex; align-items:center; gap:6px;">📄 Ler PDF do Contrato</button>
                             <button type="button" class="btn-app btn-cancel" id="btn-cancel-edicao-locacao" style="display:none;">❌ Cancelar Edição</button>
                         </div>
                     </form>
@@ -619,7 +621,7 @@
             </div>
             <div class="page" id="page-usuarios">
                 <div class="page-header"><h2>👤 Gerenciamento de Usuários</h2><p>Crie e gerencie usuários com acesso limitado</p></div>
-                <div class="card" id="card-form-usuario"><div class="card-title"><span class="icon">📝</span> <span id="usuario-form-title">Novo Usuário</span></div><div class="edit-banner" id="edit-banner-usuario">✏️ <span id="edit-banner-usuario-text">Você está editando um usuário existente.</span></div><form id="form-usuario" autocomplete="off"><div class="grid-3"><div class="form-group-app"><label>Nome do Usuário</label><input type="text" id="u-nome" placeholder="Nome completo" required></div><div class="form-group-app"><label>Login (Usuário)</label><input type="text" id="u-login" placeholder="Nome de usuário para login" required autocomplete="off"></div><div class="form-group-app"><label>Senha</label><input type="password" id="u-senha" placeholder="Senha de acesso" required autocomplete="off"></div></div><div class="section-divider"><div class="form-group-app"><label>📑 Abas Permitidas</label><div class="permissoes-grid" id="permissoes-abas-grid"><label><input type="checkbox" class="perm-abas-check" value="veiculos"> 🚙 Veículos</label><label><input type="checkbox" class="perm-abas-check" value="garagem"> 🖼️ Garagem</label><label><input type="checkbox" class="perm-abas-check" value="socorro"> 🆘 Socorro</label><label><input type="checkbox" class="perm-abas-check" value="carro"> 🚘 DOC</label><label><input type="checkbox" class="perm-abas-check" value="locatarios"> 👥 Locatários</label><label><input type="checkbox" class="perm-abas-check" value="locacoes"> 📋 Locações</label><label><input type="checkbox" class="perm-abas-check" value="manutencao"> 🔧 Manutenção</label><label><input type="checkbox" class="perm-abas-check" value="mecanico"> 🔧 Mecânico</label><label><input type="checkbox" class="perm-abas-check" value="fluxocaixa"> 💰 Fluxo de Caixa</label><label><input type="checkbox" class="perm-abas-check" value="banco"> 🏦 Banco</label><label><input type="checkbox" class="perm-abas-check" value="usuarios"> 👤 Usuários</label><label><input type="checkbox" class="perm-abas-check" value="filtro"> 🔍 Filtro</label><label><input type="checkbox" class="perm-abas-check" value="gerador-contrato"> 📄 Gerador de Contrato</label></div></div></div><div class="section-divider"><div class="form-group-app"><label>🔧 Sub-Abas do Histórico de Manutenção Permitidas</label><div class="permissoes-grid" id="permissoes-subabas-manutencao-grid"></div></div></div><div class="section-divider"><div class="form-group-app"><label>🔘 Ações Permitidas (Botões)</label><div class="permissoes-grid" id="permissoes-acoes-grid"><label><input type="checkbox" class="perm-acoes-check" value="criar"> ➕ Criar / Adicionar</label><label><input type="checkbox" class="perm-acoes-check" value="editar"> ✏️ Editar</label><label><input type="checkbox" class="perm-acoes-check" value="excluir"> 🗑️ Excluir</label><label><input type="checkbox" class="perm-acoes-check" value="upload"> 📤 Upload (PDFs/Imagens)</label><label><input type="checkbox" class="perm-acoes-check" value="download"> 📥 Download de Documentos</label><label><input type="checkbox" class="perm-acoes-check" value="salvar_servico"> 💾 Salvar Serviço</label><label><input type="checkbox" class="perm-acoes-check" value="fechamento_servicos"> 📊 Fechamento Serviços</label></div></div></div><div class="section-divider"><div class="form-group-app"><label>🚙 Veículos Permitidos para este Usuário</label><div class="permissoes-grid" id="permissoes-usuario-grid"></div></div></div><div style="display:flex;gap:12px;margin-top:8px;"><button type="submit" class="btn-app btn-save" id="btn-submit-usuario">💾 Salvar Usuário</button><button type="button" class="btn-app btn-cancel" id="btn-cancel-usuario">Limpar</button><button type="button" class="btn-app btn-cancel" id="btn-cancel-edicao-usuario" style="display:none;">❌ Cancelar Edição</button></div></form></div>
+                <div class="card" id="card-form-usuario"><div class="card-title"><span class="icon">📝</span> <span id="usuario-form-title">Novo Usuário</span></div><div class="edit-banner" id="edit-banner-usuario">✏️ <span id="edit-banner-usuario-text">Você está editando um usuário existente.</span></div><form id="form-usuario" autocomplete="off"><div class="grid-3"><div class="form-group-app"><label>Nome do Usuário</label><input type="text" id="u-nome" placeholder="Nome completo" required></div><div class="form-group-app"><label>Login (Usuário)</label><input type="text" id="u-login" placeholder="Nome de usuário para login" required autocomplete="off"></div><div class="form-group-app"><label>Senha</label><input type="password" id="u-senha" placeholder="Senha de acesso" required autocomplete="off"></div></div><div class="section-divider"><div class="form-group-app"><label>📑 Abas Permitidas</label><div class="permissoes-grid" id="permissoes-abas-grid"></div></div></div><div class="section-divider"><div class="form-group-app"><label>🔧 Sub-Abas do Histórico de Manutenção Permitidas</label><div class="permissoes-grid" id="permissoes-subabas-manutencao-grid"></div></div></div><div class="section-divider"><div class="form-group-app"><label>🔘 Ações Permitidas (Botões)</label><div class="permissoes-grid" id="permissoes-acoes-grid"></div></div></div><div class="section-divider"><div class="form-group-app"><label>🚙 Veículos Permitidos para este Usuário</label><div class="permissoes-grid" id="permissoes-usuario-grid"></div></div></div><div style="display:flex;gap:12px;margin-top:8px;"><button type="submit" class="btn-app btn-save" id="btn-submit-usuario">💾 Salvar Usuário</button><button type="button" class="btn-app btn-cancel" id="btn-cancel-usuario">Limpar</button><button type="button" class="btn-app btn-cancel" id="btn-cancel-edicao-usuario" style="display:none;">❌ Cancelar Edição</button></div></form></div>
                 <div class="card"><div class="card-title"><span class="icon">📋</span> Usuários Cadastrados</div><div class="table-wrapper" id="table-wrapper-usuarios"><button class="scroll-btn scroll-btn-left">◀</button><button class="scroll-btn scroll-btn-right">▶</button><table id="tabela-usuarios"><thead><tr><th>Nome</th><th>Login</th><th>Perfil</th><th>Abas</th><th>Sub-Abas Manutenção</th><th>Ações (Botões)</th><th>Veículos</th><th>Data Criação</th><th>Ações</th></tr></thead><tbody id="tbody-usuarios"></tbody></table></div></div>
             </div>
             <div class="page" id="page-auditoria">
@@ -671,6 +673,61 @@
                     </form>
                 </div>
             </div>
+            <!-- PÁGINA COMPROVANTES SIMPLIFICADA -->
+            <div class="page" id="page-comprovantes">
+                <div class="page-header">
+                    <h2>🧾 Comprovantes</h2>
+                    <p>Upload de comprovantes em PDF ou JPEG</p>
+                </div>
+                <div class="card" id="card-form-comprovante">
+                    <div class="card-title"><span class="icon">📤</span> Novo Comprovante</div>
+                    <form id="form-comprovante" autocomplete="off">
+                        <div class="form-group-app" style="margin-top:8px;">
+                            <label>Arquivo do Comprovante (PDF ou JPEG)</label>
+                            <input type="file" id="comp-arquivo" accept=".pdf,.jpg,.jpeg" required>
+                        </div>
+                        <div style="display:flex; gap:12px; margin-top:16px; flex-wrap:wrap;">
+                            <button type="submit" class="btn-app btn-save" id="btn-submit-comprovante">💾 Salvar Comprovante</button>
+                            <button type="button" class="btn-app btn-cancel" id="btn-cancel-comprovante">Limpar</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card">
+                    <div class="card-title"><span class="icon">📋</span> Comprovantes Salvos</div>
+                    <div class="table-wrapper" id="table-wrapper-comprovantes">
+                        <button class="scroll-btn scroll-btn-left">◀</button>
+                        <button class="scroll-btn scroll-btn-right">▶</button>
+                        <table id="tabela-comprovantes">
+                            <thead>
+                                <tr>
+                                    <th>Data/Hora</th>
+                                    <th>Arquivo</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-comprovantes"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <!-- PÁGINA PAGAMENTOS -->
+            <div class="page" id="page-pagamentos">
+                <div class="page-header">
+                    <h2>💳 Pagamentos Semanais</h2>
+                    <p>Registre e acompanhe os pagamentos das locações ativas</p>
+                </div>
+                <div class="card">
+                    <div class="card-title"><span class="icon">📋</span> Locações Ativas e Status do Pagamento</div>
+                    <div class="table-wrapper" id="table-wrapper-pagamentos">
+                        <button class="scroll-btn scroll-btn-left">◀</button>
+                        <button class="scroll-btn scroll-btn-right">▶</button>
+                        <table id="tabela-pagamentos">
+                            <thead><tr><th>Placa</th><th>Locatário</th><th>Valor Semanal</th><th>Vencimento</th><th>Status</th><th>Ação</th></tr></thead>
+                            <tbody id="tbody-pagamentos"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
     <div class="docs-modal-overlay" id="docs-modal-overlay"><div class="docs-modal"><div class="docs-modal-header"><h3>📎 Documentos da Locação</h3><button class="docs-modal-close" id="docs-modal-close">✕</button></div><div id="docs-modal-content"></div></div></div>
@@ -692,6 +749,8 @@
             const db = firebase.firestore();
             const auth = firebase.auth();
 
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
             let authPronto = false;
             auth.onAuthStateChanged(function(user) {
                 if (user) { authPronto = true; } else { auth.signInAnonymously().catch(function(error) { authPronto = false; }); }
@@ -712,10 +771,12 @@
                 auditoria: db.collection('auditoria'),
                 socorroImagens: db.collection('socorro_imagens'),
                 banco: db.collection('banco'),
-                configuracoes: db.collection('configuracoes')
+                configuracoes: db.collection('configuracoes'),
+                comprovantes: db.collection('comprovantes'),
+                pagamentos: db.collection('pagamentos')
             };
 
-            let veiculos = [], locatarios = [], locacoes = [], fluxoCaixa = [], usuarios = [], garagem = [], carroPdfs = [], manutencoes = [], mecanicos = [], auditoriaLogs = [], socorroImagens = [], dadosBancoLista = [], usuarioLogado = null;
+            let veiculos = [], locatarios = [], locacoes = [], fluxoCaixa = [], usuarios = [], garagem = [], carroPdfs = [], manutencoes = [], mecanicos = [], auditoriaLogs = [], socorroImagens = [], dadosBancoLista = [], usuarioLogado = null, comprovantes = [];
             let editandoVeiculoId = null, editandoLocatarioId = null, editandoLocacaoId = null, editandoFluxoId = null, editandoUsuarioId = null, editandoManutencaoId = null, editandoMecanicoId = null, editandoBancoId = null;
             let termoBuscaLocacoes = '', termoBuscaFluxo = '', termoBuscaAuditoria = '', dadosCarregados = false, listenersAtivos = [], placaFiltroManutencao = '';
             let subAbaCarroAtiva = '';
@@ -727,6 +788,78 @@
                 subtituloLogin: 'Sistema de Locação de Veículos',
                 subtituloApp: 'Gestão de Frotas'
             };
+
+            const modulosExclusivosAdmin = new Set(['auditoria', 'configuracoes']);
+            const modulosEspeciais = ['veiculos', 'fluxocaixa', 'filtro'];
+            const infoModulos = {
+                veiculos: '🚙 Veículos',
+                garagem: '🖼️ Garagem',
+                socorro: '🆘 Socorro',
+                carro: '🚘 DOC',
+                'gerador-contrato': '📄 Gerador de Contrato',
+                locatarios: '👥 Locatários',
+                locacoes: '📋 Locações',
+                manutencao: '🔧 Manutenção',
+                mecanico: '🔧 Mecânico',
+                fluxocaixa: '💰 Fluxo de Caixa',
+                banco: '🏦 Banco',
+                usuarios: '👤 Usuários',
+                filtro: '🔍 Filtro',
+                comprovantes: '🧾 Comprovantes',
+                pagamentos: '💳 Pagamentos'
+            };
+            const infoAcoes = {
+                criar: '➕ Criar / Adicionar',
+                editar: '✏️ Editar',
+                excluir: '🗑️ Excluir',
+                upload: '📤 Upload (PDFs/Imagens)',
+                download: '📥 Download de Documentos',
+                salvar_servico: '💾 Salvar Serviço',
+                fechamento_servicos: '📊 Fechamento Serviços'
+            };
+
+            function coletarModulosDisponiveis() {
+                const modulos = new Set();
+                document.querySelectorAll('.page').forEach(page => {
+                    const id = page.id;
+                    if (id && id.startsWith('page-')) {
+                        const modulo = id.substring(5);
+                        if (!modulosExclusivosAdmin.has(modulo)) {
+                            modulos.add(modulo);
+                        }
+                    }
+                });
+                modulosEspeciais.forEach(m => modulos.add(m));
+                return Array.from(modulos);
+            }
+
+            function renderizarPermissoesAbasGrid() {
+                const grid = document.getElementById('permissoes-abas-grid');
+                if (!grid) return;
+                const modulos = coletarModulosDisponiveis();
+                if (modulos.length === 0) {
+                    grid.innerHTML = '<span style="color:var(--text-muted);font-size:12px;">Nenhum módulo disponível.</span>';
+                    return;
+                }
+                const abasPermitidas = editandoUsuarioId ? (usuarios.find(u => u.id === editandoUsuarioId)?.abasPermitidas || []) : [];
+                grid.innerHTML = modulos.map(mod => {
+                    const label = infoModulos[mod] || `📁 ${mod}`;
+                    const checked = editandoUsuarioId ? (abasPermitidas.includes(mod) ? 'checked' : '') : '';
+                    return `<label><input type="checkbox" class="perm-abas-check" value="${mod}" ${checked}> ${label}</label>`;
+                }).join('');
+            }
+
+            function renderizarPermissoesAcoesGrid() {
+                const grid = document.getElementById('permissoes-acoes-grid');
+                if (!grid) return;
+                const acoes = Object.keys(infoAcoes);
+                const acoesPermitidas = editandoUsuarioId ? (usuarios.find(u => u.id === editandoUsuarioId)?.acoesPermitidas || []) : [];
+                grid.innerHTML = acoes.map(acao => {
+                    const label = infoAcoes[acao];
+                    const checked = editandoUsuarioId ? (acoesPermitidas.includes(acao) ? 'checked' : '') : '';
+                    return `<label><input type="checkbox" class="perm-acoes-check" value="${acao}" ${checked}> ${label}</label>`;
+                }).join('');
+            }
 
             function aplicarConfiguracoes() {
                 if (!configuracaoGlobal) return;
@@ -991,6 +1124,9 @@
         .btn-toggle:hover { background: rgba(255, 255, 255, 0.1); border-color: #fff; }
         .btn-reset { background: #c0392b; color: #fff; }
         .btn-reset:hover { background: #a93226; }
+        .btn-edit-clauses { background: #c9a84c; color: #1a1a1a; }
+        .btn-edit-clauses:hover { background: #b8960a; }
+        .btn-edit-clauses.active { background: #27ae60; color: #fff; }
         .main-container { display: flex; gap: 0; max-width: 1500px; margin: 0 auto; min-height: calc(100vh - 130px); }
         .sidebar { width: 440px; min-width: 440px; background: var(--card-bg); border-right: 1px solid var(--border); overflow-y: auto; max-height: calc(100vh - 130px); position: sticky; top: 70px; transition: var(--transition); box-shadow: var(--shadow-lg); z-index: 50; }
         .sidebar.collapsed { min-width: 0; width: 0; overflow: hidden; border-right: none; box-shadow: none; }
@@ -1034,6 +1170,15 @@
         .document-sheet .italic { font-style: italic; }
         .toast { position: fixed; bottom: 24px; right: 24px; background: #1a3c5e; color: #fff; padding: 12px 20px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; z-index: 999; opacity: 0; transform: translateY(20px); pointer-events: none; transition: opacity 0.35s, transform 0.35s; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3); }
         .toast.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+        .editable-clause {
+            outline: 2px dashed #c9a84c;
+            outline-offset: 4px;
+            cursor: text;
+            transition: background 0.2s;
+        }
+        .editable-clause:hover {
+            background: rgba(201,168,76,0.05);
+        }
         @media (max-width: 1100px) {
             .main-container { flex-direction: column; }
             .sidebar { width: 100%; min-width: 100%; max-height: none; position: relative; top: auto; border-right: none; border-bottom: 2px solid var(--border); }
@@ -1066,11 +1211,12 @@
 </head>
 <body>
     <header class="app-header no-print">
-        <h1><span class="icon">📋</span> Gerador de Contrato de Locação</h1>
+        <h1><span class="icon">📋</span> INSTRUMENTO PARTICULAR DE CONTRATO DE LOCAÇÃO DE VEÍCULOS</h1>
         <div class="header-actions">
-            <button class="btn btn-toggle" id="btnToggleSidebar" title="Mostrar/Ocultar formulário">☰ Formulário</button>
-            <button class="btn btn-reset" id="btnReset" title="Restaurar valores padrão">↺ Resetar</button>
-            <button class="btn btn-print" id="btnPrint" title="Imprimir contrato">🖨️ Imprimir / PDF</button>
+            <button class="btn btn-toggle" id="btnToggleSidebar" title="Editar/Confirmar documento">✏️ Editar Documento</button>
+            <button class="btn btn-edit-clauses" id="btnEditClauses">📝 Editar Cláusulas</button>
+            <button class="btn btn-reset" id="btnReset">↺ Resetar</button>
+            <button class="btn btn-print" id="btnPrint">🖨️ Imprimir / PDF</button>
         </div>
     </header>
     <div class="main-container">
@@ -1265,12 +1411,15 @@
         (function() {
             const sidebar = document.getElementById('sidebar');
             const btnToggleSidebar = document.getElementById('btnToggleSidebar');
+            const btnEditClauses = document.getElementById('btnEditClauses');
             const btnPrint = document.getElementById('btnPrint');
             const btnReset = document.getElementById('btnReset');
             const toast = document.getElementById('toast');
             const allInputs = document.querySelectorAll('input[data-bind], textarea[data-bind]');
             const allHighlightSpans = document.querySelectorAll('.highlight[data-bind]');
             let toastTimer;
+            let editingClauses = false;
+
             function showToast(message, duration = 2000) {
                 clearTimeout(toastTimer);
                 toast.textContent = message;
@@ -1294,17 +1443,41 @@
             });
             updateAllBindings();
             let sidebarVisible = true;
+
+            function atualizarTextoBotao() {
+                btnToggleSidebar.textContent = sidebarVisible ? '✔️ Confirmar Edição' : '✏️ Editar Documento';
+            }
+
             btnToggleSidebar.addEventListener('click', function() {
                 sidebarVisible = !sidebarVisible;
                 if (sidebarVisible) {
                     sidebar.classList.remove('collapsed');
-                    btnToggleSidebar.textContent = '☰ Formulário';
                 } else {
                     sidebar.classList.add('collapsed');
-                    btnToggleSidebar.textContent = '☰ Mostrar Formulário';
                 }
-                showToast(sidebarVisible ? 'Formulário visível' : 'Formulário oculto');
+                atualizarTextoBotao();
+                showToast(sidebarVisible ? 'Documento em edição. Clique em Confirmar quando terminar.' : 'Edições confirmadas! Documento atualizado.', 2500);
             });
+
+            // Função para alternar edição de cláusulas
+            function toggleClauseEditing() {
+                editingClauses = !editingClauses;
+                const clauseElements = document.querySelectorAll('.document-sheet p, .document-sheet h3, .document-sheet h2.doc-title');
+                clauseElements.forEach(el => {
+                    // Ignora elementos que contêm destaques (campos variáveis)
+                    if (el.querySelector('.highlight')) return;
+                    el.contentEditable = editingClauses ? 'true' : 'false';
+                    el.classList.toggle('editable-clause', editingClauses);
+                });
+                btnEditClauses.textContent = editingClauses ? '✅ Concluir Edição' : '📝 Editar Cláusulas';
+                btnEditClauses.classList.toggle('active', editingClauses);
+                showToast(editingClauses ? 'Modo de edição ativado – clique no texto para alterar.' : 'Edição concluída!', 2500);
+            }
+
+            btnEditClauses.addEventListener('click', toggleClauseEditing);
+
+            atualizarTextoBotao();
+
             btnPrint.addEventListener('click', function() {
                 updateAllBindings();
                 showToast('Abrindo janela de impressão...', 1800);
@@ -1373,12 +1546,6 @@
                         }
                     }
                 });
-                const sectionId = header.getAttribute('data-section');
-                const fieldsDiv = document.getElementById('fields-' + sectionId);
-                if (fieldsDiv) {
-                    fieldsDiv.classList.add('expanded');
-                    header.classList.add('open');
-                }
             });
             document.addEventListener('keydown', function(e) {
                 if ((e.ctrlKey || e.metaKey) && e.key === 'p') { updateAllBindings(); }
@@ -1437,11 +1604,9 @@
 
             function atualizarUIporPerfil() {
                 const navButtons = document.querySelectorAll('.top-nav button[data-page]');
-                // Mostrar/ocultar botões do menu conforme permissões
                 navButtons.forEach(btn => {
                     const page = btn.getAttribute('data-page');
                     if (page === 'garagem') {
-                        // Garagem contém imagens e veículos; mostramos se usuário tiver permissão para garagem OU veiculos
                         btn.style.display = (temPermissaoAba('garagem') || temPermissaoAba('veiculos')) ? '' : 'none';
                     } else if (page === 'socorro') {
                         btn.style.display = temPermissaoAba('socorro') ? '' : 'none';
@@ -1465,28 +1630,28 @@
                         btn.style.display = isAdmin() ? '' : 'none';
                     } else if (page === 'configuracoes') {
                         btn.style.display = isAdmin() ? '' : 'none';
+                    } else if (page === 'comprovantes') {
+                        btn.style.display = temPermissaoAba('comprovantes') ? '' : 'none';
+                    } else if (page === 'pagamentos') {
+                        btn.style.display = temPermissaoAba('pagamentos') ? '' : 'none';
                     } else {
-                        btn.style.display = ''; // fallback
+                        btn.style.display = '';
                     }
                 });
 
-                // Sub-abas da Garagem
                 const subTabImagens = document.querySelector('#garagem-sub-tabs .sub-tab-btn[data-subtab="garagem-imagens"]');
                 const subTabVeiculos = document.querySelector('#garagem-sub-tabs .sub-tab-btn[data-subtab="garagem-veiculos"]');
                 if (subTabImagens) subTabImagens.style.display = temPermissaoAba('garagem') ? '' : 'none';
                 if (subTabVeiculos) subTabVeiculos.style.display = temPermissaoAba('veiculos') ? '' : 'none';
 
-                // Garantir que a sub-aba ativa corresponda à primeira permissão disponível
                 const activeSubTab = document.querySelector('#garagem-sub-tabs .sub-tab-btn.active');
                 if (activeSubTab && activeSubTab.style.display === 'none') {
-                    // Se a sub-aba ativa estiver oculta, ativar a primeira visível
                     const visibleSubTab = Array.from(document.querySelectorAll('#garagem-sub-tabs .sub-tab-btn')).find(btn => btn.style.display !== 'none');
                     if (visibleSubTab) {
                         visibleSubTab.click();
                     }
                 }
 
-                // Formulários e botões de ação (criar, editar, etc.)
                 const btnCriarVeiculo = document.getElementById('card-form-veiculo');
                 if (btnCriarVeiculo) btnCriarVeiculo.style.display = (isAdmin() || temPermissaoAcao('criar')) ? '' : 'none';
                 const btnUploadGaragem = document.getElementById('btn-upload-garagem-veiculo');
@@ -1519,24 +1684,23 @@
                 const btnFechamento = document.getElementById('btn-mecanico-fechamento');
                 if (btnFechamento) btnFechamento.style.display = temPermissaoAcao('fechamento_servicos') ? '' : 'none';
 
-                // Página Banco
                 const cardBanco = document.getElementById('card-form-banco');
                 if (cardBanco) cardBanco.style.display = (isAdmin() || temPermissaoAba('banco')) ? '' : 'none';
                 const btnToggleFluxo = document.getElementById('btn-toggle-fluxo');
                 if (btnToggleFluxo) btnToggleFluxo.style.display = (isAdmin() || temPermissaoAba('fluxocaixa')) ? '' : 'none';
-                // O container do fluxo de caixa fica oculto por padrão; se usuário não tem permissão, não deve ser mostrado nunca
                 const fluxoContainer = document.getElementById('fluxo-caixa-container');
                 if (fluxoContainer && !temPermissaoAba('fluxocaixa')) {
                     fluxoContainer.style.display = 'none';
                 }
 
-                // Botão "Inserir Dados Contrato" e "Locações" no formulário de locatário
                 const btnInserirContrato = document.getElementById('btn-inserir-contrato');
                 if (btnInserirContrato) btnInserirContrato.style.display = temPermissaoAba('gerador-contrato') ? '' : 'none';
                 const btnIrLocacoes = document.getElementById('btn-ir-locacoes');
                 if (btnIrLocacoes) btnIrLocacoes.style.display = temPermissaoAba('locacoes') ? '' : 'none';
 
-                // Atualizar as tabelas com as permissões de ação
+                const formComprovante = document.getElementById('card-form-comprovante');
+                if (formComprovante) formComprovante.style.display = temPermissaoAcao('upload') ? '' : 'none';
+
                 if (dadosCarregados) {
                     atualizarTabelaVeiculos();
                     atualizarTabelaLocatarios();
@@ -1556,6 +1720,8 @@
                         atualizarResumoFluxoCaixa();
                         atualizarTabelaFluxoCaixa();
                     }
+                    atualizarTabelaComprovantes();
+                    atualizarTabelaPagamentos();
                 }
             }
 
@@ -1656,13 +1822,13 @@
                         login = `${primeiroNome}${contador}`;
                     }
 
-                    const abasPermitidas = ['garagem', 'veiculos', 'socorro', 'carro', 'manutencao', 'banco'];
+                    const abasPermitidas = ['garagem', 'veiculos', 'socorro', 'carro', 'manutencao', 'banco', 'comprovantes', 'pagamentos'];
                     const acoesPermitidas = ['download'];
                     const subAbasManutencaoPermitidas = [veiculo.placa];
                     const veiculosPermitidos = [veiculo.id];
 
                     await colecoes.usuarios.add({
-                        nome: locatario.nome,
+                        nome: locatario.nome.toUpperCase(),
                         usuario: login,
                         senha: senha,
                         role: 'usuario',
@@ -1675,8 +1841,8 @@
                         dataAtualizacao: new Date().toISOString()
                     });
                     console.log(`✅ Usuário criado automaticamente: login=${login}, senha=${senha}`);
-                    showToast(`🔑 Acesso criado para ${locatario.nome} (Login: ${login}, Senha: ${senha})`, 'success');
-                    registrarAuditoria('criar', 'Usuário', '', `Criação automática de usuário para locatário ${locatario.nome} (login: ${login})`);
+                    showToast(`🔑 Acesso criado para ${locatario.nome.toUpperCase()} (Login: ${login}, Senha: ${senha})`, 'success');
+                    registrarAuditoria('criar', 'Usuário', '', `Criação automática de usuário para locatário ${locatario.nome.toUpperCase()} (login: ${login})`);
                 } catch (error) {
                     console.error('Erro ao criar usuário do locatário:', error);
                     showToast('⚠️ Erro ao criar acesso para o locatário.', 'error');
@@ -1684,7 +1850,6 @@
             }
 
             function aplicarRestricoesSubAbasManutencao() {
-                // Mostrar/ocultar sub-abas de manutenção conforme permissões
                 document.querySelectorAll('#manutencao-sub-tabs .sub-tab-btn').forEach(btn => {
                     const placa = btn.getAttribute('data-placa');
                     btn.style.display = temPermissaoSubAbaManutencao(placa) ? '' : 'none';
@@ -1797,6 +1962,13 @@
             const loginUserInput = document.getElementById('login-user');
             if (loginUserInput) { loginUserInput.addEventListener('input', function() { this.value = this.value.toUpperCase(); }); }
 
+            // ===== MODIFICAÇÃO: forçar maiúsculas nos campos de usuário =====
+            const uNomeInput = document.getElementById('u-nome');
+            const uLoginInput = document.getElementById('u-login');
+            if (uNomeInput) uNomeInput.addEventListener('input', function() { this.value = this.value.toUpperCase(); });
+            if (uLoginInput) uLoginInput.addEventListener('input', function() { this.value = this.value.toUpperCase(); });
+            // =================================================================
+
             loginForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
                 const userInput = document.getElementById('login-user').value.trim();
@@ -1812,36 +1984,31 @@
                             document.getElementById('user-avatar-inicial').textContent = usuarioLogado.nome.charAt(0).toUpperCase();
                             await registrarAuditoria('login', 'Sistema', '', `Login do usuário ${usuarioLogado.nome}`);
                             atualizarUIporPerfil();
-                            
-                            // ALTERAÇÃO: garantir que após login correto a aba "Imagens da Garagem" seja exibida
-                            // Somente se tiver permissão para garagem; senão, ir para a primeira página permitida
+
                             if (temPermissaoAba('garagem')) {
                                 navegarPara('garagem');
                             } else if (temPermissaoAba('veiculos')) {
-                                navegarPara('garagem'); // vai para veículos
-                                // Força a sub-aba veículos
+                                navegarPara('garagem');
                                 document.querySelector('#garagem-sub-tabs .sub-tab-btn[data-subtab="garagem-veiculos"]')?.click();
                             } else {
-                                // Encontrar primeira página visível no menu
                                 const visibleNavBtn = Array.from(navButtons).find(btn => btn.style.display !== 'none');
                                 if (visibleNavBtn) {
                                     navegarPara(visibleNavBtn.getAttribute('data-page'));
                                 }
                             }
-                            
+
                             if (!dadosCarregados) { ativarListenersFirestore(); } else { inicializarInterface(); }
                             showToast(`✅ Bem-vindo, ${usuarioLogado.nome}!`, 'success');
-                            
-                            // Após login bem-sucedido, tentar entrar em tela cheia para ocultar a barra de endereços
+
                             try {
                                 if (document.documentElement.requestFullscreen) {
                                     await document.documentElement.requestFullscreen();
                                 }
                             } catch (fullscreenError) {
-                                // Ignorar erro de fullscreen (ex: se não for permitido)
                             }
-                            // Rolagem para o topo para garantir que a barra de endereços seja ocultada
                             window.scrollTo(0, 0);
+
+                            verificarPagamentosPendentes();
                         } else {
                             loginError.classList.add('show'); document.getElementById('login-pass').value = ''; document.getElementById('login-pass').focus(); setTimeout(() => loginError.classList.remove('show'), 3000);
                         }
@@ -1862,13 +2029,11 @@
                     termoBuscaAuditoria = ''; document.getElementById('input-busca-auditoria').value = ''; atualizarUIBuscaAuditoria();
                     document.getElementById('fluxo-caixa-container').style.display = 'none';
                     showToast('👋 Logout realizado com sucesso!', 'info');
-                    // Ao fazer logout, a tela de login é exibida, então rolar para o topo novamente
                     window.scrollTo(0, 0);
                 }
             });
 
             function navegarPara(pageName) {
-                // Sempre permitir navegação sem restrições de permissão
                 pages.forEach(p => p.classList.remove('active'));
                 const targetPage = document.getElementById('page-' + pageName);
                 if (targetPage) targetPage.classList.add('active');
@@ -1876,13 +2041,11 @@
                 const activeBtn = document.querySelector(`.top-nav button[data-page="${pageName}"]`);
                 if (activeBtn) activeBtn.classList.add('active');
                 if (pageName === 'garagem') {
-                    // Verificar permissões e ativar a sub-aba apropriada
                     const tabImagens = document.querySelector('#garagem-sub-tabs .sub-tab-btn[data-subtab="garagem-imagens"]');
                     const tabVeiculos = document.querySelector('#garagem-sub-tabs .sub-tab-btn[data-subtab="garagem-veiculos"]');
                     const canGaragem = temPermissaoAba('garagem');
                     const canVeiculos = temPermissaoAba('veiculos');
 
-                    // Ocultar/ mostrar sub-abas já foi feito em atualizarUIporPerfil, mas garantimos aqui
                     if (tabImagens) tabImagens.style.display = canGaragem ? '' : 'none';
                     if (tabVeiculos) tabVeiculos.style.display = canVeiculos ? '' : 'none';
 
@@ -1891,13 +2054,9 @@
                         targetSubTab = tabImagens;
                     } else if (canVeiculos) {
                         targetSubTab = tabVeiculos;
-                    } else {
-                        // Nenhuma permissão, mas se chegou aqui, algo errado; mostrar nada
-                        targetSubTab = null;
                     }
 
                     if (targetSubTab) {
-                        // Remover active de todas as sub-tabs e contents
                         document.querySelectorAll('#garagem-sub-tabs .sub-tab-btn').forEach(b => b.classList.remove('active'));
                         document.querySelectorAll('#page-garagem .sub-tab-content').forEach(c => c.classList.remove('active'));
                         targetSubTab.classList.add('active');
@@ -1939,10 +2098,24 @@
                         if (termoBuscaFluxo) { document.getElementById('input-busca-fluxo').value = termoBuscaFluxo; atualizarUIBuscaFluxo(); }
                     }
                 }
-                if (pageName === 'usuarios') { atualizarTabelaUsuarios(); atualizarPermissoesUsuarioGrid(); atualizarPermissoesSubAbasManutencaoGrid(); initScrollButtons(); }
+                if (pageName === 'usuarios') { 
+                    atualizarTabelaUsuarios(); 
+                    atualizarPermissoesUsuarioGrid(); 
+                    atualizarPermissoesSubAbasManutencaoGrid(); 
+                    renderizarPermissoesAbasGrid();
+                    renderizarPermissoesAcoesGrid();
+                    initScrollButtons(); 
+                }
                 if (pageName === 'auditoria') { atualizarTabelaAuditoria(); initScrollButtons(); if (termoBuscaAuditoria) { document.getElementById('input-busca-auditoria').value = termoBuscaAuditoria; atualizarUIBuscaAuditoria(); } }
                 if (pageName === 'configuracoes') { preencherFormConfiguracoes(); }
-                // Sempre rolar para o topo ao navegar para qualquer página
+                if (pageName === 'comprovantes') {
+                    atualizarTabelaComprovantes();
+                    initScrollButtons();
+                }
+                if (pageName === 'pagamentos') {
+                    atualizarTabelaPagamentos();
+                    initScrollButtons();
+                }
                 window.scrollTo(0, 0);
             }
 
@@ -2198,7 +2371,7 @@
                 }
                 const veiculosPerm = getVeiculosPermitidos();
                 const thAcoes = document.getElementById('th-acoes-veiculos');
-                if (thAcoes) thAcoes.style.display = ''; // manter
+                if (thAcoes) thAcoes.style.display = '';
                 const colspan = 17;
                 if (veiculosPerm.length === 0) { tbody.innerHTML = `<tr><td colspan="${colspan}" class="empty-state"><span class="icon">🚙</span><br>Nenhum veículo cadastrado</td></tr>`; return; }
                 tbody.innerHTML = veiculosPerm.map(v => {
@@ -2707,13 +2880,15 @@
             btnLimparFiltroFluxo.addEventListener('click', () => { termoBuscaFluxo = ''; inputBuscaFluxo.value = ''; atualizarUIBuscaFluxo(); inputBuscaFluxo.focus(); });
 
             const formUsuario = document.getElementById('form-usuario'), btnSubmitUsuario = document.getElementById('btn-submit-usuario'), btnCancelUsuario = document.getElementById('btn-cancel-usuario'), btnCancelEdicaoUsuario = document.getElementById('btn-cancel-edicao-usuario'), editBannerUsuario = document.getElementById('edit-banner-usuario'), usuarioFormTitle = document.getElementById('usuario-form-title');
-            function resetarFormUsuario() { formUsuario.reset(); editandoUsuarioId = null; btnSubmitUsuario.textContent = '💾 Salvar Usuário'; btnCancelEdicaoUsuario.style.display = 'none'; editBannerUsuario.classList.remove('show'); usuarioFormTitle.textContent = 'Novo Usuário'; atualizarPermissoesUsuarioGrid(); atualizarPermissoesSubAbasManutencaoGrid(); }
+            function resetarFormUsuario() { formUsuario.reset(); editandoUsuarioId = null; btnSubmitUsuario.textContent = '💾 Salvar Usuário'; btnCancelEdicaoUsuario.style.display = 'none'; editBannerUsuario.classList.remove('show'); usuarioFormTitle.textContent = 'Novo Usuário'; atualizarPermissoesUsuarioGrid(); atualizarPermissoesSubAbasManutencaoGrid(); renderizarPermissoesAbasGrid(); renderizarPermissoesAcoesGrid(); }
             btnCancelUsuario.addEventListener('click', resetarFormUsuario);
             btnCancelEdicaoUsuario.addEventListener('click', () => { resetarFormUsuario(); showToast('📋 Edição cancelada.', 'info'); });
             formUsuario.addEventListener('submit', async function(e) {
                 if (!isAdmin()) { showToast('⚠️ Apenas administrador pode gerenciar usuários.', 'error'); return; }
                 e.preventDefault();
-                const nome = document.getElementById('u-nome').value.trim(), login = document.getElementById('u-login').value.trim(), senha = document.getElementById('u-senha').value;
+                const nome = document.getElementById('u-nome').value.trim().toUpperCase();
+                const login = document.getElementById('u-login').value.trim().toUpperCase();
+                const senha = document.getElementById('u-senha').value;
                 if (!nome || !login || !senha) { showToast('⚠️ Preencha todos os campos.', 'error'); return; }
                 const abas = []; document.querySelectorAll('.perm-abas-check:checked').forEach(ch => abas.push(ch.value));
                 const acoes = []; document.querySelectorAll('.perm-acoes-check:checked').forEach(ch => acoes.push(ch.value));
@@ -2723,7 +2898,7 @@
                     const updateData = { nome, usuario: login, senha, abasPermitidas: abas, acoesPermitidas: acoes, subAbasManutencaoPermitidas: subManut, veiculosPermitidos: veicPerms, dataAtualizacao: new Date().toISOString() };
                     try { await colecoes.usuarios.doc(editandoUsuarioId).update(updateData); resetarFormUsuario(); showToast('✅ Usuário atualizado!', 'success'); registrarAuditoria('editar', 'Usuário', editandoUsuarioId, nome); } catch (error) { showToast('❌ Erro.', 'error'); }
                 } else {
-                    const existe = usuarios.some(u => u.usuario === login);
+                    const existe = usuarios.some(u => u.usuario.toUpperCase() === login);
                     if (existe) { showToast('⚠️ Login já existe.', 'error'); return; }
                     const novo = { nome, usuario: login, senha, role: 'usuario', abasPermitidas: abas, acoesPermitidas: acoes, subAbasManutencaoPermitidas: subManut, veiculosPermitidos: veicPerms, dataCriacao: new Date().toISOString(), dataAtualizacao: new Date().toISOString() };
                     try { const docRef = await colecoes.usuarios.add(novo); resetarFormUsuario(); showToast('✅ Usuário criado!', 'success'); registrarAuditoria('criar', 'Usuário', docRef.id, nome); } catch (error) { showToast('❌ Erro.', 'error'); }
@@ -2755,7 +2930,7 @@
                 btnSubmitUsuario.textContent = '💾 Atualizar Usuário'; btnCancelEdicaoUsuario.style.display = 'inline-block';
                 editBannerUsuario.classList.add('show'); document.getElementById('edit-banner-usuario-text').textContent = `Editando: ${usuario.nome}`;
                 usuarioFormTitle.textContent = 'Editar Usuário'; document.getElementById('card-form-usuario').scrollIntoView({ behavior: 'smooth' });
-                atualizarPermissoesUsuarioGrid(); atualizarPermissoesSubAbasManutencaoGrid(); showToast('✏️ Modo edição.', 'info');
+                atualizarPermissoesUsuarioGrid(); atualizarPermissoesSubAbasManutencaoGrid(); renderizarPermissoesAbasGrid(); renderizarPermissoesAcoesGrid(); showToast('✏️ Modo edição.', 'info');
             };
             window._excluirUsuario = async function(id) {
                 if (!isAdmin()) return;
@@ -2933,7 +3108,6 @@
                     selectVeiculo.innerHTML += `<option value="${v.id}">${v.marca} ${v.modelo} - ${v.placa}</option>`;
                     selectPlaca.innerHTML += `<option value="${v.placa}">${v.placa} (${v.marca} ${v.modelo})</option>`;
                 });
-                // Aplicar restrições de sub-abas permitidas
                 aplicarRestricoesSubAbasManutencao();
             }
 
@@ -2945,7 +3119,6 @@
                     if (veiculo && temPermissaoSubAbaManutencao(veiculo.placa)) {
                         selectPlaca.value = veiculo.placa;
                     } else {
-                        // Selecionar a primeira placa permitida
                         const firstPermitted = getVeiculosPermitidos().find(v => temPermissaoSubAbaManutencao(v.placa));
                         if (firstPermitted) selectPlaca.value = firstPermitted.placa;
                     }
@@ -3317,8 +3490,6 @@
 
             function gerarPDFFechamento(filtrados, dataInicio, dataFim, placa, oficina) {
                 const total = filtrados.reduce((sum, m) => sum + (parseFloat(m.valor) || 0), 0);
-
-                // Prepara dados para passar ao pop-up
                 const filtrosObj = { dataInicio, dataFim, placa, oficina };
                 const filtrosJson = JSON.stringify(filtrosObj);
 
@@ -3425,7 +3596,6 @@
                 janela.document.close();
             }
 
-            // Listener para receber mensagem do pop-up e lançar no fluxo
             window.addEventListener('message', function(event) {
                 if (event.data && event.data.type === 'fechamento-lancar') {
                     const { total, filtros } = event.data;
@@ -3657,6 +3827,8 @@
                 listenersAtivos.push(colecoes.auditoria.orderBy('timestamp', 'desc').onSnapshot(snap => { auditoriaLogs = []; snap.forEach(doc => auditoriaLogs.push({ id: doc.id, ...doc.data() })); if (dadosCarregados) atualizarTabelaAuditoria(); }));
                 listenersAtivos.push(colecoes.socorroImagens.onSnapshot(snap => { socorroImagens = []; snap.forEach(doc => socorroImagens.push({ id: doc.id, ...doc.data() })); if (dadosCarregados) atualizarSocorro(); }));
                 listenersAtivos.push(colecoes.banco.onSnapshot(snap => { dadosBancoLista = []; snap.forEach(doc => dadosBancoLista.push({ id: doc.id, ...doc.data() })); if (dadosCarregados) atualizarDadosBanco(); }));
+                listenersAtivos.push(colecoes.comprovantes.onSnapshot(snap => { comprovantes = []; snap.forEach(doc => comprovantes.push({ id: doc.id, ...doc.data() })); if (dadosCarregados) atualizarTabelaComprovantes(); }));
+                listenersAtivos.push(colecoes.pagamentos.onSnapshot(snap => { if (dadosCarregados) atualizarTabelaPagamentos(); }));
                 setTimeout(() => { if (!dadosCarregados) { dadosCarregados = true; inicializarInterface(); } }, 500);
             }
 
@@ -3694,11 +3866,9 @@
             console.log('🚗 PAIZÃO RENT CAR - Sistema pronto');
             console.log('👤 Admin: SERGIO / 080888');
 
-            // Ocultar barra de endereços ao iniciar (scroll para o topo)
             window.addEventListener('DOMContentLoaded', function() {
                 window.scrollTo(0, 0);
             });
-            // Também ao redimensionar ou orientação mudar, manter scroll no topo
             window.addEventListener('resize', function() {
                 window.scrollTo(0, 0);
             });
@@ -3706,7 +3876,6 @@
                 setTimeout(() => window.scrollTo(0, 0), 300);
             });
 
-            // Listeners para configurações
             document.getElementById('form-configuracoes').addEventListener('submit', async function(e) {
                 e.preventDefault();
                 if (!isAdmin()) { showToast('Apenas administrador.', 'error'); return; }
@@ -3742,6 +3911,322 @@
                 preencherFormConfiguracoes();
                 showToast('Configurações restauradas.', 'info');
             });
+
+            // ================= FUNÇÕES DO MÓDULO COMPROVANTES (SIMPLIFICADO) =================
+            function resetarFormComprovante() {
+                document.getElementById('form-comprovante').reset();
+            }
+
+            document.getElementById('btn-cancel-comprovante').addEventListener('click', resetarFormComprovante);
+
+            document.getElementById('form-comprovante').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                if (!temPermissaoAcao('upload')) {
+                    showToast('⚠️ Sem permissão para upload.', 'error');
+                    return;
+                }
+
+                const arquivoInput = document.getElementById('comp-arquivo');
+                const arquivo = arquivoInput.files[0];
+                if (!arquivo) {
+                    showToast('⚠️ Selecione um arquivo.', 'error');
+                    return;
+                }
+
+                // Verifica se é PDF ou JPEG
+                const tipoPermitido = ['application/pdf', 'image/jpeg', 'image/jpg'];
+                if (!tipoPermitido.includes(arquivo.type)) {
+                    showToast('⚠️ Apenas PDF ou JPEG são aceitos.', 'error');
+                    return;
+                }
+
+                try {
+                    const base64 = await fileToBase64(arquivo);
+
+                    const dadosComprovante = {
+                        arquivoNome: arquivo.name,
+                        arquivoTipo: arquivo.type,
+                        arquivoBase64: base64,
+                        dataUpload: new Date().toISOString()
+                    };
+
+                    const docRef = await colecoes.comprovantes.add(dadosComprovante);
+
+                    showToast('✅ Comprovante salvo!', 'success');
+                    registrarAuditoria('upload', 'Comprovante', docRef.id, `Upload: ${arquivo.name}`);
+
+                    resetarFormComprovante();
+                } catch (error) {
+                    console.error('Erro ao salvar comprovante:', error);
+                    showToast('❌ Erro ao processar arquivo.', 'error');
+                }
+            });
+
+            function atualizarTabelaComprovantes() {
+                const tbody = document.getElementById('tbody-comprovantes');
+                if (!temPermissaoAba('comprovantes')) {
+                    tbody.innerHTML = '<tr><td colspan="3" class="empty-state">🚫 Você não tem permissão para visualizar comprovantes.</td></tr>';
+                    return;
+                }
+
+                if (comprovantes.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" class="empty-state">🧾 Nenhum comprovante salvo.</td></tr>';
+                    return;
+                }
+
+                const lista = [...comprovantes].sort((a, b) => new Date(b.dataUpload) - new Date(a.dataUpload));
+
+                tbody.innerHTML = lista.map(c => {
+                    const dataUploadFormatada = c.dataUpload ? new Date(c.dataUpload).toLocaleString('pt-BR') : '—';
+                    let acoesHtml = '<td>';
+                    if (temPermissaoAcao('download')) {
+                        acoesHtml += `<button class="btn-pdf" onclick="window._baixarComprovante('${c.id}')">📥</button>`;
+                    }
+                    if (temPermissaoAcao('excluir')) {
+                        acoesHtml += `<button class="btn-danger" onclick="window._excluirComprovante('${c.id}')">🗑️</button>`;
+                    }
+                    acoesHtml += '</td>';
+
+                    return `<tr>
+                        <td>${dataUploadFormatada}</td>
+                        <td>${c.arquivoNome || '—'}</td>
+                        ${acoesHtml}
+                    </tr>`;
+                }).join('');
+
+                initScrollButtons();
+            }
+
+            window._baixarComprovante = function(id) {
+                if (!temPermissaoAcao('download')) {
+                    showToast('⚠️ Sem permissão para download.', 'error');
+                    return;
+                }
+                const comp = comprovantes.find(c => c.id === id);
+                if (!comp || !comp.arquivoBase64) {
+                    showToast('❌ Arquivo não encontrado.', 'error');
+                    return;
+                }
+                downloadDocumento(comp.arquivoBase64, comp.arquivoNome || 'comprovante');
+                registrarAuditoria('download', 'Comprovante', id, `Download: ${comp.arquivoNome}`);
+            };
+
+            window._excluirComprovante = async function(id) {
+                if (!temPermissaoAcao('excluir')) {
+                    showToast('⚠️ Sem permissão para excluir.', 'error');
+                    return;
+                }
+                if (!confirm('Excluir este comprovante?')) return;
+
+                try {
+                    await colecoes.comprovantes.doc(id).delete();
+                    showToast('🗑️ Comprovante excluído!', 'info');
+                    registrarAuditoria('excluir', 'Comprovante', id, 'Comprovante excluído');
+                } catch (error) {
+                    console.error('Erro ao excluir:', error);
+                    showToast('❌ Erro ao excluir.', 'error');
+                }
+            };
+
+            // ================= FUNÇÕES DE LEITURA DE PDF =================
+            document.getElementById('btn-ler-pdf-contrato').addEventListener('click', async function() {
+                const fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.accept = '.pdf';
+                fileInput.onchange = async (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    try {
+                        const arrayBuffer = await file.arrayBuffer();
+                        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                        let textoCompleto = '';
+                        for (let i = 1; i <= pdf.numPages; i++) {
+                            const page = await pdf.getPage(i);
+                            const content = await page.getTextContent();
+                            textoCompleto += content.items.map(item => item.str).join(' ') + '\n';
+                        }
+                        preencherFormularioComPDF(textoCompleto);
+                    } catch (error) {
+                        console.error('Erro ao ler PDF:', error);
+                        showToast('❌ Erro ao processar o PDF.', 'error');
+                    }
+                };
+                fileInput.click();
+            });
+
+            function preencherFormularioComPDF(texto) {
+                const padraoLocatario = /"([^"]+)"\s*,\s*FONE\s*"([^"]+)".*?CEP\s*"([^"]+)".*?CIDADE\s*"([^"]+)".*?ESTADO\s*"([^"]+)".*?RG\s*n[º°]\s*"([^"]+)".*?CPF\s*sob\s*o\s*n[º°]\s*"([^"]+)".*?CNH\s*n[º°]\s*de\s*registro:\s*"([^"]+)".*?validade\s*"([^"]+)"/is;
+                const matchLocatario = texto.match(padraoLocatario);
+                if (matchLocatario) {
+                    const nome = matchLocatario[1].trim();
+                    const fone = matchLocatario[2].trim();
+                    const cep = matchLocatario[3].trim();
+                    const cidade = matchLocatario[4].trim();
+                    const estado = matchLocatario[5].trim();
+                    const rg = matchLocatario[6].trim();
+                    const cpf = matchLocatario[7].trim();
+                    const cnh = matchLocatario[8].trim();
+                    const validade = matchLocatario[9].trim();
+
+                    const selectLocatario = document.getElementById('loc-locatario');
+                    let locatarioExistente = locatarios.find(l => l.cpf === cpf);
+                    if (!locatarioExistente) {
+                        const novo = {
+                            nome, cpf, rg, cnh, fone, cep,
+                            endereco: '', bairro: '', cidade, estado,
+                            validadeCNH: validade.split('/').reverse().join('-'),
+                            dataCadastro: new Date().toISOString()
+                        };
+                        colecoes.locatarios.add(novo).then(docRef => {
+                            locatarioExistente = { id: docRef.id, ...novo };
+                            atualizarSelectsLocacao();
+                            selectLocatario.value = docRef.id;
+                        });
+                    } else {
+                        atualizarSelectsLocacao();
+                        selectLocatario.value = locatarioExistente.id;
+                    }
+                }
+
+                const padraoVeiculo = /"([^"]+)"\s*"([^"]+)"\s*,\s*cor\s*"([^"]+)"\s*,\s*placas\s*"([^"]+)"\s*,\s*ano\s*de\s*fabrica[çc][ãa]o\s*"([^"]+)"\s*e\s*ano\s*modelo\s*"([^"]+)"/is;
+                const matchVeiculo = texto.match(padraoVeiculo);
+                if (matchVeiculo) {
+                    const marca = matchVeiculo[1].trim();
+                    const modelo = matchVeiculo[2].trim();
+                    const cor = matchVeiculo[3].trim();
+                    const placa = matchVeiculo[4].trim();
+                    const anoFab = matchVeiculo[5].trim();
+                    const anoMod = matchVeiculo[6].trim();
+
+                    const selectVeiculo = document.getElementById('loc-veiculo');
+                    let veiculoExistente = veiculos.find(v => v.placa === placa);
+                    if (!veiculoExistente) {
+                        const novo = {
+                            marca, modelo, cor, placa,
+                            anoFabricacao: anoFab, anoModelo: anoMod,
+                            potencia: '', km: 0, renavan: '', chassi: '',
+                            fipe: 0, valorSemanal: 0, caucao: 0,
+                            proprietario: '', proprietarioCpf: '',
+                            opcionais: { ar: false, vidros: false, multimidia: false, rodas: false },
+                            dataCadastro: new Date().toISOString()
+                        };
+                        colecoes.veiculos.add(novo).then(docRef => {
+                            veiculoExistente = { id: docRef.id, ...novo };
+                            atualizarSelectsLocacao();
+                            selectVeiculo.value = docRef.id;
+                            preencherCamposVeiculoLocacao(docRef.id);
+                        });
+                    } else {
+                        atualizarSelectsLocacao();
+                        selectVeiculo.value = veiculoExistente.id;
+                        preencherCamposVeiculoLocacao(veiculoExistente.id);
+                    }
+                }
+
+                showToast('✅ Dados extraídos do PDF com sucesso!', 'success');
+            }
+
+            // ================= FUNÇÕES DE PAGAMENTOS =================
+            function calcularProximoVencimento(locacao) {
+                const dataInicio = new Date(locacao.dataInicio + 'T00:00:00');
+                const agora = new Date();
+                let proximaSegunda = new Date(dataInicio);
+                const diaSemana = dataInicio.getDay();
+                const diasAteSegunda = (8 - diaSemana) % 7;
+                proximaSegunda.setDate(dataInicio.getDate() + diasAteSegunda);
+                proximaSegunda.setHours(13, 0, 0, 0);
+                while (proximaSegunda < agora) {
+                    proximaSegunda.setDate(proximaSegunda.getDate() + 7);
+                }
+                return proximaSegunda;
+            }
+
+            async function verificarPagamentosPendentes() {
+                if (!usuarioLogado || !isAdmin()) return;
+                const locacoesAtivas = locacoes.filter(l => l.status !== 'encerrada');
+                for (const locacao of locacoesAtivas) {
+                    const vencimento = calcularProximoVencimento(locacao);
+                    const snapshot = await colecoes.pagamentos
+                        .where('locacaoId', '==', locacao.id)
+                        .where('dataVencimento', '==', vencimento.toISOString())
+                        .get();
+                    const pagamentoExistente = !snapshot.empty;
+                    if (!pagamentoExistente && new Date() > vencimento) {
+                        showToast(`⚠️ Pagamento pendente! ${locacao.veiculoPlaca} - ${locacao.locatarioNome} venceu em ${vencimento.toLocaleString('pt-BR')}.`, 'error');
+                    }
+                }
+            }
+
+            async function registrarPagamento(locacaoId) {
+                if (!isAdmin() && !temPermissaoAcao('criar')) {
+                    showToast('⚠️ Sem permissão.', 'error');
+                    return;
+                }
+                const locacao = locacoes.find(l => l.id === locacaoId);
+                if (!locacao || locacao.status === 'encerrada') return;
+                const vencimento = calcularProximoVencimento(locacao);
+                const snapshot = await colecoes.pagamentos
+                    .where('locacaoId', '==', locacaoId)
+                    .where('dataVencimento', '==', vencimento.toISOString())
+                    .get();
+                if (!snapshot.empty) {
+                    showToast('⚠️ Pagamento já registrado.', 'error');
+                    return;
+                }
+                const pagamentoRef = await colecoes.pagamentos.add({
+                    locacaoId,
+                    dataPagamento: new Date().toISOString(),
+                    dataVencimento: vencimento.toISOString(),
+                    valor: locacao.valorSemanal,
+                    status: 'pago'
+                });
+                const fluxoRef = await colecoes.fluxocaixa.add({
+                    descricao: `Pagamento semanal - ${locacao.veiculoPlaca} - ${locacao.locatarioNome}`,
+                    valor: locacao.valorSemanal,
+                    tipo: 'entrada',
+                    data: new Date().toISOString().split('T')[0],
+                    categoria: 'locacao',
+                    observacao: `Pagamento referente à semana de ${new Date(vencimento).toLocaleDateString('pt-BR')}`,
+                    dataCriacao: new Date().toISOString(),
+                    dataAtualizacao: new Date().toISOString()
+                });
+                await colecoes.pagamentos.doc(pagamentoRef.id).update({ fluxoCaixaId: fluxoRef.id });
+                showToast('✅ Pagamento registrado e lançado no Fluxo!', 'success');
+                registrarAuditoria('criar', 'Pagamento', pagamentoRef.id, `Pagamento registrado para ${locacao.veiculoPlaca}`);
+                atualizarTabelaPagamentos();
+            }
+
+            function atualizarTabelaPagamentos() {
+                const tbody = document.getElementById('tbody-pagamentos');
+                if (!temPermissaoAba('pagamentos')) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="empty-state">🚫 Sem permissão.</td></tr>';
+                    return;
+                }
+                const locacoesAtivas = locacoes.filter(l => l.status !== 'encerrada');
+                if (locacoesAtivas.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="empty-state">💳 Nenhuma locação ativa.</td></tr>';
+                    return;
+                }
+                const linhas = locacoesAtivas.map(async locacao => {
+                    const vencimento = calcularProximoVencimento(locacao);
+                    const snapshot = await colecoes.pagamentos
+                        .where('locacaoId', '==', locacao.id)
+                        .where('dataVencimento', '==', vencimento.toISOString())
+                        .get();
+                    const pago = !snapshot.empty;
+                    const statusHtml = pago ? '<span class="badge badge-success">Pago</span>' : '<span class="badge badge-warning">Pendente</span>';
+                    const acaoHtml = pago ? '<span style="color:var(--text-muted);">—</span>' : `<button class="btn-encerrar" onclick="registrarPagamento('${locacao.id}')">✅ Registrar</button>`;
+                    return `<tr><td>${locacao.veiculoPlaca}</td><td>${locacao.locatarioNome}</td><td class="highlight-valor">${formatarMoeda(locacao.valorSemanal)}</td><td>${vencimento.toLocaleString('pt-BR')}</td><td>${statusHtml}</td><td>${acaoHtml}</td></tr>`;
+                });
+                Promise.all(linhas).then(rows => {
+                    tbody.innerHTML = rows.join('');
+                    initScrollButtons();
+                });
+            }
+
+            // Inicializações finais
+            atualizarTabelaComprovantes();
+            atualizarTabelaPagamentos();
         })();
     </script>
 </body>

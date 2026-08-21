@@ -376,7 +376,6 @@
             </div>
         </header>
         <main class="main-content" id="main-content">
-            <!-- Páginas existentes: Garagem, Socorro, Carro, Gerador, Locatarios, Locações, Manutenção, Mecânico, Banco, Usuários, Auditoria, Configurações, Comprovantes, Pagamentos -->
             <div class="page active" id="page-garagem">
                 <div class="page-header"><h2>🖼️ Garagem</h2><p>Imagens da garagem e cadastro de veículos</p></div>
                 <div class="sub-tabs" id="garagem-sub-tabs"><button class="sub-tab-btn active" data-subtab="garagem-imagens">🖼️ Imagens</button><button class="sub-tab-btn" data-subtab="garagem-veiculos">🚙 Veículos</button></div>
@@ -545,7 +544,6 @@
                     </div>
                 </div>
             </div>
-            <!-- Demais páginas: Manutenção, Mecânico, Banco, Usuários, Auditoria, Configurações, Comprovantes, Pagamentos -->
             <div class="page" id="page-manutencao">
                 <div class="page-header"><h2>🔧 Manutenção de Veículos</h2><p>Registre e acompanhe as manutenções</p></div>
                 <div class="card" id="card-form-manutencao"><div class="card-title"><span class="icon">📝</span> <span id="manut-form-title">Nova Manutenção</span></div><div class="edit-banner" id="edit-banner-manutencao">✏️ <span id="edit-banner-manutencao-text">Você está editando um registro de manutenção.</span></div><form id="form-manutencao" autocomplete="off"><div class="grid-3"><div class="form-group-app"><label>Veículo (Modelo/Marca)</label><select id="m-veiculo" required><option value="">Selecione um veículo...</option></select></div><div class="form-group-app"><label>Placa do Veículo</label><select id="m-subaba" required><option value="">Escolha a placa...</option></select></div><div class="form-group-app"><label>Data da Manutenção</label><input type="date" id="m-data" required></div><div class="form-group-app"><label>Tipo de Manutenção</label><select id="m-tipo" required><option value="">Selecione o tipo...</option><option value="preventiva">🔧 Preventiva</option><option value="corretiva">🔩 Corretiva</option><option value="revisao">📋 Revisão Programada</option><option value="pneus">🛞 Pneus</option><option value="oleo">🛢️ Troca de Óleo</option><option value="freios">🛑 Freios</option><option value="suspensao">🔗 Suspensão</option><option value="eletrica">⚡ Elétrica</option><option value="lataria">🎨 Lataria / Pintura</option><option value="outros">📌 Outros</option></select></div><div class="form-group-app"><label>Descrição do Serviço</label><input type="text" id="m-descricao" placeholder="Ex: Troca de pastilhas de freio dianteiras" required></div><div class="form-group-app"><label>Valor Gasto (R$)</label><input type="text" id="m-valor" placeholder="R$ 0,00" oninput="formatarMoedaInput(this)" onblur="formatarMoedaInputBlur(this)"></div><div class="form-group-app"><label>KM Atual no Momento</label><input type="number" id="m-km" placeholder="Ex: 55000"></div><div class="form-group-app"><label>Observação</label><input type="text" id="m-observacao" placeholder="Observações adicionais..."></div></div><div class="form-group-app" style="margin-top:8px;"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" id="m-registrar-fluxo" style="width:auto;accent-color:var(--success);"> Registrar automaticamente como despesa no Fluxo de Caixa</label></div><div style="display:flex;gap:12px;margin-top:8px;"><button type="submit" class="btn-app btn-save" id="btn-submit-manutencao">💾 Registrar Manutenção</button><button type="button" class="btn-app btn-cancel" id="btn-cancel-manutencao">Limpar</button><button type="button" class="btn-app btn-cancel" id="btn-cancel-edicao-manutencao" style="display:none;">❌ Cancelar Edição</button></div></form></div>
@@ -2482,6 +2480,7 @@
                 let texto = ''; if (forma === 'parcelado') texto = `${parcelas}x de ${formatarMoeda(valorCaucao / parcelas)}`; else if (forma === 'entrada_parcelado') { const restante = valorCaucao - entrada; texto = parcelas > 0 && restante > 0 ? `Entrada ${formatarMoeda(entrada)} + ${parcelas}x de ${formatarMoeda(restante / parcelas)}` : `Entrada ${formatarMoeda(entrada)} cobre o total.`; }
                 divValorParcela.textContent = `💡 Valor de cada parcela: ${texto}`; divValorParcela.style.display = 'block';
             }
+
             document.getElementById('loc-veiculo').addEventListener('change', function() {
                 preencherCamposVeiculoLocacao(this.value);
                 atualizarValorParcela();
@@ -3887,6 +3886,96 @@
 
             document.getElementById('btn-cancel-comprovante').addEventListener('click', resetarFormComprovante);
 
+            // ================= NOVAS FUNÇÕES: PROCESSAMENTO AUTOMÁTICO DE COMPROVANTE =================
+
+            // Extrai texto de um PDF a partir de um base64
+            async function extrairTextoDePDF(base64) {
+                try {
+                    const byteString = atob(base64.split(',')[1] || base64);
+                    const ab = new ArrayBuffer(byteString.length);
+                    const ia = new Uint8Array(ab);
+                    for (let i = 0; i < byteString.length; i++) {
+                        ia[i] = byteString.charCodeAt(i);
+                    }
+                    const pdf = await pdfjsLib.getDocument({ data: ab }).promise;
+                    let textoCompleto = '';
+                    for (let i = 1; i <= pdf.numPages; i++) {
+                        const page = await pdf.getPage(i);
+                        const content = await page.getTextContent();
+                        textoCompleto += content.items.map(item => item.str).join(' ') + '\n';
+                    }
+                    return textoCompleto;
+                } catch (error) {
+                    console.error('Erro ao extrair texto do PDF:', error);
+                    return '';
+                }
+            }
+
+            // Processa o comprovante salvo: identifica locação ativa e registra pagamento
+            async function processarComprovanteSalvo(dadosComprovante) {
+                // Apenas PDF é suportado para leitura automática
+                if (dadosComprovante.arquivoTipo !== 'application/pdf') {
+                    showToast('ℹ️ Leitura automática disponível somente para PDF. Associe o pagamento manualmente.', 'info');
+                    return;
+                }
+
+                const texto = await extrairTextoDePDF(dadosComprovante.arquivoBase64);
+                if (!texto.trim()) {
+                    showToast('⚠️ Não foi possível extrair texto do comprovante.', 'error');
+                    return;
+                }
+
+                // Extrai todos os CPFs e placas encontrados no texto
+                const cpfs = texto.match(/\d{3}\.?\d{3}\.?\d{3}-?\d{2}/g) || [];
+                const placas = texto.match(/[A-Z]{3}\d{1}[A-Z]{1}\d{2}/g) || texto.match(/[A-Z]{3}\d{4}/g) || [];
+
+                // Normaliza para comparação
+                const cpfsNormalizados = cpfs.map(cpf => cpf.replace(/\D/g, ''));
+                const placasNormalizadas = placas.map(placa => placa.replace(/[^A-Z0-9]/g, '').toUpperCase());
+
+                // Busca locações ativas correspondentes
+                const locacoesAtivas = locacoes.filter(l => l.status !== 'encerrada');
+                let locacaoEncontrada = null;
+
+                for (const loc of locacoesAtivas) {
+                    // Verifica por CPF do locatário
+                    if (loc.locatarioCPF && cpfsNormalizados.includes(loc.locatarioCPF.replace(/\D/g, ''))) {
+                        locacaoEncontrada = loc;
+                        break;
+                    }
+                    // Verifica por placa do veículo
+                    if (loc.veiculoPlaca && placasNormalizadas.includes(loc.veiculoPlaca.replace(/[^A-Z0-9]/g, '').toUpperCase())) {
+                        locacaoEncontrada = loc;
+                        break;
+                    }
+                }
+
+                if (!locacaoEncontrada) {
+                    showToast('⚠️ Não foi possível identificar o responsável pelo comprovante. Faça a associação manualmente na aba Pagamentos.', 'error');
+                    return;
+                }
+
+                // Verifica se já existe pagamento para o vencimento atual (evita duplicidade)
+                const vencimento = calcularProximoVencimento(locacaoEncontrada);
+                const snapshot = await colecoes.pagamentos
+                    .where('locacaoId', '==', locacaoEncontrada.id)
+                    .where('dataVencimento', '==', vencimento.toISOString())
+                    .get();
+
+                if (!snapshot.empty) {
+                    showToast('⚠️ Pagamento para esta locação já está registrado para o vencimento atual.', 'error');
+                    return;
+                }
+
+                // Registra o pagamento e lança no fluxo de caixa
+                await registrarPagamento(locacaoEncontrada.id);
+
+                // Navega para a aba de pagamentos para visualizar o status atualizado
+                navegarPara('pagamentos');
+            }
+
+            // ================= FIM DAS NOVAS FUNÇÕES =================
+
             document.getElementById('form-comprovante').addEventListener('submit', async function(e) {
                 e.preventDefault();
                 if (!temPermissaoAcao('upload')) {
@@ -3922,6 +4011,9 @@
 
                     showToast('✅ Comprovante salvo!', 'success');
                     registrarAuditoria('upload', 'Comprovante', docRef.id, `Upload: ${arquivo.name}`);
+
+                    // Processa o comprovante automaticamente
+                    await processarComprovanteSalvo(dadosComprovante);
 
                     resetarFormComprovante();
                 } catch (error) {

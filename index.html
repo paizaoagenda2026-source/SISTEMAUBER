@@ -325,6 +325,40 @@
         .btn-inserir-contrato:hover { background:#d35400; box-shadow:0 4px 14px rgba(230,126,34,0.4); }
         #page-gerador-contrato .page-header { margin-bottom:20px; }
         #iframe-gerador-contrato { width:100%; height:calc(100vh - var(--header-height) - 80px); border:none; border-radius:12px; background:#f0f2f5; }
+
+        /* ===== BOTÃO CONSULTA MULTAS ===== */
+        #btn-consulta-multas {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 9999;
+            background: linear-gradient(45deg, #ff3333, #ffcc00);
+            color: #000;
+            font-weight: 800;
+            text-transform: uppercase;
+            padding: 15px 25px;
+            border-radius: 50px;
+            text-decoration: none;
+            box-shadow: 0 0 20px rgba(255, 51, 51, 0.8);
+            animation: piscar 1s infinite;
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            font-size: 16px;
+            letter-spacing: 1px;
+            border: 2px solid #fff;
+            display: inline-block;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        #btn-consulta-multas:hover {
+            transform: scale(1.05);
+        }
+        @keyframes piscar {
+            0%, 100% { opacity: 1; box-shadow: 0 0 20px rgba(255, 51, 51, 0.8); }
+            50% { opacity: 0.5; box-shadow: 0 0 40px rgba(255, 204, 0, 1); }
+        }
+        @media (max-width: 600px) {
+            #btn-consulta-multas { bottom: 12px; right: 12px; padding: 10px 15px; font-size: 13px; }
+        }
     </style>
 </head>
 <body>
@@ -375,7 +409,10 @@
                 <button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="Menu">☰</button>
             </div>
         </header>
+        <!-- Botão consulta multas flutuante -->
+        <a id="btn-consulta-multas" href="https://sempararempresas.usezapay.com.br/" target="_blank" rel="noopener noreferrer" onclick="abrirConsultaMultas(event)">🚨 consulta multas</a>
         <main class="main-content" id="main-content">
+            <!-- Conteúdo das páginas (inalterado) -->
             <div class="page active" id="page-garagem">
                 <div class="page-header"><h2>🖼️ Garagem</h2><p>Imagens da garagem e cadastro de veículos</p></div>
                 <div class="sub-tabs" id="garagem-sub-tabs"><button class="sub-tab-btn active" data-subtab="garagem-imagens">🖼️ Imagens</button><button class="sub-tab-btn" data-subtab="garagem-veiculos">🚙 Veículos</button></div>
@@ -4288,6 +4325,19 @@
             atualizarTabelaComprovantes();
             atualizarTabelaPagamentos();
         })();
+    </script>
+    <script>
+        // Função para abrir o site de consulta de multas em tela cheia
+        function abrirConsultaMultas(event) {
+            event.preventDefault();
+            var url = 'https://sempararempresas.usezapay.com.br/';
+            var width = screen.availWidth || screen.width;
+            var height = screen.availHeight || screen.height;
+            var novaJanela = window.open(url, '_blank', 'width=' + width + ',height=' + height + ',top=0,left=0,menubar=no,toolbar=no,location=yes,status=no,scrollbars=yes');
+            if (!novaJanela) {
+                window.open(url, '_blank');
+            }
+        }
     </script>
 </body>
 </html>

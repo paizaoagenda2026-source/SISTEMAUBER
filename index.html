@@ -58,7 +58,7 @@
         .login-error.show { display:block; }
         #app-screen { display:none; min-height:100vh; flex-direction:column; }
         #app-screen.active { display:flex; }
-        .top-header { position:sticky; top:0; z-index:100; background:var(--bg-sidebar); border-bottom:1px solid var(--border); height:var(--header-height); display:flex; align-items:center; justify-content:space-between; padding:0 28px; box-shadow:0 2px 16px rgba(0,0,0,0.3); flex-shrink:0; }
+        .top-header { position:sticky; top:0; z-index:100; background:var(--bg-sidebar); border-bottom:1px solid var(--border); height:auto; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; padding:10px 24px; box-shadow:0 2px 16px rgba(0,0,0,0.3); flex-shrink:0; }
         .top-header .brand { display:flex; align-items:center; gap:12px; flex-shrink:0; }
         .top-header .brand .brand-icon { font-size:28px; }
         .top-header .brand .brand-text h2 { font-size:18px; font-weight:700; color:#fff; line-height:1.1; }
@@ -70,35 +70,63 @@
             justify-content: center;
             align-items: center;
             gap: 6px;
-            flex: 1;
-            padding: 0 20px;
+            flex: 1 1 100%;
+            padding: 8px 0 4px 0;
+            order: 3;
         }
         .top-nav button {
-            background:transparent;
-            border:none;
+            background:rgba(255,255,255,0.03);
+            border:1px solid transparent;
             color:#b0b3bc;
-            font-size:14px;
+            font-size:13px;
             cursor:pointer;
-            padding:8px 12px;
+            padding:6px 14px;
             border-radius:8px;
-            transition:all 0.2s;
+            transition:all 0.2s ease;
             font-family:inherit;
             display:flex;
             align-items:center;
-            gap:8px;
+            gap:6px;
             white-space:nowrap;
-            flex: 0 0 calc((100% / 7) - 12px);
-            max-width: calc((100% / 7) - 12px);
-            justify-content:center;
+            flex: 0 0 auto;
             box-sizing:border-box;
+            font-weight:500;
+            letter-spacing:0.2px;
         }
-        .top-nav button:hover { background:rgba(255,255,255,0.04); color:#fff; }
-        .top-nav button.active { background:rgba(230,168,23,0.12); color:var(--primary); font-weight:600; }
-        .top-nav button .nav-icon { font-size:18px; }
-        #btn-menu-nav { border:2px solid var(--primary); background:rgba(230,168,23,0.08); color:var(--primary); font-weight:700; letter-spacing:1px; animation:pulseMenu 2.5s infinite; margin-left:4px; }
-        #btn-menu-nav:hover { background:rgba(230,168,23,0.2); color:#fff; border-color:#f0b822; box-shadow:0 0 18px rgba(230,168,23,0.35); animation:none; }
-        @keyframes pulseMenu { 0%,100%{ box-shadow:0 0 0 0 rgba(230,168,23,0.4); } 50%{ box-shadow:0 0 0 10px rgba(230,168,23,0); } }
-        .top-user { display:flex; align-items:center; gap:12px; flex-shrink:0; }
+        .top-nav button:hover {
+            background:rgba(255,255,255,0.07);
+            color:#fff;
+            border-color:rgba(255,255,255,0.15);
+            transform:translateY(-1px);
+        }
+        .top-nav button.active {
+            background:rgba(230,168,23,0.15);
+            color:var(--primary);
+            border-color:var(--primary);
+            font-weight:600;
+            box-shadow:0 0 12px rgba(230,168,23,0.1);
+        }
+        .top-nav button .nav-icon { font-size:16px; }
+        #btn-menu-nav {
+            border:2px solid var(--primary);
+            background:rgba(230,168,23,0.10);
+            color:var(--primary);
+            font-weight:700;
+            animation:pulseMenu 2.5s infinite;
+            padding:6px 18px;
+        }
+        #btn-menu-nav:hover {
+            background:rgba(230,168,23,0.25);
+            color:#fff;
+            border-color:#f0b822;
+            box-shadow:0 0 18px rgba(230,168,23,0.35);
+            animation:none;
+        }
+        @keyframes pulseMenu {
+            0%,100%{ box-shadow:0 0 0 0 rgba(230,168,23,0.4); }
+            50%{ box-shadow:0 0 0 8px rgba(230,168,23,0); }
+        }
+        .top-user { display:flex; align-items:center; gap:12px; flex-shrink:0; margin-left:auto; }
         .top-user .user-avatar { width:36px; height:36px; border-radius:50%; background:var(--primary); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; color:#1a1a1a; }
         .top-user .user-info { text-align:right; line-height:1.2; }
         .top-user .user-info .user-name { font-weight:600; font-size:13px; color:#fff; }
@@ -108,23 +136,24 @@
         .mobile-menu-toggle { display:none; background:transparent; border:none; color:#fff; font-size:26px; cursor:pointer; padding:4px 8px; border-radius:6px; transition:background 0.2s; }
         .mobile-menu-toggle:hover { background:rgba(255,255,255,0.05); }
         @media (max-width:768px) {
-            .top-header { padding:0 16px; flex-wrap:wrap; height:auto; min-height:var(--header-height); }
+            .top-header { padding:8px 12px; }
             .top-nav {
                 flex-wrap: nowrap;
                 overflow-x: auto;
                 -webkit-overflow-scrolling:touch;
                 scrollbar-width:none;
-                padding:8px 0 12px 0;
+                padding:6px 0 10px 0;
                 justify-content:flex-start;
                 flex: 1 1 100%;
+                order:3;
+                gap:4px;
             }
             .top-nav::-webkit-scrollbar { display:none; }
             .top-nav button {
                 flex: 0 0 auto;
-                max-width: none;
-                font-size:13px;
-                padding:6px 12px;
-                flex-shrink:0;
+                font-size:12px;
+                padding:4px 10px;
+                gap:4px;
             }
             .top-user .user-info { display:none; }
             .top-user .btn-logout { padding:4px 10px; font-size:11px; }
@@ -134,7 +163,7 @@
         @media (max-width:480px) {
             .top-header .brand .brand-text small { display:none; }
             .top-header .brand .brand-text h2 { font-size:15px; }
-            .top-nav button { font-size:12px; padding:4px 10px; }
+            .top-nav button { font-size:11px; padding:4px 8px; }
         }
         .main-content { flex:1; padding:28px 32px; background:var(--bg-dark); min-height:calc(100vh - var(--header-height)); }
         .page { display:none; animation:fadeIn 0.35s ease; }
@@ -386,6 +415,13 @@
                     <small id="app-subtitulo">Gestão de Frotas</small>
                 </div>
             </div>
+            <div class="top-user">
+                <span class="sync-indicator online" id="sync-indicator" title="Status da sincronização com Firebase"><span class="sync-dot"></span> <span id="sync-text">Online</span></span>
+                <div class="user-avatar" id="user-avatar-inicial">S</div>
+                <div class="user-info"><div class="user-name" id="user-name-display">SERGIO</div><div class="user-role" id="user-role-display">Administrador</div></div>
+                <button class="btn-logout" id="btn-logout" title="Sair">🚪</button>
+                <button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="Menu">☰</button>
+            </div>
             <nav class="top-nav" id="top-nav">
                 <button data-page="garagem"><span class="nav-icon">🖼️</span> Garagem</button>
                 <button data-page="socorro"><span class="nav-icon">🆘</span> Socorro</button>
@@ -401,13 +437,6 @@
                 <button data-page="comprovantes"><span class="nav-icon">🧾</span> Comprovantes</button>
                 <button data-page="pagamentos"><span class="nav-icon">💳</span> Pagamentos</button>
             </nav>
-            <div class="top-user">
-                <span class="sync-indicator online" id="sync-indicator" title="Status da sincronização com Firebase"><span class="sync-dot"></span> <span id="sync-text">Online</span></span>
-                <div class="user-avatar" id="user-avatar-inicial">S</div>
-                <div class="user-info"><div class="user-name" id="user-name-display">SERGIO</div><div class="user-role" id="user-role-display">Administrador</div></div>
-                <button class="btn-logout" id="btn-logout" title="Sair">🚪</button>
-                <button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="Menu">☰</button>
-            </div>
         </header>
         <!-- Botão consulta multas flutuante -->
         <a id="btn-consulta-multas" href="https://sempararempresas.usezapay.com.br/" target="_blank" rel="noopener noreferrer" onclick="abrirConsultaMultas(event)">🚨 consulta multas</a>
@@ -3952,7 +3981,7 @@
             async function processarComprovanteSalvo(dadosComprovante) {
                 // Apenas PDF é suportado para leitura automática
                 if (dadosComprovante.arquivoTipo !== 'application/pdf') {
-                    showToast('ℹ️ Leitura automática disponível somente para PDF. Associe o pagamento manualmente.', 'info');
+                    showToast('ℹ️ Leitura automática disponível somente para PDF. Associe o pagamento manualmente na aba Pagamentos.', 'info');
                     return;
                 }
 

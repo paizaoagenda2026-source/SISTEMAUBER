@@ -359,6 +359,7 @@
                         <th>Placa</th>
                         <th>Início</th>
                         <th>Fim</th>
+                        <th>Vencimento</th>
                         <th>Aluguel / Total c/ Caução</th>
                         <th>Ações</th>
                     </tr>
@@ -2211,6 +2212,7 @@ function atualizarTabelaAlugueis() {
             <td>${a.placa || ''}</td>
             <td>${formatarDataBR(a.dataInicio)}</td>
             <td>${formatarDataBR(a.dataFim)}</td>
+            <td>${formatarDataBR(a.vencimento)}</td>
             <td>${a.valor || ''}${origemTxt}<br><small style="color:#666;">${tipoLabel} · Caução: ${caucaoLabel}</small>${totalTxt}</td>
             <td>
                 ${status !== 'pago' ? `<button class="btn-success" onclick="marcarPagamentoPago(${i})" title="Marcar como pago">✅</button>` : ''}

@@ -1,272 +1,326 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LOBÃO - SISTEMA DE LOCAÇÃO DE CARROS</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<style>
-:root{--primary:#1a3c6e;--secondary:#e63946;--accent:#f4a261;--bg:#f8f9fa;--text:#333;--white:#fff;--shadow:0 4px 6px rgba(0,0,0,.1);--radius:8px;--success:#28a745;--warning:#ffc107;--danger:#dc3545;--info:#17a2b8}
-*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif}
-body{background:var(--bg);color:var(--text);min-height:100vh}
-.login-container{display:flex;justify-content:center;align-items:center;height:100vh;background:linear-gradient(135deg,#1a3c6e,#0d1b2a)}
-.login-box{background:rgba(255,255,255,.95);padding:40px;border-radius:var(--radius);box-shadow:0 15px 30px rgba(0,0,0,.3);width:400px;text-align:center}
-.login-box h1{color:var(--primary);margin-bottom:10px;font-size:28px}
-.login-box h2{color:var(--secondary);margin-bottom:30px;font-size:18px}
-.login-box input{width:100%;padding:12px;margin-bottom:15px;border:2px solid #ddd;border-radius:var(--radius);font-size:16px;text-transform:uppercase}
-.login-box input:focus{outline:none;border-color:var(--primary)}
-.login-box button{width:100%;padding:12px;background:var(--primary);color:var(--white);border:none;border-radius:var(--radius);font-size:16px;cursor:pointer;font-weight:bold}
-.login-box button:hover{background:#0d1b2a}
-.main-container{display:none;min-height:100vh}
-.tabs-container{display:flex;flex-wrap:wrap;background:var(--primary);padding:10px;gap:5px;position:sticky;top:0;z-index:100;align-items:center}
-.tab{padding:8px 12px;background:transparent;color:var(--white);border:none;cursor:pointer;border-radius:5px;font-size:12px;font-weight:500;white-space:nowrap}
-.tab:hover{background:rgba(255,255,255,.2)}
-.tab.active{background:var(--secondary)}
-.tab.hidden-tab{display:none!important}
-.fullscreen-btn,.logout-btn,.debug-btn{margin-left:5px;color:white;border:none;padding:8px 12px;border-radius:5px;cursor:pointer;font-weight:bold;font-size:12px}
-.fullscreen-btn{background:var(--secondary)}
-.logout-btn{background:#dc3545}
-.debug-btn{background:#6f42c1;margin-left:auto}
-.tab-content{display:none;padding:20px;background:var(--white);margin:20px;border-radius:var(--radius);box-shadow:var(--shadow)}
-.tab-content.active{display:block}
-.tab-content.hidden-content{display:none!important}
-.form-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:15px;margin-bottom:20px}
-.form-group{display:flex;flex-direction:column}
-.form-group label{font-weight:600;margin-bottom:5px;font-size:13px;color:var(--primary)}
-.form-group input,.form-group select,.form-group textarea{padding:9px;border:2px solid #ddd;border-radius:5px;font-size:13px;width:100%}
-.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--primary)}
-.btn-primary{background:var(--primary);color:white;padding:11px 25px;border:none;border-radius:5px;cursor:pointer;font-size:14px;font-weight:bold;margin-right:8px;margin-bottom:8px}
-.btn-primary:hover{background:#0d1b2a}
-.btn-secondary{background:var(--secondary);color:white;padding:11px 25px;border:none;border-radius:5px;cursor:pointer;font-size:14px;font-weight:bold;margin-right:8px;margin-bottom:8px}
-.btn-buscar{background:#6c757d;color:white;padding:11px 25px;border:none;border-radius:5px;cursor:pointer;font-size:14px;font-weight:bold;margin-right:8px;margin-bottom:8px}
-.btn-warning{background:var(--accent);color:white;padding:6px 12px;border:none;border-radius:5px;cursor:pointer;font-size:13px;margin:2px}
-.btn-danger{background:#dc3545;color:white;padding:6px 12px;border:none;border-radius:5px;cursor:pointer;font-size:13px;margin:2px}
-.btn-info{background:var(--info);color:white;padding:11px 25px;border:none;border-radius:5px;cursor:pointer;font-size:14px;font-weight:bold;margin-right:8px;margin-bottom:8px}
-.table-container{overflow-x:auto;margin-top:20px}
-table{width:100%;border-collapse:collapse;background:white}
-th,td{padding:10px;text-align:left;border-bottom:1px solid #ddd;font-size:13px}
-th{background:var(--primary);color:white;font-weight:600}
-tr:hover{background:#f5f5f5}
-.filter-input{margin-bottom:15px;padding:9px;width:300px;border:2px solid #ddd;border-radius:5px;font-size:13px}
-.config-section{margin-bottom:20px;padding:20px;background:#f8f9fa;border-radius:8px;border-left:4px solid var(--primary)}
-.permissoes-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;margin:10px 0;padding:10px;background:#fff;border-radius:6px;border:1px solid #ddd}
-.permissao-item{display:flex;align-items:center;gap:6px;font-size:13px}
-.selfie-thumbnail{width:50px;height:50px;border-radius:50%;object-fit:cover;border:2px solid var(--primary);cursor:pointer;margin-right:5px}
-.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.8);z-index:9999;display:none;justify-content:center;align-items:center}
-.modal-overlay.active{display:flex}
-.modal-content{max-width:90%;max-height:90%;position:relative}
-.modal-content img{max-width:100%;max-height:90vh;object-fit:contain;border-radius:8px}
-.modal-close{position:absolute;top:-40px;right:0;background:white;color:#333;border:none;border-radius:50%;width:35px;height:35px;font-size:20px;cursor:pointer;font-weight:bold}
-input[type="text"],input[type="search"],textarea{text-transform:uppercase}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LOBÃO - SISTEMA DE LOCAÇÃO DE CARROS</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <style>
+        :root { --primary: #1a3c6e; --secondary: #e63946; --accent: #f4a261; --bg: #f8f9fa; --text: #333; --white: #fff; --shadow: 0 4px 6px rgba(0,0,0,0.1); --radius: 8px; --success: #28a745; --warning: #ffc107; --danger: #dc3545; --info: #17a2b8; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: var(--bg); color: var(--text); min-height: 100vh; }
+        .login-container { display: flex; justify-content: center; align-items: center; height: 100vh; background: url('lobao.jpg') no-repeat center center fixed; background-size: cover; }
+        .login-box { background: rgba(255, 255, 255, 0.92); padding: 40px; border-radius: var(--radius); box-shadow: 0 15px 30px rgba(0,0,0,0.3); width: 400px; text-align: center; }
+        .login-box h1 { color: var(--primary); margin-bottom: 10px; font-size: 28px; }
+        .login-box h2 { color: var(--secondary); margin-bottom: 30px; font-size: 20px; }
+        .login-box input { width: 100%; padding: 12px; margin-bottom: 15px; border: 2px solid #ddd; border-radius: var(--radius); font-size: 16px; transition: border-color 0.3s; text-transform: uppercase; }
+        .login-box input:focus { outline: none; border-color: var(--primary); }
+        .login-box button { width: 100%; padding: 12px; background: var(--primary); color: var(--white); border: none; border-radius: var(--radius); font-size: 16px; cursor: pointer; transition: background 0.3s; font-weight: bold; }
+        .login-box button:hover { background: #0d1b2a; }
+        .main-container { display: none; min-height: 100vh; }
+        .tabs-container { display: flex; flex-wrap: wrap; background: var(--primary); padding: 10px; gap: 5px; position: sticky; top: 0; z-index: 100; align-items: center; }
+        .tab { padding: 10px 15px; background: transparent; color: var(--white); border: none; cursor: pointer; border-radius: 5px; font-size: 13px; transition: background 0.3s; font-weight: 500; white-space: nowrap; }
+        .tab:hover { background: rgba(255,255,255,0.2); }
+        .tab.active { background: var(--secondary); color: var(--white); }
+        .tab.hidden-tab { display: none !important; }
+        .fullscreen-btn { margin-left: auto; background: var(--secondary); color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 12px; white-space: nowrap; }
+        .logout-btn { background: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 12px; white-space: nowrap; margin-left: 5px; transition: background 0.3s; }
+        .logout-btn:hover { background: #c82333; }
+        .debug-btn { background: #6f42c1; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 12px; white-space: nowrap; margin-left: 5px; }
+        .tab-content { display: none; padding: 20px; background: var(--white); margin: 20px; border-radius: var(--radius); box-shadow: var(--shadow); }
+        .tab-content.active { display: block; }
+        .tab-content.hidden-content { display: none !important; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .form-group { display: flex; flex-direction: column; position: relative; }
+        .form-group label { font-weight: 600; margin-bottom: 5px; font-size: 14px; color: var(--primary); }
+        .form-group input, .form-group select, .form-group textarea { padding: 10px; border: 2px solid #ddd; border-radius: 5px; font-size: 14px; transition: border-color 0.3s; width: 100%; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--primary); }
+        .btn-primary { background: var(--primary); color: white; padding: 12px 30px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; transition: background 0.3s; margin-right: 10px; margin-bottom: 10px; }
+        .btn-primary:hover { background: #0d1b2a; }
+        .btn-secondary { background: var(--secondary); color: white; padding: 12px 30px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; transition: background 0.3s; margin-right: 10px; margin-bottom: 10px; }
+        .btn-secondary:hover { background: #c1272d; }
+        .btn-buscar { background: #6c757d; color: white; padding: 12px 30px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; transition: background 0.3s; margin-right: 10px; margin-bottom: 10px; display: inline-block; }
+        .btn-buscar:hover { background: #5a6268; }
+        .btn-success { background: var(--success); color: white; padding: 12px 30px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; transition: background 0.3s; margin-right: 10px; margin-bottom: 10px; }
+        .btn-success:hover { background: #218838; }
+        .btn-warning { background: var(--accent); color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; margin: 2px; }
+        .btn-danger { background: #dc3545; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; margin: 2px; }
+        .btn-copy { background: var(--info); color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; margin: 2px; transition: background 0.3s; }
+        .btn-copy:hover { background: #138496; }
+        .btn-info { background: var(--info); color: white; padding: 12px 30px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; transition: background 0.3s; margin-right: 10px; margin-bottom: 10px; }
+        .btn-info:hover { background: #138496; }
+        .table-container { overflow-x: auto; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; background: white; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; font-size: 14px; }
+        th { background: var(--primary); color: white; font-weight: 600; }
+        tr:hover { background: #f5f5f5; }
+        .filter-input { margin-bottom: 15px; padding: 10px; width: 300px; border: 2px solid #ddd; border-radius: 5px; font-size: 14px; }
+        .subfolder { background: #f8f9fa; border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin: 15px 0; }
+        .subfolder-header { display: flex; align-items: center; gap: 15px; margin-bottom: 10px; border-bottom: 2px solid var(--primary); padding-bottom: 5px; }
+        .subfolder h4 { color: var(--primary); font-size: 16px; }
+        .saved-images { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 15px; }
+        .saved-image-item { width: auto; height: auto; max-width: 200px; max-height: 320px; border: 2px solid #ddd; border-radius: 8px; overflow: hidden; position: relative; cursor: pointer; transition: all 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
+        .saved-image-item:hover { transform: scale(1.05); box-shadow: 0 6px 12px rgba(0,0,0,0.2); border-color: var(--primary); }
+        .saved-image-item img { width: 100%; height: auto; max-height: 250px; object-fit: cover; display: block; }
+        .saved-image-item .delete-btn { position: absolute; top: 8px; right: 8px; background: rgba(220,53,69,0.9); color: white; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; z-index: 2; transition: background 0.3s; }
+        .status-btn { display: block; width: 100%; margin-top: 5px; padding: 8px 0; font-size: 14px; font-weight: bold; text-align: center; border: none; border-radius: 4px; cursor: pointer; transition: background 0.3s; }
+        .image-preview-card { width: 150px; height: 100px; border: 1px solid #ddd; border-radius: 4px; overflow: hidden; background: #fafafa; position: relative; display: inline-block; }
+        .image-preview-card img { width: 100%; height: 100%; object-fit: cover; display: none; }
+        .image-preview-card .no-image { display: flex; align-items: center; justify-content: center; height: 100%; color: #666; font-size: 10px; text-align: center; padding: 2px; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; display: none; justify-content: center; align-items: center; cursor: pointer; }
+        .modal-overlay.active { display: flex; }
+        .modal-content { max-width: 90%; max-height: 90%; position: relative; }
+        .modal-content img { max-width: 100%; max-height: 90vh; object-fit: contain; border-radius: 8px; }
+        .modal-close { position: absolute; top: -40px; right: -40px; background: white; color: #333; border: none; border-radius: 50%; width: 35px; height: 35px; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        .config-section { margin-bottom: 30px; padding: 20px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid var(--primary); }
+        .config-section h3 { color: var(--primary); margin-bottom: 15px; }
+        .sub-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #ddd; padding-bottom: 10px; }
+        .sub-tab { padding: 10px 20px; background: transparent; color: var(--primary); border: 2px solid var(--primary); cursor: pointer; border-radius: 5px; font-size: 14px; transition: all 0.3s; font-weight: 600; }
+        .sub-tab.active { background: var(--primary); color: white; }
+        .sub-tab-content { display: none; }
+        .sub-tab-content.active { display: block; }
+        .status-pendente { background-color: #ffc107; color: #000; padding: 5px 10px; border-radius: 5px; font-weight: bold; }
+        .status-pago { background-color: #28a745; color: white; padding: 5px 10px; border-radius: 5px; font-weight: bold; }
+        .status-atrasado { background-color: #dc3545; color: white; padding: 5px 10px; border-radius: 5px; font-weight: bold; }
+        .permissoes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #ddd; }
+        .permissao-item { display: flex; align-items: center; gap: 8px; padding: 5px; border-radius: 4px; }
+        .permissao-item input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
+        .permissao-item label { cursor: pointer; font-size: 14px; user-select: none; }
+        .permissao-grupo { margin-bottom: 15px; }
+        .permissao-grupo h5 { color: var(--primary); margin-bottom: 8px; font-size: 15px; border-bottom: 2px solid var(--primary); padding-bottom: 4px; }
+        .permissoes-veiculos { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px; }
+        .contrato-modal, .selfie-modal, .despesas-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 99999; display: none; justify-content: center; align-items: center; }
+        .contrato-modal.active, .selfie-modal.active, .despesas-modal.active { display: flex; }
+        .contrato-modal-content { background: white; width: 95%; max-width: 1200px; height: 90vh; border-radius: 10px; display: flex; flex-direction: column; overflow: hidden; }
+        .contrato-modal-header { display: flex; justify-content: space-between; padding: 15px 20px; background: var(--primary); color: white; }
+        .contrato-modal-header h3 { font-size: 18px; }
+        .contrato-modal-close { background: none; border: none; color: white; font-size: 28px; cursor: pointer; font-weight: bold; }
+        .contrato-modal-body { flex: 1; overflow-y: auto; padding: 20px; }
+        .contrato-form-group { margin-bottom: 12px; }
+        .contrato-form-group label { display: block; font-weight: 600; margin-bottom: 4px; font-size: 13px; color: #555; }
+        .contrato-form-group input, .contrato-form-group textarea { width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
+        .contrato-actions { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+        .selfie-container { position: relative; width: 100%; max-width: 640px; background: #000; border-radius: 10px; overflow: hidden; }
+        .selfie-video { width: 100%; height: auto; display: block; transform: scaleX(-1); }
+        .selfie-canvas { display: none; }
+        .selfie-controls { display: flex; gap: 15px; margin-top: 20px; flex-wrap: wrap; justify-content: center; }
+        .selfie-btn-capture { background: var(--success); color: white; padding: 15px 40px; border: none; border-radius: 50px; cursor: pointer; font-size: 18px; font-weight: bold; }
+        .selfie-btn-cancel { background: var(--danger); color: white; padding: 15px 40px; border: none; border-radius: 50px; cursor: pointer; font-size: 18px; font-weight: bold; }
+        .selfie-preview-container { position: absolute; top: 10px; right: 10px; width: 120px; height: 90px; border: 2px solid white; border-radius: 8px; overflow: hidden; display: none; }
+        .selfie-title { color: white; font-size: 24px; margin-bottom: 20px; text-align: center; }
+        .selfie-instructions { color: #ccc; font-size: 14px; margin-bottom: 15px; text-align: center; }
+        .selfie-photo-preview { margin-top: 20px; display: none; text-align: center; }
+        .selfie-photo-preview img { max-width: 300px; max-height: 300px; border-radius: 10px; border: 3px solid white; }
+        .selfie-thumbnail { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary); cursor: pointer; margin-right: 5px; }
+        .despesas-modal-content { background: white; width: 90%; max-width: 800px; border-radius: 10px; display: flex; flex-direction: column; }
+        .despesas-modal-header { background: var(--primary); color: white; padding: 15px 20px; display: flex; justify-content: space-between; }
+        .despesas-modal-body { padding: 20px; max-height: 70vh; overflow-y: auto; }
+        .dashboard-encerradas { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .kpi-card { background: linear-gradient(135deg, #f8f9fa, #ffffff); border-radius: 10px; padding: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); border-left: 6px solid var(--primary); text-align: center; }
+        .kpi-card .kpi-value { font-size: 28px; font-weight: 700; color: var(--primary); margin-bottom: 5px; }
+        .kpi-card .kpi-label { font-size: 14px; color: #666; }
+        .kpi-card.green { border-left-color: var(--success); } .kpi-card.green .kpi-value { color: var(--success); }
+        .kpi-card.red { border-left-color: var(--danger); } .kpi-card.red .kpi-value { color: var(--danger); }
+        .kpi-card.orange { border-left-color: var(--accent); } .kpi-card.orange .kpi-value { color: var(--accent); }
+        .kpi-card.blue { border-left-color: var(--info); } .kpi-card.blue .kpi-value { color: var(--info); }
+        .chart-container { background: #fff; border-radius: 10px; padding: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); margin-bottom: 30px; }
+        .chart-container canvas { max-height: 350px; }
+        input[type="text"], input[type="search"], textarea { text-transform: uppercase; }
+    </style>
 </head>
 <body>
 
 <div class="login-container" id="loginContainer">
-  <div class="login-box">
-    <h1>🦁 LOBÃO</h1>
-    <h2>SISTEMA DE LOCAÇÃO DE CARROS</h2>
-    <form id="loginForm">
-      <input type="text" id="loginUser" placeholder="Usuário" required autocomplete="off" oninput="this.value=this.value.toUpperCase()">
-      <input type="password" id="loginPassword" placeholder="Senha" required>
-      <button type="submit" id="loginButton">Entrar</button>
-    </form>
-    <p id="loginError" style="color:red;margin-top:10px;display:none">Usuário ou senha inválidos!</p>
-  </div>
+    <div class="login-box">
+        <h1>🦁 LOBÃO</h1>
+        <h2>SISTEMA DE LOCAÇÃO DE CARROS</h2>
+        <form id="loginForm">
+            <input type="text" id="loginUser" placeholder="Usuário" required autocomplete="off" oninput="this.value = this.value.toUpperCase()">
+            <input type="password" id="loginPassword" placeholder="Senha" required>
+            <button type="submit" id="loginButton">Entrar</button>
+        </form>
+        <p id="loginError" style="color: red; margin-top: 10px; display: none;">Usuário ou senha inválidos!</p>
+    </div>
 </div>
 
 <div class="main-container" id="mainContainer">
-  <div class="tabs-container">
-    <button class="tab active" data-tab="veiculos">🚗 Veículos</button>
-    <button class="tab" data-tab="clientes">👤 Clientes</button>
-    <button class="tab" data-tab="locacoes">📋 Locações</button>
-    <button class="tab" data-tab="manutencao">🔧 Manutenção</button>
-    <button class="tab" data-tab="mecanico">👨‍🔧 Mecânico</button>
-    <button class="tab" data-tab="usuario">👥 Usuário</button>
-    <button class="tab" data-tab="historico">📜 Histórico</button>
-    <button class="tab" data-tab="auditoria">🔍 Auditoria</button>
-    <button class="fullscreen-btn" id="fullscreenBtn">🖥️ Tela Cheia</button>
-    <button class="debug-btn" onclick="debugVeiculos()">🔎 Ver Banco</button>
-    <button class="logout-btn" onclick="sairSistema()">🚪 Sair</button>
-  </div>
+    <div class="tabs-container" id="tabsContainer">
+        <button class="tab active" data-tab="veiculos">🚗 Veículos</button>
+        <button class="tab" data-tab="clientes">👤 Clientes</button>
+        <button class="tab" data-tab="locacoes">📋 Locações</button>
+        <button class="tab" data-tab="locEncerrada">🏁 LOC. ENCERRADA</button>
+        <button class="tab" data-tab="manutencao">🔧 Manutenção</button>
+        <button class="tab" data-tab="mecanico">👨‍🔧 Mecânico</button>
+        <button class="tab" data-tab="usuario">👥 Usuário</button>
+        <button class="tab" data-tab="garagem">🏠 Garagem</button>
+        <button class="tab" data-tab="sos">🆘 SOS</button>
+        <button class="tab" data-tab="comprovantes">📄 Documentos</button>
+        <button class="tab" data-tab="pagamentos">💰 Sub Pagamentos</button>
+        <button class="tab" data-tab="banco">🏦 Banco</button>
+        <button class="tab" data-tab="fluxocaixa">💵 Fluxo de Caixa</button>
+        <button class="tab" data-tab="doc">📁 Comprovante</button>
+        <button class="tab" data-tab="compras">🛒 Compras</button>
+        <button class="tab" data-tab="configuracao">⚙️ Configuração</button>
+        <button class="tab" data-tab="auditoria">🔍 Auditoria</button>
+        <button class="tab" data-tab="pendente">⏳ Pendente</button>
+        <button class="tab" data-tab="historico">📜 HISTÓRICO</button>
+        <button class="tab" data-tab="vistoria">📸 VISTORIA</button>
+        <button class="fullscreen-btn" id="fullscreenBtn">🖥️ Tela Cheia</button>
+        <button class="debug-btn" onclick="debugVeiculos()">🔎 Ver Banco</button>
+        <button class="logout-btn" onclick="sairSistema()">🚪 Sair</button>
+    </div>
 
-  <!-- VEÍCULOS -->
-  <div class="tab-content active" id="veiculos">
-    <h2>🚗 Cadastro de Veículos</h2>
-    <input type="text" class="filter-input" placeholder="🔍 Filtrar veículos..." id="filterVeiculos">
-    <div class="form-grid">
-      <div class="form-group"><label>Fabricante/Modelo</label><input type="text" id="veicFabricante"></div>
-      <div class="form-group"><label>Cor</label><input type="text" id="veicCor"></div>
-      <div class="form-group"><label>Placa</label><input type="text" id="veicPlaca"></div>
-      <div class="form-group"><label>Motor</label><input type="text" id="veicMotor"></div>
-      <div class="form-group"><label>Câmbio</label><input type="text" id="veicCambio"></div>
-      <div class="form-group"><label>Ano Fabr</label><input type="text" id="veicAnoFabr"></div>
-      <div class="form-group"><label>Ano Model</label><input type="text" id="veicAnoModel"></div>
-      <div class="form-group"><label>KM</label><input type="text" id="veicKm"></div>
-      <div class="form-group"><label>Renavan</label><input type="text" id="veicRenavan"></div>
-      <div class="form-group"><label>Chassi</label><input type="text" id="veicChassi"></div>
-      <div class="form-group"><label>R$ Fipe</label><input type="text" id="veicFipe" class="money"></div>
-      <div class="form-group"><label>R$ Caução</label><input type="text" id="veicCaucao" class="money"></div>
-      <div class="form-group"><label>R$ Aluguel</label><input type="text" id="veicAluguel" class="money"></div>
-      <div class="form-group"><label>Proprietário</label><input type="text" id="veicProprietario"></div>
-      <div class="form-group"><label>CPF Propr</label><input type="text" id="veicCpfPropr"></div>
+    <!-- ABA: VEICULOS -->
+    <div class="tab-content active" id="veiculos">
+        <h2>🚗 Cadastro de Veículos</h2>
+        <input type="text" class="filter-input" placeholder="🔍 Filtrar veículos..." id="filterVeiculos">
+        <div class="form-grid" id="formVeiculos">
+            <div class="form-group"><label>Fabricante/Modelo</label><input type="text" id="veicFabricante" class="campo-enter"></div>
+            <div class="form-group"><label>Cor</label><input type="text" id="veicCor" class="campo-enter"></div>
+            <div class="form-group"><label>Placa</label><input type="text" id="veicPlaca" class="campo-enter"></div>
+            <div class="form-group"><label>Motor</label><input type="text" id="veicMotor" class="campo-enter"></div>
+            <div class="form-group"><label>Câmbio</label><input type="text" id="veicCambio" class="campo-enter"></div>
+            <div class="form-group"><label>Ano Fabr</label><input type="text" id="veicAnoFabr" class="campo-enter"></div>
+            <div class="form-group"><label>Ano Model</label><input type="text" id="veicAnoModel" class="campo-enter"></div>
+            <div class="form-group"><label>KM</label><input type="text" id="veicKm" class="campo-enter"></div>
+            <div class="form-group"><label>Renavan</label><input type="text" id="veicRenavan" class="campo-enter"></div>
+            <div class="form-group"><label>Chassi</label><input type="text" id="veicChassi" class="campo-enter"></div>
+            <div class="form-group"><label>R$ Fipe</label><input type="text" id="veicFipe" class="money campo-enter"></div>
+            <div class="form-group"><label>R$ Caução</label><input type="text" id="veicCaucao" class="money campo-enter"></div>
+            <div class="form-group"><label>R$ Aluguel</label><input type="text" id="veicAluguel" class="money campo-enter"></div>
+            <div class="form-group"><label>Proprietário</label><input type="text" id="veicProprietario" class="campo-enter"></div>
+            <div class="form-group"><label>CPF Propr</label><input type="text" id="veicCpfPropr" class="campo-enter"></div>
+        </div>
+        <button class="btn-primary" data-permissao="veiculos_salvar" onclick="salvarVeiculo()">💾 Salvar</button>
+        <button class="btn-info" data-permissao="veiculos_rastreador" onclick="alert('Rastreador não implementado.')">📍 Rastreador</button>
+        <button class="btn-warning" data-permissao="veiculos_multas" onclick="alert('Multas não implementado.')">🚨 Multas</button>
+        <div class="table-container">
+            <table id="tabelaVeiculos">
+                <thead><tr><th>Fab/Modelo</th><th>Placa</th><th>Cor</th><th>Ano</th><th>Aluguel</th><th>Ações</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
     </div>
-    <button class="btn-primary" onclick="salvarVeiculo()">💾 Salvar Veículo</button>
-    <button class="btn-secondary" onclick="limparCamposVeiculo()">🔄 Limpar</button>
-    <div class="table-container">
-      <table id="tabelaVeiculos">
-        <thead><tr><th>Fab/Modelo</th><th>Placa</th><th>Cor</th><th>Ano</th><th>Aluguel</th><th>Ações</th></tr></thead>
-        <tbody></tbody>
-      </table>
-    </div>
-  </div>
 
-  <!-- CLIENTES -->
-  <div class="tab-content" id="clientes">
-    <h2>👤 Cadastro de Clientes</h2>
-    <input type="text" class="filter-input" placeholder="🔍 Filtrar clientes..." id="filterClientes">
-    <div class="form-grid">
-      <div class="form-group"><label>Data Cadastro</label><input type="date" id="cliDataCadastro"></div>
-      <div class="form-group"><label>Nome</label><input type="text" id="cliNome"></div>
-      <div class="form-group"><label>CPF</label><input type="text" id="cliCpf"></div>
-      <div class="form-group"><label>RG</label><input type="text" id="cliRg"></div>
-      <div class="form-group"><label>CNH</label><input type="text" id="cliCnh"></div>
-      <div class="form-group"><label>Data CNH</label><input type="date" id="cliDataCnh"></div>
-      <div class="form-group"><label>Telefone</label><input type="text" id="cliTelefone"></div>
-      <div class="form-group"><label>Endereço</label><input type="text" id="cliEndereco"></div>
-      <div class="form-group"><label>CEP</label><input type="text" id="cliCep"></div>
-      <div class="form-group"><label>Cidade</label><input type="text" id="cliCidade"></div>
-      <div class="form-group"><label>Estado</label><input type="text" id="cliEstado"></div>
+    <!-- ABA: CLIENTES -->
+    <div class="tab-content" id="clientes">
+        <h2>👤 Cadastro de Clientes</h2>
+        <input type="text" class="filter-input" placeholder="🔍 Filtrar clientes..." id="filterClientes">
+        <div class="form-grid" id="formClientes">
+            <div class="form-group"><label>Data do Cadastro</label><input type="date" id="cliDataCadastro" class="campo-enter"></div>
+            <div class="form-group"><label>Nome</label><input type="text" id="cliNome" class="campo-enter"></div>
+            <div class="form-group"><label>CPF</label><input type="text" id="cliCpf" class="campo-enter"></div>
+            <div class="form-group"><label>RG</label><input type="text" id="cliRg" class="campo-enter"></div>
+            <div class="form-group"><label>CNH</label><input type="text" id="cliCnh" class="campo-enter"></div>
+            <div class="form-group"><label>Data CNH</label><input type="date" id="cliDataCnh" class="campo-enter"></div>
+            <div class="form-group"><label>Telefone</label><input type="text" id="cliTelefone" class="campo-enter"></div>
+            <div class="form-group"><label>Endereço</label><input type="text" id="cliEndereco" class="campo-enter"></div>
+            <div class="form-group"><label>CEP</label><input type="text" id="cliCep" class="campo-enter"></div>
+            <div class="form-group"><label>Cidade</label><input type="text" id="cliCidade" class="campo-enter"></div>
+            <div class="form-group"><label>Estado</label><input type="text" id="cliEstado" class="campo-enter"></div>
+            <div class="form-group"><label>Selfie do Cliente</label>
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <button type="button" class="btn-buscar" onclick="abrirModalSelfie('cliente')" style="padding:10px 20px;font-size:14px;">📸 Tirar Selfie</button>
+                    <div id="selfiePreviewCliente" style="display:flex;align-items:center;"></div>
+                </div>
+            </div>
+        </div>
+        <button class="btn-primary" data-permissao="clientes_salvar" onclick="salvarCliente()">💾 Salvar Cliente</button>
+        <div class="table-container">
+            <table id="tabelaClientes">
+                <thead><tr><th>Nome</th><th>CPF</th><th>Telefone</th><th>Cidade</th><th>Selfie</th><th>Ações</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
     </div>
-    <button class="btn-primary" onclick="salvarCliente()">💾 Salvar Cliente</button>
-    <button class="btn-secondary" onclick="limparCamposCliente()">🔄 Limpar</button>
-    <div class="table-container">
-      <table id="tabelaClientes">
-        <thead><tr><th>Nome</th><th>CPF</th><th>Telefone</th><th>Cidade</th><th>Ações</th></tr></thead>
-        <tbody></tbody>
-      </table>
-    </div>
-  </div>
 
-  <!-- LOCAÇÕES -->
-  <div class="tab-content" id="locacoes">
-    <h2>📋 Locações</h2>
-    <div class="form-grid">
-      <div class="form-group"><label>Locatário</label><select id="locLocatario"><option value="">Selecione</option></select></div>
-      <div class="form-group"><label>Placa</label><select id="locPlaca" onchange="selecionarPlacaCombo()"><option value="">Selecione</option></select></div>
-      <div class="form-group"><label>Data Início</label><input type="date" id="locDataInicio" onchange="calcularDataFim()"></div>
-      <div class="form-group"><label>Data Fim</label><input type="date" id="locDataFim" readonly></div>
-      <div class="form-group"><label>Valor Aluguel</label><input type="text" id="locValorAluguel" class="money"></div>
-      <div class="form-group"><label>Fabricante</label><input type="text" id="locFabModelo" readonly></div>
+    <!-- ABA: LOCAÇÕES -->
+    <div class="tab-content" id="locacoes">
+        <h2>📋 Locações Ativas</h2>
+        <div class="form-grid">
+            <div class="form-group"><label>Locatário</label><select id="locLocatario" class="campo-enter" onchange="selecionarClienteCombo()"><option value="">Selecione um cliente</option></select></div>
+            <div class="form-group"><label>Veículo</label><select id="locVeiculo" class="campo-enter" onchange="selecionarVeiculoCombo()"><option value="">Selecione um veículo</option></select></div>
+            <div class="form-group"><label>Data Início</label><input type="date" id="locDataInicio" class="campo-enter" onchange="calcularDataFim()"></div>
+            <div class="form-group"><label>Data Fim</label><input type="date" id="locDataFim" readonly></div>
+            <div class="form-group"><label>Fabricante/Modelo</label><input type="text" id="locFabModelo" readonly></div>
+            <div class="form-group"><label>Cor</label><input type="text" id="locCor" readonly></div>
+            <div class="form-group"><label>Placa</label><select id="locPlaca" class="campo-enter" onchange="selecionarPlacaCombo()"><option value="">Selecione uma placa</option></select></div>
+            <div class="form-group"><label>Ano Fabr</label><input type="text" id="locAnoFabr" readonly></div>
+            <div class="form-group"><label>Ano Model</label><input type="text" id="locAnoModel" readonly></div>
+            <div class="form-group"><label>R$ Caução</label><input type="text" id="locCaucao" class="money campo-enter"></div>
+            <div class="form-group"><label>Valor Aluguel</label><input type="text" id="locValorAluguel" class="money campo-enter"></div>
+            <div class="form-group"><label>ALUGUEL MENSAL</label><input type="text" id="locAluguelMensal" class="money campo-enter"></div>
+            <div class="form-group"><label>Proprietário</label><input type="text" id="locProprietario" readonly></div>
+            <div class="form-group"><label>CPF Propr</label><input type="text" id="locCpfPropr" readonly></div>
+            <div class="form-group"><label>Pagamento Caução</label>
+                <select id="locPagCaucao" class="campo-enter">
+                    <option value="avista">À Vista</option><option value="parcelado">Parcelado C/Aluguel</option><option value="entrada">Entrada + Parcelas</option>
+                </select>
+            </div>
+            <div class="form-group"><label>R$ CAUÇÃO PAGO</label><input type="text" id="locCaucaoPago" class="money campo-enter"></div>
+        </div>
+        <button class="btn-primary" onclick="salvarLocacao()">💾 Salvar</button>
+        <button class="btn-secondary" onclick="abrirModalContratos()">📄 Contrato</button>
+        <div class="table-container">
+            <table id="tabelaLocacoes">
+                <thead><tr><th>Locatário</th><th>Veículo</th><th>Placa</th><th>Início</th><th>Fim</th><th>Aluguel</th><th>Ações</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
     </div>
-    <button class="btn-primary" onclick="salvarLocacao()">💾 Salvar Locação</button>
-    <div class="table-container">
-      <table id="tabelaLocacoes">
-        <thead><tr><th>Locatário</th><th>Placa</th><th>Início</th><th>Fim</th><th>Aluguel</th><th>Ações</th></tr></thead>
-        <tbody></tbody>
-      </table>
-    </div>
-  </div>
 
-  <!-- MANUTENÇÃO -->
-  <div class="tab-content" id="manutencao">
-    <h2>🔧 Manutenção</h2>
-    <div class="form-grid">
-      <div class="form-group"><label>Placa</label><select id="manPlaca" onchange="selecionarPlacaManutencao()"><option value="">Selecione</option></select></div>
-      <div class="form-group"><label>Veículo</label><input type="text" id="manVeiculo" readonly></div>
-      <div class="form-group"><label>Tipo</label><input type="text" id="manTipo"></div>
-      <div class="form-group"><label>KM</label><input type="text" id="manKm"></div>
-      <div class="form-group"><label>OBS</label><textarea id="manObs"></textarea></div>
-    </div>
-    <button class="btn-primary" onclick="salvarManutencao()">💾 Salvar</button>
-    <div class="table-container">
-      <table id="tabelaManutencao">
-        <thead><tr><th>Veículo</th><th>Placa</th><th>Tipo</th><th>KM</th><th>Ações</th></tr></thead>
-        <tbody></tbody>
-      </table>
-    </div>
-  </div>
+    <!-- OUTRAS ABAS (mantidas) -->
+    <div class="tab-content" id="locEncerrada"><h2>🏁 Locações Encerradas</h2><div class="dashboard-encerradas"><div class="kpi-card"><div class="kpi-value" id="kpiTotalLocs">0</div><div class="kpi-label">Total</div></div><div class="kpi-card green"><div class="kpi-value" id="kpiReceitaTotal">R$ 0,00</div><div class="kpi-label">Receita</div></div><div class="kpi-card red"><div class="kpi-value" id="kpiDespesasTotal">R$ 0,00</div><div class="kpi-label">Despesas</div></div><div class="kpi-card orange"><div class="kpi-value" id="kpiLucroTotal">R$ 0,00</div><div class="kpi-label">Lucro</div></div></div><div class="table-container"><table id="tabelaLocEncerrada"><thead><tr><th>Locatário</th><th>Veículo</th><th>Placa</th><th>Início</th><th>Fim</th><th>Encerrada</th><th>R$ Gerado</th><th>Despesas</th><th>Lucro</th><th>Ações</th></tr></thead><tbody></tbody></table></div></div>
 
-  <!-- MECÂNICO -->
-  <div class="tab-content" id="mecanico">
-    <h2>👨‍🔧 Mecânico</h2>
-    <div class="form-grid">
-      <div class="form-group"><label>Data</label><input type="date" id="mecData"></div>
-      <div class="form-group"><label>Oficina</label><input type="text" id="mecOficina"></div>
-      <div class="form-group"><label>Serviço</label><input type="text" id="mecServico"></div>
-      <div class="form-group"><label>Responsável</label><input type="text" id="mecResponsavel"></div>
-      <div class="form-group"><label>Carro</label><input type="text" id="mecCarro"></div>
-      <div class="form-group"><label>Placa</label><select id="mecPlaca" onchange="selecionarPlacaMecanico()"><option value="">Selecione</option></select></div>
-      <div class="form-group"><label>Valor</label><input type="text" id="mecValor" class="money"></div>
-      <div class="form-group"><label>OBS</label><textarea id="mecObs"></textarea></div>
-    </div>
-    <button class="btn-primary" onclick="salvarMecanico()">💾 Salvar</button>
-    <div class="table-container">
-      <table id="tabelaMecanico">
-        <thead><tr><th>Data</th><th>Oficina</th><th>Serviço</th><th>Carro</th><th>Valor</th><th>Ações</th></tr></thead>
-        <tbody></tbody>
-      </table>
-    </div>
-  </div>
+    <div class="tab-content" id="manutencao"><h2>🔧 Manutenção</h2><div class="form-grid"><div class="form-group"><label>Veículo</label><input type="text" id="manVeiculo" readonly></div><div class="form-group"><label>Placa</label><select id="manPlaca" onchange="selecionarPlacaManutencao()"><option value="">Selecione</option></select></div><div class="form-group"><label>Tipo</label><input type="text" id="manTipo"></div><div class="form-group"><label>KM</label><input type="text" id="manKm"></div><div class="form-group"><label>OBS</label><textarea id="manObs"></textarea></div></div><button class="btn-primary" onclick="salvarManutencao()">💾 Salvar</button><div class="table-container"><table id="tabelaManutencao"><thead><tr><th>Veículo</th><th>Placa</th><th>Tipo</th><th>KM</th><th>Ações</th></tr></thead><tbody></tbody></table></div></div>
 
-  <!-- USUÁRIO -->
-  <div class="tab-content" id="usuario">
-    <h2>👥 Usuários</h2>
-    <div class="form-grid">
-      <div class="form-group"><label>Nome</label><input type="text" id="userNome"></div>
-      <div class="form-group"><label>Senha</label><input type="password" id="userSenha"></div>
-      <div class="form-group"><label>Tipo</label><select id="userTipo" onchange="preencherPermissoesPadrao()">
-        <option value="ADM">ADM</option><option value="MOTORISTA">MOTORISTA</option><option value="OFICINA">OFICINA</option><option value="VISITANTE">VISITANTE</option>
-      </select></div>
-    </div>
-    <div class="config-section"><h3>🔐 Permissões</h3><div id="permissoesContainer"></div></div>
-    <button class="btn-primary" onclick="salvarUsuario()">💾 Salvar</button>
-    <button class="btn-secondary" onclick="limparCamposUsuario()">🔄 Limpar</button>
-    <div class="table-container">
-      <table id="tabelaUsuario">
-        <thead><tr><th>Nome</th><th>Tipo</th><th>Ações</th></tr></thead>
-        <tbody></tbody>
-      </table>
-    </div>
-  </div>
+    <div class="tab-content" id="mecanico"><h2>👨‍🔧 Mecânico</h2><div class="form-grid"><div class="form-group"><label>Data</label><input type="date" id="mecData"></div><div class="form-group"><label>Oficina</label><input type="text" id="mecOficina"></div><div class="form-group"><label>Serviço</label><input type="text" id="mecServico"></div><div class="form-group"><label>Responsável</label><input type="text" id="mecResponsavel"></div><div class="form-group"><label>Carro</label><input type="text" id="mecCarro"></div><div class="form-group"><label>Placa</label><select id="mecPlaca" onchange="selecionarPlacaMecanico()"><option value="">Selecione</option></select></div><div class="form-group"><label>Valor</label><input type="text" id="mecValor" class="money"></div><div class="form-group"><label>OBS</label><textarea id="mecObs"></textarea></div></div><button class="btn-primary" onclick="salvarMecanico()">💾 Salvar</button><div class="table-container"><table id="tabelaMecanico"><thead><tr><th>Data</th><th>Oficina</th><th>Serviço</th><th>Carro</th><th>Valor</th><th>Ações</th></tr></thead><tbody></tbody></table></div></div>
 
-  <!-- HISTÓRICO -->
-  <div class="tab-content" id="historico">
-    <h2>📜 Histórico</h2>
-    <input type="text" class="filter-input" placeholder="🔍 Pesquisar..." id="filterHistorico">
-    <div class="table-container">
-      <table id="tabelaHistorico">
-        <thead><tr><th>Data</th><th>Descrição</th><th>Placa</th><th>Valor</th><th>Fornecedor</th><th>Oficina</th></tr></thead>
-        <tbody></tbody>
-      </table>
-    </div>
-  </div>
+    <div class="tab-content" id="usuario"><h2>👥 Usuários</h2><div class="form-grid"><div class="form-group"><label>Nome</label><input type="text" id="userNome"></div><div class="form-group"><label>Senha</label><input type="password" id="userSenha"></div><div class="form-group"><label>Tipo</label><select id="userTipo" onchange="preencherPermissoesPadrao()"><option value="ADM">ADM</option><option value="MOTORISTA">MOTORISTA</option><option value="OFICINA">OFICINA</option><option value="VISITANTE">VISITANTE</option></select></div></div><div class="config-section"><h3>🔐 Permissões</h3><div id="permissoesContainer"></div></div><button class="btn-primary" onclick="salvarUsuario()">💾 Salvar</button><div class="table-container"><table id="tabelaUsuario"><thead><tr><th>Nome</th><th>Tipo</th><th>Selfie</th><th>Ações</th></tr></thead><tbody></tbody></table></div></div>
 
-  <!-- AUDITORIA -->
-  <div class="tab-content" id="auditoria">
-    <h2>🔍 Auditoria</h2>
-    <button class="btn-danger" onclick="limparAuditoriaManual()">🗑️ Limpar Auditoria</button>
-    <div class="table-container">
-      <table id="tabelaAuditoria">
-        <thead><tr><th>Data/Hora</th><th>Usuário</th><th>Ação</th><th>Descrição</th></tr></thead>
-        <tbody></tbody>
-      </table>
-    </div>
-  </div>
+    <div class="tab-content" id="garagem"><h2>🏠 Garagem</h2><div class="subfolder"><div class="subfolder-header"><h4>📁 Fotos</h4></div><input type="file" id="garagemImagem" accept="image/*" style="display:none;"><div class="saved-images" id="garagemSavedImages"></div></div><button class="btn-buscar" onclick="document.getElementById('garagemImagem').click()">📂 Buscar</button><button class="btn-primary" onclick="salvarGaragem()">💾 Salvar</button></div>
+
+    <div class="tab-content" id="sos"><h2>🆘 SOS</h2><div class="subfolder"><div class="subfolder-header"><h4>📁 Imagens</h4></div><input type="file" id="sosImagem" accept="image/*" style="display:none;"><div class="saved-images" id="sosSavedImages"></div></div><button class="btn-buscar" onclick="document.getElementById('sosImagem').click()">📂 Buscar</button><button class="btn-primary" onclick="salvarSOS()">💾 Salvar</button></div>
+
+    <div class="tab-content" id="comprovantes"><h2>📄 Documentos</h2><div class="sub-tabs"><button class="sub-tab active" onclick="switchSubTab('novo')">📤 Novo</button><button class="sub-tab" onclick="switchSubTab('salvos')">📁 Salvos</button></div><div class="sub-tab-content active" id="subTabNovo"><input type="file" id="compImagem" accept="image/*" style="display:none;"><button class="btn-buscar" onclick="document.getElementById('compImagem').click()">📂 Buscar</button><button class="btn-primary" onclick="salvarComprovante()">💾 Salvar</button></div><div class="sub-tab-content" id="subTabSalvos"><div class="saved-images" id="compSavedImages"></div></div></div>
+
+    <div class="tab-content" id="pagamentos"><h2>💰 Sub Pagamentos</h2><div class="table-container"><table id="tabelaPagamentos"><thead><tr><th>Locatário</th><th>Data</th><th>Placa</th><th>R$</th><th>Vencimento</th><th>Status</th><th>Ação</th></tr></thead><tbody></tbody></table></div></div>
+
+    <div class="tab-content" id="banco"><h2>🏦 Banco</h2><div class="form-grid"><div class="form-group"><label>Banco</label><input type="text" id="bancoNome"></div><div class="form-group"><label>Agência</label><input type="text" id="bancoAgencia"></div><div class="form-group"><label>Conta</label><input type="text" id="bancoConta"></div><div class="form-group"><label>PIX</label><input type="text" id="bancoPix"></div><div class="form-group"><label>Titular</label><input type="text" id="bancoTitular"></div></div><button class="btn-primary" onclick="salvarBanco()">💾 Salvar</button><div class="table-container"><table id="tabelaBancos"><thead><tr><th>Banco</th><th>Agência</th><th>Conta</th><th>PIX</th><th>Titular</th><th>Ações</th></tr></thead><tbody></tbody></table></div></div>
+
+    <div class="tab-content" id="fluxocaixa"><h2>💵 Fluxo de Caixa</h2><div class="form-grid"><div class="form-group"><label>Data</label><input type="date" id="fcData"></div><div class="form-group"><label>Descrição</label><input type="text" id="fcDescricao"></div><div class="form-group"><label>Categoria</label><input type="text" id="fcCategoria"></div><div class="form-group"><label>Valor</label><input type="text" id="fcValor" class="money"></div><div class="form-group"><label>Tipo</label><select id="fcTipo"><option value="entrada">Entrada</option><option value="saida">Saída</option></select></div></div><button class="btn-primary" onclick="salvarFluxoCaixa()">💾 Salvar</button><div class="dashboard-encerradas" style="margin-top:20px;"><div class="kpi-card green"><div class="kpi-value" id="totalEntradas">R$ 0,00</div><div class="kpi-label">Entradas</div></div><div class="kpi-card red"><div class="kpi-value" id="totalSaidas">R$ 0,00</div><div class="kpi-label">Saídas</div></div><div class="kpi-card blue"><div class="kpi-value" id="saldoTotal">R$ 0,00</div><div class="kpi-label">Saldo</div></div></div><div class="table-container"><table id="tabelaFluxoCaixa"><thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Valor</th><th>Tipo</th><th>Ações</th></tr></thead><tbody></tbody></table></div></div>
+
+    <div class="tab-content" id="doc"><h2>📁 Comprovante</h2><div class="form-grid"><div class="form-group"><label>Nome</label><input type="text" id="docNome"></div><div class="form-group"><label>R$ LOCAÇÃO</label><input type="text" id="docTipo" class="money"></div><div class="form-group"><label>VENCIMENTO</label><input type="date" id="docData"></div><div class="form-group"><label>Veículo/Cliente</label><select id="docReferencia"><option value="">Selecione</option></select></div><div class="form-group"><label>Obs</label><textarea id="docObs"></textarea></div></div><button class="btn-primary" onclick="salvarDoc()">💾 Salvar</button><div class="table-container"><table id="tabelaDoc"><thead><tr><th>Nome</th><th>R$</th><th>Vencimento</th><th>Veículo</th><th>Ações</th></tr></thead><tbody></tbody></table></div></div>
+
+    <div class="tab-content" id="compras"><h2>🛒 Compras</h2><div class="form-grid"><div class="form-group"><label>Data</label><input type="date" id="compData"></div><div class="form-group"><label>Produto</label><input type="text" id="compProduto"></div><div class="form-group"><label>Fornecedor</label><input type="text" id="compFornecedor"></div><div class="form-group"><label>Placa</label><input type="text" id="compPlaca"></div><div class="form-group"><label>Qtd</label><input type="number" id="compQuantidade"></div><div class="form-group"><label>Valor Unit</label><input type="text" id="compValorUnitario" class="money"></div><div class="form-group"><label>Total</label><input type="text" id="compValorTotal" class="money" readonly></div><div class="form-group"><label>Status</label><select id="compStatus"><option value="pendente">Pendente</option><option value="pago">Pago</option></select></div></div><button class="btn-primary" onclick="salvarCompra()">💾 Salvar</button><div class="table-container"><table id="tabelaCompras"><thead><tr><th>Data</th><th>Produto</th><th>Fornecedor</th><th>Placa</th><th>Valor</th><th>Status</th><th>Ações</th></tr></thead><tbody></tbody></table></div></div>
+
+    <div class="tab-content" id="configuracao"><h2>⚙️ Configurações</h2><div class="config-section"><h3>🔧 Gerais</h3><div class="form-grid"><div class="form-group"><label>Empresa</label><input type="text" id="configEmpresa" value="LOBÃO"></div><div class="form-group"><label>CNPJ</label><input type="text" id="configCnpj"></div><div class="form-group"><label>Telefone</label><input type="text" id="configTelefone"></div><div class="form-group"><label>Email</label><input type="text" id="configEmail"></div><div class="form-group"><label>Endereço</label><input type="text" id="configEndereco"></div></div></div><button class="btn-primary" onclick="salvarConfiguracao()">💾 Salvar</button></div>
+
+    <div class="tab-content" id="auditoria"><h2>🔍 Auditoria</h2><div class="table-container"><table id="tabelaAuditoria"><thead><tr><th>Data/Hora</th><th>Usuário</th><th>Ação</th><th>Descrição</th></tr></thead><tbody></tbody></table></div></div>
+
+    <div class="tab-content" id="pendente"><h2>⏳ Pendências</h2><div class="form-grid"><div class="form-group"><label>Data</label><input type="date" id="pendData"></div><div class="form-group"><label>Descrição</label><input type="text" id="pendDescricao"></div><div class="form-group"><label>Crédito</label><input type="text" id="pendCredito" class="money"></div><div class="form-group"><label>Débito</label><input type="text" id="pendDebito" class="money"></div><div class="form-group"><label>Vencimento</label><input type="date" id="pendVencimento"></div></div><button class="btn-primary" onclick="salvarPendencia()">💾 Salvar</button><div class="table-container"><table id="tabelaPendentes"><thead><tr><th>Data</th><th>Descrição</th><th>Crédito</th><th>Débito</th><th>Vencimento</th><th>Status</th><th>Ações</th></tr></thead><tbody></tbody></table></div></div>
+
+    <div class="tab-content" id="historico"><h2>📜 Histórico</h2><div class="table-container"><table id="tabelaHistorico"><thead><tr><th>Data</th><th>Descrição</th><th>Placa</th><th>Valor</th><th>Fornecedor</th><th>Oficina</th><th>Ações</th></tr></thead><tbody></tbody></table></div></div>
+
+    <div class="tab-content" id="vistoria"><h2>📸 Vistoria</h2><div id="vistoriaSubTabs" class="vistoria-sub-tabs"></div><div id="vistoriaContent" style="display:none;"><h4 id="vistoriaLocacaoInfo"></h4><div id="vistoriaFotosContainer" class="vistoria-foto-container"></div><button class="btn-primary" onclick="abrirCameraVistoria()">📷 Tirar Foto</button></div><div id="vistoriaNenhuma" style="display:none;text-align:center;padding:30px;color:#999;">Nenhuma locação ativa.</div></div>
+
 </div>
 
-<div class="modal-overlay" id="imageModal" onclick="closeImageModal()">
-  <div class="modal-content">
-    <button class="modal-close" onclick="closeImageModal()">×</button>
-    <img id="modalImage" src="">
-  </div>
-</div>
+<!-- MODAIS -->
+<div class="modal-overlay" id="imageModal" onclick="closeImageModal()"><div class="modal-content"><button class="modal-close" onclick="closeImageModal()">×</button><img id="modalImage" src=""></div></div>
+<div class="selfie-modal" id="selfieModal"><div class="selfie-title">📸 Tire sua Selfie</div><div class="selfie-instructions">Posicione o rosto e clique em Capturar</div><div class="selfie-container"><video class="selfie-video" id="selfieVideo" autoplay playsinline></video><canvas class="selfie-canvas" id="selfieCanvas"></canvas><div class="selfie-preview-container" id="selfiePreviewContainer"><img id="selfiePreviewImg"></div></div><div class="selfie-photo-preview" id="selfiePhotoPreview"><img id="selfiePhotoResult"><p>Capturada!</p></div><div class="selfie-controls"><button class="selfie-btn-capture" id="selfieCaptureBtn" onclick="capturarSelfie()">📸 Capturar</button><button class="selfie-btn-cancel" onclick="fecharModalSelfie()">❌ Cancelar</button><button class="selfie-btn-capture" id="selfieConfirmBtn" onclick="confirmarSelfie()" style="display:none;">✅ Confirmar</button></div></div>
+<div class="selfie-modal" id="vistoriaCameraModal"><div class="selfie-title">📷 Foto Vistoria</div><div class="selfie-container"><video class="selfie-video" id="vistoriaVideo" autoplay playsinline></video><canvas class="selfie-canvas" id="vistoriaCanvas"></canvas></div><div class="selfie-photo-preview" id="vistoriaPhotoPreview"><img id="vistoriaPhotoResult"><p>Capturada!</p></div><div class="selfie-controls"><button class="selfie-btn-capture" id="vistoriaCaptureBtn" onclick="capturarVistoria()">📸 Capturar</button><button class="selfie-btn-cancel" onclick="fecharCameraVistoria()">❌ Cancelar</button><button class="selfie-btn-capture" id="vistoriaConfirmBtn" onclick="confirmarVistoria()" style="display:none;">✅ Confirmar</button></div></div>
+<div class="contrato-modal" id="contratoModal"><div class="contrato-modal-content"><div class="contrato-modal-header"><h3>📄 Contratos</h3><button class="contrato-modal-close" onclick="fecharModalContratos()">×</button></div><div class="contrato-modal-body"><p style="padding:20px;text-align:center;color:#666;">Módulo de contratos (a implementar detalhes).</p><button class="btn-secondary" onclick="fecharModalContratos()">Fechar</button></div></div></div>
+<div class="despesas-modal" id="despesasModal"><div class="despesas-modal-content"><div class="despesas-modal-header"><h3>📋 Despesas</h3><button class="contrato-modal-close" onclick="fecharDespesasModal()">×</button></div><div class="despesas-modal-body" id="despesasModalBody"></div></div></div>
+<div id="printArea" class="print-area"></div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-// ========== FIREBASE ==========
+// ===== FIREBASE =====
 const firebaseConfig = {
   apiKey: "AIzaSyApeHoLWESXU8j50ckswmJZ7j9qzWlZtlY",
   authDomain: "paizaouber2-3b2db.firebaseapp.com",
@@ -283,556 +337,988 @@ let db = null;
 let dbCarregado = false;
 let usuarioLogado = null;
 
-// ========== ESTRUTURA PADRÃO ==========
 function criarDBPadrao() {
-  return {
-    veiculos: [], clientes: [], locacoes: [], manutencao: [], mecanico: [],
-    usuarios: [{ nome:'LOBÃO', senha:'18998211', tipo:'ADM', permissoes: null, selfie:null }],
-    fluxoCaixa: [], compras: [], auditoria: [], bancos: [], pendentes: [], historico: [],
-    config: { empresa:'LOBÃO', ultimaLimpezaAuditoria: null }
-  };
+    return {
+        veiculos: [], clientes: [], locacoes: [], locacoesEncerradas: [], manutencao: [], mecanico: [],
+        usuarios: [{ nome: 'LOBÃO', senha: '18998211', tipo: 'ADM', permissoes: JSON.parse(JSON.stringify(permissoesPadrao.ADM)), selfie: null }],
+        alugueis: [], fluxoCaixa: [], documentos: [], compras: [], auditoria: [], bancos: [], pendentes: [], historico: [],
+        contratos: { contratoLocacao:{}, termoResponsabilidade:{}, notaPromissoria:{} },
+        imagens: { garagem:{fotos:[]}, sos:{fotos:[]}, comprovantes:{fotos:[]} },
+        config: { empresa: 'LOBÃO', cnpj:'', telefone:'', email:'', endereco:'', ultimaLimpezaAuditoria: null }
+    };
 }
 
-// ========== HELPERS ==========
-function campoVazio(v){ return !v || String(v).trim()===''; }
-function normalizarPlaca(p){ return String(p||'').toUpperCase().replace(/[^A-Z0-9]/g,''); }
-function formatarMoedaBR(v){ return 'R$ '+(Number(v)||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
-function parseMoeda(s){ if(typeof s==='number')return s; return parseFloat(String(s||'0').replace('R$','').replace(/\./g,'').replace(',','.').trim())||0; }
-
-// ========== FIREBASE LOAD/SAVE ==========
 async function carregarDB() {
-  try {
-    const snap = await dbFirestore.collection('lobao_db').doc('principal').get();
-    if (snap.exists) {
-      db = snap.data();
-      ['veiculos','clientes','locacoes','manutencao','mecanico','fluxoCaixa','compras','auditoria','bancos','pendentes','historico'].forEach(k => { if(!Array.isArray(db[k])) db[k]=[]; });
-      if(!Array.isArray(db.usuarios)) db.usuarios=[];
-      if(!db.config) db.config = criarDBPadrao().config;
-      if(!db.usuarios.some(u => u.nome === 'LOBÃO')) {
-        db.usuarios.push({ nome:'LOBÃO', senha:'18998211', tipo:'ADM', permissoes: null, selfie:null });
-      }
-    } else {
-      db = criarDBPadrao();
-      await salvarDB();
-    }
-    dbCarregado = true;
-  } catch (e) {
-    console.error('Erro ao carregar Firestore:', e);
     try {
-      const stored = localStorage.getItem(DB_STORAGE_KEY);
-      db = stored ? JSON.parse(stored) : criarDBPadrao();
-    } catch(err) { db = criarDBPadrao(); }
-    dbCarregado = true;
-  }
+        const docSnap = await dbFirestore.collection('lobao_db').doc('principal').get();
+        if (docSnap.exists) {
+            db = docSnap.data();
+            if (!db.pendentes) db.pendentes = [];
+            if (!db.locacoesEncerradas) db.locacoesEncerradas = [];
+            if (!db.historico) db.historico = [];
+            if (!db.contratos) db.contratos = { contratoLocacao:{}, termoResponsabilidade:{}, notaPromissoria:{} };
+            if (!db.imagens) db.imagens = { garagem:{fotos:[]}, sos:{fotos:[]}, comprovantes:{fotos:[]} };
+            if (!db.config) db.config = criarDBPadrao().config;
+            if (db.locacoes) db.locacoes.forEach(l => { if (!l.vistoria) l.vistoria = []; });
+            db.pendentes.forEach(p => { if (!p.status) p.status = 'Pendente'; });
+            if (!db.usuarios.some(u => u.nome === 'LOBÃO')) {
+                db.usuarios.push({ nome:'LOBÃO', senha:'18998211', tipo:'ADM', permissoes: JSON.parse(JSON.stringify(permissoesPadrao.ADM)), selfie:null });
+            }
+        } else {
+            db = criarDBPadrao();
+            await salvarDB();
+        }
+        dbCarregado = true;
+    } catch (error) {
+        console.error('Erro ao carregar Firestore:', error);
+        try {
+            const stored = localStorage.getItem(DB_STORAGE_KEY);
+            db = stored ? JSON.parse(stored) : criarDBPadrao();
+        } catch (e) { db = criarDBPadrao(); }
+        dbCarregado = true;
+    }
 }
 
 async function salvarDB() {
-  try {
-    if (!db) return;
-    await dbFirestore.collection('lobao_db').doc('principal').set(db);
-    localStorage.setItem(DB_STORAGE_KEY, JSON.stringify(db));
-    console.log('✅ Salvo no Firebase');
-  } catch (e) {
-    console.error('❌ Erro ao salvar:', e);
-    alert('Erro ao salvar no Firebase: ' + e.message);
-  }
+    try {
+        if (!db) return;
+        await dbFirestore.collection('lobao_db').doc('principal').set(db);
+        localStorage.setItem(DB_STORAGE_KEY, JSON.stringify(db));
+    } catch (error) {
+        console.error('Erro ao salvar:', error);
+        alert('Erro ao salvar no Firebase.');
+    }
 }
 
-// ========== LOGIN ==========
-document.getElementById('loginForm').addEventListener('submit', async function(e){
-  e.preventDefault();
-  if(!dbCarregado){ alert('Sistema carregando... aguarde.'); return; }
-  const user = document.getElementById('loginUser').value.trim().toUpperCase();
-  const pass = document.getElementById('loginPassword').value;
-  if(!user || !pass){ alert('Preencha usuário e senha!'); return; }
-  const u = db.usuarios.find(x => x.nome === user && x.senha === pass);
-  if(u){
-    document.getElementById('loginContainer').style.display='none';
-    document.getElementById('mainContainer').style.display='block';
-    usuarioLogado = u;
-    registrarAuditoria('Login', 'Login: '+user);
-    atualizarTudo();
-  } else {
-    document.getElementById('loginError').style.display='block';
-  }
+// ===== PERMISSÕES =====
+const todasAbas = [
+    { id: 'veiculos' }, { id: 'clientes' }, { id: 'locacoes' }, { id: 'locEncerrada' },
+    { id: 'manutencao' }, { id: 'mecanico' }, { id: 'usuario' }, { id: 'garagem' },
+    { id: 'sos' }, { id: 'comprovantes' }, { id: 'pagamentos' }, { id: 'banco' },
+    { id: 'fluxocaixa' }, { id: 'doc' }, { id: 'compras' }, { id: 'configuracao' },
+    { id: 'auditoria' }, { id: 'pendente' }, { id: 'historico' }, { id: 'vistoria' }
+];
+const todasPermissoes = ['veiculos_salvar','veiculos_rastreador','veiculos_multas','clientes_salvar','locacoes_salvar','locacoes_contrato','manutencao_salvar','mecanico_salvar','usuario_salvar','usuario_editar','usuario_excluir','usuario_limpar','garagem_buscar','garagem_salvar','sos_buscar','sos_salvar','sos_baixar','comprovantes_buscar','comprovantes_salvar','banco_salvar','banco_editar','banco_copiar','banco_excluir','fluxocaixa_salvar','doc_salvar','doc_limpar','doc_selecionar','compras_salvar','compras_editar','compras_limpar','compras_excluir','config_salvar','config_restaurar','auditoria_filtrar','auditoria_limpar','pendente_salvar','pendente_editar','pendente_excluir','vistoria_camera'];
+
+const permissoesPadrao = {
+    ADM: { abas: Object.fromEntries(todasAbas.map(a => [a.id, true])), botoes: Object.fromEntries(todasPermissoes.map(b => [b, true])), veiculos: {} },
+    MOTORISTA: { abas: { veiculos:false,clientes:false,locacoes:false,locEncerrada:false,manutencao:true,mecanico:false,usuario:false,garagem:true,sos:true,comprovantes:true,pagamentos:false,banco:true,fluxocaixa:false,doc:true,compras:false,configuracao:false,auditoria:false,pendente:false,historico:true,vistoria:true }, botoes: { garagem_salvar:true, sos_salvar:true, sos_baixar:true, banco_copiar:true, doc_salvar:true, doc_limpar:true, doc_selecionar:true }, veiculos: {} },
+    OFICINA: { abas: { veiculos:true,clientes:false,locacoes:false,locEncerrada:false,manutencao:true,mecanico:true,usuario:false,garagem:false,sos:false,comprovantes:false,pagamentos:false,banco:false,fluxocaixa:false,doc:false,compras:false,configuracao:false,auditoria:false,pendente:false,historico:false,vistoria:true }, botoes: { veiculos_salvar:true, manutencao_salvar:true, mecanico_salvar:true, vistoria_camera:true }, veiculos: {} },
+    VISITANTE: { abas: { veiculos:false,clientes:false,locacoes:false,locEncerrada:false,manutencao:false,mecanico:false,usuario:false,garagem:true,sos:false,comprovantes:false,pagamentos:false,banco:false,fluxocaixa:false,doc:false,compras:false,configuracao:false,auditoria:false,pendente:false,historico:false,vistoria:false }, botoes: { garagem_buscar:true, garagem_salvar:true }, veiculos: {} }
+};
+
+// ===== VARIÁVEIS GLOBAIS =====
+let selfieStream = null, selfieDataUrl = null, selfieClienteTemp = null, selfieUsuarioTemp = null, selfieDestino = 'cliente';
+let vistoriaStream = null, vistoriaDataUrl = null, vistoriaLocacaoIndex = null;
+let usuarioEditandoIndex = null, compraEditandoIndex = null, pendenciaEditandoIndex = null;
+
+// ===== HELPERS =====
+function campoVazio(v) { return !v || String(v).trim() === ''; }
+function formatarMoedaBR(v) { return 'R$ ' + (Number(v) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+function normalizarPlaca(p) { return String(p || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); }
+function formatarDataBR(d) { if (!d) return ''; const p = d.split('-'); return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : d; }
+
+function parseMoeda(s) {
+    if (typeof s === 'number') return s;
+    return parseFloat(String(s || '0').replace('R$', '').replace(/\./g, '').replace(',', '.').trim()) || 0;
+}
+
+// ===== LOGIN =====
+document.getElementById('loginForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const user = document.getElementById('loginUser').value.trim().toUpperCase();
+    const pass = document.getElementById('loginPassword').value;
+    if (!dbCarregado) { alert('Sistema ainda carregando... aguarde.'); return; }
+    if (campoVazio(user) || campoVazio(pass)) { alert('Preencha usuário e senha!'); return; }
+    const u = db.usuarios.find(x => x.nome === user && x.senha === pass);
+    if (u) {
+        document.getElementById('loginContainer').style.display = 'none';
+        document.getElementById('mainContainer').style.display = 'block';
+        aplicarPermissoes(u);
+        registrarAuditoria('Login', `Login: ${user}`);
+        try { if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen(); } catch(e){}
+    } else {
+        document.getElementById('loginError').style.display = 'block';
+        registrarAuditoria('Login', `Falha login: ${user}`);
+    }
 });
 
-function sairSistema(){
-  if(!confirm('Sair do sistema?')) return;
-  try{ if(document.fullscreenElement) document.exitFullscreen(); }catch(e){}
-  document.getElementById('mainContainer').style.display='none';
-  document.getElementById('loginContainer').style.display='flex';
-  document.getElementById('loginUser').value='';
-  document.getElementById('loginPassword').value='';
-  usuarioLogado = null;
+function sairSistema() {
+    if (!confirm('Sair do sistema?')) return;
+    try { if (document.fullscreenElement) document.exitFullscreen(); } catch(e){}
+    document.getElementById('mainContainer').style.display = 'none';
+    document.getElementById('loginContainer').style.display = 'flex';
+    document.getElementById('loginUser').value = '';
+    document.getElementById('loginPassword').value = '';
+    document.getElementById('loginError').style.display = 'none';
+    usuarioLogado = null;
 }
 
-// ========== TABS ==========
+// ===== TAB SWITCHING =====
 document.querySelectorAll('.tab').forEach(tab => {
-  tab.addEventListener('click', function(){
-    if(this.classList.contains('hidden-tab')) return;
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    this.classList.add('active');
-    const c = document.getElementById(this.dataset.tab);
-    if(c) c.classList.add('active');
-  });
-});
-
-document.getElementById('fullscreenBtn').addEventListener('click', function(){
-  if(document.fullscreenElement){ document.exitFullscreen(); this.textContent='🖥️ Tela Cheia'; }
-  else { document.documentElement.requestFullscreen(); this.textContent='🖥️ Sair'; }
-});
-
-// ========== MÁSCARAS ==========
-document.addEventListener('input', function(e){
-  if(e.target.classList.contains('money')){
-    let v = e.target.value.replace(/\D/g,'');
-    if(v){
-      v = (parseInt(v)/100).toFixed(2);
-      let [i,d] = v.split('.');
-      i = i.replace(/\B(?=(\d{3})+(?!\d))/g,'.');
-      e.target.value = 'R$ '+i+','+d;
-    } else e.target.value = '';
-  }
-  if(e.target.matches('input[type="text"],input[type="search"],textarea')){
-    const pos = e.target.selectionStart;
-    e.target.value = e.target.value.toUpperCase();
-    e.target.setSelectionRange(pos, pos);
-  }
-});
-
-// ========== FILTROS ==========
-['filterVeiculos|tabelaVeiculos','filterClientes|tabelaClientes','filterHistorico|tabelaHistorico'].forEach(s => {
-  const [f,t] = s.split('|');
-  const el = document.getElementById(f);
-  if(el) el.addEventListener('keyup', function(){
-    const v = this.value.toLowerCase();
-    document.querySelectorAll('#'+t+' tbody tr').forEach(r => {
-      r.style.display = r.textContent.toLowerCase().includes(v) ? '' : 'none';
+    tab.addEventListener('click', function() {
+        if (this.classList.contains('hidden-tab')) return;
+        const tabId = this.dataset.tab;
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        this.classList.add('active');
+        const content = document.getElementById(tabId);
+        if (content && !content.classList.contains('hidden-content')) content.classList.add('active');
+        if (tabId === 'veiculos') atualizarTabelaVeiculos();
+        if (tabId === 'clientes') atualizarTabelaClientes();
+        if (tabId === 'locacoes') atualizarCombosLocacao();
+        if (tabId === 'manutencao') atualizarPlacasManutencao();
+        if (tabId === 'mecanico') atualizarPlacasMecanico();
+        if (tabId === 'historico') atualizarTabelaHistorico();
+        if (tabId === 'auditoria') atualizarTabelaAuditoria();
     });
-  });
 });
 
-// ========== VEÍCULOS ==========
-function salvarVeiculo(){
-  const fabricante = document.getElementById('veicFabricante').value.trim();
-  const cor = document.getElementById('veicCor').value.trim();
-  const placa = document.getElementById('veicPlaca').value.trim();
-  const anoFabr = document.getElementById('veicAnoFabr').value.trim();
-  const anoModel = document.getElementById('veicAnoModel').value.trim();
-  const aluguel = document.getElementById('veicAluguel').value;
-  const caucao = document.getElementById('veicCaucao').value;
-  const proprietario = document.getElementById('veicProprietario').value.trim();
-  const cpfPropr = document.getElementById('veicCpfPropr').value.trim();
+document.getElementById('fullscreenBtn').addEventListener('click', function() {
+    if (document.fullscreenElement) { document.exitFullscreen(); this.textContent = '🖥️ Tela Cheia'; }
+    else { document.documentElement.requestFullscreen(); this.textContent = '🖥️ Sair'; }
+});
 
-  if(!fabricante || !cor || !placa || !anoFabr || !anoModel || !aluguel || !caucao || !proprietario || !cpfPropr){
-    alert('Preencha todos os campos obrigatórios!'); return;
-  }
-
-  // ✅ VALIDAÇÃO ROBUSTA DE PLACA
-  const placaNorm = normalizarPlaca(placa);
-  if(!placaNorm || placaNorm.length < 5){
-    alert('Placa inválida! Digite uma placa válida (ex: ABC1D23).'); return;
-  }
-  if(!Array.isArray(db.veiculos)) db.veiculos = [];
-  const duplicado = db.veiculos.find(v => {
-    if(!v || !v.placa) return false;
-    return normalizarPlaca(v.placa) === placaNorm;
-  });
-  if(duplicado){
-    alert('❌ Já existe um veículo com essa placa!\n\nPlaca no sistema: '+duplicado.placa+'\nFabricante: '+(duplicado.fabricante||'-')+'\nCor: '+(duplicado.cor||'-')+'\n\nClique em "🔎 Ver Banco" para listar todos.');
-    return;
-  }
-
-  db.veiculos.push({
-    fabricante, cor, placa,
-    motor: document.getElementById('veicMotor').value.trim(),
-    cambio: document.getElementById('veicCambio').value.trim(),
-    anoFabr, anoModel,
-    km: document.getElementById('veicKm').value.trim(),
-    renavan: document.getElementById('veicRenavan').value.trim(),
-    chassi: document.getElementById('veicChassi').value.trim(),
-    fipe: document.getElementById('veicFipe').value,
-    caucao, aluguel, proprietario, cpfPropr,
-    criadoEm: new Date().toISOString()
-  });
-
-  atualizarTabelaVeiculos();
-  atualizarCombosPlacas();
-  registrarAuditoria('Cadastro', 'Veículo: '+fabricante+' - '+placa);
-  salvarDB();
-  alert('✅ Veículo salvo com sucesso!');
-  limparCamposVeiculo();
+// ===== FILTROS =====
+function setupFilter(inputId, tableId) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    input.addEventListener('keyup', function() {
+        const f = this.value.toLowerCase();
+        document.querySelectorAll(`#${tableId} tbody tr`).forEach(row => {
+            row.style.display = row.textContent.toLowerCase().includes(f) ? '' : 'none';
+        });
+    });
 }
+['filterVeiculos','filterClientes','filterLocacoes','filterManutencao','filterMecanico','filterUsuario','filterPagamentos','filterBancos','filterFluxoCaixa','filterDoc','filterCompras','filterAuditoria','filterLocEncerrada','filterPendentes','filterHistorico'].forEach(id => {
+    setupFilter(id, id.replace('filter', 'tabela'));
+});
 
-function limparCamposVeiculo(){
-  ['veicFabricante','veicCor','veicPlaca','veicMotor','veicCambio','veicAnoFabr','veicAnoModel','veicKm','veicRenavan','veicChassi','veicFipe','veicCaucao','veicAluguel','veicProprietario','veicCpfPropr']
-  .forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
-}
+// ===== MÁSCARA DE MOEDA =====
+document.querySelectorAll('.money').forEach(input => {
+    input.addEventListener('input', function() {
+        let v = this.value.replace(/\D/g, '');
+        if (v) {
+            v = (parseInt(v) / 100).toFixed(2);
+            let [i, d] = v.split('.');
+            i = i.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            this.value = 'R$ ' + i + ',' + d;
+        }
+    });
+});
 
-function atualizarTabelaVeiculos(){
-  const tbody = document.querySelector('#tabelaVeiculos tbody');
-  if(!tbody) return;
-  tbody.innerHTML = '';
-  (db.veiculos||[]).forEach((v,i) => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${v.fabricante||''}</td>
-      <td>${v.placa||''}</td>
-      <td>${v.cor||''}</td>
-      <td>${(v.anoFabr||'')}${v.anoModel?'/'+v.anoModel:''}</td>
-      <td>${v.aluguel||''}</td>
-      <td>
-        <button class="btn-warning" onclick="editarVeiculo(${i})">✏️</button>
-        <button class="btn-danger" onclick="excluirVeiculo(${i})">🗑️</button>
-      </td>`;
-    tbody.appendChild(tr);
-  });
-}
+// Uppercase em campos de texto
+document.querySelectorAll('input[type="text"], input[type="search"], textarea').forEach(i => {
+    i.addEventListener('input', function() { this.value = this.value.toUpperCase(); });
+});
 
-function editarVeiculo(i){
-  const v = db.veiculos[i]; if(!v) return;
-  document.getElementById('veicFabricante').value = v.fabricante||'';
-  document.getElementById('veicCor').value = v.cor||'';
-  document.getElementById('veicPlaca').value = v.placa||'';
-  document.getElementById('veicMotor').value = v.motor||'';
-  document.getElementById('veicCambio').value = v.cambio||'';
-  document.getElementById('veicAnoFabr').value = v.anoFabr||'';
-  document.getElementById('veicAnoModel').value = v.anoModel||'';
-  document.getElementById('veicKm').value = v.km||'';
-  document.getElementById('veicRenavan').value = v.renavan||'';
-  document.getElementById('veicChassi').value = v.chassi||'';
-  document.getElementById('veicFipe').value = v.fipe||'';
-  document.getElementById('veicCaucao').value = v.caucao||'';
-  document.getElementById('veicAluguel').value = v.aluguel||'';
-  document.getElementById('veicProprietario').value = v.proprietario||'';
-  document.getElementById('veicCpfPropr').value = v.cpfPropr||'';
-  if(confirm('Excluir o veículo atual para salvar como novo?')){
-    db.veiculos.splice(i,1);
+// ===== FUNÇÕES DE VEÍCULOS =====
+function salvarVeiculo() {
+    const fabricante = document.getElementById('veicFabricante').value.trim();
+    const cor = document.getElementById('veicCor').value.trim();
+    const placa = document.getElementById('veicPlaca').value.trim();
+    const anoFabr = document.getElementById('veicAnoFabr').value.trim();
+    const anoModel = document.getElementById('veicAnoModel').value.trim();
+    const aluguel = document.getElementById('veicAluguel').value;
+    const caucao = document.getElementById('veicCaucao').value;
+    const proprietario = document.getElementById('veicProprietario').value.trim();
+    const cpfPropr = document.getElementById('veicCpfPropr').value.trim();
+
+    if (campoVazio(fabricante) || campoVazio(cor) || campoVazio(placa) || campoVazio(anoFabr) ||
+        campoVazio(anoModel) || campoVazio(aluguel) || campoVazio(caucao) ||
+        campoVazio(proprietario) || campoVazio(cpfPropr)) {
+        alert('Preencha todos os campos obrigatórios do veículo!');
+        return;
+    }
+
+    // ===== VALIDAÇÃO ROBUSTA DE PLACA =====
+    const placaNorm = normalizarPlaca(placa);
+    if (!placaNorm) {
+        alert('Placa inválida! Digite apenas letras e números.');
+        return;
+    }
+
+    // Garante que db.veiculos é array
+    if (!Array.isArray(db.veiculos)) db.veiculos = [];
+
+    // Procura duplicada ignorando null/undefined/vazias
+    const veiculoDuplicado = db.veiculos.find(v => {
+        if (!v || v.placa === null || v.placa === undefined) return false;
+        const p = normalizarPlaca(v.placa);
+        return p !== '' && p === placaNorm;
+    });
+
+    if (veiculoDuplicado) {
+        alert(
+            'Já existe um veículo com essa placa!\n\n' +
+            'Placa no sistema: "' + veiculoDuplicado.placa + '"\n' +
+            'Fabricante: ' + (veiculoDuplicado.fabricante || 'N/A') + '\n' +
+            'Cor: ' + (veiculoDuplicado.cor || 'N/A') + '\n\n' +
+            'Clique em "🔎 Ver Banco" para ver todos os veículos salvos.'
+        );
+        console.warn('Veículo duplicado:', veiculoDuplicado);
+        console.log('Todos os veículos:', db.veiculos);
+        return;
+    }
+    // ===== FIM DA VALIDAÇÃO =====
+
+    const veiculo = {
+        fabricante, cor, placa,
+        motor: document.getElementById('veicMotor').value.trim(),
+        cambio: document.getElementById('veicCambio').value.trim(),
+        anoFabr, anoModel,
+        km: document.getElementById('veicKm').value.trim(),
+        renavan: document.getElementById('veicRenavan').value.trim(),
+        chassi: document.getElementById('veicChassi').value.trim(),
+        fipe: document.getElementById('veicFipe').value,
+        caucao, aluguel, proprietario, cpfPropr
+    };
+    db.veiculos.push(veiculo);
     atualizarTabelaVeiculos();
+    atualizarCombosLocacao();
+    atualizarPlacasManutencao();
+    atualizarPlacasMecanico();
+    registrarAuditoria('Cadastro', `Novo veículo: ${veiculo.fabricante} - ${veiculo.placa}`);
     salvarDB();
-  }
-  window.scrollTo(0,0);
+    alert('✅ Veículo salvo com sucesso!');
+    limparCamposVeiculo();
 }
 
-function excluirVeiculo(i){
-  if(!confirm('Excluir veículo permanentemente?')) return;
-  db.veiculos.splice(i,1);
-  atualizarTabelaVeiculos();
-  atualizarCombosPlacas();
-  registrarAuditoria('Exclusão', 'Veículo removido');
-  salvarDB();
-}
-
-function debugVeiculos(){
-  console.log('=== DB ===', db);
-  console.table((db.veiculos||[]).map((v,i)=>({i, placa:v.placa, normalizada:normalizarPlaca(v.placa), fabricante:v.fabricante})));
-  let msg = 'Total: '+(db.veiculos||[]).length+' veículos\n\n';
-  (db.veiculos||[]).forEach((v,i)=>{ msg += i+': "'+v.placa+'" → "'+normalizarPlaca(v.placa)+'"\n'; });
-  alert(msg);
-}
-
-// ========== CLIENTES ==========
-function salvarCliente(){
-  const nome = document.getElementById('cliNome').value.trim();
-  const cpf = document.getElementById('cliCpf').value.trim();
-  const telefone = document.getElementById('cliTelefone').value.trim();
-  if(!nome || !cpf || !telefone){ alert('Preencha nome, CPF e telefone!'); return; }
-  const cpfLimpo = cpf.replace(/\D/g,'');
-  if(db.clientes.some(c => (c.cpf||'').replace(/\D/g,'') === cpfLimpo)){
-    alert('Já existe cliente com esse CPF!'); return;
-  }
-  db.clientes.push({
-    dataCadastro: document.getElementById('cliDataCadastro').value,
-    nome, cpf, rg: document.getElementById('cliRg').value,
-    cnh: document.getElementById('cliCnh').value,
-    dataCnh: document.getElementById('cliDataCnh').value,
-    telefone,
-    endereco: document.getElementById('cliEndereco').value,
-    cep: document.getElementById('cliCep').value,
-    cidade: document.getElementById('cliCidade').value,
-    estado: document.getElementById('cliEstado').value
-  });
-  atualizarTabelaClientes();
-  atualizarCombosPlacas();
-  registrarAuditoria('Cadastro', 'Cliente: '+nome);
-  salvarDB();
-  alert('✅ Cliente salvo!');
-  limparCamposCliente();
-}
-
-function limparCamposCliente(){
-  ['cliDataCadastro','cliNome','cliCpf','cliRg','cliCnh','cliDataCnh','cliTelefone','cliEndereco','cliCep','cliCidade','cliEstado']
-  .forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
-}
-
-function atualizarTabelaClientes(){
-  const tbody = document.querySelector('#tabelaClientes tbody');
-  if(!tbody) return;
-  tbody.innerHTML = '';
-  (db.clientes||[]).forEach((c,i) => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${c.nome||''}</td>
-      <td>${c.cpf||''}</td>
-      <td>${c.telefone||''}</td>
-      <td>${c.cidade||''}</td>
-      <td><button class="btn-danger" onclick="if(confirm('Excluir?')){db.clientes.splice(${i},1);atualizarTabelaClientes();salvarDB();}">🗑️</button></td>`;
-    tbody.appendChild(tr);
-  });
-}
-
-// ========== LOCAÇÕES ==========
-function atualizarCombosPlacas(){
-  const sCli = document.getElementById('locLocatario');
-  if(sCli){
-    sCli.innerHTML = '<option value="">Selecione</option>';
-    (db.clientes||[]).forEach(c => {
-      const o = document.createElement('option');
-      o.value = c.nome; o.textContent = c.nome+' - '+c.cpf;
-      sCli.appendChild(o);
+function limparCamposVeiculo() {
+    ['veicFabricante','veicCor','veicPlaca','veicMotor','veicCambio','veicAnoFabr','veicAnoModel','veicKm','veicRenavan','veicChassi','veicFipe','veicCaucao','veicAluguel','veicProprietario','veicCpfPropr'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
     });
-  }
-  ['locPlaca','manPlaca','mecPlaca'].forEach(id => {
-    const s = document.getElementById(id);
-    if(!s) return;
+}
+
+function atualizarTabelaVeiculos() {
+    const tbody = document.querySelector('#tabelaVeiculos tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    (db.veiculos || []).forEach((v, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${v.fabricante || ''}</td>
+            <td>${v.placa || ''}</td>
+            <td>${v.cor || ''}</td>
+            <td>${(v.anoFabr || '')}${v.anoModel ? '/' + v.anoModel : ''}</td>
+            <td>${v.aluguel || ''}</td>
+            <td>
+                <button class="btn-warning" onclick="editarVeiculo(${i})">✏️</button>
+                <button class="btn-danger" onclick="excluirVeiculo(${i})">🗑️</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function editarVeiculo(i) {
+    const v = db.veiculos[i];
+    if (!v) return;
+    document.getElementById('veicFabricante').value = v.fabricante || '';
+    document.getElementById('veicCor').value = v.cor || '';
+    document.getElementById('veicPlaca').value = v.placa || '';
+    document.getElementById('veicMotor').value = v.motor || '';
+    document.getElementById('veicCambio').value = v.cambio || '';
+    document.getElementById('veicAnoFabr').value = v.anoFabr || '';
+    document.getElementById('veicAnoModel').value = v.anoModel || '';
+    document.getElementById('veicKm').value = v.km || '';
+    document.getElementById('veicRenavan').value = v.renavan || '';
+    document.getElementById('veicChassi').value = v.chassi || '';
+    document.getElementById('veicFipe').value = v.fipe || '';
+    document.getElementById('veicCaucao').value = v.caucao || '';
+    document.getElementById('veicAluguel').value = v.aluguel || '';
+    document.getElementById('veicProprietario').value = v.proprietario || '';
+    document.getElementById('veicCpfPropr').value = v.cpfPropr || '';
+    if (confirm('Deseja EXCLUIR este veículo para salvar as alterações como novo?')) {
+        db.veiculos.splice(i, 1);
+        atualizarTabelaVeiculos();
+        salvarDB();
+    }
+    window.scrollTo(0, 0);
+}
+
+function excluirVeiculo(i) {
+    if (!confirm('Excluir permanentemente este veículo?')) return;
+    db.veiculos.splice(i, 1);
+    atualizarTabelaVeiculos();
+    atualizarCombosLocacao();
+    atualizarPlacasManutencao();
+    atualizarPlacasMecanico();
+    registrarAuditoria('Exclusão', `Veículo excluído índice ${i}`);
+    salvarDB();
+}
+
+function debugVeiculos() {
+    console.log('=== DB COMPLETO ===', db);
+    console.log('=== VEÍCULOS ===');
+    console.table((db.veiculos || []).map((v, i) => ({ idx: i, placa: v.placa, placaNorm: normalizarPlaca(v.placa), fabricante: v.fabricante })));
+    alert(
+        'Total de veículos no banco: ' + (db.veiculos || []).length + '\n\n' +
+        'Abra o Console (F12) para ver a lista detalhada.\n\n' +
+        (db.veiculos || []).map((v,i) => `${i}: "${v.placa}" (normalizada: "${normalizarPlaca(v.placa)}")`).join('\n')
+    );
+}
+
+// ===== FUNÇÕES DE CLIENTES =====
+async function salvarCliente() {
+    const nome = document.getElementById('cliNome').value.trim();
+    const cpf = document.getElementById('cliCpf').value.trim();
+    const rg = document.getElementById('cliRg').value.trim();
+    const telefone = document.getElementById('cliTelefone').value.trim();
+    const endereco = document.getElementById('cliEndereco').value.trim();
+    const cidade = document.getElementById('cliCidade').value.trim();
+    const estado = document.getElementById('cliEstado').value.trim();
+    if (!nome || !cpf || !rg || !telefone || !endereco || !cidade || !estado) {
+        alert('Preencha todos os campos obrigatórios do cliente!'); return;
+    }
+    const cpfLimpo = cpf.replace(/\D/g, '');
+    if (db.clientes.some(c => (c.cpf || '').replace(/\D/g, '') === cpfLimpo)) {
+        alert('Já existe um cliente com esse CPF!'); return;
+    }
+    const cliente = {
+        dataCadastro: document.getElementById('cliDataCadastro').value,
+        nome, cpf, rg,
+        cnh: document.getElementById('cliCnh').value,
+        dataCnh: document.getElementById('cliDataCnh').value,
+        telefone, endereco,
+        cep: document.getElementById('cliCep').value,
+        cidade, estado,
+        selfie: selfieClienteTemp || null
+    };
+    db.clientes.push(cliente);
+    criarUsuarioDoCliente(cliente);
+    atualizarTabelaClientes();
+    atualizarCombosLocacao();
+    registrarAuditoria('Cadastro', `Novo cliente: ${cliente.nome}`);
+    salvarDB();
+    alert('Cliente salvo!');
+    limparCamposCliente();
+    limparSelfieCliente();
+}
+
+function limparCamposCliente() {
+    ['cliDataCadastro','cliNome','cliCpf','cliRg','cliCnh','cliDataCnh','cliTelefone','cliEndereco','cliCep','cliCidade','cliEstado'].forEach(id => {
+        const el = document.getElementById(id); if (el) el.value = '';
+    });
+}
+
+function atualizarTabelaClientes() {
+    const tbody = document.querySelector('#tabelaClientes tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    (db.clientes || []).forEach((c, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${c.nome || ''}</td>
+            <td>${c.cpf || ''}</td>
+            <td>${c.telefone || ''}</td>
+            <td>${c.cidade || ''}</td>
+            <td>${c.selfie ? `<img src="${c.selfie}" class="selfie-thumbnail" onclick="openImageModal('${c.selfie}')">` : '-'}</td>
+            <td>
+                <button class="btn-warning" onclick="editarCliente(${i})">✏️</button>
+                <button class="btn-danger" onclick="excluirCliente(${i})">🗑️</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function editarCliente(i) {
+    const c = db.clientes[i];
+    if (!c) return;
+    document.getElementById('cliDataCadastro').value = c.dataCadastro || '';
+    document.getElementById('cliNome').value = c.nome || '';
+    document.getElementById('cliCpf').value = c.cpf || '';
+    document.getElementById('cliRg').value = c.rg || '';
+    document.getElementById('cliCnh').value = c.cnh || '';
+    document.getElementById('cliDataCnh').value = c.dataCnh || '';
+    document.getElementById('cliTelefone').value = c.telefone || '';
+    document.getElementById('cliEndereco').value = c.endereco || '';
+    document.getElementById('cliCep').value = c.cep || '';
+    document.getElementById('cliCidade').value = c.cidade || '';
+    document.getElementById('cliEstado').value = c.estado || '';
+    window.scrollTo(0, 0);
+}
+
+function excluirCliente(i) {
+    if (!confirm('Excluir este cliente?')) return;
+    db.clientes.splice(i, 1);
+    atualizarTabelaClientes();
+    atualizarCombosLocacao();
+    salvarDB();
+}
+
+function criarUsuarioDoCliente(cliente) {
+    const primeiroNome = cliente.nome.split(/\s+/)[0].toUpperCase();
+    if (db.usuarios.some(u => u.nome === primeiroNome)) return;
+    const tel = cliente.telefone.replace(/\D/g, '');
+    const senha = tel.length >= 10 ? tel.substring(2) : tel;
+    db.usuarios.push({
+        nome: primeiroNome, senha, tipo: 'MOTORISTA',
+        permissoes: JSON.parse(JSON.stringify(permissoesPadrao.MOTORISTA)),
+        selfie: cliente.selfie || null
+    });
+    atualizarTabelaUsuario();
+}
+
+// ===== FUNÇÕES DE USUÁRIOS =====
+function atualizarTabelaUsuario() {
+    const tbody = document.querySelector('#tabelaUsuario tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    (db.usuarios || []).forEach((u, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${u.nome || ''}</td>
+            <td>${u.tipo || ''}</td>
+            <td>${u.selfie ? `<img src="${u.selfie}" class="selfie-thumbnail" onclick="openImageModal('${u.selfie}')">` : '-'}</td>
+            <td>
+                <button class="btn-warning" onclick="editarUsuario(${i})">✏️</button>
+                <button class="btn-danger" onclick="excluirUsuario(${i})">🗑️</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function editarUsuario(i) {
+    const u = db.usuarios[i];
+    if (!u) return;
+    document.getElementById('userNome').value = u.nome || '';
+    document.getElementById('userSenha').value = u.senha || '';
+    document.getElementById('userTipo').value = u.tipo || 'ADM';
+    usuarioEditandoIndex = i;
+    preencherPermissoesUI(u.permissoes);
+    window.scrollTo(0, 0);
+}
+
+function excluirUsuario(i) {
+    if (!confirm('Excluir este usuário?')) return;
+    if ((db.usuarios[i].nome || '').toUpperCase() === 'LOBÃO') { alert('Não é possível excluir o LOBÃO.'); return; }
+    db.usuarios.splice(i, 1);
+    atualizarTabelaUsuario();
+    salvarDB();
+}
+
+function salvarUsuario() {
+    const nome = document.getElementById('userNome').value.trim().toUpperCase();
+    const senha = document.getElementById('userSenha').value;
+    const tipo = document.getElementById('userTipo').value;
+    if (!nome || !senha) { alert('Preencha nome e senha!'); return; }
+    const permissoes = coletarPermissoesUI();
+    const selfie = selfieUsuarioTemp || null;
+    if (usuarioEditandoIndex !== null) {
+        db.usuarios[usuarioEditandoIndex] = { nome, senha, tipo, permissoes, selfie };
+        usuarioEditandoIndex = null;
+    } else {
+        if (db.usuarios.some(u => u.nome === nome)) { alert('Já existe esse usuário!'); return; }
+        db.usuarios.push({ nome, senha, tipo, permissoes, selfie });
+    }
+    atualizarTabelaUsuario();
+    salvarDB();
+    alert('Usuário salvo!');
+    limparCamposUsuario();
+}
+
+function limparCamposUsuario() {
+    ['userNome','userSenha'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    selfieUsuarioTemp = null;
+    document.getElementById('selfiePreviewUsuario').innerHTML = '';
+    usuarioEditandoIndex = null;
+}
+
+function gerarPermissoesUI() {
+    const container = document.getElementById('permissoesContainer');
+    if (!container) return;
+    container.innerHTML = '<h5>📑 Abas</h5>';
+    const grid = document.createElement('div'); grid.className = 'permissoes-grid';
+    todasAbas.forEach(a => {
+        const d = document.createElement('div'); d.className = 'permissao-item';
+        d.innerHTML = `<input type="checkbox" id="perm_aba_${a.id}" checked> <label for="perm_aba_${a.id}">${a.id}</label>`;
+        grid.appendChild(d);
+    });
+    container.appendChild(grid);
+    const grid2 = document.createElement('div'); grid2.className = 'permissoes-grid';
+    todasPermissoes.forEach(p => {
+        const d = document.createElement('div'); d.className = 'permissao-item';
+        d.innerHTML = `<input type="checkbox" id="perm_botao_${p}" checked> <label for="perm_botao_${p}">${p}</label>`;
+        grid2.appendChild(d);
+    });
+    container.appendChild(grid2);
+}
+
+function preencherPermissoesUI(permissoes) {
+    if (!permissoes) return;
+    todasAbas.forEach(a => {
+        const cb = document.getElementById(`perm_aba_${a.id}`);
+        if (cb) cb.checked = permissoes.abas?.[a.id] || false;
+    });
+    todasPermissoes.forEach(p => {
+        const cb = document.getElementById(`perm_botao_${p}`);
+        if (cb) cb.checked = permissoes.botoes?.[p] || false;
+    });
+}
+
+function coletarPermissoesUI() {
+    const p = { abas: {}, botoes: {}, veiculos: {} };
+    todasAbas.forEach(a => { const cb = document.getElementById(`perm_aba_${a.id}`); p.abas[a.id] = cb ? cb.checked : false; });
+    todasPermissoes.forEach(b => { const cb = document.getElementById(`perm_botao_${b}`); p.botoes[b] = cb ? cb.checked : false; });
+    return p;
+}
+
+function preencherPermissoesPadrao() {
+    const tipo = document.getElementById('userTipo').value;
+    preencherPermissoesUI(permissoesPadrao[tipo]);
+}
+
+function aplicarPermissoes(usuario) {
+    usuarioLogado = usuario;
+    const p = usuario.permissoes || permissoesPadrao.MOTORISTA;
+    document.querySelectorAll('.tab[data-tab]').forEach(tab => {
+        if (p.abas?.[tab.dataset.tab]) tab.classList.remove('hidden-tab');
+        else tab.classList.add('hidden-tab');
+    });
+    document.querySelectorAll('.tab-content').forEach(c => {
+        if (!p.abas?.[c.id]) { c.classList.add('hidden-content'); c.classList.remove('active'); }
+        else c.classList.remove('hidden-content');
+    });
+    document.querySelectorAll('[data-permissao]').forEach(btn => {
+        btn.style.display = p.botoes?.[btn.dataset.permissao] ? '' : 'none';
+    });
+    const firstTab = document.querySelector('.tab[data-tab]:not(.hidden-tab)');
+    if (firstTab) firstTab.click();
+}
+
+// ===== FUNÇÕES DE LOCAÇÃO =====
+function atualizarCombosLocacao() {
+    const sCli = document.getElementById('locLocatario');
+    if (sCli) {
+        sCli.innerHTML = '<option value="">Selecione</option>';
+        (db.clientes || []).forEach(c => {
+            const o = document.createElement('option');
+            o.value = c.nome; o.textContent = `${c.nome} - ${c.cpf}`;
+            sCli.appendChild(o);
+        });
+    }
+    const sVei = document.getElementById('locVeiculo');
+    if (sVei) {
+        sVei.innerHTML = '<option value="">Selecione</option>';
+        (db.veiculos || []).forEach(v => {
+            const o = document.createElement('option');
+            o.value = v.fabricante; o.textContent = `${v.fabricante} - ${v.placa}`;
+            sVei.appendChild(o);
+        });
+    }
+    const sPl = document.getElementById('locPlaca');
+    if (sPl) {
+        sPl.innerHTML = '<option value="">Selecione</option>';
+        (db.veiculos || []).forEach(v => {
+            const o = document.createElement('option');
+            o.value = v.placa; o.textContent = `${v.placa} - ${v.fabricante}`;
+            sPl.appendChild(o);
+        });
+    }
+}
+
+function selecionarClienteCombo() {
+    const nome = document.getElementById('locLocatario').value;
+    const c = (db.clientes || []).find(x => x.nome === nome);
+    if (c) document.getElementById('locCpfPropr').value = c.cpf || '';
+}
+
+function selecionarVeiculoCombo() {
+    const f = document.getElementById('locVeiculo').value;
+    const v = (db.veiculos || []).find(x => x.fabricante === f);
+    if (v) {
+        document.getElementById('locFabModelo').value = v.fabricante || '';
+        document.getElementById('locCor').value = v.cor || '';
+        document.getElementById('locPlaca').value = v.placa || '';
+        document.getElementById('locAnoFabr').value = v.anoFabr || '';
+        document.getElementById('locAnoModel').value = v.anoModel || '';
+        document.getElementById('locCaucao').value = v.caucao || '';
+        document.getElementById('locValorAluguel').value = v.aluguel || '';
+        document.getElementById('locProprietario').value = v.proprietario || '';
+        document.getElementById('locCpfPropr').value = v.cpfPropr || '';
+    }
+}
+
+function selecionarPlacaCombo() { selecionarVeiculoCombo(); }
+
+function calcularDataFim() {
+    const d = document.getElementById('locDataInicio').value;
+    if (d) {
+        const dt = new Date(d); dt.setMonth(dt.getMonth() + 6);
+        document.getElementById('locDataFim').value = dt.toISOString().split('T')[0];
+    }
+}
+
+function salvarLocacao() {
+    const locatario = document.getElementById('locLocatario').value;
+    const fabricante = document.getElementById('locFabModelo').value;
+    const placa = document.getElementById('locPlaca').value;
+    const dataInicio = document.getElementById('locDataInicio').value;
+    const dataFim = document.getElementById('locDataFim').value;
+    const valorAluguel = document.getElementById('locValorAluguel').value;
+    if (!locatario || !fabricante || !placa || !dataInicio) { alert('Preencha todos os campos obrigatórios!'); return; }
+    db.locacoes.push({
+        locatario, fabricante, placa, dataInicio, dataFim, valorAluguel,
+        caucao: document.getElementById('locCaucao').value,
+        caucaoPago: document.getElementById('locCaucaoPago').value,
+        pagCaucao: document.getElementById('locPagCaucao').value,
+        vistoria: []
+    });
+    atualizarTabelaLocacoes();
+    registrarAuditoria('Cadastro', `Nova locação: ${locatario} - ${placa}`);
+    salvarDB();
+    alert('Locação salva!');
+}
+
+function atualizarTabelaLocacoes() {
+    const tbody = document.querySelector('#tabelaLocacoes tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    (db.locacoes || []).forEach((l, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${l.locatario || ''}</td>
+            <td>${l.fabricante || ''}</td>
+            <td>${l.placa || ''}</td>
+            <td>${l.dataInicio || ''}</td>
+            <td>${l.dataFim || ''}</td>
+            <td>${l.valorAluguel || ''}</td>
+            <td>
+                <button class="btn-warning" onclick="alert('Encerrar locação não implementado.')">🏁</button>
+                <button class="btn-danger" onclick="excluirLocacao(${i})">🗑️</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function excluirLocacao(i) {
+    if (!confirm('Excluir esta locação?')) return;
+    db.locacoes.splice(i, 1);
+    atualizarTabelaLocacoes();
+    salvarDB();
+}
+
+// ===== MANUTENÇÃO E MECÂNICO =====
+function atualizarPlacasManutencao() {
+    const s = document.getElementById('manPlaca');
+    if (!s) return;
     s.innerHTML = '<option value="">Selecione</option>';
-    (db.veiculos||[]).forEach(v => {
-      const o = document.createElement('option');
-      o.value = v.placa; o.textContent = v.placa+' - '+v.fabricante;
-      s.appendChild(o);
+    (db.veiculos || []).forEach(v => {
+        const o = document.createElement('option');
+        o.value = v.placa; o.textContent = `${v.placa} - ${v.fabricante}`;
+        s.appendChild(o);
     });
-  });
 }
 
-function selecionarPlacaCombo(){
-  const p = document.getElementById('locPlaca').value;
-  const v = (db.veiculos||[]).find(x => x.placa === p);
-  if(v){
-    document.getElementById('locFabModelo').value = v.fabricante||'';
-    document.getElementById('locValorAluguel').value = v.aluguel||'';
-  }
+function selecionarPlacaManutencao() {
+    const p = document.getElementById('manPlaca').value;
+    const v = (db.veiculos || []).find(x => x.placa === p);
+    if (v) document.getElementById('manVeiculo').value = v.fabricante || '';
 }
 
-function selecionarPlacaManutencao(){
-  const p = document.getElementById('manPlaca').value;
-  const v = (db.veiculos||[]).find(x => x.placa === p);
-  if(v) document.getElementById('manVeiculo').value = v.fabricante||'';
+function salvarManutencao() {
+    const placa = document.getElementById('manPlaca').value;
+    if (!placa) { alert('Selecione a placa!'); return; }
+    db.manutencao.push({
+        veiculo: document.getElementById('manVeiculo').value,
+        placa,
+        tipo: document.getElementById('manTipo').value,
+        km: document.getElementById('manKm').value,
+        obs: document.getElementById('manObs').value
+    });
+    atualizarTabelaManutencao();
+    salvarDB();
+    alert('Manutenção salva!');
 }
 
-function selecionarPlacaMecanico(){
-  const p = document.getElementById('mecPlaca').value;
-  const v = (db.veiculos||[]).find(x => x.placa === p);
-  if(v) document.getElementById('mecCarro').value = v.fabricante||'';
+function atualizarTabelaManutencao() {
+    const tbody = document.querySelector('#tabelaManutencao tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    (db.manutencao || []).forEach((m, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${m.veiculo||''}</td><td>${m.placa||''}</td><td>${m.tipo||''}</td><td>${m.km||''}</td>
+            <td><button class="btn-danger" onclick="db.manutencao.splice(${i},1);atualizarTabelaManutencao();salvarDB();">🗑️</button></td>`;
+        tbody.appendChild(tr);
+    });
 }
 
-function calcularDataFim(){
-  const d = document.getElementById('locDataInicio').value;
-  if(d){
-    const dt = new Date(d); dt.setMonth(dt.getMonth()+6);
-    document.getElementById('locDataFim').value = dt.toISOString().split('T')[0];
-  }
+function atualizarPlacasMecanico() {
+    const s = document.getElementById('mecPlaca');
+    if (!s) return;
+    s.innerHTML = '<option value="">Selecione</option>';
+    (db.veiculos || []).forEach(v => {
+        const o = document.createElement('option');
+        o.value = v.placa; o.textContent = `${v.placa} - ${v.fabricante}`;
+        s.appendChild(o);
+    });
 }
 
-function salvarLocacao(){
-  const locatario = document.getElementById('locLocatario').value;
-  const placa = document.getElementById('locPlaca').value;
-  const dataInicio = document.getElementById('locDataInicio').value;
-  if(!locatario || !placa || !dataInicio){ alert('Preencha todos os campos!'); return; }
-  db.locacoes.push({
-    locatario, placa,
-    fabricante: document.getElementById('locFabModelo').value,
-    dataInicio,
-    dataFim: document.getElementById('locDataFim').value,
-    valorAluguel: document.getElementById('locValorAluguel').value
-  });
-  atualizarTabelaLocacoes();
-  salvarDB();
-  alert('✅ Locação salva!');
+function selecionarPlacaMecanico() {
+    const p = document.getElementById('mecPlaca').value;
+    const v = (db.veiculos || []).find(x => x.placa === p);
+    if (v) document.getElementById('mecCarro').value = v.fabricante || '';
 }
 
-function atualizarTabelaLocacoes(){
-  const tbody = document.querySelector('#tabelaLocacoes tbody');
-  if(!tbody) return;
-  tbody.innerHTML = '';
-  (db.locacoes||[]).forEach((l,i) => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${l.locatario||''}</td><td>${l.placa||''}</td><td>${l.dataInicio||''}</td><td>${l.dataFim||''}</td><td>${l.valorAluguel||''}</td>
-      <td><button class="btn-danger" onclick="if(confirm('Excluir?')){db.locacoes.splice(${i},1);atualizarTabelaLocacoes();salvarDB();}">🗑️</button></td>`;
-    tbody.appendChild(tr);
-  });
+async function salvarMecanico() {
+    const data = document.getElementById('mecData').value;
+    const oficina = document.getElementById('mecOficina').value;
+    const servico = document.getElementById('mecServico').value;
+    const carro = document.getElementById('mecCarro').value;
+    const placa = document.getElementById('mecPlaca').value;
+    const valor = document.getElementById('mecValor').value;
+    if (!data || !oficina || !servico || !carro || !placa || !valor) {
+        alert('Preencha todos os campos!'); return;
+    }
+    db.mecanico.push({
+        data, oficina, servico,
+        responsavel: document.getElementById('mecResponsavel').value,
+        carro, placa, valor,
+        obs: document.getElementById('mecObs').value,
+        pago: false
+    });
+    db.historico.push({
+        data, descricao: servico, placa, valor,
+        fornecedor: document.getElementById('mecResponsavel').value, oficina
+    });
+    atualizarTabelaMecanico();
+    atualizarTabelaHistorico();
+    salvarDB();
+    alert('Serviço salvo!');
+    limparCamposMecanico();
 }
 
-// ========== MANUTENÇÃO ==========
-function salvarManutencao(){
-  const placa = document.getElementById('manPlaca').value;
-  if(!placa){ alert('Selecione a placa!'); return; }
-  db.manutencao.push({
-    veiculo: document.getElementById('manVeiculo').value,
-    placa,
-    tipo: document.getElementById('manTipo').value,
-    km: document.getElementById('manKm').value,
-    obs: document.getElementById('manObs').value
-  });
-  atualizarTabelaManutencao();
-  salvarDB();
-  alert('✅ Manutenção salva!');
+function limparCamposMecanico() {
+    ['mecData','mecOficina','mecServico','mecResponsavel','mecCarro','mecPlaca','mecValor','mecObs'].forEach(id => {
+        const el = document.getElementById(id); if (el) el.value = '';
+    });
 }
 
-function atualizarTabelaManutencao(){
-  const tbody = document.querySelector('#tabelaManutencao tbody');
-  if(!tbody) return;
-  tbody.innerHTML = '';
-  (db.manutencao||[]).forEach((m,i) => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${m.veiculo||''}</td><td>${m.placa||''}</td><td>${m.tipo||''}</td><td>${m.km||''}</td>
-      <td><button class="btn-danger" onclick="if(confirm('Excluir?')){db.manutencao.splice(${i},1);atualizarTabelaManutencao();salvarDB();}">🗑️</button></td>`;
-    tbody.appendChild(tr);
-  });
+function atualizarTabelaMecanico() {
+    const tbody = document.querySelector('#tabelaMecanico tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    (db.mecanico || []).forEach((m, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${m.data||''}</td><td>${m.oficina||''}</td><td>${m.servico||''}</td><td>${m.carro||''}</td><td>${m.valor||''}</td>
+            <td><button class="btn-danger" onclick="db.mecanico.splice(${i},1);atualizarTabelaMecanico();salvarDB();">🗑️</button></td>`;
+        tbody.appendChild(tr);
+    });
 }
 
-// ========== MECÂNICO ==========
-function salvarMecanico(){
-  const data = document.getElementById('mecData').value;
-  const placa = document.getElementById('mecPlaca').value;
-  const valor = document.getElementById('mecValor').value;
-  if(!data || !placa || !valor){ alert('Preencha data, placa e valor!'); return; }
-  const item = {
-    data,
-    oficina: document.getElementById('mecOficina').value,
-    servico: document.getElementById('mecServico').value,
-    responsavel: document.getElementById('mecResponsavel').value,
-    carro: document.getElementById('mecCarro').value,
-    placa, valor,
-    obs: document.getElementById('mecObs').value
-  };
-  db.mecanico.push(item);
-  db.historico.push({
-    data,
-    descricao: item.servico,
-    placa,
-    valor,
-    fornecedor: item.responsavel,
-    oficina: item.oficina
-  });
-  atualizarTabelaMecanico();
-  atualizarTabelaHistorico();
-  salvarDB();
-  alert('✅ Serviço salvo!');
+// ===== HISTÓRICO =====
+function atualizarTabelaHistorico() {
+    const tbody = document.querySelector('#tabelaHistorico tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    (db.historico || []).slice().reverse().forEach((h, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${h.data||''}</td><td>${h.descricao||''}</td><td>${h.placa||''}</td><td>${h.valor||''}</td><td>${h.fornecedor||''}</td><td>${h.oficina||''}</td><td>-</td><td>-</td>`;
+        tbody.appendChild(tr);
+    });
 }
 
-function atualizarTabelaMecanico(){
-  const tbody = document.querySelector('#tabelaMecanico tbody');
-  if(!tbody) return;
-  tbody.innerHTML = '';
-  (db.mecanico||[]).forEach((m,i) => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${m.data||''}</td><td>${m.oficina||''}</td><td>${m.servico||''}</td><td>${m.carro||''}</td><td>${m.valor||''}</td>
-      <td><button class="btn-danger" onclick="if(confirm('Excluir?')){db.mecanico.splice(${i},1);atualizarTabelaMecanico();salvarDB();}">🗑️</button></td>`;
-    tbody.appendChild(tr);
-  });
+// ===== AUDITORIA =====
+function registrarAuditoria(acao, descricao) {
+    if (!db.auditoria) db.auditoria = [];
+    db.auditoria.push({
+        data: new Date().toLocaleString('pt-BR'),
+        usuario: usuarioLogado ? usuarioLogado.nome : 'SISTEMA',
+        acao, descricao
+    });
+    if (db.auditoria.length > 1000) db.auditoria.shift();
+    try { atualizarTabelaAuditoria(); } catch(e) {}
 }
 
-// ========== HISTÓRICO ==========
-function atualizarTabelaHistorico(){
-  const tbody = document.querySelector('#tabelaHistorico tbody');
-  if(!tbody) return;
-  tbody.innerHTML = '';
-  (db.historico||[]).slice().reverse().forEach(h => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${h.data||''}</td><td>${h.descricao||''}</td><td>${h.placa||''}</td><td>${h.valor||''}</td><td>${h.fornecedor||''}</td><td>${h.oficina||''}</td>`;
-    tbody.appendChild(tr);
-  });
+function atualizarTabelaAuditoria() {
+    const tbody = document.querySelector('#tabelaAuditoria tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    (db.auditoria || []).slice(-100).reverse().forEach(a => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${a.data||''}</td><td>${a.usuario||''}</td><td>${a.acao||''}</td><td>${a.descricao||''}</td>`;
+        tbody.appendChild(tr);
+    });
 }
 
-// ========== USUÁRIOS ==========
-function preencherPermissoesPadrao(){}
-function salvarUsuario(){
-  const nome = document.getElementById('userNome').value.trim().toUpperCase();
-  const senha = document.getElementById('userSenha').value;
-  const tipo = document.getElementById('userTipo').value;
-  if(!nome || !senha){ alert('Preencha nome e senha!'); return; }
-  if(db.usuarios.some(u => u.nome === nome)){ alert('Usuário já existe!'); return; }
-  db.usuarios.push({ nome, senha, tipo, permissoes: null, selfie:null });
-  atualizarTabelaUsuario();
-  salvarDB();
-  alert('✅ Usuário salvo!');
-  limparCamposUsuario();
+// ===== SELFIE =====
+function abrirModalSelfie(destino = 'cliente') {
+    selfieDestino = destino;
+    selfieDataUrl = null;
+    document.getElementById('selfiePhotoPreview').style.display = 'none';
+    document.getElementById('selfieConfirmBtn').style.display = 'none';
+    document.getElementById('selfieCaptureBtn').style.display = 'inline-block';
+    document.getElementById('selfieModal').classList.add('active');
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false })
+        .then(stream => {
+            selfieStream = stream;
+            document.getElementById('selfieVideo').srcObject = stream;
+            document.getElementById('selfieVideo').play();
+            atualizarPreviewSelfie();
+        })
+        .catch(err => { alert('Erro ao acessar câmera: ' + err.message); fecharModalSelfie(); });
 }
 
-function limparCamposUsuario(){
-  ['userNome','userSenha'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
+function fecharModalSelfie() {
+    if (selfieStream) { selfieStream.getTracks().forEach(t => t.stop()); selfieStream = null; }
+    document.getElementById('selfieModal').classList.remove('active');
+    document.getElementById('selfieVideo').srcObject = null;
+    selfieDataUrl = null;
 }
 
-function atualizarTabelaUsuario(){
-  const tbody = document.querySelector('#tabelaUsuario tbody');
-  if(!tbody) return;
-  tbody.innerHTML = '';
-  (db.usuarios||[]).forEach((u,i) => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${u.nome||''}</td><td>${u.tipo||''}</td>
-      <td>${u.nome==='LOBÃO'?'🔒':'<button class="btn-danger" onclick="if(confirm(\'Excluir?\')){db.usuarios.splice('+i+',1);atualizarTabelaUsuario();salvarDB();}">🗑️</button>'}</td>`;
-    tbody.appendChild(tr);
-  });
+function atualizarPreviewSelfie() {
+    const v = document.getElementById('selfieVideo');
+    const c = document.getElementById('selfieCanvas');
+    const p = document.getElementById('selfiePreviewImg');
+    if (!v || !c || !p || !v.readyState) { setTimeout(atualizarPreviewSelfie, 200); return; }
+    if (v.readyState === v.HAVE_ENOUGH_DATA) {
+        c.width = v.videoWidth; c.height = v.videoHeight;
+        const ctx = c.getContext('2d');
+        ctx.translate(c.width, 0); ctx.scale(-1, 1);
+        ctx.drawImage(v, 0, 0, c.width, c.height);
+        try { p.src = c.toDataURL('image/jpeg', 0.6); } catch(e) {}
+    }
+    if (selfieStream) setTimeout(atualizarPreviewSelfie, 150);
 }
 
-// ========== AUDITORIA ==========
-function registrarAuditoria(acao, descricao){
-  if(!Array.isArray(db.auditoria)) db.auditoria = [];
-  db.auditoria.push({
-    data: new Date().toLocaleString('pt-BR'),
-    usuario: usuarioLogado ? usuarioLogado.nome : 'SISTEMA',
-    acao, descricao
-  });
-  if(db.auditoria.length > 500) db.auditoria.shift();
+function capturarSelfie() {
+    const v = document.getElementById('selfieVideo');
+    const c = document.getElementById('selfieCanvas');
+    if (v.readyState !== v.HAVE_ENOUGH_DATA) { alert('Câmera não pronta.'); return; }
+    c.width = v.videoWidth; c.height = v.videoHeight;
+    const ctx = c.getContext('2d');
+    ctx.translate(c.width, 0); ctx.scale(-1, 1);
+    ctx.drawImage(v, 0, 0, c.width, c.height);
+    selfieDataUrl = c.toDataURL('image/jpeg', 0.6);
+    document.getElementById('selfiePhotoResult').src = selfieDataUrl;
+    document.getElementById('selfiePhotoPreview').style.display = 'block';
+    document.getElementById('selfieCaptureBtn').style.display = 'none';
+    document.getElementById('selfieConfirmBtn').style.display = 'inline-block';
+    if (selfieStream) { selfieStream.getTracks().forEach(t => t.stop()); selfieStream = null; }
+    document.getElementById('selfieVideo').srcObject = null;
 }
 
-function atualizarTabelaAuditoria(){
-  const tbody = document.querySelector('#tabelaAuditoria tbody');
-  if(!tbody) return;
-  tbody.innerHTML = '';
-  (db.auditoria||[]).slice(-100).reverse().forEach(a => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${a.data||''}</td><td>${a.usuario||''}</td><td>${a.acao||''}</td><td>${a.descricao||''}</td>`;
-    tbody.appendChild(tr);
-  });
+function confirmarSelfie() {
+    if (!selfieDataUrl) { alert('Nenhuma selfie capturada!'); return; }
+    if (selfieDestino === 'usuario') {
+        selfieUsuarioTemp = selfieDataUrl;
+        const c = document.getElementById('selfiePreviewUsuario');
+        if (c) c.innerHTML = `<img src="${selfieDataUrl}" class="selfie-thumbnail" onclick="openImageModal('${selfieDataUrl}')">`;
+        fecharModalSelfie();
+    } else {
+        selfieClienteTemp = selfieDataUrl;
+        const c = document.getElementById('selfiePreviewCliente');
+        if (c) c.innerHTML = `<img src="${selfieDataUrl}" class="selfie-thumbnail" onclick="openImageModal('${selfieDataUrl}')">`;
+        fecharModalSelfie();
+    }
 }
 
-function limparAuditoriaManual(){
-  if(!confirm('Limpar toda a auditoria?')) return;
-  db.auditoria = [];
-  atualizarTabelaAuditoria();
-  salvarDB();
-  alert('Auditoria limpa!');
+function limparSelfieCliente() { selfieClienteTemp = null; const c = document.getElementById('selfiePreviewCliente'); if (c) c.innerHTML = ''; }
+function limparSelfieUsuario() { selfieUsuarioTemp = null; const c = document.getElementById('selfiePreviewUsuario'); if (c) c.innerHTML = ''; }
+
+// ===== MODAL IMAGEM =====
+function openImageModal(src) {
+    document.getElementById('modalImage').src = src;
+    document.getElementById('imageModal').classList.add('active');
+}
+function closeImageModal() { document.getElementById('imageModal').classList.remove('active'); }
+
+// ===== MODAIS DIVERSOS =====
+function abrirModalContratos() { document.getElementById('contratoModal').classList.add('active'); }
+function fecharModalContratos() { document.getElementById('contratoModal').classList.remove('active'); }
+function fecharDespesasModal() { document.getElementById('despesasModal').classList.remove('active'); }
+function switchSubTab(t) {
+    document.querySelectorAll('#comprovantes .sub-tab').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('#comprovantes .sub-tab-content').forEach(x => x.classList.remove('active'));
+    document.getElementById(t === 'novo' ? 'subTabNovo' : 'subTabSalvos').classList.add('active');
+}
+function abrirCameraVistoria() { alert('Função de vistoria em implementação.'); }
+function fecharCameraVistoria() { document.getElementById('vistoriaCameraModal').classList.remove('active'); }
+
+// ===== FUNÇÕES DIVERSAS (stubs para não quebrar) =====
+function atualizarResumoFinanceiro() {}
+function atualizarTabelaCompras() { const t = document.querySelector('#tabelaCompras tbody'); if (t) t.innerHTML = ''; }
+function atualizarTabelaLocEncerrada() { const t = document.querySelector('#tabelaLocEncerrada tbody'); if (t) t.innerHTML = ''; }
+function atualizarTabelaAlugueis() { const t = document.querySelector('#tabelaPagamentos tbody'); if (t) t.innerHTML = ''; }
+function atualizarTabelaBancos() { const t = document.querySelector('#tabelaBancos tbody'); if (t) t.innerHTML = ''; }
+function atualizarTabelaFluxoCaixa() { const t = document.querySelector('#tabelaFluxoCaixa tbody'); if (t) t.innerHTML = ''; }
+function atualizarTabelaDoc() { const t = document.querySelector('#tabelaDoc tbody'); if (t) t.innerHTML = ''; }
+function atualizarTabelaPendentes() { const t = document.querySelector('#tabelaPendentes tbody'); if (t) t.innerHTML = ''; }
+function atualizarGaleriaGaragem() {}
+function atualizarGaleriaSOS() {}
+function atualizarGaleriaComprovantes() {}
+function carregarDadosContratos() {}
+function carregarConfiguracoes() {}
+function preencherPlacaUsuarioLogado() {}
+function atualizarVistoria() {}
+function atualizarSelectPlacasDoc() {}
+function atualizarSubAbasDoc() {}
+function atualizarPermissoesVeiculos() {}
+function salvarCompra() { alert('Função em implementação.'); }
+function editarCompra() { alert('Função em implementação.'); }
+function limparCamposCompra() {}
+function excluirCompra() {}
+function salvarBanco() { alert('Função em implementação.'); }
+function editarBanco() {}
+function salvarFluxoCaixa() { alert('Função em implementação.'); }
+function salvarDoc() { alert('Função em implementação.'); }
+function limparCamposDoc() {}
+function processarDocumentoComprovante() {}
+function salvarPendencia() { alert('Função em implementação.'); }
+function editarPendencia() {}
+function excluirPendencia() {}
+function processarPendenciaPDF() {}
+function salvarConfiguracao() { alert('Função em implementação.'); }
+function restaurarPadroes() {}
+function aplicarFiltroAuditoria() {}
+function limparFiltroAuditoria() {}
+function limparAuditoriaManual() { if (confirm('Limpar auditoria?')) { db.auditoria = []; atualizarTabelaAuditoria(); salvarDB(); } }
+function limparVistoriaSelecionada() {}
+function capturarVistoria() {}
+function confirmarVistoria() {}
+function salvarGaragem() {}
+function salvarSOS() {}
+function salvarComprovante() {}
+function previewCompImagem() {}
+function previewGaragemImagem() {}
+function previewSOSImagem() {}
+function previewMecPdf() {}
+function previewCompPdf() {}
+function switchSubTabPagamentos() {}
+function switchContratoTab() {}
+function imprimirDocumento() { window.print(); }
+function abrirModalSelfie_() {}
+
+// ===== INICIALIZAÇÃO =====
+async function inicializarSistemaCompleto() {
+    await carregarDB();
+    if (!db.usuarios.some(u => u.nome === 'LOBÃO')) {
+        db.usuarios.push({ nome:'LOBÃO', senha:'18998211', tipo:'ADM', permissoes: JSON.parse(JSON.stringify(permissoesPadrao.ADM)), selfie:null });
+        await salvarDB();
+    }
+    gerarPermissoesUI();
+    atualizarTabelaVeiculos();
+    atualizarTabelaClientes();
+    atualizarTabelaUsuario();
+    atualizarCombosLocacao();
+    atualizarPlacasManutencao();
+    atualizarPlacasMecanico();
+    atualizarTabelaLocacoes();
+    atualizarTabelaManutencao();
+    atualizarTabelaMecanico();
+    atualizarTabelaHistorico();
+    atualizarTabelaAuditoria();
 }
 
-// ========== MODAL IMAGEM ==========
-function openImageModal(src){ document.getElementById('modalImage').src = src; document.getElementById('imageModal').classList.add('active'); }
-function closeImageModal(){ document.getElementById('imageModal').classList.remove('active'); }
-
-// ========== ATUALIZA TUDO ==========
-function atualizarTudo(){
-  atualizarTabelaVeiculos();
-  atualizarTabelaClientes();
-  atualizarTabelaLocacoes();
-  atualizarTabelaManutencao();
-  atualizarTabelaMecanico();
-  atualizarTabelaUsuario();
-  atualizarTabelaHistorico();
-  atualizarTabelaAuditoria();
-  atualizarCombosPlacas();
+document.addEventListener('DOMContentLoaded', inicializarSistemaCompleto);
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    inicializarSistemaCompleto();
 }
-
-// ========== INICIALIZAÇÃO ==========
-async function init(){
-  await carregarDB();
-  atualizarTudo();
-  console.log('✅ Sistema inicializado. Total veículos:', (db.veiculos||[]).length);
-}
-
-document.addEventListener('DOMContentLoaded', init);
-if(document.readyState === 'complete' || document.readyState === 'interactive') init();
 </script>
 </body>
 </html>

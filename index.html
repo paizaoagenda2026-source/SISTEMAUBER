@@ -164,6 +164,21 @@
         @media print { body * { visibility: hidden; } .print-area, .print-area * { visibility: visible; } .print-area { display: block; position: absolute; left: 0; top: 0; width: 100%; } }
         .vistoria-sub-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
         .vistoria-foto-container { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 15px; }
+        
+        /* ===== NOVOS ESTILOS PARA DOCUMENTOS POR PLACA ===== */
+        .documento-folder { background: #fff; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); overflow: hidden; }
+        .documento-folder-header { background: var(--primary); color: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .documento-folder-header h4 { margin: 0; font-size: 16px; display: flex; align-items: center; gap: 10px; }
+        .documento-folder-badge { background: var(--secondary); color: white; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; }
+        .documento-list { padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .documento-item { display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 12px 15px; border-radius: 6px; border: 1px solid #eee; transition: background 0.2s; }
+        .documento-item:hover { background: #e9ecef; }
+        .documento-info { display: flex; align-items: center; gap: 15px; }
+        .documento-icon { font-size: 28px; }
+        .documento-details strong { display: block; color: #333; font-size: 14px; word-break: break-all; }
+        .documento-details small { color: #888; font-size: 12px; }
+        .documento-actions { display: flex; gap: 8px; }
+        .documento-actions button { padding: 8px 15px; font-size: 12px; margin: 0; border-radius: 4px; }
     </style>
 </head>
 <body>
@@ -394,7 +409,38 @@
         </div>
     </div>
 
-    <div class="tab-content" id="comprovantes"><h2>📄 Documentos</h2><div class="sub-tabs"><button class="sub-tab active" onclick="switchSubTab('novo')">📤 Novo</button><button class="sub-tab" onclick="switchSubTab('salvos')">📁 Salvos</button></div><div class="sub-tab-content active" id="subTabNovo"><input type="file" id="compImagem" accept="image/*" style="display:none;"><button class="btn-buscar" onclick="document.getElementById('compImagem').click()">📂 Buscar</button><button class="btn-primary" onclick="salvarComprovante()">💾 Salvar</button></div><div class="sub-tab-content" id="subTabSalvos"><div class="saved-images" id="compSavedImages"></div></div></div>
+    <!-- ===== ABA DOCUMENTOS ATUALIZADA ===== -->
+    <div class="tab-content" id="comprovantes">
+        <h2>📄 Documentos por Placa</h2>
+        <div class="sub-tabs">
+            <button class="sub-tab active" onclick="switchSubTab('novo')">📤 Anexar Novo</button>
+            <button class="sub-tab" onclick="switchSubTab('salvos')">📁 Documentos Salvos</button>
+        </div>
+        
+        <!-- Sub-tab Novo -->
+        <div class="sub-tab-content active" id="subTabNovo">
+            <div class="form-group" style="max-width: 400px; margin-bottom: 15px;">
+                <label>Selecione a Placa do Veículo</label>
+                <select id="docPlacaSelect" style="padding: 10px; border: 2px solid #ddd; border-radius: 5px; font-size: 14px; width: 100%;">
+                    <option value="">Selecione uma placa...</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label>Selecione os Documentos (PDF ou Imagem)</label>
+                <input type="file" id="docPdfInput" accept="application/pdf, image/*" multiple style="padding: 10px; border: 1px dashed #ccc; border-radius: 5px; width: 100%; max-width: 500px; background: #fafafa;">
+                <small style="color: #666; margin-top: 5px;">Você pode selecionar vários arquivos de uma vez.</small>
+            </div>
+            <button class="btn-primary" onclick="salvarDocumentosPlaca()">💾 Salvar Documentos</button>
+        </div>
+        
+        <!-- Sub-tab Salvos -->
+        <div class="sub-tab-content" id="subTabSalvos">
+            <div id="documentosSalvosContainer" style="margin-top: 20px;">
+                <!-- Renderizado via JS -->
+            </div>
+        </div>
+    </div>
+    <!-- ===== FIM DA ABA DOCUMENTOS ===== -->
 
     <div class="tab-content" id="pagamentos">
         <h2>💰 Sub Pagamentos</h2>
@@ -549,6 +595,7 @@ function criarDBPadrao() {
         usuarios: [{ nome: 'SERGIO', senha: '080888', tipo: 'ADM', permissoes: JSON.parse(JSON.stringify(permissoesPadrao.ADM)), selfie: null }],
         alugueis: [], fluxoCaixa: [], documentos: [], compras: [], auditoria: [], bancos: [], pendentes: [], historico: [],
         historicoAlugueis: [],
+        documentosPlacas: {}, // NOVO CAMPO PARA DOCUMENTOS POR PLACA
         contratos: { contratoLocacao:{}, termoResponsabilidade:{}, notaPromissoria:{} },
         imagens: { garagem:{fotos:[]}, sos:{fotos:[]}, comprovantes:{fotos:[]} },
         config: { empresa: 'LOBÃO', cnpj:'', telefone:'', email:'', endereco:'', ultimaLimpezaAuditoria: null }
@@ -590,6 +637,7 @@ async function carregarDB() {
     if (!Array.isArray(db.imagens.garagem.fotos)) db.imagens.garagem.fotos = [];
     if (!Array.isArray(db.imagens.sos.fotos)) db.imagens.sos.fotos = [];
     if (!Array.isArray(db.imagens.comprovantes.fotos)) db.imagens.comprovantes.fotos = [];
+    if (!db.documentosPlacas) db.documentosPlacas = {}; // Garante que o novo campo exista
     if (!db.config) db.config = criarDBPadrao().config;
     if (db.locacoes) db.locacoes.forEach(l => {
         if (!l.vistoria) l.vistoria = [];
@@ -803,6 +851,7 @@ document.querySelectorAll('.tab').forEach(tab => {
         if (tabId === 'fluxocaixa') atualizarTabelaFluxoCaixa();
         if (tabId === 'garagem') atualizarGaleriaGaragem();
         if (tabId === 'sos') atualizarGaleriaSOS();
+        if (tabId === 'comprovantes') { atualizarComboPlacasDocumentos(); atualizarGaleriaComprovantes(); }
     });
 });
 
@@ -955,6 +1004,7 @@ function salvarVeiculo() {
     atualizarCombosLocacao();
     atualizarPlacasManutencao();
     atualizarPlacasMecanico();
+    atualizarComboPlacasDocumentos(); // Atualiza o combo de documentos com a nova placa
     salvarDB();
     limparCamposVeiculo();
 }
@@ -1034,6 +1084,7 @@ function excluirVeiculo(i) {
     atualizarCombosLocacao();
     atualizarPlacasManutencao();
     atualizarPlacasMecanico();
+    atualizarComboPlacasDocumentos(); // Atualiza o combo de documentos
     registrarAuditoria('Exclusão', `Veículo excluído índice ${i}`);
     salvarDB();
 }
@@ -2240,6 +2291,8 @@ function switchSubTab(t) {
     document.querySelectorAll('#comprovantes .sub-tab').forEach(x => x.classList.remove('active'));
     document.querySelectorAll('#comprovantes .sub-tab-content').forEach(x => x.classList.remove('active'));
     document.getElementById(t === 'novo' ? 'subTabNovo' : 'subTabSalvos').classList.add('active');
+    if (t === 'novo') atualizarComboPlacasDocumentos();
+    if (t === 'salvos') atualizarGaleriaComprovantes();
 }
 function abrirCameraVistoria() { alert('Função de vistoria em implementação.'); }
 function fecharCameraVistoria() { document.getElementById('vistoriaCameraModal').classList.remove('active'); }
@@ -2652,7 +2705,6 @@ function salvarFluxoCaixa() {
 
 function atualizarTabelaDoc() { const t = document.querySelector('#tabelaDoc tbody'); if (t) t.innerHTML = ''; }
 function atualizarTabelaPendentes() { const t = document.querySelector('#tabelaPendentes tbody'); if (t) t.innerHTML = ''; }
-function atualizarGaleriaComprovantes() {}
 function carregarDadosContratos() {}
 function carregarConfiguracoes() {}
 function preencherPlacaUsuarioLogado() {}
@@ -2681,7 +2733,6 @@ function limparAuditoriaManual() { if (confirm('Limpar auditoria?')) { db.audito
 function limparVistoriaSelecionada() {}
 function capturarVistoria() {}
 function confirmarVistoria() {}
-function salvarComprovante() {}
 function previewCompImagem() {}
 function previewMecPdf() {}
 function previewCompPdf() {}
@@ -2689,6 +2740,155 @@ function switchSubTabPagamentos() {}
 function switchContratoTab() {}
 function imprimirDocumento() { window.print(); }
 function abrirModalSelfie_() {}
+
+// ===== NOVAS FUNÇÕES: DOCUMENTOS POR PLACA =====
+
+function atualizarComboPlacasDocumentos() {
+    const sel = document.getElementById('docPlacaSelect');
+    if (!sel) return;
+    sel.innerHTML = '<option value="">Selecione uma placa...</option>';
+    (db.veiculos || []).forEach(v => {
+        const opt = document.createElement('option');
+        opt.value = v.placa;
+        opt.textContent = `${v.placa} - ${v.fabricante}`;
+        sel.appendChild(opt);
+    });
+}
+
+function salvarDocumentosPlaca() {
+    const placa = document.getElementById('docPlacaSelect').value;
+    const input = document.getElementById('docPdfInput');
+    
+    if (!placa) { alert('Selecione uma placa!'); return; }
+    if (!input.files || input.files.length === 0) { alert('Selecione pelo menos um arquivo!'); return; }
+    
+    if (!db.documentosPlacas) db.documentosPlacas = {};
+    if (!db.documentosPlacas[placa]) db.documentosPlacas[placa] = [];
+    
+    const files = Array.from(input.files);
+    let processados = 0;
+    
+    files.forEach(file => {
+        // Verifica tamanho do arquivo (limite de 700KB para evitar estourar o Firestore de 1MB)
+        if (file.size > 700 * 1024) {
+            alert(`O arquivo "${file.name}" é muito grande (${(file.size / 1024).toFixed(0)}KB). O limite é 700KB para garantir o funcionamento do banco de dados.`);
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            db.documentosPlacas[placa].push({
+                nome: file.name,
+                tipo: file.type,
+                data: e.target.result, // Base64
+                dataUpload: new Date().toLocaleString('pt-BR')
+            });
+            processados++;
+            if (processados === files.length) {
+                salvarDB();
+                atualizarGaleriaComprovantes();
+                input.value = ''; // Limpar input
+                alert(`✅ ${files.length} documento(s) anexado(s) à placa ${placa}!`);
+                switchSubTab('salvos'); // Mudar para aba de salvos
+            }
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+function atualizarGaleriaComprovantes() {
+    const container = document.getElementById('documentosSalvosContainer');
+    if (!container) return;
+    container.innerHTML = '';
+    
+    if (!db.documentosPlacas || Object.keys(db.documentosPlacas).length === 0) {
+        container.innerHTML = '<p style="color:#999;text-align:center;padding:20px;">Nenhum documento anexado ainda.</p>';
+        return;
+    }
+
+    // Ordenar as placas alfabeticamente
+    const placasOrdenadas = Object.keys(db.documentosPlacas).sort();
+
+    placasOrdenadas.forEach(placa => {
+        const docs = db.documentosPlacas[placa] || [];
+        if (docs.length === 0) return; // Pula se não tiver documentos
+
+        const veiculo = (db.veiculos || []).find(v => v.placa === placa);
+        const nomeVeiculo = veiculo ? `${veiculo.fabricante} - ${veiculo.cor}` : 'Veículo Desconhecido';
+
+        const folderDiv = document.createElement('div');
+        folderDiv.className = 'documento-folder';
+        
+        // Cabeçalho da Pasta (Placa)
+        const headerDiv = document.createElement('div');
+        headerDiv.className = 'documento-folder-header';
+        headerDiv.innerHTML = `
+            <h4>📁 Placa: ${placa} <small style="font-weight:normal; opacity:0.8; font-size:12px;">(${nomeVeiculo})</small></h4>
+            <span class="documento-folder-badge">${docs.length} doc(s)</span>
+        `;
+        folderDiv.appendChild(headerDiv);
+
+        const listContainer = document.createElement('div');
+        listContainer.className = 'documento-list';
+
+        docs.forEach((doc, idx) => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'documento-item';
+
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'documento-info';
+            
+            const isPdf = doc.tipo && doc.tipo.includes('pdf');
+            infoDiv.innerHTML = `
+                <span class="documento-icon">${isPdf ? '📄' : '🖼️'}</span>
+                <div class="documento-details">
+                    <strong>${doc.nome}</strong>
+                    <small>Enviado em: ${doc.dataUpload}</small>
+                </div>
+            `;
+
+            const actionDiv = document.createElement('div');
+            actionDiv.className = 'documento-actions';
+
+            const btnAbrir = document.createElement('button');
+            btnAbrir.className = 'btn-info';
+            btnAbrir.textContent = '👁️ Abrir';
+            btnAbrir.onclick = () => {
+                const win = window.open();
+                win.document.write(`<iframe src="${doc.data}" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>`);
+            };
+
+            const btnExcluir = document.createElement('button');
+            btnExcluir.className = 'btn-danger';
+            btnExcluir.textContent = '🗑️ Excluir';
+            btnExcluir.onclick = () => excluirDocumentoPlaca(placa, idx);
+
+            actionDiv.appendChild(btnAbrir);
+            actionDiv.appendChild(btnExcluir);
+
+            itemDiv.appendChild(infoDiv);
+            itemDiv.appendChild(actionDiv);
+            listContainer.appendChild(itemDiv);
+        });
+
+        folderDiv.appendChild(listContainer);
+        container.appendChild(folderDiv);
+    });
+}
+
+function excluirDocumentoPlaca(placa, idx) {
+    if (!confirmarSenhaADM()) return;
+    if (!confirm(`Excluir o documento "${db.documentosPlacas[placa][idx].nome}"?`)) return;
+    
+    db.documentosPlacas[placa].splice(idx, 1);
+    if (db.documentosPlacas[placa].length === 0) {
+        delete db.documentosPlacas[placa];
+    }
+    
+    salvarDB();
+    atualizarGaleriaComprovantes();
+    registrarAuditoria('Exclusão', `Documento excluído da placa ${placa}`);
+}
 
 // ===== PWA: INSTALAÇÃO + SERVICE WORKER =====
 let deferredInstallPrompt = null;
@@ -2783,6 +2983,8 @@ async function inicializarSistemaCompleto() {
     atualizarEstadoEdicaoLocacao();
     atualizarGaleriaGaragem();
     atualizarGaleriaSOS();
+    atualizarComboPlacasDocumentos(); // Inicializa o combo de documentos
+    atualizarGaleriaComprovantes();   // Inicializa a galeria de documentos
     configurarInputMultiplasImagens();
     configurarBotaoInstalar();
     console.log('🚀 Sistema inicializado.');

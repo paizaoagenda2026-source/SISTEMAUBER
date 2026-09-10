@@ -2,8 +2,22 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>PAIZÃO UBER 2.0</title>
+
+    <!-- ===== PWA ===== -->
+    <meta name="description" content="PAIZÃO UBER 2.0 - Sistema de Locação de Carros">
+    <meta name="theme-color" content="#1a3c6e">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="PAIZÃO UBER">
+    <meta name="application-name" content="PAIZÃO UBER">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="icon.svg">
+    <link rel="shortcut icon" type="image/svg+xml" href="icon.svg">
+    <link rel="apple-touch-icon" href="icon.svg">
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
@@ -11,6 +25,13 @@
         :root { --primary: #1a3c6e; --secondary: #e63946; --accent: #f4a261; --bg: #f8f9fa; --text: #333; --white: #fff; --shadow: 0 4px 6px rgba(0,0,0,0.1); --radius: 8px; --success: #28a745; --warning: #ffc107; --danger: #dc3545; --info: #17a2b8; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background: var(--bg); color: var(--text); min-height: 100vh; }
+
+        /* ===== PWA: ajustes de tela cheia / notch ===== */
+        @media (display-mode: fullscreen), (display-mode: standalone) {
+            body { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
+            .tabs-container { padding-top: calc(10px + env(safe-area-inset-top)); }
+        }
+
         .login-container { display: flex; justify-content: center; align-items: center; height: 100vh; background: url('lobao.jpg') no-repeat center center fixed; background-size: cover; }
         .login-box { background: rgba(255, 255, 255, 0.92); padding: 40px; border-radius: var(--radius); box-shadow: 0 15px 30px rgba(0,0,0,0.3); width: 400px; text-align: center; }
         .login-box h1 { color: var(--primary); margin-bottom: 10px; font-size: 28px; }
@@ -29,6 +50,8 @@
         .logout-btn { background: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 12px; white-space: nowrap; margin-left: 5px; transition: background 0.3s; }
         .logout-btn:hover { background: #c82333; }
         .debug-btn { background: #6f42c1; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 12px; white-space: nowrap; margin-left: 5px; }
+        .install-btn { background: #28a745; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 12px; white-space: nowrap; margin-left: 5px; transition: background 0.3s; }
+        .install-btn:hover { background: #218838; }
         .tab-content { display: none; padding: 20px; background: var(--white); margin: 20px; border-radius: var(--radius); box-shadow: var(--shadow); }
         .tab-content.active { display: block; }
         .tab-content.hidden-content { display: none !important; }
@@ -135,6 +158,10 @@
         input[type="text"], input[type="search"], textarea { text-transform: uppercase; }
         .editando-aviso { display: none; margin-bottom: 15px; padding: 10px 15px; background: #fff3cd; border-left: 4px solid var(--warning); border-radius: 5px; font-weight: bold; color: #856404; }
         .editando-aviso.ativo { display: block; }
+        .print-area { display: none; }
+        @media print { body * { visibility: hidden; } .print-area, .print-area * { visibility: visible; } .print-area { display: block; position: absolute; left: 0; top: 0; width: 100%; } }
+        .vistoria-sub-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+        .vistoria-foto-container { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 15px; }
     </style>
 </head>
 <body>
@@ -175,6 +202,7 @@
         <button class="tab" data-tab="historico">📜 HISTÓRICO</button>
         <button class="tab" data-tab="vistoria">📸 VISTORIA</button>
         <button class="fullscreen-btn" id="fullscreenBtn">🖥️ Tela Cheia</button>
+        <button class="install-btn" id="installBtn" style="display:none;">📲 Instalar App</button>
         <button class="debug-btn" onclick="debugVeiculos()">🔎 Ver Banco</button>
         <button class="logout-btn" onclick="sairSistema()">🚪 Sair</button>
     </div>
@@ -288,7 +316,7 @@
         </div>
     </div>
 
-    <!-- OUTRAS ABAS (mantidas) -->
+    <!-- OUTRAS ABAS -->
     <div class="tab-content" id="locEncerrada"><h2>🏁 Locações Encerradas</h2><div class="dashboard-encerradas"><div class="kpi-card"><div class="kpi-value" id="kpiTotalLocs">0</div><div class="kpi-label">Total</div></div><div class="kpi-card green"><div class="kpi-value" id="kpiReceitaTotal">R$ 0,00</div><div class="kpi-label">Receita</div></div><div class="kpi-card red"><div class="kpi-value" id="kpiDespesasTotal">R$ 0,00</div><div class="kpi-label">Despesas</div></div><div class="kpi-card orange"><div class="kpi-value" id="kpiLucroTotal">R$ 0,00</div><div class="kpi-label">Lucro</div></div></div><div class="table-container"><table id="tabelaLocEncerrada"><thead><tr><th>Locatário</th><th>Veículo</th><th>Placa</th><th>Início</th><th>Fim</th><th>Encerrada</th><th>R$ Gerado</th><th>Despesas</th><th>Lucro</th><th>Ações</th></tr></thead><tbody></tbody></table></div></div>
 
     <div class="tab-content" id="manutencao"><h2>🔧 Manutenção</h2><div class="form-grid"><div class="form-group"><label>Veículo</label><input type="text" id="manVeiculo" readonly></div><div class="form-group"><label>Placa</label><select id="manPlaca" onchange="selecionarPlacaManutencao()"><option value="">Selecione</option></select></div><div class="form-group"><label>Tipo</label><input type="text" id="manTipo"></div><div class="form-group"><label>KM</label><input type="text" id="manKm"></div><div class="form-group"><label>OBS</label><textarea id="manObs"></textarea></div></div><button class="btn-primary" onclick="salvarManutencao()">💾 Salvar</button><div class="table-container"><table id="tabelaManutencao"><thead><tr><th>Veículo</th><th>Placa</th><th>Tipo</th><th>KM</th><th>Ações</th></tr></thead><tbody></tbody></table></div></div>
@@ -297,7 +325,7 @@
 
     <div class="tab-content" id="usuario"><h2>👥 Usuários</h2><div class="form-grid"><div class="form-group"><label>Nome</label><input type="text" id="userNome"></div><div class="form-group"><label>Senha</label><input type="password" id="userSenha"></div><div class="form-group"><label>Tipo</label><select id="userTipo" onchange="preencherPermissoesPadrao()"><option value="ADM">ADM</option><option value="MOTORISTA">MOTORISTA</option><option value="OFICINA">OFICINA</option><option value="VISITANTE">VISITANTE</option></select></div></div><div class="config-section"><h3>🔐 Permissões</h3><div id="permissoesContainer"></div></div><button class="btn-primary" onclick="salvarUsuario()">💾 Salvar</button><div class="table-container"><table id="tabelaUsuario"><thead><tr><th>Nome</th><th>Tipo</th><th>Selfie</th><th>Ações</th></tr></thead><tbody></tbody></table></div></div>
 
-    <!-- ===== ABA: GARAGEM (MULTI-IMAGEM) ===== -->
+    <!-- ===== ABA: GARAGEM ===== -->
     <div class="tab-content" id="garagem">
         <h2>🏠 Garagem</h2>
 
@@ -316,7 +344,7 @@
         </div>
     </div>
 
-    <!-- ===== ABA: SOS (MULTI-IMAGEM) ===== -->
+    <!-- ===== ABA: SOS ===== -->
     <div class="tab-content" id="sos">
         <h2>🆘 SOS</h2>
 
@@ -353,7 +381,7 @@
 
     <div class="tab-content" id="pendente"><h2>⏳ Pendências</h2><div class="form-grid"><div class="form-group"><label>Data</label><input type="date" id="pendData"></div><div class="form-group"><label>Descrição</label><input type="text" id="pendDescricao"></div><div class="form-group"><label>Crédito</label><input type="text" id="pendCredito" class="money"></div><div class="form-group"><label>Débito</label><input type="text" id="pendDebito" class="money"></div><div class="form-group"><label>Vencimento</label><input type="date" id="pendVencimento"></div></div><button class="btn-primary" onclick="salvarPendencia()">💾 Salvar</button><div class="table-container"><table id="tabelaPendentes"><thead><tr><th>Data</th><th>Descrição</th><th>Crédito</th><th>Débito</th><th>Vencimento</th><th>Status</th><th>Ações</th></tr></thead><tbody></tbody></table></div></div>
 
-    <!-- ===== ABA HISTÓRICO (COM SUB-ABAS) ===== -->
+    <!-- ===== ABA HISTÓRICO ===== -->
     <div class="tab-content" id="historico">
         <h2>📜 Histórico</h2>
         <div class="sub-tabs">
@@ -387,13 +415,13 @@
     <button class="modal-nav-btn modal-nav-prev" id="modalPrevBtn" onclick="event.stopPropagation(); navegarImagem(-1)" title="Anterior (←)">‹</button>
     <div class="modal-content">
         <button class="modal-close" onclick="event.stopPropagation(); closeImageModal()">×</button>
-        <img id="modalImage" src="">
+        <img id="modalImage" src="" alt="">
         <div class="modal-counter" id="modalCounter"></div>
     </div>
     <button class="modal-nav-btn modal-nav-next" id="modalNextBtn" onclick="event.stopPropagation(); navegarImagem(1)" title="Próxima (→)">›</button>
 </div>
-<div class="selfie-modal" id="selfieModal"><div class="selfie-title">📸 Tire sua Selfie</div><div class="selfie-instructions">Posicione o rosto e clique em Capturar</div><div class="selfie-container"><video class="selfie-video" id="selfieVideo" autoplay playsinline></video><canvas class="selfie-canvas" id="selfieCanvas"></canvas><div class="selfie-preview-container" id="selfiePreviewContainer"><img id="selfiePreviewImg"></div></div><div class="selfie-photo-preview" id="selfiePhotoPreview"><img id="selfiePhotoResult"><p>Capturada!</p></div><div class="selfie-controls"><button class="selfie-btn-capture" id="selfieCaptureBtn" onclick="capturarSelfie()">📸 Capturar</button><button class="selfie-btn-cancel" onclick="fecharModalSelfie()">❌ Cancelar</button><button class="selfie-btn-capture" id="selfieConfirmBtn" onclick="confirmarSelfie()" style="display:none;">✅ Confirmar</button></div></div>
-<div class="selfie-modal" id="vistoriaCameraModal"><div class="selfie-title">📷 Foto Vistoria</div><div class="selfie-container"><video class="selfie-video" id="vistoriaVideo" autoplay playsinline></video><canvas class="selfie-canvas" id="vistoriaCanvas"></canvas></div><div class="selfie-photo-preview" id="vistoriaPhotoPreview"><img id="vistoriaPhotoResult"><p>Capturada!</p></div><div class="selfie-controls"><button class="selfie-btn-capture" id="vistoriaCaptureBtn" onclick="capturarVistoria()">📸 Capturar</button><button class="selfie-btn-cancel" onclick="fecharCameraVistoria()">❌ Cancelar</button><button class="selfie-btn-capture" id="vistoriaConfirmBtn" onclick="confirmarVistoria()" style="display:none;">✅ Confirmar</button></div></div>
+<div class="selfie-modal" id="selfieModal"><div class="selfie-title">📸 Tire sua Selfie</div><div class="selfie-instructions">Posicione o rosto e clique em Capturar</div><div class="selfie-container"><video class="selfie-video" id="selfieVideo" autoplay playsinline></video><canvas class="selfie-canvas" id="selfieCanvas"></canvas><div class="selfie-preview-container" id="selfiePreviewContainer"><img id="selfiePreviewImg" alt=""></div></div><div class="selfie-photo-preview" id="selfiePhotoPreview"><img id="selfiePhotoResult" alt=""><p>Capturada!</p></div><div class="selfie-controls"><button class="selfie-btn-capture" id="selfieCaptureBtn" onclick="capturarSelfie()">📸 Capturar</button><button class="selfie-btn-cancel" onclick="fecharModalSelfie()">❌ Cancelar</button><button class="selfie-btn-capture" id="selfieConfirmBtn" onclick="confirmarSelfie()" style="display:none;">✅ Confirmar</button></div></div>
+<div class="selfie-modal" id="vistoriaCameraModal"><div class="selfie-title">📷 Foto Vistoria</div><div class="selfie-container"><video class="selfie-video" id="vistoriaVideo" autoplay playsinline></video><canvas class="selfie-canvas" id="vistoriaCanvas"></canvas></div><div class="selfie-photo-preview" id="vistoriaPhotoPreview"><img id="vistoriaPhotoResult" alt=""><p>Capturada!</p></div><div class="selfie-controls"><button class="selfie-btn-capture" id="vistoriaCaptureBtn" onclick="capturarVistoria()">📸 Capturar</button><button class="selfie-btn-cancel" onclick="fecharCameraVistoria()">❌ Cancelar</button><button class="selfie-btn-capture" id="vistoriaConfirmBtn" onclick="confirmarVistoria()" style="display:none;">✅ Confirmar</button></div></div>
 <div class="contrato-modal" id="contratoModal"><div class="contrato-modal-content"><div class="contrato-modal-header"><h3>📄 Contratos</h3><button class="contrato-modal-close" onclick="fecharModalContratos()">×</button></div><div class="contrato-modal-body"><p style="padding:20px;text-align:center;color:#666;">Módulo de contratos (a implementar detalhes).</p><button class="btn-secondary" onclick="fecharModalContratos()">Fechar</button></div></div></div>
 <div class="despesas-modal" id="despesasModal"><div class="despesas-modal-content"><div class="despesas-modal-header"><h3>📋 Despesas</h3><button class="contrato-modal-close" onclick="fecharDespesasModal()">×</button></div><div class="despesas-modal-body" id="despesasModalBody"></div></div></div>
 <div id="printArea" class="print-area"></div>
@@ -552,7 +580,7 @@ let veiculoEditandoIndex = null, clienteEditandoIndex = null, locacaoEditandoInd
 let garagemImagensTemp = [];
 let sosImagensTemp = [];
 
-// ===== VARIÁVEIS DO MODAL DE IMAGEM (GALERIA/NAVEGAÇÃO) =====
+// ===== VARIÁVEIS DO MODAL DE IMAGEM =====
 let galeriaAtual = [];
 let galeriaIndexAtual = 0;
 
@@ -567,7 +595,7 @@ function parseMoeda(s) {
     return parseFloat(String(s || '0').replace('R$', '').replace(/\./g, '').replace(',', '.').trim()) || 0;
 }
 
-// ===== CÁLCULO DE RECEITA ESPERADA (PGTO SEMANAL / MENSAL / ÚNICO) =====
+// ===== CÁLCULO DE RECEITA ESPERADA =====
 function calcularReceitaEsperada(locacao, dataEncerramentoISO) {
     const tipoPag = (locacao.tipoPagamento || 'mensal').toLowerCase();
     const inicio = new Date(locacao.dataInicio + 'T00:00:00');
@@ -882,7 +910,7 @@ document.querySelectorAll('input[type="text"], input[type="search"], textarea').
                 next.focus({ preventScroll: false });
                 if (next.tagName === 'INPUT' && typeof next.select === 'function') {
                     const t = (next.type || 'text').toLowerCase();
-                    if (['text','search','tel','email','url','password','number','date','money'].includes(t)) {
+                    if (['text','search','tel','email','url','password','number','date'].includes(t)) {
                         try { next.select(); } catch(_) {}
                     }
                 }
@@ -1152,14 +1180,13 @@ function atualizarTabelaClientes() {
     if (!tbody) return;
     tbody.innerHTML = '';
 
-    // Galeria de selfies (para navegação no modal)
     const selfiesClientes = (db.clientes || []).filter(c => c.selfie).map(c => c.selfie);
     window._galeriaClientes = selfiesClientes;
 
     (db.clientes || []).forEach((c, i) => {
         const selfieIdx = c.selfie ? selfiesClientes.indexOf(c.selfie) : -1;
         const selfieCell = c.selfie
-            ? `<img src="${c.selfie}" class="selfie-thumbnail" onclick="event.stopPropagation(); openImageModal('${c.selfie}', window._galeriaClientes, ${selfieIdx})">`
+            ? `<img src="${c.selfie}" class="selfie-thumbnail" alt="selfie" onclick="event.stopPropagation(); openImageModal('${c.selfie}', window._galeriaClientes, ${selfieIdx})">`
             : '-';
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -1200,7 +1227,7 @@ function editarCliente(i) {
     const prevSelfie = document.getElementById('selfiePreviewCliente');
     if (prevSelfie) {
         prevSelfie.innerHTML = c.selfie
-            ? `<img src="${c.selfie}" class="selfie-thumbnail" onclick="openImageModal('${c.selfie}')">`
+            ? `<img src="${c.selfie}" class="selfie-thumbnail" alt="selfie" onclick="openImageModal('${c.selfie}')">`
             : '';
     }
 
@@ -1245,14 +1272,13 @@ function atualizarTabelaUsuario() {
     if (!tbody) return;
     tbody.innerHTML = '';
 
-    // Galeria de selfies de usuários
     const selfiesUsuarios = (db.usuarios || []).filter(u => u.selfie).map(u => u.selfie);
     window._galeriaUsuarios = selfiesUsuarios;
 
     (db.usuarios || []).forEach((u, i) => {
         const selfieIdx = u.selfie ? selfiesUsuarios.indexOf(u.selfie) : -1;
         const selfieCell = u.selfie
-            ? `<img src="${u.selfie}" class="selfie-thumbnail" onclick="event.stopPropagation(); openImageModal('${u.selfie}', window._galeriaUsuarios, ${selfieIdx})">`
+            ? `<img src="${u.selfie}" class="selfie-thumbnail" alt="selfie" onclick="event.stopPropagation(); openImageModal('${u.selfie}', window._galeriaUsuarios, ${selfieIdx})">`
             : '-';
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -1988,7 +2014,6 @@ function atualizarTabelaHistoricoAlugueis() {
 
     const lista = db.historicoAlugueis || [];
 
-    // KPIs
     const totalRecebido = lista.reduce((s, h) => s + (Number(h.valorNumerico) || parseMoeda(h.valor) || 0), 0);
     const elTotal = document.getElementById('kpiHistAlugTotal');
     const elQtd = document.getElementById('kpiHistAlugQtd');
@@ -2002,7 +2027,6 @@ function atualizarTabelaHistoricoAlugueis() {
         return;
     }
 
-    // Mais recentes primeiro
     const listaOrd = lista.slice().reverse();
 
     listaOrd.forEach(h => {
@@ -2024,7 +2048,7 @@ function atualizarTabelaHistoricoAlugueis() {
 
 // ===== AUDITORIA =====
 function registrarAuditoria(acao, descricao) {
-    if (!db.auditoria) db.auditoria = [];
+    if (!db || !db.auditoria) { if (db) db.auditoria = []; else return; }
     db.auditoria.push({
         data: new Date().toLocaleString('pt-BR'),
         usuario: usuarioLogado ? usuarioLogado.nome : 'SISTEMA',
@@ -2107,12 +2131,12 @@ function confirmarSelfie() {
     if (selfieDestino === 'usuario') {
         selfieUsuarioTemp = selfieDataUrl;
         const c = document.getElementById('selfiePreviewUsuario');
-        if (c) c.innerHTML = `<img src="${selfieDataUrl}" class="selfie-thumbnail" onclick="openImageModal('${selfieDataUrl}')">`;
+        if (c) c.innerHTML = `<img src="${selfieDataUrl}" class="selfie-thumbnail" alt="selfie" onclick="openImageModal('${selfieDataUrl}')">`;
         fecharModalSelfie();
     } else {
         selfieClienteTemp = selfieDataUrl;
         const c = document.getElementById('selfiePreviewCliente');
-        if (c) c.innerHTML = `<img src="${selfieDataUrl}" class="selfie-thumbnail" onclick="openImageModal('${selfieDataUrl}')">`;
+        if (c) c.innerHTML = `<img src="${selfieDataUrl}" class="selfie-thumbnail" alt="selfie" onclick="openImageModal('${selfieDataUrl}')">`;
         fecharModalSelfie();
     }
 }
@@ -2120,21 +2144,13 @@ function confirmarSelfie() {
 function limparSelfieCliente() { selfieClienteTemp = null; const c = document.getElementById('selfiePreviewCliente'); if (c) c.innerHTML = ''; }
 function limparSelfieUsuario() { selfieUsuarioTemp = null; const c = document.getElementById('selfiePreviewUsuario'); if (c) c.innerHTML = ''; }
 
-// ===== MODAL IMAGEM (COM NAVEGAÇÃO ENTRE IMAGENS) =====
-
-/**
- * Abre o modal de imagem.
- * @param {string} src - URL da imagem a exibir
- * @param {Array<string>} [gallery] - Array opcional com todas as imagens da galeria (para navegação)
- * @param {number} [index] - Índice inicial dentro da galeria
- */
+// ===== MODAL IMAGEM (COM NAVEGAÇÃO) =====
 function openImageModal(src, gallery, index) {
     if (Array.isArray(gallery) && gallery.length > 0) {
         galeriaAtual = gallery.slice();
         if (typeof index === 'number' && index >= 0 && index < gallery.length) {
             galeriaIndexAtual = index;
         } else {
-            // tenta achar pelo src
             const idx = gallery.indexOf(src);
             galeriaIndexAtual = idx >= 0 ? idx : 0;
         }
@@ -2198,7 +2214,6 @@ function closeImageModal() {
     if (counter) counter.style.display = 'none';
 }
 
-// Navegação por teclado (setas e ESC) quando o modal estiver ativo
 document.addEventListener('keydown', function(e) {
     const modal = document.getElementById('imageModal');
     if (!modal || !modal.classList.contains('active')) return;
@@ -2231,11 +2246,6 @@ function abrirCameraVistoria() { alert('Função de vistoria em implementação.
 function fecharCameraVistoria() { document.getElementById('vistoriaCameraModal').classList.remove('active'); }
 
 // ===== MULTI-IMAGEM: COMPRESSÃO E PREVIEW =====
-
-/**
- * Comprime uma imagem (dataURL) redimensionando para no máx. maxWidth px
- * e salvando em JPEG com a qualidade indicada.
- */
 function comprimirImagemDataURL(dataUrl, maxWidth, quality, callback) {
     const img = new Image();
     img.onload = function() {
@@ -2265,9 +2275,6 @@ function comprimirImagemDataURL(dataUrl, maxWidth, quality, callback) {
     img.src = dataUrl;
 }
 
-/**
- * Lê múltiplos arquivos do input, comprime cada um e retorna array de dataURLs.
- */
 function lerEComprimirArquivos(files, maxWidth, quality, onDone) {
     const lista = Array.from(files || []);
     if (lista.length === 0) { onDone([]); return; }
@@ -2307,10 +2314,6 @@ function lerEComprimirArquivos(files, maxWidth, quality, onDone) {
     });
 }
 
-/**
- * Renderiza preview das imagens recém-selecionadas (antes de salvar).
- * Passa a lista inteira como galeria para o modal, permitindo navegação.
- */
 function renderizarPreviewSelecionadas(containerId, dataUrls, onRemove) {
     const container = document.getElementById(containerId);
     if (!container) return;
@@ -2325,6 +2328,7 @@ function renderizarPreviewSelecionadas(containerId, dataUrls, onRemove) {
 
         const img = document.createElement('img');
         img.src = src;
+        img.alt = 'pré-visualização';
         img.addEventListener('click', (ev) => {
             ev.stopPropagation();
             openImageModal(src, dataUrls, idx);
@@ -2450,6 +2454,7 @@ function atualizarGaleriaGaragem() {
 
         const img = document.createElement('img');
         img.src = src;
+        img.alt = 'foto garagem';
         img.addEventListener('click', (ev) => {
             ev.stopPropagation();
             openImageModal(src, fotos, i);
@@ -2528,6 +2533,7 @@ function atualizarGaleriaSOS() {
 
         const img = document.createElement('img');
         img.src = src;
+        img.alt = 'imagem sos';
         img.addEventListener('click', (ev) => {
             ev.stopPropagation();
             openImageModal(src, fotos, i);
@@ -2737,7 +2743,7 @@ function excluirPagamento(i) {
     salvarDB();
 }
 
-// ===== FUNÇÕES DIVERSAS (stubs para não quebrar) =====
+// ===== FUNÇÕES DIVERSAS (stubs) =====
 function atualizarResumoFinanceiro() {}
 function atualizarTabelaCompras() { const t = document.querySelector('#tabelaCompras tbody'); if (t) t.innerHTML = ''; }
 function atualizarTabelaBancos() { const t = document.querySelector('#tabelaBancos tbody'); if (t) t.innerHTML = ''; }
@@ -2783,6 +2789,86 @@ function switchContratoTab() {}
 function imprimirDocumento() { window.print(); }
 function abrirModalSelfie_() {}
 
+// ============================================================
+// ===== PWA: INSTALAÇÃO COMO APP + SERVICE WORKER =====
+// ============================================================
+let deferredInstallPrompt = null;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    const btn = document.getElementById('installBtn');
+    if (btn) btn.style.display = 'inline-block';
+    console.log('📲 App pode ser instalado.');
+});
+
+window.addEventListener('appinstalled', () => {
+    deferredInstallPrompt = null;
+    const btn = document.getElementById('installBtn');
+    if (btn) btn.style.display = 'none';
+    console.log('✅ App instalado com sucesso!');
+});
+
+function configurarBotaoInstalar() {
+    const btn = document.getElementById('installBtn');
+    if (!btn) return;
+
+    // Já está rodando como app instalado?
+    const rodandoComoApp = window.matchMedia('(display-mode: standalone)').matches
+        || window.matchMedia('(display-mode: fullscreen)').matches
+        || window.navigator.standalone === true;
+
+    if (rodandoComoApp) {
+        btn.style.display = 'none';
+        return;
+    }
+
+    // iOS/Safari não dispara beforeinstallprompt — mostra o botão sempre
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    if (isIOS && !rodandoComoApp) {
+        btn.style.display = 'inline-block';
+    }
+
+    btn.addEventListener('click', async () => {
+        if (deferredInstallPrompt) {
+            deferredInstallPrompt.prompt();
+            try {
+                const choice = await deferredInstallPrompt.userChoice;
+                if (choice && choice.outcome === 'accepted') {
+                    btn.style.display = 'none';
+                }
+            } catch (err) {
+                console.warn('Instalação cancelada:', err);
+            }
+            deferredInstallPrompt = null;
+            return;
+        }
+
+        alert(
+            '📲 COMO INSTALAR O PAIZÃO UBER 2.0\n\n' +
+            '• ANDROID (Chrome):\n' +
+            '  Menu ⋮ (três pontinhos) → "Instalar aplicativo"\n' +
+            '  ou "Adicionar à tela inicial"\n\n' +
+            '• iPHONE / iPAD (Safari):\n' +
+            '  Botão Compartilhar (□↑) → "Adicionar à Tela de Início"\n\n' +
+            '• COMPUTADOR (Chrome/Edge):\n' +
+            '  Ícone de instalar na barra de endereço\n\n' +
+            '⚠️ Importante: o sistema precisa estar publicado\n' +
+            'em um endereço HTTPS ou localhost para instalar.'
+        );
+    });
+}
+
+if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('✅ Service Worker registrado. Escopo:', reg.scope))
+            .catch(err => console.warn('⚠️ Service Worker não registrado:', err));
+    });
+} else {
+    console.log('ℹ️ Service Worker não registrado (protocolo local ou navegador sem suporte).');
+}
+
 // ===== INICIALIZAÇÃO =====
 async function inicializarSistemaCompleto() {
     try {
@@ -2823,6 +2909,7 @@ async function inicializarSistemaCompleto() {
     atualizarGaleriaGaragem();
     atualizarGaleriaSOS();
     configurarInputMultiplasImagens();
+    configurarBotaoInstalar();
     console.log('🚀 Sistema inicializado. Usuários disponíveis:', (db.usuarios || []).map(u => u.nome));
 }
 

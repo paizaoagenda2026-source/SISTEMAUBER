@@ -412,7 +412,20 @@
         <div class="sub-tab-content active" id="subTabHistGeral">
             <input type="text" class="filter-input" placeholder="🔍 Filtrar histórico..." id="filterHistorico">
             <div class="table-container">
-                <table id="tabelaHistorico"><thead><tr><th>Data</th><th>Descrição</th><th>Placa</th><th>Valor</th><th>Fornecedor</th><th>Oficina</th><th>Ações</th></tr></thead><tbody></tbody></table>
+                <table id="tabelaHistorico">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Descrição</th>
+                            <th>Placa</th>
+                            <th>Valor</th>
+                            <th>Fornecedor</th>
+                            <th>Oficina</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
             </div>
         </div>
         <div class="sub-tab-content" id="subTabHistAlugueis">
@@ -422,7 +435,22 @@
                 <div class="kpi-card blue"><div class="kpi-value" id="kpiHistAlugQtd">0</div><div class="kpi-label">Pagamentos</div></div>
             </div>
             <div class="table-container">
-                <table id="tabelaHistoricoAlugueis"><thead><tr><th>Data Pgto</th><th>Locatário</th><th>Placa</th><th>Parcela</th><th>Descrição</th><th>Valor</th><th>Vencimento</th><th>Tipo</th></tr></thead><tbody></tbody></table>
+                <table id="tabelaHistoricoAlugueis">
+                    <thead>
+                        <tr>
+                            <th>Data Pgto</th>
+                            <th>Locatário</th>
+                            <th>Placa</th>
+                            <th>Parcela</th>
+                            <th>Descrição</th>
+                            <th>Valor</th>
+                            <th>Vencimento</th>
+                            <th>Tipo</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -706,7 +734,7 @@ document.querySelectorAll('.tab').forEach(tab => {
         if (tabId === 'historico') { atualizarTabelaHistorico(); atualizarTabelaHistoricoAlugueis(); }
         if (tabId === 'auditoria') atualizarTabelaAuditoria();
         if (tabId === 'pagamentos') atualizarTabelaAlugueis();
-        if (tabId === 'fluxocaixa') atualizarTabelaFluxoCaixa(); // NOVO: Atualiza o Fluxo de Caixa ao clicar na aba
+        if (tabId === 'fluxocaixa') atualizarTabelaFluxoCaixa();
         if (tabId === 'garagem') atualizarGaleriaGaragem();
         if (tabId === 'sos') atualizarGaleriaSOS();
     });
@@ -1716,17 +1744,47 @@ function atualizarTabelaMecanico() {
     });
 }
 
+// ===== FUNÇÃO CORRIGIDA: ATUALIZA O HISTÓRICO GERAL =====
 function atualizarTabelaHistorico() {
     const tbody = document.querySelector('#tabelaHistorico tbody');
     if (!tbody) return;
     tbody.innerHTML = '';
-    (db.historico || []).slice().reverse().forEach((h) => {
+    const lista = (db.historico || []).slice().reverse();
+    if (lista.length === 0) {
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${h.data||''}</td><td>${h.descricao||''}</td><td>${h.placa||''}</td><td>${h.valor||''}</td><td>${h.fornecedor||''}</td><td>${h.oficina||''}</td><td>-</td><td>-</td>`;
+        tr.innerHTML = `<td colspan="7" style="text-align:center;color:#999;padding:20px;">Nenhum registro no histórico.</td>`;
+        tbody.appendChild(tr);
+        return;
+    }
+    lista.forEach((h, visualIndex) => {
+        const realIndex = (db.historico.length - 1) - visualIndex;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${h.data||''}</td>
+            <td>${h.descricao||''}</td>
+            <td>${h.placa||''}</td>
+            <td>${h.valor||''}</td>
+            <td>${h.fornecedor||''}</td>
+            <td>${h.oficina||''}</td>
+            <td>
+                <button class="btn-danger" onclick="excluirHistorico(${realIndex})" title="Excluir">🗑️</button>
+            </td>
+        `;
         tbody.appendChild(tr);
     });
 }
 
+// ===== NOVA FUNÇÃO: EXCLUIR ITEM DO HISTÓRICO GERAL =====
+function excluirHistorico(index) {
+    if (!confirmarSenhaADM()) return;
+    if (!confirm('Excluir este registro do histórico geral?')) return;
+    db.historico.splice(index, 1);
+    atualizarTabelaHistorico();
+    salvarDB();
+    registrarAuditoria('Exclusão', 'Registro do histórico geral excluído');
+}
+
+// ===== FUNÇÃO CORRIGIDA: ATUALIZA O HISTÓRICO DE ALUGUÉIS =====
 function atualizarTabelaHistoricoAlugueis() {
     const tbody = document.querySelector('#tabelaHistoricoAlugueis tbody');
     if (!tbody) return;
@@ -1735,13 +1793,17 @@ function atualizarTabelaHistoricoAlugueis() {
     const totalRecebido = lista.reduce((s, h) => s + (Number(h.valorNumerico) || parseMoeda(h.valor) || 0), 0);
     const elTotal = document.getElementById('kpiHistAlugTotal'); if (elTotal) elTotal.textContent = formatarMoedaBR(totalRecebido);
     const elQtd = document.getElementById('kpiHistAlugQtd'); if (elQtd) elQtd.textContent = lista.length;
+    
     if (lista.length === 0) {
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td colspan="8" style="text-align:center;color:#999;padding:20px;">Nenhum aluguel pago registrado ainda.</td>`;
+        tr.innerHTML = `<td colspan="9" style="text-align:center;color:#999;padding:20px;">Nenhum aluguel pago registrado ainda.</td>`;
         tbody.appendChild(tr);
         return;
     }
-    lista.slice().reverse().forEach(h => {
+    
+    const listaReversa = lista.slice().reverse();
+    listaReversa.forEach((h, visualIndex) => {
+        const realIndex = (lista.length - 1) - visualIndex;
         const tipoLabel = (h.tipoPagamento || 'mensal').toUpperCase();
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -1753,9 +1815,22 @@ function atualizarTabelaHistoricoAlugueis() {
             <td><strong style="color:#28a745;">${h.valor || ''}</strong></td>
             <td>${formatarDataBR(h.vencimento)}</td>
             <td>${tipoLabel}</td>
+            <td>
+                <button class="btn-danger" onclick="excluirHistoricoAluguel(${realIndex})" title="Excluir">🗑️</button>
+            </td>
         `;
         tbody.appendChild(tr);
     });
+}
+
+// ===== NOVA FUNÇÃO: EXCLUIR ITEM DO HISTÓRICO DE ALUGUÉIS =====
+function excluirHistoricoAluguel(index) {
+    if (!confirmarSenhaADM()) return;
+    if (!confirm('Excluir este registro do histórico de aluguéis?')) return;
+    db.historicoAlugueis.splice(index, 1);
+    atualizarTabelaHistoricoAlugueis();
+    salvarDB();
+    registrarAuditoria('Exclusão', 'Registro do histórico de aluguéis excluído');
 }
 
 function registrarAuditoria(acao, descricao) {
@@ -2239,7 +2314,7 @@ function marcarPagamentoPago(i) {
     
     atualizarTabelaAlugueis();
     atualizarTabelaHistoricoAlugueis();
-    atualizarTabelaFluxoCaixa(); // NOVO: Atualiza a tabela do fluxo de caixa imediatamente
+    atualizarTabelaFluxoCaixa();
     salvarDB();
     alert('✅ Pagamento registrado, enviado para o Fluxo de Caixa e próxima parcela gerada!');
 }
@@ -2255,7 +2330,6 @@ function atualizarResumoFinanceiro() {}
 function atualizarTabelaCompras() { const t = document.querySelector('#tabelaCompras tbody'); if (t) t.innerHTML = ''; }
 function atualizarTabelaBancos() { const t = document.querySelector('#tabelaBancos tbody'); if (t) t.innerHTML = ''; }
 
-// ===== FUNÇÃO CORRIGIDA: ATUALIZA O FLUXO DE CAIXA =====
 function atualizarTabelaFluxoCaixa() {
     const tbody = document.querySelector('#tabelaFluxoCaixa tbody');
     if (!tbody) return;
@@ -2449,7 +2523,7 @@ async function inicializarSistemaCompleto() {
     atualizarTabelaHistoricoAlugueis();
     atualizarTabelaAuditoria();
     atualizarTabelaAlugueis();
-    atualizarTabelaFluxoCaixa(); // NOVO: Inicializa a tabela do Fluxo de Caixa
+    atualizarTabelaFluxoCaixa();
     atualizarEstadoEdicaoVeiculo();
     atualizarEstadoEdicaoCliente();
     atualizarEstadoEdicaoLocacao();

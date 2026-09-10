@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>PAIZÃO UBER 2.0</title>
 
-    <!-- ===== PWA ===== -->
+    <!-- ===== PWA: INSTALA COMO APP ===== -->
     <meta name="description" content="PAIZÃO UBER 2.0 - Sistema de Locação de Carros">
     <meta name="theme-color" content="#1a3c6e">
     <meta name="mobile-web-app-capable" content="yes">
@@ -14,9 +14,14 @@
     <meta name="apple-mobile-web-app-title" content="PAIZÃO UBER">
     <meta name="application-name" content="PAIZÃO UBER">
     <link rel="manifest" href="manifest.json">
-    <link rel="icon" type="image/svg+xml" href="icon.svg">
-    <link rel="shortcut icon" type="image/svg+xml" href="icon.svg">
-    <link rel="apple-touch-icon" href="icon.svg">
+
+    <!-- ===== ÍCONE = FOTO lobao.jpg (a MESMA do login) ===== -->
+    <link rel="icon" type="image/jpeg" href="lobao.jpg">
+    <link rel="shortcut icon" type="image/jpeg" href="lobao.jpg">
+    <link rel="apple-touch-icon" href="lobao.jpg">
+    <link rel="apple-touch-icon" sizes="180x180" href="lobao.jpg">
+    <link rel="apple-touch-icon" sizes="192x192" href="lobao.jpg">
+    <link rel="apple-touch-icon" sizes="512x512" href="lobao.jpg">
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -25,13 +30,10 @@
         :root { --primary: #1a3c6e; --secondary: #e63946; --accent: #f4a261; --bg: #f8f9fa; --text: #333; --white: #fff; --shadow: 0 4px 6px rgba(0,0,0,0.1); --radius: 8px; --success: #28a745; --warning: #ffc107; --danger: #dc3545; --info: #17a2b8; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background: var(--bg); color: var(--text); min-height: 100vh; }
-
-        /* ===== PWA: ajustes de tela cheia / notch ===== */
         @media (display-mode: fullscreen), (display-mode: standalone) {
             body { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
             .tabs-container { padding-top: calc(10px + env(safe-area-inset-top)); }
         }
-
         .login-container { display: flex; justify-content: center; align-items: center; height: 100vh; background: url('lobao.jpg') no-repeat center center fixed; background-size: cover; }
         .login-box { background: rgba(255, 255, 255, 0.92); padding: 40px; border-radius: var(--radius); box-shadow: 0 15px 30px rgba(0,0,0,0.3); width: 400px; text-align: center; }
         .login-box h1 { color: var(--primary); margin-bottom: 10px; font-size: 28px; }
@@ -207,7 +209,6 @@
         <button class="logout-btn" onclick="sairSistema()">🚪 Sair</button>
     </div>
 
-    <!-- ABA: VEICULOS -->
     <div class="tab-content active" id="veiculos">
         <h2>🚗 Cadastro de Veículos</h2>
         <div class="editando-aviso" id="avisoEditandoVeiculo">✏️ <strong>Modo Edição</strong> — Você está editando um veículo existente. Salve para confirmar ou limpe o formulário.</div>
@@ -240,7 +241,6 @@
         </div>
     </div>
 
-    <!-- ABA: CLIENTES -->
     <div class="tab-content" id="clientes">
         <h2>👤 Cadastro de Clientes</h2>
         <div class="editando-aviso" id="avisoEditandoCliente">✏️ <strong>Modo Edição</strong> — Você está editando um cliente existente. Salve para confirmar ou limpe o formulário.</div>
@@ -273,7 +273,6 @@
         </div>
     </div>
 
-    <!-- ABA: LOCAÇÕES -->
     <div class="tab-content" id="locacoes">
         <h2>📋 Locações Ativas</h2>
         <div class="editando-aviso" id="avisoEditandoLocacao">✏️ <strong>Modo Edição</strong> — Você está editando uma locação existente. Salve para confirmar ou limpe o formulário.</div>
@@ -316,7 +315,6 @@
         </div>
     </div>
 
-    <!-- OUTRAS ABAS -->
     <div class="tab-content" id="locEncerrada"><h2>🏁 Locações Encerradas</h2><div class="dashboard-encerradas"><div class="kpi-card"><div class="kpi-value" id="kpiTotalLocs">0</div><div class="kpi-label">Total</div></div><div class="kpi-card green"><div class="kpi-value" id="kpiReceitaTotal">R$ 0,00</div><div class="kpi-label">Receita</div></div><div class="kpi-card red"><div class="kpi-value" id="kpiDespesasTotal">R$ 0,00</div><div class="kpi-label">Despesas</div></div><div class="kpi-card orange"><div class="kpi-value" id="kpiLucroTotal">R$ 0,00</div><div class="kpi-label">Lucro</div></div></div><div class="table-container"><table id="tabelaLocEncerrada"><thead><tr><th>Locatário</th><th>Veículo</th><th>Placa</th><th>Início</th><th>Fim</th><th>Encerrada</th><th>R$ Gerado</th><th>Despesas</th><th>Lucro</th><th>Ações</th></tr></thead><tbody></tbody></table></div></div>
 
     <div class="tab-content" id="manutencao"><h2>🔧 Manutenção</h2><div class="form-grid"><div class="form-group"><label>Veículo</label><input type="text" id="manVeiculo" readonly></div><div class="form-group"><label>Placa</label><select id="manPlaca" onchange="selecionarPlacaManutencao()"><option value="">Selecione</option></select></div><div class="form-group"><label>Tipo</label><input type="text" id="manTipo"></div><div class="form-group"><label>KM</label><input type="text" id="manKm"></div><div class="form-group"><label>OBS</label><textarea id="manObs"></textarea></div></div><button class="btn-primary" onclick="salvarManutencao()">💾 Salvar</button><div class="table-container"><table id="tabelaManutencao"><thead><tr><th>Veículo</th><th>Placa</th><th>Tipo</th><th>KM</th><th>Ações</th></tr></thead><tbody></tbody></table></div></div>
@@ -325,38 +323,30 @@
 
     <div class="tab-content" id="usuario"><h2>👥 Usuários</h2><div class="form-grid"><div class="form-group"><label>Nome</label><input type="text" id="userNome"></div><div class="form-group"><label>Senha</label><input type="password" id="userSenha"></div><div class="form-group"><label>Tipo</label><select id="userTipo" onchange="preencherPermissoesPadrao()"><option value="ADM">ADM</option><option value="MOTORISTA">MOTORISTA</option><option value="OFICINA">OFICINA</option><option value="VISITANTE">VISITANTE</option></select></div></div><div class="config-section"><h3>🔐 Permissões</h3><div id="permissoesContainer"></div></div><button class="btn-primary" onclick="salvarUsuario()">💾 Salvar</button><div class="table-container"><table id="tabelaUsuario"><thead><tr><th>Nome</th><th>Tipo</th><th>Selfie</th><th>Ações</th></tr></thead><tbody></tbody></table></div></div>
 
-    <!-- ===== ABA: GARAGEM ===== -->
     <div class="tab-content" id="garagem">
         <h2>🏠 Garagem</h2>
-
         <div class="subfolder">
             <div class="subfolder-header"><h4>📁 Selecionar Fotos (múltiplas)</h4></div>
             <input type="file" id="garagemImagem" accept="image/*" multiple style="display:none;">
             <div class="saved-images" id="garagemPreviewSelecionadas"></div>
         </div>
-
         <button class="btn-buscar" onclick="document.getElementById('garagemImagem').click()">📂 Buscar</button>
         <button class="btn-primary" onclick="salvarGaragem()">💾 Salvar</button>
-
         <div class="subfolder" style="margin-top:20px;">
             <div class="subfolder-header"><h4>📸 Fotos Salvas</h4></div>
             <div class="saved-images" id="garagemSavedImages"></div>
         </div>
     </div>
 
-    <!-- ===== ABA: SOS ===== -->
     <div class="tab-content" id="sos">
         <h2>🆘 SOS</h2>
-
         <div class="subfolder">
             <div class="subfolder-header"><h4>📁 Selecionar Imagens (múltiplas)</h4></div>
             <input type="file" id="sosImagem" accept="image/*" multiple style="display:none;">
             <div class="saved-images" id="sosPreviewSelecionadas"></div>
         </div>
-
         <button class="btn-buscar" onclick="document.getElementById('sosImagem').click()">📂 Buscar</button>
         <button class="btn-primary" onclick="salvarSOS()">💾 Salvar</button>
-
         <div class="subfolder" style="margin-top:20px;">
             <div class="subfolder-header"><h4>📸 Imagens Salvas</h4></div>
             <div class="saved-images" id="sosSavedImages"></div>
@@ -381,7 +371,6 @@
 
     <div class="tab-content" id="pendente"><h2>⏳ Pendências</h2><div class="form-grid"><div class="form-group"><label>Data</label><input type="date" id="pendData"></div><div class="form-group"><label>Descrição</label><input type="text" id="pendDescricao"></div><div class="form-group"><label>Crédito</label><input type="text" id="pendCredito" class="money"></div><div class="form-group"><label>Débito</label><input type="text" id="pendDebito" class="money"></div><div class="form-group"><label>Vencimento</label><input type="date" id="pendVencimento"></div></div><button class="btn-primary" onclick="salvarPendencia()">💾 Salvar</button><div class="table-container"><table id="tabelaPendentes"><thead><tr><th>Data</th><th>Descrição</th><th>Crédito</th><th>Débito</th><th>Vencimento</th><th>Status</th><th>Ações</th></tr></thead><tbody></tbody></table></div></div>
 
-    <!-- ===== ABA HISTÓRICO ===== -->
     <div class="tab-content" id="historico">
         <h2>📜 Histórico</h2>
         <div class="sub-tabs">
@@ -410,7 +399,6 @@
 
 </div>
 
-<!-- MODAIS -->
 <div class="modal-overlay" id="imageModal" onclick="closeImageModal()">
     <button class="modal-nav-btn modal-nav-prev" id="modalPrevBtn" onclick="event.stopPropagation(); navegarImagem(-1)" title="Anterior (←)">‹</button>
     <div class="modal-content">
@@ -430,7 +418,6 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-// ===== FIREBASE =====
 const firebaseConfig = {
   apiKey: "AIzaSyApeHoLWESXU8j50ckswmJZ7j9qzWlZtlY",
   authDomain: "paizaouber2-3b2db.firebaseapp.com",
@@ -480,7 +467,6 @@ async function carregarDB() {
             console.log('📥 DB novo criado (fallback total)');
         }
     }
-
     if (!db || typeof db !== 'object') db = criarDBPadrao();
     ['veiculos','clientes','locacoes','locacoesEncerradas','manutencao','mecanico',
      'alugueis','fluxoCaixa','documentos','compras','auditoria','bancos',
@@ -503,57 +489,29 @@ async function carregarDB() {
     db.pendentes.forEach(p => { if (!p.status) p.status = 'Pendente'; });
 
     let precisaSalvar = false;
-
     const lobao = db.usuarios.find(u => u && u.nome === 'LOBÃO');
     if (lobao) {
-        lobao.nome = 'SERGIO';
-        lobao.senha = '080888';
-        lobao.tipo = 'ADM';
+        lobao.nome = 'SERGIO'; lobao.senha = '080888'; lobao.tipo = 'ADM';
         if (!lobao.permissoes) lobao.permissoes = JSON.parse(JSON.stringify(permissoesPadrao.ADM));
         precisaSalvar = true;
-        console.log('🔄 Usuário LOBÃO migrado para SERGIO');
     }
-
     if (!db.usuarios.some(u => u && u.nome === 'SERGIO')) {
         db.usuarios.push({
-            nome: 'SERGIO',
-            senha: '080888',
-            tipo: 'ADM',
-            permissoes: JSON.parse(JSON.stringify(permissoesPadrao.ADM)),
-            selfie: null
+            nome: 'SERGIO', senha: '080888', tipo: 'ADM',
+            permissoes: JSON.parse(JSON.stringify(permissoesPadrao.ADM)), selfie: null
         });
         precisaSalvar = true;
-        console.log('✅ Usuário SERGIO adicionado automaticamente');
     }
-
     dbCarregado = true;
-    console.log('✅ DB carregado. Usuários:', db.usuarios.map(u => u.nome));
-
-    if (precisaSalvar) {
-        try {
-            await salvarDB();
-            console.log('💾 DB persistido com SERGIO');
-        } catch(e) {
-            console.error('❌ Erro ao persistir SERGIO:', e);
-        }
-    }
+    if (precisaSalvar) { try { await salvarDB(); } catch(e) {} }
 }
 
 async function salvarDB() {
     if (!db) return;
-    try {
-        localStorage.setItem(DB_STORAGE_KEY, JSON.stringify(db));
-    } catch (e) {
-        console.error('Erro ao salvar localStorage:', e);
-    }
-    try {
-        await dbFirestore.collection('lobao_db').doc('principal').set(db);
-    } catch (error) {
-        console.error('Erro ao salvar Firestore:', error);
-    }
+    try { localStorage.setItem(DB_STORAGE_KEY, JSON.stringify(db)); } catch (e) {}
+    try { await dbFirestore.collection('lobao_db').doc('principal').set(db); } catch (error) { console.error('Erro Firestore:', error); }
 }
 
-// ===== PERMISSÕES =====
 const todasAbas = [
     { id: 'veiculos' }, { id: 'clientes' }, { id: 'locacoes' }, { id: 'locEncerrada' },
     { id: 'manutencao' }, { id: 'mecanico' }, { id: 'usuario' }, { id: 'garagem' },
@@ -570,195 +528,108 @@ const permissoesPadrao = {
     VISITANTE: { abas: { veiculos:false,clientes:false,locacoes:false,locEncerrada:false,manutencao:false,mecanico:false,usuario:false,garagem:true,sos:false,comprovantes:false,pagamentos:false,banco:false,fluxocaixa:false,doc:false,compras:false,configuracao:false,auditoria:false,pendente:false,historico:false,vistoria:false }, botoes: { garagem_buscar:true, garagem_salvar:true }, veiculos: {} }
 };
 
-// ===== VARIÁVEIS GLOBAIS =====
 let selfieStream = null, selfieDataUrl = null, selfieClienteTemp = null, selfieUsuarioTemp = null, selfieDestino = 'cliente';
 let vistoriaStream = null, vistoriaDataUrl = null, vistoriaLocacaoIndex = null;
 let usuarioEditandoIndex = null, compraEditandoIndex = null, pendenciaEditandoIndex = null;
 let veiculoEditandoIndex = null, clienteEditandoIndex = null, locacaoEditandoIndex = null;
-
-// ===== VARIÁVEIS PARA MULTI-IMAGEM (GARAGEM / SOS) =====
 let garagemImagensTemp = [];
 let sosImagensTemp = [];
-
-// ===== VARIÁVEIS DO MODAL DE IMAGEM =====
 let galeriaAtual = [];
 let galeriaIndexAtual = 0;
 
-// ===== HELPERS =====
 function campoVazio(v) { return !v || String(v).trim() === ''; }
 function formatarMoedaBR(v) { return 'R$ ' + (Number(v) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 function normalizarPlaca(p) { return String(p || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); }
 function formatarDataBR(d) { if (!d) return ''; const p = d.split('-'); return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : d; }
+function parseMoeda(s) { if (typeof s === 'number') return s; return parseFloat(String(s || '0').replace('R$', '').replace(/\./g, '').replace(',', '.').trim()) || 0; }
 
-function parseMoeda(s) {
-    if (typeof s === 'number') return s;
-    return parseFloat(String(s || '0').replace('R$', '').replace(/\./g, '').replace(',', '.').trim()) || 0;
-}
-
-// ===== CÁLCULO DE RECEITA ESPERADA =====
 function calcularReceitaEsperada(locacao, dataEncerramentoISO) {
     const tipoPag = (locacao.tipoPagamento || 'mensal').toLowerCase();
     const inicio = new Date(locacao.dataInicio + 'T00:00:00');
     const fim = new Date(dataEncerramentoISO + 'T00:00:00');
-
-    if (isNaN(inicio.getTime()) || isNaN(fim.getTime())) {
-        return { total: 0, periodos: 0, valorPeriodo: 0, tipoPagamento: tipoPag };
-    }
-
+    if (isNaN(inicio.getTime()) || isNaN(fim.getTime())) return { total: 0, periodos: 0, valorPeriodo: 0, tipoPagamento: tipoPag };
     const diffMs = Math.max(0, fim - inicio);
     const diffDias = Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
-
-    let periodos = 0;
-    let valorPeriodo = 0;
-
+    let periodos = 0, valorPeriodo = 0;
     if (tipoPag === 'semanal') {
         valorPeriodo = parseMoeda(locacao.valorAluguel);
-        if (valorPeriodo <= 0) {
-            const mensal = parseMoeda(locacao.aluguelMensal);
-            valorPeriodo = mensal > 0 ? mensal / 4 : 0;
-        }
+        if (valorPeriodo <= 0) { const mensal = parseMoeda(locacao.aluguelMensal); valorPeriodo = mensal > 0 ? mensal / 4 : 0; }
         periodos = Math.ceil(diffDias / 7);
     } else if (tipoPag === 'mensal') {
         valorPeriodo = parseMoeda(locacao.aluguelMensal);
-        if (valorPeriodo <= 0) {
-            valorPeriodo = parseMoeda(locacao.valorAluguel);
-        }
+        if (valorPeriodo <= 0) valorPeriodo = parseMoeda(locacao.valorAluguel);
         periodos = Math.ceil(diffDias / 30);
     } else {
         valorPeriodo = parseMoeda(locacao.valorAluguel) || parseMoeda(locacao.aluguelMensal);
         periodos = 1;
     }
-
-    const total = periodos * valorPeriodo;
-    return { total, periodos, valorPeriodo, tipoPagamento: tipoPag };
+    return { total: periodos * valorPeriodo, periodos, valorPeriodo, tipoPagamento: tipoPag };
 }
 
-// ===== GERAÇÃO DE PARCELAS =====
 function gerarParcelasPagamento(opts) {
-    const {
-        dataInicio,
-        valorAluguel,
-        caucao,
-        caucaoPago,
-        tipoPagCaucao,
-        tipoPagamento
-    } = opts;
-
+    const { dataInicio, valorAluguel, caucao, caucaoPago, tipoPagCaucao, tipoPagamento } = opts;
     const parcelas = [];
-
-    if ((!valorAluguel || valorAluguel <= 0) && (!caucao || caucao <= 0)) {
-        return parcelas;
-    }
-
+    if ((!valorAluguel || valorAluguel <= 0) && (!caucao || caucao <= 0)) return parcelas;
     let intervalDias = 30;
     if (tipoPagamento === 'semanal') intervalDias = 7;
-
     function calcVencimento(index) {
         if (!dataInicio) return '';
         const d = new Date(dataInicio + 'T00:00:00');
         d.setDate(d.getDate() + (intervalDias * index));
         return d.toISOString().split('T')[0];
     }
-
     if (!caucao || caucao <= 0) {
-        parcelas.push({
-            valor: valorAluguel,
-            vencimento: dataInicio,
-            parcela: 1,
-            descricao: 'Aluguel'
-        });
+        parcelas.push({ valor: valorAluguel, vencimento: dataInicio, parcela: 1, descricao: 'Aluguel' });
         return parcelas;
     }
-
     if (tipoPagCaucao === 'avista') {
-        parcelas.push({
-            valor: valorAluguel + caucao,
-            vencimento: dataInicio,
-            parcela: 1,
-            descricao: 'Aluguel + Caução (À Vista)'
-        });
+        parcelas.push({ valor: valorAluguel + caucao, vencimento: dataInicio, parcela: 1, descricao: 'Aluguel + Caução (À Vista)' });
         return parcelas;
     }
-
     if (tipoPagCaucao === 'parcelado') {
         const parcelaCaucao = caucao / 10;
         for (let i = 0; i < 10; i++) {
-            parcelas.push({
-                valor: valorAluguel + parcelaCaucao,
-                vencimento: calcVencimento(i),
-                parcela: i + 1,
-                descricao: `Aluguel + Caução ${i + 1}/10`
-            });
+            parcelas.push({ valor: valorAluguel + parcelaCaucao, vencimento: calcVencimento(i), parcela: i + 1, descricao: `Aluguel + Caução ${i + 1}/10` });
         }
         return parcelas;
     }
-
     if (tipoPagCaucao === 'entrada') {
         const entrada = caucaoPago > 0 ? caucaoPago : 0;
         const saldo = Math.max(0, caucao - entrada);
         const parcelaSaldo = saldo / 9;
-
-        parcelas.push({
-            valor: valorAluguel + entrada,
-            vencimento: calcVencimento(0),
-            parcela: 1,
-            descricao: 'Aluguel + Entrada Caução'
-        });
+        parcelas.push({ valor: valorAluguel + entrada, vencimento: calcVencimento(0), parcela: 1, descricao: 'Aluguel + Entrada Caução' });
         for (let i = 1; i <= 9; i++) {
-            parcelas.push({
-                valor: valorAluguel + parcelaSaldo,
-                vencimento: calcVencimento(i),
-                parcela: i + 1,
-                descricao: `Aluguel + Saldo Caução ${i}/9`
-            });
+            parcelas.push({ valor: valorAluguel + parcelaSaldo, vencimento: calcVencimento(i), parcela: i + 1, descricao: `Aluguel + Saldo Caução ${i}/9` });
         }
         return parcelas;
     }
-
     return parcelas;
 }
 
-// ===== CONFIRMAÇÃO DE SENHA DO ADM =====
 function confirmarSenhaADM() {
     const senha = prompt('🔐 Digite a senha do ADM para continuar:');
     if (senha === null) return false;
-    if (String(senha).trim() === '') {
-        alert('❌ Senha vazia! Operação cancelada.');
-        return false;
-    }
+    if (String(senha).trim() === '') { alert('❌ Senha vazia! Operação cancelada.'); return false; }
     const adm = (db.usuarios || []).find(u => u && u.tipo === 'ADM' && u.senha === senha);
-    if (adm) {
-        registrarAuditoria('Edição', `Senha ADM confirmada (usuário: ${adm.nome})`);
-        return true;
-    }
+    if (adm) { registrarAuditoria('Edição', `Senha ADM confirmada (usuário: ${adm.nome})`); return true; }
     alert('❌ Senha incorreta! Operação cancelada.');
     registrarAuditoria('Edição', 'Tentativa de edição com senha ADM incorreta');
     return false;
 }
 
-// ===== LOGIN =====
 document.getElementById('loginForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const user = document.getElementById('loginUser').value.trim().toUpperCase();
     const pass = document.getElementById('loginPassword').value;
-
     if (!dbCarregado) {
-        for (let i = 0; i < 20; i++) {
-            await new Promise(r => setTimeout(r, 250));
-            if (dbCarregado) break;
-        }
+        for (let i = 0; i < 20; i++) { await new Promise(r => setTimeout(r, 250)); if (dbCarregado) break; }
     }
     if (!dbCarregado) { alert('Sistema ainda carregando... aguarde alguns segundos e tente novamente.'); return; }
     if (campoVazio(user) || campoVazio(pass)) { alert('Preencha usuário e senha!'); return; }
-
     if (user === 'SERGIO' && !db.usuarios.some(u => u && u.nome === 'SERGIO')) {
-        db.usuarios.push({
-            nome: 'SERGIO', senha: '080888', tipo: 'ADM',
-            permissoes: JSON.parse(JSON.stringify(permissoesPadrao.ADM)), selfie: null
-        });
+        db.usuarios.push({ nome: 'SERGIO', senha: '080888', tipo: 'ADM', permissoes: JSON.parse(JSON.stringify(permissoesPadrao.ADM)), selfie: null });
         await salvarDB();
     }
-
     const u = db.usuarios.find(x => x && x.nome === user && x.senha === pass);
     if (u) {
         document.getElementById('loginContainer').style.display = 'none';
@@ -769,7 +640,6 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     } else {
         document.getElementById('loginError').style.display = 'block';
         registrarAuditoria('Login', `Falha login: ${user}`);
-        console.warn('Usuários disponíveis:', db.usuarios.map(x => x.nome));
     }
 });
 
@@ -784,7 +654,6 @@ function sairSistema() {
     usuarioLogado = null;
 }
 
-// ===== TAB SWITCHING =====
 document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', function() {
         if (this.classList.contains('hidden-tab')) return;
@@ -813,13 +682,11 @@ document.getElementById('fullscreenBtn').addEventListener('click', function() {
     else { document.documentElement.requestFullscreen(); this.textContent = '🖥️ Sair'; }
 });
 
-// ===== SUB-TAB HISTÓRICO =====
 function switchSubTabHistorico(tipo) {
     const tabs = document.querySelectorAll('#historico .sub-tab');
     const contents = document.querySelectorAll('#historico .sub-tab-content');
     tabs.forEach(t => t.classList.remove('active'));
     contents.forEach(c => c.classList.remove('active'));
-
     if (tipo === 'geral') {
         tabs[0].classList.add('active');
         document.getElementById('subTabHistGeral').classList.add('active');
@@ -831,7 +698,6 @@ function switchSubTabHistorico(tipo) {
     }
 }
 
-// ===== FILTROS =====
 function setupFilter(inputId, tableId) {
     const input = document.getElementById(inputId);
     if (!input) return;
@@ -846,7 +712,6 @@ function setupFilter(inputId, tableId) {
     setupFilter(id, id.replace('filter', 'tabela'));
 });
 
-// ===== MÁSCARA DE MOEDA =====
 document.querySelectorAll('.money').forEach(input => {
     input.addEventListener('input', function() {
         let v = this.value.replace(/\D/g, '');
@@ -859,32 +724,22 @@ document.querySelectorAll('.money').forEach(input => {
     });
 });
 
-// Uppercase em campos de texto
 document.querySelectorAll('input[type="text"], input[type="search"], textarea').forEach(i => {
     i.addEventListener('input', function() { this.value = this.value.toUpperCase(); });
 });
 
-// ===== ENTER → PRÓXIMO CAMPO =====
 (function configurarEnterProximoCampo() {
     const tiposIgnorados = ['submit','button','reset','checkbox','radio','file','image','range','color'];
-
     function estaVisivel(el) {
         if (!el) return false;
         const style = window.getComputedStyle(el);
         if (style.display === 'none' || style.visibility === 'hidden') return false;
         return el.getClientRects().length > 0;
     }
-
     function acharContainer(el) {
-        return el.closest('.tab-content')
-            || el.closest('.modal-overlay')
-            || el.closest('.selfie-modal')
-            || el.closest('.contrato-modal')
-            || el.closest('.despesas-modal')
-            || el.closest('#mainContainer')
-            || document.body;
+        return el.closest('.tab-content') || el.closest('.modal-overlay') || el.closest('.selfie-modal')
+            || el.closest('.contrato-modal') || el.closest('.despesas-modal') || el.closest('#mainContainer') || document.body;
     }
-
     document.addEventListener('keydown', function(e) {
         if (e.key !== 'Enter' && e.keyCode !== 13) return;
         const el = document.activeElement;
@@ -898,9 +753,7 @@ document.querySelectorAll('input[type="text"], input[type="search"], textarea').
         }
         if (e.ctrlKey || e.altKey || e.metaKey) return;
         const container = acharContainer(el);
-        const todos = Array.from(container.querySelectorAll(
-            'input:not([type="hidden"]), select, textarea'
-        )).filter(x => !x.disabled && estaVisivel(x));
+        const todos = Array.from(container.querySelectorAll('input:not([type="hidden"]), select, textarea')).filter(x => !x.disabled && estaVisivel(x));
         const idx = todos.indexOf(el);
         if (idx === -1) return;
         if (idx < todos.length - 1) {
@@ -914,16 +767,11 @@ document.querySelectorAll('input[type="text"], input[type="search"], textarea').
                         try { next.select(); } catch(_) {}
                     }
                 }
-            } catch(_) {
-                next.focus();
-            }
-        } else {
-            e.preventDefault();
-        }
+            } catch(_) { next.focus(); }
+        } else { e.preventDefault(); }
     }, true);
 })();
 
-// ===== FUNÇÕES DE VEÍCULOS =====
 function salvarVeiculo() {
     const fabricante = document.getElementById('veicFabricante').value.trim();
     const cor = document.getElementById('veicCor').value.trim();
@@ -934,40 +782,24 @@ function salvarVeiculo() {
     const caucao = document.getElementById('veicCaucao').value;
     const proprietario = document.getElementById('veicProprietario').value.trim();
     const cpfPropr = document.getElementById('veicCpfPropr').value.trim();
-
     if (campoVazio(fabricante) || campoVazio(cor) || campoVazio(placa) || campoVazio(anoFabr) ||
         campoVazio(anoModel) || campoVazio(aluguel) || campoVazio(caucao) ||
         campoVazio(proprietario) || campoVazio(cpfPropr)) {
-        alert('Preencha todos os campos obrigatórios do veículo!');
-        return;
+        alert('Preencha todos os campos obrigatórios do veículo!'); return;
     }
-
     const placaNorm = normalizarPlaca(placa);
-    if (!placaNorm) {
-        alert('Placa inválida! Digite apenas letras e números.');
-        return;
-    }
-
+    if (!placaNorm) { alert('Placa inválida! Digite apenas letras e números.'); return; }
     if (!Array.isArray(db.veiculos)) db.veiculos = [];
-
     const veiculoDuplicado = db.veiculos.find((v, idx) => {
         if (!v || v.placa === null || v.placa === undefined) return false;
         if (veiculoEditandoIndex !== null && idx === veiculoEditandoIndex) return false;
         const p = normalizarPlaca(v.placa);
         return p !== '' && p === placaNorm;
     });
-
     if (veiculoDuplicado) {
-        alert(
-            'Já existe um veículo com essa placa!\n\n' +
-            'Placa no sistema: "' + veiculoDuplicado.placa + '"\n' +
-            'Fabricante: ' + (veiculoDuplicado.fabricante || 'N/A') + '\n' +
-            'Cor: ' + (veiculoDuplicado.cor || 'N/A') + '\n\n' +
-            'Clique em "🔎 Ver Banco" para ver todos os veículos salvos.'
-        );
+        alert('Já existe um veículo com essa placa!\n\nPlaca: "' + veiculoDuplicado.placa + '"');
         return;
     }
-
     const veiculo = {
         fabricante, cor, placa,
         motor: document.getElementById('veicMotor').value.trim(),
@@ -979,7 +811,6 @@ function salvarVeiculo() {
         fipe: document.getElementById('veicFipe').value,
         caucao, aluguel, proprietario, cpfPropr
     };
-
     if (veiculoEditandoIndex !== null && db.veiculos[veiculoEditandoIndex]) {
         db.veiculos[veiculoEditandoIndex] = veiculo;
         registrarAuditoria('Edição', `Veículo atualizado: ${veiculo.fabricante} - ${veiculo.placa}`);
@@ -991,7 +822,6 @@ function salvarVeiculo() {
         registrarAuditoria('Cadastro', `Novo veículo: ${veiculo.fabricante} - ${veiculo.placa}`);
         alert('✅ Veículo salvo com sucesso!');
     }
-
     atualizarTabelaVeiculos();
     atualizarCombosLocacao();
     atualizarPlacasManutencao();
@@ -1002,8 +832,7 @@ function salvarVeiculo() {
 
 function limparCamposVeiculo() {
     ['veicFabricante','veicCor','veicPlaca','veicMotor','veicCambio','veicAnoFabr','veicAnoModel','veicKm','veicRenavan','veicChassi','veicFipe','veicCaucao','veicAluguel','veicProprietario','veicCpfPropr'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.value = '';
+        const el = document.getElementById(id); if (el) el.value = '';
     });
     veiculoEditandoIndex = null;
     atualizarEstadoEdicaoVeiculo();
@@ -1046,9 +875,7 @@ function editarVeiculo(i) {
     if (!confirmarSenhaADM()) return;
     const v = db.veiculos[i];
     if (!v) { alert('Veículo não encontrado.'); return; }
-
     veiculoEditandoIndex = i;
-
     document.getElementById('veicFabricante').value = v.fabricante || '';
     document.getElementById('veicCor').value = v.cor || '';
     document.getElementById('veicPlaca').value = v.placa || '';
@@ -1064,23 +891,16 @@ function editarVeiculo(i) {
     document.getElementById('veicAluguel').value = v.aluguel || '';
     document.getElementById('veicProprietario').value = v.proprietario || '';
     document.getElementById('veicCpfPropr').value = v.cpfPropr || '';
-
     atualizarEstadoEdicaoVeiculo();
     window.scrollTo(0, 0);
     document.getElementById('veicFabricante').focus();
-    console.log(`✏️ Editando veículo #${i}: ${v.fabricante} - ${v.placa}`);
 }
 
 function excluirVeiculo(i) {
     if (!confirm('Excluir permanentemente este veículo?')) return;
     db.veiculos.splice(i, 1);
-    if (veiculoEditandoIndex === i) {
-        veiculoEditandoIndex = null;
-        atualizarEstadoEdicaoVeiculo();
-        limparCamposVeiculo();
-    } else if (veiculoEditandoIndex !== null && veiculoEditandoIndex > i) {
-        veiculoEditandoIndex--;
-    }
+    if (veiculoEditandoIndex === i) { veiculoEditandoIndex = null; atualizarEstadoEdicaoVeiculo(); limparCamposVeiculo(); }
+    else if (veiculoEditandoIndex !== null && veiculoEditandoIndex > i) veiculoEditandoIndex--;
     atualizarTabelaVeiculos();
     atualizarCombosLocacao();
     atualizarPlacasManutencao();
@@ -1090,19 +910,13 @@ function excluirVeiculo(i) {
 }
 
 function debugVeiculos() {
-    console.log('=== DB COMPLETO ===', db);
-    console.log('=== USUÁRIOS ===');
-    console.table((db.usuarios || []).map((u, i) => ({ idx: i, nome: u.nome, tipo: u.tipo })));
-    console.log('=== VEÍCULOS ===');
-    console.table((db.veiculos || []).map((v, i) => ({ idx: i, placa: v.placa, placaNorm: normalizarPlaca(v.placa), fabricante: v.fabricante, aluguel: v.aluguel })));
+    console.log('=== DB ===', db);
     alert(
         'USUÁRIOS:\n' + (db.usuarios || []).map(u => `• ${u.nome} (${u.tipo})`).join('\n') + '\n\n' +
-        'Total de veículos: ' + (db.veiculos || []).length + '\n\n' +
-        'Abra o Console (F12) para ver detalhes.'
+        'Total de veículos: ' + (db.veiculos || []).length
     );
 }
 
-// ===== FUNÇÕES DE CLIENTES =====
 async function salvarCliente() {
     const nome = document.getElementById('cliNome').value.trim();
     const cpf = document.getElementById('cliCpf').value.trim();
@@ -1119,10 +933,7 @@ async function salvarCliente() {
         if (clienteEditandoIndex !== null && idx === clienteEditandoIndex) return false;
         return (c.cpf || '').replace(/\D/g, '') === cpfLimpo;
     });
-    if (clienteDuplicado) {
-        alert('Já existe um cliente com esse CPF!'); return;
-    }
-
+    if (clienteDuplicado) { alert('Já existe um cliente com esse CPF!'); return; }
     const cliente = {
         dataCadastro: document.getElementById('cliDataCadastro').value,
         nome, cpf, rg,
@@ -1133,7 +944,6 @@ async function salvarCliente() {
         cidade, estado,
         selfie: selfieClienteTemp || null
     };
-
     if (clienteEditandoIndex !== null && db.clientes[clienteEditandoIndex]) {
         db.clientes[clienteEditandoIndex] = cliente;
         registrarAuditoria('Edição', `Cliente atualizado: ${cliente.nome}`);
@@ -1146,7 +956,6 @@ async function salvarCliente() {
         registrarAuditoria('Cadastro', `Novo cliente: ${cliente.nome}`);
         alert('Cliente salvo!');
     }
-
     atualizarTabelaClientes();
     atualizarTabelaUsuario();
     atualizarCombosLocacao();
@@ -1179,10 +988,8 @@ function atualizarTabelaClientes() {
     const tbody = document.querySelector('#tabelaClientes tbody');
     if (!tbody) return;
     tbody.innerHTML = '';
-
     const selfiesClientes = (db.clientes || []).filter(c => c.selfie).map(c => c.selfie);
     window._galeriaClientes = selfiesClientes;
-
     (db.clientes || []).forEach((c, i) => {
         const selfieIdx = c.selfie ? selfiesClientes.indexOf(c.selfie) : -1;
         const selfieCell = c.selfie
@@ -1208,9 +1015,7 @@ function editarCliente(i) {
     if (!confirmarSenhaADM()) return;
     const c = db.clientes[i];
     if (!c) { alert('Cliente não encontrado.'); return; }
-
     clienteEditandoIndex = i;
-
     document.getElementById('cliDataCadastro').value = c.dataCadastro || '';
     document.getElementById('cliNome').value = c.nome || '';
     document.getElementById('cliCpf').value = c.cpf || '';
@@ -1222,7 +1027,6 @@ function editarCliente(i) {
     document.getElementById('cliCep').value = c.cep || '';
     document.getElementById('cliCidade').value = c.cidade || '';
     document.getElementById('cliEstado').value = c.estado || '';
-
     selfieClienteTemp = c.selfie || null;
     const prevSelfie = document.getElementById('selfiePreviewCliente');
     if (prevSelfie) {
@@ -1230,24 +1034,16 @@ function editarCliente(i) {
             ? `<img src="${c.selfie}" class="selfie-thumbnail" alt="selfie" onclick="openImageModal('${c.selfie}')">`
             : '';
     }
-
     atualizarEstadoEdicaoCliente();
     window.scrollTo(0, 0);
     document.getElementById('cliNome').focus();
-    console.log(`✏️ Editando cliente #${i}: ${c.nome}`);
 }
 
 function excluirCliente(i) {
     if (!confirm('Excluir este cliente?')) return;
     db.clientes.splice(i, 1);
-    if (clienteEditandoIndex === i) {
-        clienteEditandoIndex = null;
-        atualizarEstadoEdicaoCliente();
-        limparCamposCliente();
-        limparSelfieCliente();
-    } else if (clienteEditandoIndex !== null && clienteEditandoIndex > i) {
-        clienteEditandoIndex--;
-    }
+    if (clienteEditandoIndex === i) { clienteEditandoIndex = null; atualizarEstadoEdicaoCliente(); limparCamposCliente(); limparSelfieCliente(); }
+    else if (clienteEditandoIndex !== null && clienteEditandoIndex > i) clienteEditandoIndex--;
     atualizarTabelaClientes();
     atualizarCombosLocacao();
     salvarDB();
@@ -1266,15 +1062,12 @@ function criarUsuarioDoCliente(cliente) {
     atualizarTabelaUsuario();
 }
 
-// ===== FUNÇÕES DE USUÁRIOS =====
 function atualizarTabelaUsuario() {
     const tbody = document.querySelector('#tabelaUsuario tbody');
     if (!tbody) return;
     tbody.innerHTML = '';
-
     const selfiesUsuarios = (db.usuarios || []).filter(u => u.selfie).map(u => u.selfie);
     window._galeriaUsuarios = selfiesUsuarios;
-
     (db.usuarios || []).forEach((u, i) => {
         const selfieIdx = u.selfie ? selfiesUsuarios.indexOf(u.selfie) : -1;
         const selfieCell = u.selfie
@@ -1305,7 +1098,6 @@ function editarUsuario(i) {
     selfieUsuarioTemp = u.selfie || null;
     preencherPermissoesUI(u.permissoes);
     window.scrollTo(0, 0);
-    console.log(`✏️ Editando usuário #${i}: ${u.nome}`);
 }
 
 function excluirUsuario(i) {
@@ -1410,7 +1202,6 @@ function aplicarPermissoes(usuario) {
     if (firstTab) firstTab.click();
 }
 
-// ===== FUNÇÕES DE LOCAÇÃO =====
 function atualizarCombosLocacao() {
     const sCli = document.getElementById('locLocatario');
     if (sCli) {
@@ -1505,26 +1296,16 @@ function salvarLocacao() {
     const placa       = document.getElementById('locPlaca').value;
     const dataInicio  = document.getElementById('locDataInicio').value;
     const dataFim     = document.getElementById('locDataFim').value;
-
-    if (!locatario || !fabricante || !placa || !dataInicio) {
-        alert('Preencha todos os campos obrigatórios!');
-        return;
-    }
-
+    if (!locatario || !fabricante || !placa || !dataInicio) { alert('Preencha todos os campos obrigatórios!'); return; }
     const { valor: valorEfetivo, origem: origemValor } = obterValorAluguelEfetivo();
-
     const valorAluguelStr = document.getElementById('locValorAluguel').value;
     const aluguelMensalStr = document.getElementById('locAluguelMensal').value;
-
     const tipoPagamento = document.getElementById('locTipoPagamento').value || 'mensal';
-
     const caucaoStr = document.getElementById('locCaucao').value;
     const caucaoPagoStr = document.getElementById('locCaucaoPago').value;
     const tipoPagCaucao = document.getElementById('locPagCaucao').value || 'avista';
-
     const caucaoValor = parseMoeda(caucaoStr);
     const caucaoPagoValor = parseMoeda(caucaoPagoStr);
-
     const locacaoObj = {
         locatario, fabricante, placa, dataInicio, dataFim,
         valorAluguel: valorEfetivo > 0 ? formatarMoedaBR(valorEfetivo) : (valorAluguelStr || 'R$ 0,00'),
@@ -1536,7 +1317,6 @@ function salvarLocacao() {
         pagCaucao:   tipoPagCaucao,
         vistoria: []
     };
-
     if (locacaoEditandoIndex !== null && db.locacoes[locacaoEditandoIndex]) {
         locacaoObj.vistoria = db.locacoes[locacaoEditandoIndex].vistoria || [];
         locacaoObj.valorTotalParcelas = db.locacoes[locacaoEditandoIndex].valorTotalParcelas || null;
@@ -1550,80 +1330,52 @@ function salvarLocacao() {
         limparCamposLocacao();
         return;
     }
-
     const parcelas = gerarParcelasPagamento({
-        dataInicio,
-        valorAluguel: valorEfetivo,
-        caucao: caucaoValor,
-        caucaoPago: caucaoPagoValor,
-        tipoPagCaucao: tipoPagCaucao,
-        tipoPagamento: tipoPagamento
+        dataInicio, valorAluguel: valorEfetivo, caucao: caucaoValor,
+        caucaoPago: caucaoPagoValor, tipoPagCaucao: tipoPagCaucao, tipoPagamento: tipoPagamento
     });
-
     let totalParcelas = 0;
     parcelas.forEach(p => { totalParcelas += p.valor; });
     locacaoObj.valorTotalParcelas = totalParcelas;
-
     db.locacoes.push(locacaoObj);
-
     if (parcelas.length > 0) {
         if (!Array.isArray(db.alugueis)) db.alugueis = [];
         const hojeISO = new Date().toISOString().split('T')[0];
-
         parcelas.forEach(p => {
             db.alugueis.push({
-                locatario,
-                fabricante,
-                placa,
-                data:          hojeISO,
-                vencimento:    p.vencimento,
-                valor:         formatarMoedaBR(p.valor),
-                valorNumerico: p.valor,
-                origem:        p.descricao,
-                tipoPagamento: tipoPagamento,
-                status:        'pendente',
-                parcela:       p.parcela,
-                dataInicio,
-                dataFim
+                locatario, fabricante, placa,
+                data: hojeISO, vencimento: p.vencimento,
+                valor: formatarMoedaBR(p.valor), valorNumerico: p.valor,
+                origem: p.descricao, tipoPagamento: tipoPagamento,
+                status: 'pendente', parcela: p.parcela,
+                dataInicio, dataFim
             });
         });
         atualizarTabelaAlugueis();
     }
-
     atualizarTabelaLocacoes();
     registrarAuditoria('Cadastro', `Nova locação: ${locatario} - ${placa} | Caução: ${tipoPagCaucao} | ${parcelas.length} parcela(s) | Total: ${formatarMoedaBR(totalParcelas)}`);
     salvarDB();
-
     if (parcelas.length > 0) {
         let resumo = '✅ Locação salva!\n\n';
         resumo += 'Forma de pagamento da caução: ' + tipoPagCaucao.toUpperCase() + '\n';
-        resumo += 'Parcelas geradas em Sub Pagamentos: ' + parcelas.length + '\n';
-        resumo += 'Valor total a receber: ' + formatarMoedaBR(totalParcelas) + '\n\n';
-        resumo += 'Detalhes das parcelas:\n';
-        parcelas.forEach(p => {
-            resumo += `  ${p.parcela}. ${p.descricao} — ${formatarMoedaBR(p.valor)} (venc. ${formatarDataBR(p.vencimento)})\n`;
-        });
+        resumo += 'Parcelas geradas: ' + parcelas.length + '\n';
+        resumo += 'Valor total: ' + formatarMoedaBR(totalParcelas);
         alert(resumo);
     } else {
-        alert('✅ Locação salva! (Nenhum valor preenchido — nada foi lançado em Sub Pagamentos.)');
+        alert('✅ Locação salva!');
     }
     limparCamposLocacao();
 }
 
 function limparCamposLocacao() {
-    [
-        'locLocatario','locVeiculo','locDataInicio','locDataFim','locFabModelo',
-        'locCor','locPlaca','locAnoFabr','locAnoModel','locCaucao','locValorAluguel',
-        'locAluguelMensal','locProprietario','locCpfPropr','locCaucaoPago'
-    ].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.value = '';
+    ['locLocatario','locVeiculo','locDataInicio','locDataFim','locFabModelo',
+     'locCor','locPlaca','locAnoFabr','locAnoModel','locCaucao','locValorAluguel',
+     'locAluguelMensal','locProprietario','locCpfPropr','locCaucaoPago'].forEach(id => {
+        const el = document.getElementById(id); if (el) el.value = '';
     });
-    const selPag = document.getElementById('locPagCaucao');
-    if (selPag) selPag.selectedIndex = 0;
-    const selTipo = document.getElementById('locTipoPagamento');
-    if (selTipo) selTipo.value = 'mensal';
-
+    const selPag = document.getElementById('locPagCaucao'); if (selPag) selPag.selectedIndex = 0;
+    const selTipo = document.getElementById('locTipoPagamento'); if (selTipo) selTipo.value = 'mensal';
     locacaoEditandoIndex = null;
     atualizarEstadoEdicaoLocacao();
 }
@@ -1660,7 +1412,7 @@ function atualizarTabelaLocacoes() {
             <td>${l.valorAluguel || ''}<br><small style="color:#666;">${tipoLabel} · Caução: ${caucaoLabel}</small>${totalTxt}</td>
             <td>
                 <button class="btn-warning" onclick="editarLocacao(${i})" title="Editar">✏️</button>
-                <button class="btn-warning" onclick="encerrarLocacao(${i})" title="Encerrar locação">🏁</button>
+                <button class="btn-warning" onclick="encerrarLocacao(${i})" title="Encerrar">🏁</button>
                 <button class="btn-danger" onclick="excluirLocacao(${i})" title="Excluir">🗑️</button>
             </td>
         `;
@@ -1672,20 +1424,11 @@ function editarLocacao(i) {
     if (!confirmarSenhaADM()) return;
     const l = db.locacoes[i];
     if (!l) { alert('Locação não encontrada.'); return; }
-
     locacaoEditandoIndex = i;
-
-    const selCli = document.getElementById('locLocatario');
-    if (selCli) selCli.value = l.locatario || '';
-
-    const selVei = document.getElementById('locVeiculo');
-    if (selVei) selVei.value = l.fabricante || '';
-
-    const selPl = document.getElementById('locPlaca');
-    if (selPl) selPl.value = l.placa || '';
-
+    const selCli = document.getElementById('locLocatario'); if (selCli) selCli.value = l.locatario || '';
+    const selVei = document.getElementById('locVeiculo'); if (selVei) selVei.value = l.fabricante || '';
+    const selPl = document.getElementById('locPlaca'); if (selPl) selPl.value = l.placa || '';
     const v = (db.veiculos || []).find(x => x.placa === l.placa) || {};
-
     document.getElementById('locFabModelo').value = l.fabricante || '';
     document.getElementById('locCor').value = v.cor || '';
     document.getElementById('locAnoFabr').value = v.anoFabr || '';
@@ -1700,57 +1443,38 @@ function editarLocacao(i) {
     document.getElementById('locCaucaoPago').value = l.caucaoPago || '';
     document.getElementById('locPagCaucao').value = l.pagCaucao || 'avista';
     document.getElementById('locTipoPagamento').value = l.tipoPagamento || 'mensal';
-
     atualizarEstadoEdicaoLocacao();
     window.scrollTo(0, 0);
     document.getElementById('locLocatario').focus();
-    console.log(`✏️ Editando locação #${i}: ${l.locatario} - ${l.placa}`);
 }
 
 function excluirLocacao(i) {
     if (!confirm('Excluir esta locação?')) return;
     db.locacoes.splice(i, 1);
-    if (locacaoEditandoIndex === i) {
-        locacaoEditandoIndex = null;
-        atualizarEstadoEdicaoLocacao();
-        limparCamposLocacao();
-    } else if (locacaoEditandoIndex !== null && locacaoEditandoIndex > i) {
-        locacaoEditandoIndex--;
-    }
+    if (locacaoEditandoIndex === i) { locacaoEditandoIndex = null; atualizarEstadoEdicaoLocacao(); limparCamposLocacao(); }
+    else if (locacaoEditandoIndex !== null && locacaoEditandoIndex > i) locacaoEditandoIndex--;
     atualizarTabelaLocacoes();
     registrarAuditoria('Exclusão', `Locação excluída índice ${i}`);
     salvarDB();
 }
 
-/* ===== ENCERRAR LOCAÇÃO ===== */
 function encerrarLocacao(i) {
     if (!confirmarSenhaADM()) return;
     const l = db.locacoes[i];
     if (!l) { alert('Locação não encontrada.'); return; }
-
     const tipoLabel = (l.tipoPagamento || 'mensal').toUpperCase();
-    if (!confirm(`Encerrar a locação de ${l.locatario} - ${l.placa}?\n\nTipo de pagamento: ${tipoLabel}\nO sistema vai calcular os aluguéis do período e lançar em "🏁 LOC. ENCERRADA".`)) return;
-
+    if (!confirm(`Encerrar a locação de ${l.locatario} - ${l.placa}?\n\nTipo: ${tipoLabel}`)) return;
     const hojeISO = new Date().toISOString().split('T')[0];
-
     const calculo = calcularReceitaEsperada(l, hojeISO);
     const receitaCalculada = calculo.total;
-
-    const pagos = (db.alugueis || []).filter(a =>
-        a.locatario === l.locatario &&
-        a.placa === l.placa &&
-        a.status === 'pago'
-    );
+    const pagos = (db.alugueis || []).filter(a => a.locatario === l.locatario && a.placa === l.placa && a.status === 'pago');
     const receitaPaga = pagos.reduce((s, a) => s + (Number(a.valorNumerico) || parseMoeda(a.valor) || 0), 0);
-
     const receita = Math.max(receitaCalculada, receitaPaga);
-
     const despMec = (db.mecanico || []).filter(m => m.placa === l.placa).reduce((s, m) => s + parseMoeda(m.valor), 0);
     const despMan = (db.manutencao || []).filter(m => m.placa === l.placa).reduce((s, m) => s + parseMoeda(m.custo || 0), 0);
     const despComp = (db.compras || []).filter(c => c.placa === l.placa).reduce((s, c) => s + parseMoeda(c.valorTotal || c.valorUnitario), 0);
     const despesas = despMec + despMan + despComp;
     const lucro = receita - despesas;
-
     const encerrada = Object.assign({}, l, {
         dataEncerramento: hojeISO,
         periodosCalculados: calculo.periodos,
@@ -1758,76 +1482,44 @@ function encerrarLocacao(i) {
         receitaCalculada: formatarMoedaBR(receitaCalculada),
         receitaPagaJaRegistrada: formatarMoedaBR(receitaPaga),
         tipoPagamento: calculo.tipoPagamento,
-        receitaNumerica: receita,
-        despesasNumerica: despesas,
-        lucroNumerico: lucro,
+        receitaNumerica: receita, despesasNumerica: despesas, lucroNumerico: lucro,
         valorGerado: formatarMoedaBR(receita),
         despesas: formatarMoedaBR(despesas),
         lucro: formatarMoedaBR(lucro)
     });
-
     if (!Array.isArray(db.locacoesEncerradas)) db.locacoesEncerradas = [];
     db.locacoesEncerradas.push(encerrada);
     db.locacoes.splice(i, 1);
-
-    if (locacaoEditandoIndex === i) {
-        locacaoEditandoIndex = null;
-        atualizarEstadoEdicaoLocacao();
-        limparCamposLocacao();
-    } else if (locacaoEditandoIndex !== null && locacaoEditandoIndex > i) {
-        locacaoEditandoIndex--;
-    }
-
+    if (locacaoEditandoIndex === i) { locacaoEditandoIndex = null; atualizarEstadoEdicaoLocacao(); limparCamposLocacao(); }
+    else if (locacaoEditandoIndex !== null && locacaoEditandoIndex > i) locacaoEditandoIndex--;
     atualizarTabelaLocacoes();
     atualizarTabelaLocEncerrada();
-    registrarAuditoria('Encerramento', `Locação encerrada: ${l.locatario} - ${l.placa} | Tipo: ${tipoLabel} | Períodos: ${calculo.periodos} x ${formatarMoedaBR(calculo.valorPeriodo)} = ${formatarMoedaBR(receitaCalculada)}`);
+    registrarAuditoria('Encerramento', `Locação encerrada: ${l.locatario} - ${l.placa}`);
     salvarDB();
-
-    alert(
-        '✅ Locação encerrada e movida para "🏁 LOC. ENCERRADA"!\n\n' +
-        'Tipo: ' + tipoLabel + '\n' +
-        'Períodos: ' + calculo.periodos + ' × ' + formatarMoedaBR(calculo.valorPeriodo) + '\n' +
-        'Receita calculada: ' + formatarMoedaBR(receitaCalculada) + '\n' +
-        'Receita paga (registrada): ' + formatarMoedaBR(receitaPaga) + '\n' +
-        'Receita usada (maior): ' + formatarMoedaBR(receita)
-    );
+    alert('✅ Locação encerrada!\n\nReceita: ' + formatarMoedaBR(receita));
 }
 
-/* ===== LOCAÇÕES ENCERRADAS ===== */
 function atualizarTabelaLocEncerrada() {
     const tbody = document.querySelector('#tabelaLocEncerrada tbody');
     const lista = db.locacoesEncerradas || [];
-
     const total = lista.length;
     const receitaTotal = lista.reduce((s, l) => s + (Number(l.receitaNumerica) || 0), 0);
     const despesasTotal = lista.reduce((s, l) => s + (Number(l.despesasNumerica) || 0), 0);
     const lucroTotal = lista.reduce((s, l) => s + (Number(l.lucroNumerico) || 0), 0);
-
-    const elTotal = document.getElementById('kpiTotalLocs');
-    const elRec = document.getElementById('kpiReceitaTotal');
-    const elDesp = document.getElementById('kpiDespesasTotal');
-    const elLucro = document.getElementById('kpiLucroTotal');
-    if (elTotal) elTotal.textContent = total;
-    if (elRec) elRec.textContent = formatarMoedaBR(receitaTotal);
-    if (elDesp) elDesp.textContent = formatarMoedaBR(despesasTotal);
-    if (elLucro) elLucro.textContent = formatarMoedaBR(lucroTotal);
-
+    const elTotal = document.getElementById('kpiTotalLocs'); if (elTotal) elTotal.textContent = total;
+    const elRec = document.getElementById('kpiReceitaTotal'); if (elRec) elRec.textContent = formatarMoedaBR(receitaTotal);
+    const elDesp = document.getElementById('kpiDespesasTotal'); if (elDesp) elDesp.textContent = formatarMoedaBR(despesasTotal);
+    const elLucro = document.getElementById('kpiLucroTotal'); if (elLucro) elLucro.textContent = formatarMoedaBR(lucroTotal);
     if (!tbody) return;
     tbody.innerHTML = '';
-
     if (total === 0) {
         const tr = document.createElement('tr');
         tr.innerHTML = `<td colspan="10" style="text-align:center;color:#999;padding:20px;">Nenhuma locação encerrada.</td>`;
         tbody.appendChild(tr);
         return;
     }
-
     lista.forEach((l, i) => {
         const tipoLabel = (l.tipoPagamento || 'mensal').toUpperCase();
-        const detalhes = l.periodosCalculados
-            ? `${tipoLabel}: ${l.periodosCalculados} × ${l.valorPeriodo || 'R$ 0,00'} = ${l.receitaCalculada || 'R$ 0,00'} (Pago: ${l.receitaPagaJaRegistrada || 'R$ 0,00'})`
-            : tipoLabel;
-
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${l.locatario || ''}</td>
@@ -1836,11 +1528,11 @@ function atualizarTabelaLocEncerrada() {
             <td>${formatarDataBR(l.dataInicio)}</td>
             <td>${formatarDataBR(l.dataFim)}</td>
             <td>${formatarDataBR(l.dataEncerramento)}</td>
-            <td title="${detalhes}">${l.valorGerado || 'R$ 0,00'}<br><small style="color:#666;">${tipoLabel}</small></td>
+            <td>${l.valorGerado || 'R$ 0,00'}<br><small style="color:#666;">${tipoLabel}</small></td>
             <td>${l.despesas || 'R$ 0,00'}</td>
             <td>${l.lucro || 'R$ 0,00'}</td>
             <td>
-                <button class="btn-warning" onclick="reabrirLocacao(${i})" title="Reabrir (voltar para Ativas)">↩️</button>
+                <button class="btn-warning" onclick="reabrirLocacao(${i})" title="Reabrir">↩️</button>
                 <button class="btn-danger" onclick="excluirLocacaoEncerrada(${i})" title="Excluir">🗑️</button>
             </td>
         `;
@@ -1852,41 +1544,26 @@ function reabrirLocacao(i) {
     if (!confirmarSenhaADM()) return;
     const l = db.locacoesEncerradas[i];
     if (!l) { alert('Locação não encontrada.'); return; }
-    if (!confirm(`Reabrir a locação de ${l.locatario} - ${l.placa}?\n\nEla voltará para "📋 Locações Ativas".`)) return;
-
+    if (!confirm(`Reabrir a locação de ${l.locatario} - ${l.placa}?`)) return;
     const copia = Object.assign({}, l);
-    delete copia.dataEncerramento;
-    delete copia.receitaNumerica;
-    delete copia.despesasNumerica;
-    delete copia.lucroNumerico;
-    delete copia.valorGerado;
-    delete copia.despesas;
-    delete copia.lucro;
-    delete copia.periodosCalculados;
-    delete copia.valorPeriodo;
-    delete copia.receitaCalculada;
-    delete copia.receitaPagaJaRegistrada;
-
+    ['dataEncerramento','receitaNumerica','despesasNumerica','lucroNumerico','valorGerado','despesas','lucro','periodosCalculados','valorPeriodo','receitaCalculada','receitaPagaJaRegistrada'].forEach(k => delete copia[k]);
     if (!Array.isArray(db.locacoes)) db.locacoes = [];
     db.locacoes.push(copia);
     db.locacoesEncerradas.splice(i, 1);
-
     atualizarTabelaLocacoes();
     atualizarTabelaLocEncerrada();
     registrarAuditoria('Reabertura', `Locação reaberta: ${l.locatario} - ${l.placa}`);
     salvarDB();
-    alert('✅ Locação reaberta e movida para "Locações Ativas".');
+    alert('✅ Locação reaberta.');
 }
 
 function excluirLocacaoEncerrada(i) {
     if (!confirm('Excluir permanentemente esta locação encerrada?')) return;
     db.locacoesEncerradas.splice(i, 1);
     atualizarTabelaLocEncerrada();
-    registrarAuditoria('Exclusão', `Locação encerrada excluída índice ${i}`);
     salvarDB();
 }
 
-// ===== MANUTENÇÃO E MECÂNICO =====
 function atualizarPlacasManutencao() {
     const s = document.getElementById('manPlaca');
     if (!s) return;
@@ -1909,8 +1586,7 @@ function salvarManutencao() {
     if (!placa) { alert('Selecione a placa!'); return; }
     db.manutencao.push({
         veiculo: document.getElementById('manVeiculo').value,
-        placa,
-        tipo: document.getElementById('manTipo').value,
+        placa, tipo: document.getElementById('manTipo').value,
         km: document.getElementById('manKm').value,
         obs: document.getElementById('manObs').value
     });
@@ -1955,9 +1631,7 @@ async function salvarMecanico() {
     const carro = document.getElementById('mecCarro').value;
     const placa = document.getElementById('mecPlaca').value;
     const valor = document.getElementById('mecValor').value;
-    if (!data || !oficina || !servico || !carro || !placa || !valor) {
-        alert('Preencha todos os campos!'); return;
-    }
+    if (!data || !oficina || !servico || !carro || !placa || !valor) { alert('Preencha todos os campos!'); return; }
     db.mecanico.push({
         data, oficina, servico,
         responsavel: document.getElementById('mecResponsavel').value,
@@ -1994,7 +1668,6 @@ function atualizarTabelaMecanico() {
     });
 }
 
-// ===== HISTÓRICO =====
 function atualizarTabelaHistorico() {
     const tbody = document.querySelector('#tabelaHistorico tbody');
     if (!tbody) return;
@@ -2006,30 +1679,21 @@ function atualizarTabelaHistorico() {
     });
 }
 
-// ===== HISTÓRICO DE ALUGUÉIS =====
 function atualizarTabelaHistoricoAlugueis() {
     const tbody = document.querySelector('#tabelaHistoricoAlugueis tbody');
     if (!tbody) return;
     tbody.innerHTML = '';
-
     const lista = db.historicoAlugueis || [];
-
     const totalRecebido = lista.reduce((s, h) => s + (Number(h.valorNumerico) || parseMoeda(h.valor) || 0), 0);
-    const elTotal = document.getElementById('kpiHistAlugTotal');
-    const elQtd = document.getElementById('kpiHistAlugQtd');
-    if (elTotal) elTotal.textContent = formatarMoedaBR(totalRecebido);
-    if (elQtd) elQtd.textContent = lista.length;
-
+    const elTotal = document.getElementById('kpiHistAlugTotal'); if (elTotal) elTotal.textContent = formatarMoedaBR(totalRecebido);
+    const elQtd = document.getElementById('kpiHistAlugQtd'); if (elQtd) elQtd.textContent = lista.length;
     if (lista.length === 0) {
         const tr = document.createElement('tr');
         tr.innerHTML = `<td colspan="8" style="text-align:center;color:#999;padding:20px;">Nenhum aluguel pago registrado ainda.</td>`;
         tbody.appendChild(tr);
         return;
     }
-
-    const listaOrd = lista.slice().reverse();
-
-    listaOrd.forEach(h => {
+    lista.slice().reverse().forEach(h => {
         const tipoLabel = (h.tipoPagamento || 'mensal').toUpperCase();
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -2046,9 +1710,9 @@ function atualizarTabelaHistoricoAlugueis() {
     });
 }
 
-// ===== AUDITORIA =====
 function registrarAuditoria(acao, descricao) {
-    if (!db || !db.auditoria) { if (db) db.auditoria = []; else return; }
+    if (!db) return;
+    if (!Array.isArray(db.auditoria)) db.auditoria = [];
     db.auditoria.push({
         data: new Date().toLocaleString('pt-BR'),
         usuario: usuarioLogado ? usuarioLogado.nome : 'SISTEMA',
@@ -2069,7 +1733,6 @@ function atualizarTabelaAuditoria() {
     });
 }
 
-// ===== SELFIE =====
 function abrirModalSelfie(destino = 'cliente') {
     selfieDestino = destino;
     selfieDataUrl = null;
@@ -2144,16 +1807,11 @@ function confirmarSelfie() {
 function limparSelfieCliente() { selfieClienteTemp = null; const c = document.getElementById('selfiePreviewCliente'); if (c) c.innerHTML = ''; }
 function limparSelfieUsuario() { selfieUsuarioTemp = null; const c = document.getElementById('selfiePreviewUsuario'); if (c) c.innerHTML = ''; }
 
-// ===== MODAL IMAGEM (COM NAVEGAÇÃO) =====
 function openImageModal(src, gallery, index) {
     if (Array.isArray(gallery) && gallery.length > 0) {
         galeriaAtual = gallery.slice();
-        if (typeof index === 'number' && index >= 0 && index < gallery.length) {
-            galeriaIndexAtual = index;
-        } else {
-            const idx = gallery.indexOf(src);
-            galeriaIndexAtual = idx >= 0 ? idx : 0;
-        }
+        if (typeof index === 'number' && index >= 0 && index < gallery.length) galeriaIndexAtual = index;
+        else { const idx = gallery.indexOf(src); galeriaIndexAtual = idx >= 0 ? idx : 0; }
     } else {
         galeriaAtual = [src];
         galeriaIndexAtual = 0;
@@ -2168,24 +1826,14 @@ function renderizarModalImagem() {
     const nextBtn = document.getElementById('modalNextBtn');
     const counter = document.getElementById('modalCounter');
     if (!img) return;
-
-    if (galeriaAtual.length === 0) {
-        img.src = '';
-        return;
-    }
-
+    if (galeriaAtual.length === 0) { img.src = ''; return; }
     if (galeriaIndexAtual < 0) galeriaIndexAtual = 0;
     if (galeriaIndexAtual >= galeriaAtual.length) galeriaIndexAtual = galeriaAtual.length - 1;
-
     img.src = galeriaAtual[galeriaIndexAtual];
-
     if (galeriaAtual.length > 1) {
         if (prevBtn) prevBtn.style.display = 'flex';
         if (nextBtn) nextBtn.style.display = 'flex';
-        if (counter) {
-            counter.style.display = 'block';
-            counter.textContent = (galeriaIndexAtual + 1) + ' / ' + galeriaAtual.length;
-        }
+        if (counter) { counter.style.display = 'block'; counter.textContent = (galeriaIndexAtual + 1) + ' / ' + galeriaAtual.length; }
     } else {
         if (prevBtn) prevBtn.style.display = 'none';
         if (nextBtn) nextBtn.style.display = 'none';
@@ -2202,38 +1850,21 @@ function navegarImagem(delta) {
 function closeImageModal() {
     const modal = document.getElementById('imageModal');
     if (modal) modal.classList.remove('active');
-    galeriaAtual = [];
-    galeriaIndexAtual = 0;
-    const img = document.getElementById('modalImage');
-    if (img) img.src = '';
-    const prevBtn = document.getElementById('modalPrevBtn');
-    const nextBtn = document.getElementById('modalNextBtn');
-    const counter = document.getElementById('modalCounter');
-    if (prevBtn) prevBtn.style.display = 'none';
-    if (nextBtn) nextBtn.style.display = 'none';
-    if (counter) counter.style.display = 'none';
+    galeriaAtual = []; galeriaIndexAtual = 0;
+    const img = document.getElementById('modalImage'); if (img) img.src = '';
+    const prevBtn = document.getElementById('modalPrevBtn'); if (prevBtn) prevBtn.style.display = 'none';
+    const nextBtn = document.getElementById('modalNextBtn'); if (nextBtn) nextBtn.style.display = 'none';
+    const counter = document.getElementById('modalCounter'); if (counter) counter.style.display = 'none';
 }
 
 document.addEventListener('keydown', function(e) {
     const modal = document.getElementById('imageModal');
     if (!modal || !modal.classList.contains('active')) return;
-
-    if (e.key === 'ArrowLeft') {
-        e.preventDefault();
-        e.stopPropagation();
-        navegarImagem(-1);
-    } else if (e.key === 'ArrowRight') {
-        e.preventDefault();
-        e.stopPropagation();
-        navegarImagem(1);
-    } else if (e.key === 'Escape') {
-        e.preventDefault();
-        e.stopPropagation();
-        closeImageModal();
-    }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); e.stopPropagation(); navegarImagem(-1); }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); e.stopPropagation(); navegarImagem(1); }
+    else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeImageModal(); }
 }, true);
 
-// ===== MODAIS DIVERSOS =====
 function abrirModalContratos() { document.getElementById('contratoModal').classList.add('active'); }
 function fecharModalContratos() { document.getElementById('contratoModal').classList.remove('active'); }
 function fecharDespesasModal() { document.getElementById('despesasModal').classList.remove('active'); }
@@ -2245,71 +1876,41 @@ function switchSubTab(t) {
 function abrirCameraVistoria() { alert('Função de vistoria em implementação.'); }
 function fecharCameraVistoria() { document.getElementById('vistoriaCameraModal').classList.remove('active'); }
 
-// ===== MULTI-IMAGEM: COMPRESSÃO E PREVIEW =====
 function comprimirImagemDataURL(dataUrl, maxWidth, quality, callback) {
     const img = new Image();
     img.onload = function() {
         try {
-            let w = img.width;
-            let h = img.height;
-            if (w > maxWidth) {
-                h = Math.round(h * (maxWidth / w));
-                w = maxWidth;
-            }
+            let w = img.width, h = img.height;
+            if (w > maxWidth) { h = Math.round(h * (maxWidth / w)); w = maxWidth; }
             const canvas = document.createElement('canvas');
-            canvas.width = w;
-            canvas.height = h;
+            canvas.width = w; canvas.height = h;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, w, h);
-            const out = canvas.toDataURL('image/jpeg', quality);
-            callback(out);
-        } catch (e) {
-            console.warn('Falha ao comprimir imagem, usando original.', e);
-            callback(dataUrl);
-        }
+            callback(canvas.toDataURL('image/jpeg', quality));
+        } catch (e) { callback(dataUrl); }
     };
-    img.onerror = function() {
-        console.warn('Erro ao carregar imagem para compressão.');
-        callback(dataUrl);
-    };
+    img.onerror = function() { callback(dataUrl); };
     img.src = dataUrl;
 }
 
 function lerEComprimirArquivos(files, maxWidth, quality, onDone) {
     const lista = Array.from(files || []);
     if (lista.length === 0) { onDone([]); return; }
-
     const resultados = new Array(lista.length);
-    let concluidas = 0;
-    let finalizado = false;
-
+    let concluidas = 0, finalizado = false;
     function checar() {
         if (finalizado) return;
-        if (concluidas === lista.length) {
-            finalizado = true;
-            onDone(resultados.filter(x => !!x));
-        }
+        if (concluidas === lista.length) { finalizado = true; onDone(resultados.filter(x => !!x)); }
     }
-
     lista.forEach((file, idx) => {
-        if (!file || !file.type || !file.type.startsWith('image/')) {
-            concluidas++;
-            checar();
-            return;
-        }
+        if (!file || !file.type || !file.type.startsWith('image/')) { concluidas++; checar(); return; }
         const reader = new FileReader();
         reader.onload = function(e) {
-            comprimirImagemDataURL(e.target.result, maxWidth, quality, function(comprimida) {
-                resultados[idx] = comprimida;
-                concluidas++;
-                checar();
+            comprimirImagemDataURL(e.target.result, maxWidth, quality, function(c) {
+                resultados[idx] = c; concluidas++; checar();
             });
         };
-        reader.onerror = function() {
-            console.warn('Falha ao ler arquivo:', file && file.name);
-            concluidas++;
-            checar();
-        };
+        reader.onerror = function() { concluidas++; checar(); };
         reader.readAsDataURL(file);
     });
 }
@@ -2319,70 +1920,46 @@ function renderizarPreviewSelecionadas(containerId, dataUrls, onRemove) {
     if (!container) return;
     container.innerHTML = '';
     if (!dataUrls || dataUrls.length === 0) return;
-
     dataUrls.forEach((src, idx) => {
         const div = document.createElement('div');
         div.className = 'saved-image-item';
         div.style.borderColor = 'var(--accent)';
         div.style.borderStyle = 'dashed';
-
         const img = document.createElement('img');
-        img.src = src;
-        img.alt = 'pré-visualização';
-        img.addEventListener('click', (ev) => {
-            ev.stopPropagation();
-            openImageModal(src, dataUrls, idx);
-        });
+        img.src = src; img.alt = 'preview';
+        img.addEventListener('click', (ev) => { ev.stopPropagation(); openImageModal(src, dataUrls, idx); });
         div.appendChild(img);
-
         const btn = document.createElement('button');
-        btn.className = 'delete-btn';
-        btn.textContent = '×';
-        btn.title = 'Remover da seleção';
-        btn.addEventListener('click', (ev) => {
-            ev.stopPropagation();
-            if (typeof onRemove === 'function') onRemove(idx);
-        });
+        btn.className = 'delete-btn'; btn.textContent = '×';
+        btn.addEventListener('click', (ev) => { ev.stopPropagation(); if (typeof onRemove === 'function') onRemove(idx); });
         div.appendChild(btn);
-
         container.appendChild(div);
     });
 }
 
-// ===== EVENTOS DOS INPUTS DE MÚLTIPLAS IMAGENS =====
 function configurarInputMultiplasImagens() {
     const inputGaragem = document.getElementById('garagemImagem');
     const inputSOS = document.getElementById('sosImagem');
-
     if (inputGaragem) {
         inputGaragem.addEventListener('change', function() {
             const files = this.files;
             if (!files || files.length === 0) return;
-
             const inputAtual = this;
             lerEComprimirArquivos(files, 900, 0.65, function(dataUrls) {
                 garagemImagensTemp = dataUrls;
                 renderizarPreviewGaragem();
-                if (dataUrls.length > 0) {
-                    console.log(`📸 Garagem: ${dataUrls.length} imagem(ns) prontas para salvar.`);
-                }
                 try { inputAtual.value = ''; } catch(e){}
             });
         });
     }
-
     if (inputSOS) {
         inputSOS.addEventListener('change', function() {
             const files = this.files;
             if (!files || files.length === 0) return;
-
             const inputAtual = this;
             lerEComprimirArquivos(files, 900, 0.65, function(dataUrls) {
                 sosImagensTemp = dataUrls;
                 renderizarPreviewSOS();
-                if (dataUrls.length > 0) {
-                    console.log(`📸 SOS: ${dataUrls.length} imagem(ns) prontas para salvar.`);
-                }
                 try { inputAtual.value = ''; } catch(e){}
             });
         });
@@ -2390,202 +1967,114 @@ function configurarInputMultiplasImagens() {
 }
 
 function renderizarPreviewGaragem() {
-    const remover = function(idx) {
-        garagemImagensTemp.splice(idx, 1);
-        renderizarPreviewGaragem();
-    };
+    const remover = function(idx) { garagemImagensTemp.splice(idx, 1); renderizarPreviewGaragem(); };
     renderizarPreviewSelecionadas('garagemPreviewSelecionadas', garagemImagensTemp, remover);
 }
 
 function renderizarPreviewSOS() {
-    const remover = function(idx) {
-        sosImagensTemp.splice(idx, 1);
-        renderizarPreviewSOS();
-    };
+    const remover = function(idx) { sosImagensTemp.splice(idx, 1); renderizarPreviewSOS(); };
     renderizarPreviewSelecionadas('sosPreviewSelecionadas', sosImagensTemp, remover);
 }
 
-// ===== GARAGEM: SALVAR + GALERIA =====
 function salvarGaragem() {
-    if (!Array.isArray(garagemImagensTemp) || garagemImagensTemp.length === 0) {
-        alert('Nenhuma imagem selecionada para salvar!');
-        return;
-    }
-
+    if (!Array.isArray(garagemImagensTemp) || garagemImagensTemp.length === 0) { alert('Nenhuma imagem selecionada!'); return; }
     if (!db.imagens) db.imagens = { garagem:{fotos:[]}, sos:{fotos:[]}, comprovantes:{fotos:[]} };
     if (!db.imagens.garagem) db.imagens.garagem = { fotos: [] };
     if (!Array.isArray(db.imagens.garagem.fotos)) db.imagens.garagem.fotos = [];
-
     const qtd = garagemImagensTemp.length;
     garagemImagensTemp.forEach(src => db.imagens.garagem.fotos.push(src));
-
     garagemImagensTemp = [];
-    const preview = document.getElementById('garagemPreviewSelecionadas');
-    if (preview) preview.innerHTML = '';
-    const input = document.getElementById('garagemImagem');
-    if (input) { try { input.value = ''; } catch(e){} }
-
+    const preview = document.getElementById('garagemPreviewSelecionadas'); if (preview) preview.innerHTML = '';
+    const input = document.getElementById('garagemImagem'); if (input) { try { input.value = ''; } catch(e){} }
     atualizarGaleriaGaragem();
     salvarDB();
     registrarAuditoria('Cadastro', `${qtd} imagem(ns) salva(s) na Garagem`);
-    alert(`✅ ${qtd} imagem(ns) salva(s) na Garagem!`);
+    alert(`✅ ${qtd} imagem(ns) salva(s)!`);
 }
 
 function atualizarGaleriaGaragem() {
     const container = document.getElementById('garagemSavedImages');
     if (!container) return;
     container.innerHTML = '';
-
-    const fotos = (db.imagens && db.imagens.garagem && Array.isArray(db.imagens.garagem.fotos))
-        ? db.imagens.garagem.fotos
-        : [];
-
+    const fotos = (db.imagens && db.imagens.garagem && Array.isArray(db.imagens.garagem.fotos)) ? db.imagens.garagem.fotos : [];
     if (fotos.length === 0) {
-        const p = document.createElement('p');
-        p.style.color = '#999';
-        p.textContent = 'Nenhuma imagem salva.';
-        container.appendChild(p);
-        return;
+        const p = document.createElement('p'); p.style.color = '#999'; p.textContent = 'Nenhuma imagem salva.';
+        container.appendChild(p); return;
     }
-
     fotos.forEach((src, i) => {
-        const div = document.createElement('div');
-        div.className = 'saved-image-item';
-
-        const img = document.createElement('img');
-        img.src = src;
-        img.alt = 'foto garagem';
-        img.addEventListener('click', (ev) => {
-            ev.stopPropagation();
-            openImageModal(src, fotos, i);
-        });
+        const div = document.createElement('div'); div.className = 'saved-image-item';
+        const img = document.createElement('img'); img.src = src; img.alt = 'foto';
+        img.addEventListener('click', (ev) => { ev.stopPropagation(); openImageModal(src, fotos, i); });
         div.appendChild(img);
-
-        const btn = document.createElement('button');
-        btn.className = 'delete-btn';
-        btn.textContent = '×';
-        btn.title = 'Excluir imagem';
-        btn.addEventListener('click', (ev) => {
-            ev.stopPropagation();
-            excluirFotoGaragem(i);
-        });
+        const btn = document.createElement('button'); btn.className = 'delete-btn'; btn.textContent = '×';
+        btn.addEventListener('click', (ev) => { ev.stopPropagation(); excluirFotoGaragem(i); });
         div.appendChild(btn);
-
         container.appendChild(div);
     });
 }
 
 function excluirFotoGaragem(i) {
-    if (!confirm('Excluir esta imagem da Garagem?')) return;
+    if (!confirm('Excluir esta imagem?')) return;
     if (!db.imagens || !db.imagens.garagem || !Array.isArray(db.imagens.garagem.fotos)) return;
     db.imagens.garagem.fotos.splice(i, 1);
-    atualizarGaleriaGaragem();
-    salvarDB();
-    registrarAuditoria('Exclusão', `Imagem da Garagem excluída (índice ${i})`);
+    atualizarGaleriaGaragem(); salvarDB();
 }
 
-// ===== SOS: SALVAR + GALERIA =====
 function salvarSOS() {
-    if (!Array.isArray(sosImagensTemp) || sosImagensTemp.length === 0) {
-        alert('Nenhuma imagem selecionada para salvar!');
-        return;
-    }
-
+    if (!Array.isArray(sosImagensTemp) || sosImagensTemp.length === 0) { alert('Nenhuma imagem selecionada!'); return; }
     if (!db.imagens) db.imagens = { garagem:{fotos:[]}, sos:{fotos:[]}, comprovantes:{fotos:[]} };
     if (!db.imagens.sos) db.imagens.sos = { fotos: [] };
     if (!Array.isArray(db.imagens.sos.fotos)) db.imagens.sos.fotos = [];
-
     const qtd = sosImagensTemp.length;
     sosImagensTemp.forEach(src => db.imagens.sos.fotos.push(src));
-
     sosImagensTemp = [];
-    const preview = document.getElementById('sosPreviewSelecionadas');
-    if (preview) preview.innerHTML = '';
-    const input = document.getElementById('sosImagem');
-    if (input) { try { input.value = ''; } catch(e){} }
-
-    atualizarGaleriaSOS();
-    salvarDB();
+    const preview = document.getElementById('sosPreviewSelecionadas'); if (preview) preview.innerHTML = '';
+    const input = document.getElementById('sosImagem'); if (input) { try { input.value = ''; } catch(e){} }
+    atualizarGaleriaSOS(); salvarDB();
     registrarAuditoria('Cadastro', `${qtd} imagem(ns) salva(s) no SOS`);
-    alert(`✅ ${qtd} imagem(ns) salva(s) no SOS!`);
+    alert(`✅ ${qtd} imagem(ns) salva(s)!`);
 }
 
 function atualizarGaleriaSOS() {
     const container = document.getElementById('sosSavedImages');
     if (!container) return;
     container.innerHTML = '';
-
-    const fotos = (db.imagens && db.imagens.sos && Array.isArray(db.imagens.sos.fotos))
-        ? db.imagens.sos.fotos
-        : [];
-
+    const fotos = (db.imagens && db.imagens.sos && Array.isArray(db.imagens.sos.fotos)) ? db.imagens.sos.fotos : [];
     if (fotos.length === 0) {
-        const p = document.createElement('p');
-        p.style.color = '#999';
-        p.textContent = 'Nenhuma imagem salva.';
-        container.appendChild(p);
-        return;
+        const p = document.createElement('p'); p.style.color = '#999'; p.textContent = 'Nenhuma imagem salva.';
+        container.appendChild(p); return;
     }
-
     fotos.forEach((src, i) => {
-        const div = document.createElement('div');
-        div.className = 'saved-image-item';
-
-        const img = document.createElement('img');
-        img.src = src;
-        img.alt = 'imagem sos';
-        img.addEventListener('click', (ev) => {
-            ev.stopPropagation();
-            openImageModal(src, fotos, i);
-        });
+        const div = document.createElement('div'); div.className = 'saved-image-item';
+        const img = document.createElement('img'); img.src = src; img.alt = 'foto';
+        img.addEventListener('click', (ev) => { ev.stopPropagation(); openImageModal(src, fotos, i); });
         div.appendChild(img);
-
-        const btn = document.createElement('button');
-        btn.className = 'delete-btn';
-        btn.textContent = '×';
-        btn.title = 'Excluir imagem';
-        btn.addEventListener('click', (ev) => {
-            ev.stopPropagation();
-            excluirFotoSOS(i);
-        });
+        const btn = document.createElement('button'); btn.className = 'delete-btn'; btn.textContent = '×';
+        btn.addEventListener('click', (ev) => { ev.stopPropagation(); excluirFotoSOS(i); });
         div.appendChild(btn);
-
         container.appendChild(div);
     });
 }
 
 function excluirFotoSOS(i) {
-    if (!confirm('Excluir esta imagem do SOS?')) return;
+    if (!confirm('Excluir esta imagem?')) return;
     if (!db.imagens || !db.imagens.sos || !Array.isArray(db.imagens.sos.fotos)) return;
     db.imagens.sos.fotos.splice(i, 1);
-    atualizarGaleriaSOS();
-    salvarDB();
-    registrarAuditoria('Exclusão', `Imagem do SOS excluída (índice ${i})`);
+    atualizarGaleriaSOS(); salvarDB();
 }
 
-// ===== SUB PAGAMENTOS (ALUGUÉIS) =====
 function atualizarTabelaAlugueis() {
     const tbody = document.querySelector('#tabelaPagamentos tbody');
     if (!tbody) return;
     tbody.innerHTML = '';
-
     const hojeISO = new Date().toISOString().split('T')[0];
-
     (db.alugueis || []).forEach((a, i) => {
         let status = a.status || 'pendente';
-
-        if (status === 'pendente' && a.vencimento && a.vencimento < hojeISO) {
-            status = 'atrasado';
-            a.status = status;
-        }
-
-        const badge =
-            status === 'pago'     ? '<span class="status-pago">PAGO</span>' :
-            status === 'atrasado' ? '<span class="status-atrasado">ATRASADO</span>' :
-                                    '<span class="status-pendente">PENDENTE</span>';
-
+        if (status === 'pendente' && a.vencimento && a.vencimento < hojeISO) { status = 'atrasado'; a.status = status; }
+        const badge = status === 'pago' ? '<span class="status-pago">PAGO</span>'
+                    : status === 'atrasado' ? '<span class="status-atrasado">ATRASADO</span>'
+                    : '<span class="status-pendente">PENDENTE</span>';
         const origemTxt = a.origem ? `<br><small style="color:#666;">${a.origem}</small>` : '';
-
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${a.locatario || ''}</td>
@@ -2595,9 +2084,7 @@ function atualizarTabelaAlugueis() {
             <td>${formatarDataBR(a.vencimento)}</td>
             <td>${badge}</td>
             <td>
-                ${status !== 'pago'
-                    ? `<button class="btn-success" onclick="marcarPagamentoPago(${i})" title="Marcar como pago">✅</button>`
-                    : ''}
+                ${status !== 'pago' ? `<button class="btn-success" onclick="marcarPagamentoPago(${i})" title="Marcar como pago">✅</button>` : ''}
                 <button class="btn-danger" onclick="excluirPagamento(${i})" title="Excluir">🗑️</button>
             </td>
         `;
@@ -2609,131 +2096,82 @@ function marcarPagamentoPago(i) {
     const a = db.alugueis[i];
     if (!a) return;
     if (!confirm(`Confirmar pagamento de ${a.valor} referente a ${a.locatario}?`)) return;
-
     const hojeISO = new Date().toISOString().split('T')[0];
-    a.status         = 'pago';
-    a.dataPagamento  = hojeISO;
-
-    // ===== 1) LANÇA NO FLUXO DE CAIXA =====
+    a.status = 'pago';
+    a.dataPagamento = hojeISO;
     if (!Array.isArray(db.fluxoCaixa)) db.fluxoCaixa = [];
     db.fluxoCaixa.push({
-        data:      a.dataPagamento,
+        data: a.dataPagamento,
         descricao: `Aluguel - ${a.locatario} - ${a.placa}`,
-        categoria: 'Aluguel',
-        valor:     a.valor,
-        tipo:      'entrada'
+        categoria: 'Aluguel', valor: a.valor, tipo: 'entrada'
     });
-
-    // ===== 2) LANÇA NO HISTÓRICO DE ALUGUÉIS =====
     if (!Array.isArray(db.historicoAlugueis)) db.historicoAlugueis = [];
     db.historicoAlugueis.push({
-        data:           a.dataPagamento,
-        dataPagamento:  a.dataPagamento,
-        locatario:      a.locatario || '',
-        fabricante:     a.fabricante || '',
-        placa:          a.placa || '',
-        parcela:        a.parcela || '',
-        origem:         a.origem || 'Aluguel',
-        valor:          a.valor || '',
-        valorNumerico:  Number(a.valorNumerico) || parseMoeda(a.valor) || 0,
-        vencimento:     a.vencimento || '',
-        tipoPagamento:  a.tipoPagamento || 'mensal',
-        status:         'pago'
+        data: a.dataPagamento, dataPagamento: a.dataPagamento,
+        locatario: a.locatario || '', fabricante: a.fabricante || '',
+        placa: a.placa || '', parcela: a.parcela || '',
+        origem: a.origem || 'Aluguel', valor: a.valor || '',
+        valorNumerico: Number(a.valorNumerico) || parseMoeda(a.valor) || 0,
+        vencimento: a.vencimento || '',
+        tipoPagamento: a.tipoPagamento || 'mensal',
+        status: 'pago'
     });
-
-    // ===== 3) CRIA AUTOMATICAMENTE O PRÓXIMO VENCIMENTO =====
     const tipoPag = (a.tipoPagamento || 'mensal').toLowerCase();
-
     if (tipoPag === 'semanal' || tipoPag === 'mensal') {
-        const locAtiva = (db.locacoes || []).find(l =>
-            l.locatario === a.locatario && l.placa === a.placa
-        );
-
+        const locAtiva = (db.locacoes || []).find(l => l.locatario === a.locatario && l.placa === a.placa);
         if (locAtiva) {
             const intervalDias = tipoPag === 'semanal' ? 7 : 30;
-
             const baseVenc = a.vencimento || hojeISO;
             const d = new Date(baseVenc + 'T00:00:00');
             d.setDate(d.getDate() + intervalDias);
             const proximoVenc = d.toISOString().split('T')[0];
-
-            const jaExiste = (db.alugueis || []).some(x =>
-                x.locatario === a.locatario &&
-                x.placa === a.placa &&
-                x.vencimento === proximoVenc &&
-                x.status !== 'pago'
-            );
-
+            const jaExiste = (db.alugueis || []).some(x => x.locatario === a.locatario && x.placa === a.placa && x.vencimento === proximoVenc && x.status !== 'pago');
             if (!jaExiste) {
-                const parcelasExistentes = (db.alugueis || []).filter(x =>
-                    x.locatario === a.locatario && x.placa === a.placa
-                ).length;
-
+                const parcelasExistentes = (db.alugueis || []).filter(x => x.locatario === a.locatario && x.placa === a.placa).length;
                 let totalCaucaoParcelas = 0;
                 const pagCaucao = locAtiva.pagCaucao || 'avista';
-                if (pagCaucao === 'parcelado' || pagCaucao === 'entrada') {
-                    totalCaucaoParcelas = 10;
-                } else if (pagCaucao === 'avista') {
-                    totalCaucaoParcelas = 1;
-                }
-
+                if (pagCaucao === 'parcelado' || pagCaucao === 'entrada') totalCaucaoParcelas = 10;
+                else if (pagCaucao === 'avista') totalCaucaoParcelas = 1;
                 const aindaTemCaucao = parcelasExistentes < totalCaucaoParcelas;
-
                 const aluguelBase = parseMoeda(locAtiva.valorAluguel) || parseMoeda(locAtiva.aluguelMensal);
                 const caucaoTotal = parseMoeda(locAtiva.caucao);
-
                 let valorProx = aluguelBase;
                 let descricaoProx = 'Aluguel';
                 const parcelaProx = parcelasExistentes + 1;
-
                 if (aindaTemCaucao) {
                     if (pagCaucao === 'parcelado') {
-                        const parcelaCaucao = caucaoTotal / 10;
-                        valorProx = aluguelBase + parcelaCaucao;
+                        valorProx = aluguelBase + (caucaoTotal / 10);
                         descricaoProx = `Aluguel + Caução ${parcelaProx}/10`;
                     } else if (pagCaucao === 'entrada') {
                         const entrada = parseMoeda(locAtiva.caucaoPago);
                         const saldo = Math.max(0, caucaoTotal - entrada);
-                        const parcelaSaldo = saldo / 9;
-                        valorProx = aluguelBase + parcelaSaldo;
+                        valorProx = aluguelBase + (saldo / 9);
                         descricaoProx = `Aluguel + Saldo Caução ${parcelaProx - 1}/9`;
                     }
                 }
-
                 db.alugueis.push({
-                    locatario:      a.locatario,
-                    fabricante:     a.fabricante || '',
-                    placa:          a.placa,
-                    data:           hojeISO,
-                    vencimento:     proximoVenc,
-                    valor:          formatarMoedaBR(valorProx),
-                    valorNumerico:  valorProx,
-                    origem:         descricaoProx,
-                    tipoPagamento:  a.tipoPagamento || 'mensal',
-                    status:         'pendente',
-                    parcela:        parcelaProx,
-                    dataInicio:     a.dataInicio || locAtiva.dataInicio,
-                    dataFim:        a.dataFim || locAtiva.dataFim
+                    locatario: a.locatario, fabricante: a.fabricante || '',
+                    placa: a.placa, data: hojeISO, vencimento: proximoVenc,
+                    valor: formatarMoedaBR(valorProx), valorNumerico: valorProx,
+                    origem: descricaoProx, tipoPagamento: a.tipoPagamento || 'mensal',
+                    status: 'pendente', parcela: parcelaProx,
+                    dataInicio: a.dataInicio || locAtiva.dataInicio,
+                    dataFim: a.dataFim || locAtiva.dataFim
                 });
-
-                registrarAuditoria('Pagamento', `Recebido: ${a.locatario} - ${a.valor} | Próximo vencimento criado: ${formatarDataBR(proximoVenc)} (${formatarMoedaBR(valorProx)})`);
+                registrarAuditoria('Pagamento', `Recebido: ${a.locatario} - ${a.valor} | Próximo: ${formatarDataBR(proximoVenc)}`);
             } else {
                 registrarAuditoria('Pagamento', `Recebido: ${a.locatario} - ${a.valor}`);
             }
         } else {
-            registrarAuditoria('Pagamento', `Recebido: ${a.locatario} - ${a.valor} (locação não está ativa - sem próximo vencimento)`);
+            registrarAuditoria('Pagamento', `Recebido: ${a.locatario} - ${a.valor} (locação inativa)`);
         }
     } else {
         registrarAuditoria('Pagamento', `Recebido: ${a.locatario} - ${a.valor}`);
     }
-
     atualizarTabelaAlugueis();
     atualizarTabelaHistoricoAlugueis();
     salvarDB();
-    alert('✅ Pagamento registrado!\n\n' +
-          '• Valor lançado no Fluxo de Caixa\n' +
-          '• Valor lançado no Histórico de Aluguéis' +
-          ((tipoPag === 'semanal' || tipoPag === 'mensal') ? '\n• Próximo vencimento gerado automaticamente' : '\n• Tipo Único: sem próximo vencimento'));
+    alert('✅ Pagamento registrado!');
 }
 
 function excluirPagamento(i) {
@@ -2743,7 +2181,6 @@ function excluirPagamento(i) {
     salvarDB();
 }
 
-// ===== FUNÇÕES DIVERSAS (stubs) =====
 function atualizarResumoFinanceiro() {}
 function atualizarTabelaCompras() { const t = document.querySelector('#tabelaCompras tbody'); if (t) t.innerHTML = ''; }
 function atualizarTabelaBancos() { const t = document.querySelector('#tabelaBancos tbody'); if (t) t.innerHTML = ''; }
@@ -2789,9 +2226,7 @@ function switchContratoTab() {}
 function imprimirDocumento() { window.print(); }
 function abrirModalSelfie_() {}
 
-// ============================================================
-// ===== PWA: INSTALAÇÃO COMO APP + SERVICE WORKER =====
-// ============================================================
+// ===== PWA: INSTALAÇÃO + SERVICE WORKER =====
 let deferredInstallPrompt = null;
 
 window.addEventListener('beforeinstallprompt', (e) => {
@@ -2806,55 +2241,37 @@ window.addEventListener('appinstalled', () => {
     deferredInstallPrompt = null;
     const btn = document.getElementById('installBtn');
     if (btn) btn.style.display = 'none';
-    console.log('✅ App instalado com sucesso!');
+    console.log('✅ App instalado!');
 });
 
 function configurarBotaoInstalar() {
     const btn = document.getElementById('installBtn');
     if (!btn) return;
-
-    // Já está rodando como app instalado?
     const rodandoComoApp = window.matchMedia('(display-mode: standalone)').matches
         || window.matchMedia('(display-mode: fullscreen)').matches
         || window.navigator.standalone === true;
-
-    if (rodandoComoApp) {
-        btn.style.display = 'none';
-        return;
-    }
-
-    // iOS/Safari não dispara beforeinstallprompt — mostra o botão sempre
+    if (rodandoComoApp) { btn.style.display = 'none'; return; }
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    if (isIOS && !rodandoComoApp) {
-        btn.style.display = 'inline-block';
-    }
+    if (isIOS) btn.style.display = 'inline-block';
 
     btn.addEventListener('click', async () => {
         if (deferredInstallPrompt) {
             deferredInstallPrompt.prompt();
             try {
                 const choice = await deferredInstallPrompt.userChoice;
-                if (choice && choice.outcome === 'accepted') {
-                    btn.style.display = 'none';
-                }
-            } catch (err) {
-                console.warn('Instalação cancelada:', err);
-            }
+                if (choice && choice.outcome === 'accepted') btn.style.display = 'none';
+            } catch (err) {}
             deferredInstallPrompt = null;
             return;
         }
-
         alert(
             '📲 COMO INSTALAR O PAIZÃO UBER 2.0\n\n' +
             '• ANDROID (Chrome):\n' +
-            '  Menu ⋮ (três pontinhos) → "Instalar aplicativo"\n' +
-            '  ou "Adicionar à tela inicial"\n\n' +
+            '  Menu ⋮ → "Instalar aplicativo"\n\n' +
             '• iPHONE / iPAD (Safari):\n' +
-            '  Botão Compartilhar (□↑) → "Adicionar à Tela de Início"\n\n' +
+            '  Compartilhar (□↑) → "Adicionar à Tela de Início"\n\n' +
             '• COMPUTADOR (Chrome/Edge):\n' +
-            '  Ícone de instalar na barra de endereço\n\n' +
-            '⚠️ Importante: o sistema precisa estar publicado\n' +
-            'em um endereço HTTPS ou localhost para instalar.'
+            '  Ícone de instalar na barra de endereço'
         );
     });
 }
@@ -2862,23 +2279,16 @@ function configurarBotaoInstalar() {
 if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
-            .then(reg => console.log('✅ Service Worker registrado. Escopo:', reg.scope))
+            .then(reg => console.log('✅ Service Worker registrado:', reg.scope))
             .catch(err => console.warn('⚠️ Service Worker não registrado:', err));
     });
-} else {
-    console.log('ℹ️ Service Worker não registrado (protocolo local ou navegador sem suporte).');
 }
 
-// ===== INICIALIZAÇÃO =====
 async function inicializarSistemaCompleto() {
-    try {
-        await carregarDB();
-    } catch(e) {
-        console.error('Falha na inicialização do DB:', e);
-        if (!db) {
-            db = criarDBPadrao();
-            dbCarregado = true;
-        }
+    try { await carregarDB(); }
+    catch(e) {
+        console.error('Falha DB:', e);
+        if (!db) { db = criarDBPadrao(); dbCarregado = true; }
     }
     if (!db) db = criarDBPadrao();
     if (!Array.isArray(db.usuarios)) db.usuarios = [];
@@ -2910,7 +2320,7 @@ async function inicializarSistemaCompleto() {
     atualizarGaleriaSOS();
     configurarInputMultiplasImagens();
     configurarBotaoInstalar();
-    console.log('🚀 Sistema inicializado. Usuários disponíveis:', (db.usuarios || []).map(u => u.nome));
+    console.log('🚀 Sistema inicializado.');
 }
 
 document.addEventListener('DOMContentLoaded', inicializarSistemaCompleto);

@@ -432,7 +432,8 @@
         <div class="sub-tab-content" id="subTabHistAlugueis">
             <input type="text" class="filter-input" placeholder="🔍 Filtrar aluguéis pagos..." id="filterHistoricoAlugueis">
             <div class="dashboard-encerradas" style="margin-top:15px;">
-                <div class="kpi-card green"><div class="kpi-value" id="kpiHistAlugTotal">R$ 0,00</div><div class="kpi-label">Total Recebido</div></div>
+                <div class="kpi-card green"><div class="kpi-value" id="kpiHistAlugTotal">R$ 0,00</div><div class="kpi-label">Total Recebido (Líquido)</div></div>
+                <div class="kpi-card red"><div class="kpi-value" id="kpiHistAlugEstorno">R$ 0,00</div><div class="kpi-label">Total Estornado (Saídas)</div></div>
                 <div class="kpi-card blue"><div class="kpi-value" id="kpiHistAlugQtd">0</div><div class="kpi-label">Pagamentos</div></div>
             </div>
             <div class="table-container">
@@ -1541,6 +1542,14 @@ function encerrarLocacao(i) {
     if (!l) { alert('Locação não encontrada.'); return; }
     const tipoLabel = (l.tipoPagamento || 'mensal').toUpperCase();
     if (!confirm(`Encerrar a locação de ${l.locatario} - ${l.placa}?\n\nTipo: ${tipoLabel}`)) return;
+    
+    // Pergunta sobre estorno da caução
+    const caucaoValor = parseMoeda(l.caucao);
+    let caucaoEstornada = false;
+    if (caucaoValor > 0) {
+        caucaoEstornada = confirm(`A locação possui uma caução registrada de ${formatarMoedaBR(caucaoValor)}.\n\nDeseja ESTORNAR este valor ao locatário?\n\nOK = Sim (Estornar / Deduzir do lucro)\nCancelar = Não (Reter / Manter como receita)`);
+    }
+
     const hojeISO = new Date().toISOString().split('T')[0];
     const calculo = calcularReceitaEsperada(l, hojeISO);
     const receitaCalculada = calculo.total;
@@ -1550,8 +1559,11 @@ function encerrarLocacao(i) {
     const despMec = (db.mecanico || []).filter(m => m.placa === l.placa).reduce((s, m) => s + parseMoeda(m.valor), 0);
     const despMan = (db.manutencao || []).filter(m => m.placa === l.placa).reduce((s, m) => s + parseMoeda(m.custo || 0), 0);
     const despComp = (db.compras || []).filter(c => c.placa === l.placa).reduce((s, c) => s + parseMoeda(c.valorTotal || c.valorUnitario), 0);
-    const despesas = despMec + despMan + despComp;
+    
+    // Se estornada, adiciona o valor da caução às despesas para abater do lucro
+    const despesas = despMec + despMan + despComp + (caucaoEstornada ? caucaoValor : 0);
     const lucro = receita - despesas;
+    
     const encerrada = Object.assign({}, l, {
         dataEncerramento: hojeISO,
         periodosCalculados: calculo.periodos,
@@ -1562,18 +1574,42 @@ function encerrarLocacao(i) {
         receitaNumerica: receita, despesasNumerica: despesas, lucroNumerico: lucro,
         valorGerado: formatarMoedaBR(receita),
         despesas: formatarMoedaBR(despesas),
-        lucro: formatarMoedaBR(lucro)
+        lucro: formatarMoedaBR(lucro),
+        caucaoEstornada: caucaoEstornada,
+        caucaoValorNumerico: caucaoValor
     });
+    
     if (!Array.isArray(db.locacoesEncerradas)) db.locacoesEncerradas = [];
     db.locacoesEncerradas.push(encerrada);
+    
+    // Lança o estorno no Histórico de Aluguéis como SAÍDA
+    if (caucaoEstornada && caucaoValor > 0) {
+        if (!Array.isArray(db.historicoAlugueis)) db.historicoAlugueis = [];
+        db.historicoAlugueis.push({
+            data: hojeISO, 
+            dataPagamento: hojeISO,
+            locatario: l.locatario || '', 
+            fabricante: l.fabricante || '',
+            placa: l.placa || '', 
+            parcela: 'Estorno',
+            origem: 'Estorno de Caução (Encerramento)', 
+            valor: `- ${formatarMoedaBR(caucaoValor)}`,
+            valorNumerico: -Math.abs(caucaoValor),
+            vencimento: hojeISO,
+            tipoPagamento: 'SAÍDA',
+            status: 'estornado'
+        });
+    }
+
     db.locacoes.splice(i, 1);
     if (locacaoEditandoIndex === i) { locacaoEditandoIndex = null; atualizarEstadoEdicaoLocacao(); limparCamposLocacao(); }
     else if (locacaoEditandoIndex !== null && locacaoEditandoIndex > i) locacaoEditandoIndex--;
     atualizarTabelaLocacoes();
     atualizarTabelaLocEncerrada();
-    registrarAuditoria('Encerramento', `Locação encerrada: ${l.locatario} - ${l.placa}`);
+    atualizarTabelaHistoricoAlugueis();
+    registrarAuditoria('Encerramento', `Locação encerrada: ${l.locatario} - ${l.placa} | Caução estornada: ${caucaoEstornada ? 'SIM' : 'NÃO'}`);
     salvarDB();
-    alert('✅ Locação encerrada!\n\nReceita: ' + formatarMoedaBR(receita));
+    alert('✅ Locação encerrada!\n\nReceita: ' + formatarMoedaBR(receita) + '\nCaução estornada: ' + (caucaoEstornada ? 'Sim' : 'Não'));
 }
 
 function atualizarTabelaLocEncerrada() {
@@ -1623,10 +1659,20 @@ function reabrirLocacao(i) {
     if (!l) { alert('Locação não encontrada.'); return; }
     if (!confirm(`Reabrir a locação de ${l.locatario} - ${l.placa}?`)) return;
     const copia = Object.assign({}, l);
-    ['dataEncerramento','receitaNumerica','despesasNumerica','lucroNumerico','valorGerado','despesas','lucro','periodosCalculados','valorPeriodo','receitaCalculada','receitaPagaJaRegistrada'].forEach(k => delete copia[k]);
+    ['dataEncerramento','receitaNumerica','despesasNumerica','lucroNumerico','valorGerado','despesas','lucro','periodosCalculados','valorPeriodo','receitaCalculada','receitaPagaJaRegistrada','caucaoEstornada','caucaoValorNumerico'].forEach(k => delete copia[k]);
     if (!Array.isArray(db.locacoes)) db.locacoes = [];
     db.locacoes.push(copia);
     db.locacoesEncerradas.splice(i, 1);
+    
+    // Remove o estorno do histórico de aluguéis se houver
+    if (l.caucaoEstornada && l.caucaoValorNumerico > 0) {
+        const idxEstorno = db.historicoAlugueis.findIndex(h => 
+            h.locatario === l.locatario && h.placa === l.placa && h.origem === 'Estorno de Caução (Encerramento)'
+        );
+        if (idxEstorno >= 0) db.historicoAlugueis.splice(idxEstorno, 1);
+        atualizarTabelaHistoricoAlugueis();
+    }
+
     atualizarTabelaLocacoes();
     atualizarTabelaLocEncerrada();
     registrarAuditoria('Reabertura', `Locação reaberta: ${l.locatario} - ${l.placa}`);
@@ -1791,9 +1837,28 @@ function atualizarTabelaHistoricoAlugueis() {
     if (!tbody) return;
     tbody.innerHTML = '';
     const lista = db.historicoAlugueis || [];
-    const totalRecebido = lista.reduce((s, h) => s + (Number(h.valorNumerico) || parseMoeda(h.valor) || 0), 0);
-    const elTotal = document.getElementById('kpiHistAlugTotal'); if (elTotal) elTotal.textContent = formatarMoedaBR(totalRecebido);
-    const elQtd = document.getElementById('kpiHistAlugQtd'); if (elQtd) elQtd.textContent = lista.length;
+    
+    let totalRecebido = 0;
+    let totalEstornado = 0;
+    
+    lista.forEach(h => {
+        const val = Number(h.valorNumerico) || 0;
+        if (val < 0 || h.tipoPagamento === 'SAÍDA') {
+            totalEstornado += Math.abs(val); // Guarda o valor absoluto para exibir no KPI
+        } else {
+            totalRecebido += val;
+        }
+    });
+    
+    // Atualiza os KPIs
+    const elTotal = document.getElementById('kpiHistAlugTotal'); 
+    if (elTotal) elTotal.textContent = formatarMoedaBR(totalRecebido);
+    
+    const elEstorno = document.getElementById('kpiHistAlugEstorno'); 
+    if (elEstorno) elEstorno.textContent = formatarMoedaBR(totalEstornado);
+    
+    const elQtd = document.getElementById('kpiHistAlugQtd'); 
+    if (elQtd) elQtd.textContent = lista.length;
     
     if (lista.length === 0) {
         const tr = document.createElement('tr');
@@ -1806,6 +1871,10 @@ function atualizarTabelaHistoricoAlugueis() {
     listaReversa.forEach((h, visualIndex) => {
         const realIndex = (lista.length - 1) - visualIndex;
         const tipoLabel = (h.tipoPagamento || 'mensal').toUpperCase();
+        const isSaida = (h.tipoPagamento === 'SAÍDA' || (Number(h.valorNumerico) < 0));
+        const valorColor = isSaida ? '#dc3545' : '#28a745';
+        const valorText = h.valor || formatarMoedaBR(h.valorNumerico);
+        
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${formatarDataBR(h.dataPagamento || h.data)}</td>
@@ -1813,7 +1882,7 @@ function atualizarTabelaHistoricoAlugueis() {
             <td>${h.placa || ''}</td>
             <td>${h.parcela || ''}</td>
             <td>${h.origem || 'Aluguel'}</td>
-            <td><strong style="color:#28a745;">${h.valor || ''}</strong></td>
+            <td><strong style="color:${valorColor};">${valorText}</strong></td>
             <td>${formatarDataBR(h.vencimento)}</td>
             <td>${tipoLabel}</td>
             <td>

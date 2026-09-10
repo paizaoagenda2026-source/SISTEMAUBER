@@ -312,7 +312,55 @@
 
     <div class="tab-content" id="manutencao"><h2>🔧 Manutenção</h2><div class="form-grid"><div class="form-group"><label>Veículo</label><input type="text" id="manVeiculo" readonly></div><div class="form-group"><label>Placa</label><select id="manPlaca" onchange="selecionarPlacaManutencao()"><option value="">Selecione</option></select></div><div class="form-group"><label>Tipo</label><input type="text" id="manTipo"></div><div class="form-group"><label>KM</label><input type="text" id="manKm"></div><div class="form-group"><label>OBS</label><textarea id="manObs"></textarea></div></div><button class="btn-primary" onclick="salvarManutencao()">💾 Salvar</button><div class="table-container"><table id="tabelaManutencao"><thead><tr><th>Veículo</th><th>Placa</th><th>Tipo</th><th>KM</th><th>Ações</th></tr></thead><tbody></tbody></table></div></div>
 
-    <div class="tab-content" id="mecanico"><h2>👨‍🔧 Mecânico</h2><div class="form-grid"><div class="form-group"><label>Data</label><input type="date" id="mecData"></div><div class="form-group"><label>Oficina</label><input type="text" id="mecOficina"></div><div class="form-group"><label>Serviço</label><input type="text" id="mecServico"></div><div class="form-group"><label>Responsável</label><input type="text" id="mecResponsavel"></div><div class="form-group"><label>Carro</label><input type="text" id="mecCarro"></div><div class="form-group"><label>Placa</label><select id="mecPlaca" onchange="selecionarPlacaMecanico()"><option value="">Selecione</option></select></div><div class="form-group"><label>Valor</label><input type="text" id="mecValor" class="money"></div><div class="form-group"><label>OBS</label><textarea id="mecObs"></textarea></div></div><button class="btn-primary" onclick="salvarMecanico()">💾 Salvar</button><div class="table-container"><table id="tabelaMecanico"><thead><tr><th>Data</th><th>Oficina</th><th>Serviço</th><th>Carro</th><th>Valor</th><th>Ações</th></tr></thead><tbody></tbody></table></div></div>
+    <div class="tab-content" id="mecanico">
+        <h2>👨‍🔧 Mecânico</h2>
+        <div class="form-grid">
+            <div class="form-group"><label>Data</label><input type="date" id="mecData"></div>
+            <div class="form-group"><label>Oficina</label><input type="text" id="mecOficina"></div>
+            <div class="form-group"><label>Serviço</label><input type="text" id="mecServico"></div>
+            <div class="form-group"><label>Responsável</label><input type="text" id="mecResponsavel"></div>
+            <div class="form-group"><label>Carro</label><input type="text" id="mecCarro"></div>
+            <div class="form-group"><label>Placa</label><select id="mecPlaca" onchange="selecionarPlacaMecanico()"><option value="">Selecione</option></select></div>
+            <div class="form-group"><label>Valor</label><input type="text" id="mecValor" class="money"></div>
+            <div class="form-group"><label>OBS</label><textarea id="mecObs"></textarea></div>
+        </div>
+        <button class="btn-primary" onclick="salvarMecanico()">💾 Salvar</button>
+        
+        <!-- NOVA SEÇÃO: RELATÓRIO E PAGAMENTO -->
+        <div class="config-section" style="margin-top: 30px; border-left-color: var(--info); background: #e9f2fa;">
+            <h3>📊 Gerar Relatório de Pagamento (Oficina)</h3>
+            <div class="form-grid">
+                <div class="form-group"><label>Data Início</label><input type="date" id="relMecDataInicio"></div>
+                <div class="form-group"><label>Data Fim</label><input type="date" id="relMecDataFim"></div>
+                <div class="form-group"><label>Oficina (Deixe em branco para todas)</label><input type="text" id="relMecOficina" placeholder="Nome da oficina"></div>
+            </div>
+            <button class="btn-info" onclick="gerarRelatorioMecanico()">🔍 Filtrar e Gerar Relatório</button>
+            
+            <div id="relatorioMecanicoResultado" style="display: none; margin-top: 20px; background: white; padding: 15px; border-radius: 8px; border: 1px solid #ccc;">
+                <h4>Resultado do Relatório</h4>
+                <div class="table-container">
+                    <table id="tabelaRelatorioMecanico">
+                        <thead><tr><th>Data</th><th>Oficina</th><th>Serviço</th><th>Valor</th><th>Status</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div style="margin-top: 15px; font-size: 18px; font-weight: bold; text-align: right;">
+                    Total a Pagar: <span id="totalRelatorioMecanico" style="color: var(--danger);">R$ 0,00</span>
+                </div>
+                <div style="text-align: right; margin-top: 10px;">
+                    <button class="btn-success" id="btnPagarRelatorio" onclick="pagarRelatorioMecanico()">💸 Pagar e Gerar PDF</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-container" style="margin-top: 30px;">
+            <h3>📋 Histórico de Serviços</h3>
+            <table id="tabelaMecanico">
+                <thead><tr><th>Data</th><th>Oficina</th><th>Serviço</th><th>Carro</th><th>Valor</th><th>Status</th><th>Ações</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
 
     <div class="tab-content" id="usuario"><h2>👥 Usuários</h2><div class="form-grid"><div class="form-group"><label>Nome</label><input type="text" id="userNome"></div><div class="form-group"><label>Senha</label><input type="password" id="userSenha"></div><div class="form-group"><label>Tipo</label><select id="userTipo" onchange="preencherPermissoesPadrao()"><option value="ADM">ADM</option><option value="MOTORISTA">MOTORISTA</option><option value="OFICINA">OFICINA</option><option value="VISITANTE">VISITANTE</option></select></div></div><div class="config-section"><h3>🔐 Permissões</h3><div id="permissoesContainer"></div></div><button class="btn-primary" onclick="salvarUsuario()">💾 Salvar</button><div class="table-container"><table id="tabelaUsuario"><thead><tr><th>Nome</th><th>Tipo</th><th>Selfie</th><th>Ações</th></tr></thead><tbody></tbody></table></div></div>
 
@@ -547,6 +595,7 @@ async function carregarDB() {
         if (!l.vistoria) l.vistoria = [];
     });
     db.pendentes.forEach(p => { if (!p.status) p.status = 'Pendente'; });
+    db.mecanico.forEach(m => { if (m.pago === undefined) m.pago = false; }); // Garante compatibilidade com registros antigos
 
     let precisaSalvar = false;
     const lobao = db.usuarios.find(u => u && u.nome === 'LOBÃO');
@@ -611,6 +660,7 @@ let garagemImagensTemp = [];
 let sosImagensTemp = [];
 let galeriaAtual = [];
 let galeriaIndexAtual = 0;
+let relatorioMecanicoTemp = []; // Armazena temporariamente os itens filtrados para pagamento
 
 function campoVazio(v) { return !v || String(v).trim() === ''; }
 function formatarMoedaBR(v) { return 'R$ ' + (Number(v) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
@@ -1760,7 +1810,7 @@ async function salvarMecanico() {
         responsavel: document.getElementById('mecResponsavel').value,
         carro, placa, valor,
         obs: document.getElementById('mecObs').value,
-        pago: false
+        pago: false // Novo campo para controle de pagamento
     });
     db.historico.push({
         data, descricao: servico, placa, valor,
@@ -1784,8 +1834,176 @@ function atualizarTabelaMecanico() {
     if (!tbody) return;
     tbody.innerHTML = '';
     (db.mecanico || []).forEach((m, i) => {
+        const statusBadge = m.pago ? '<span class="status-pago">PAGO</span>' : '<span class="status-pendente">PENDENTE</span>';
         const tr = document.createElement('tr');
         tr.innerHTML = `<td>${m.data||''}</td><td>${m.oficina||''}</td><td>${m.servico||''}</td><td>${m.carro||''}</td><td>${m.valor||''}</td>
+            <td>${statusBadge}</td>
+            <td><button class="btn-danger" onclick="db.mecanico.splice(${i},1);atualizarTabelaMecanico();salvarDB();">🗑️</button></td>`;
+        tbody.appendChild(tr);
+    });
+}
+
+// ===== NOVAS FUNÇÕES: RELATÓRIO E PAGAMENTO DE MECÂNICA =====
+function gerarRelatorioMecanico() {
+    const dtInicio = document.getElementById('relMecDataInicio').value;
+    const dtFim = document.getElementById('relMecDataFim').value;
+    const oficinaFiltro = document.getElementById('relMecOficina').value.trim().toUpperCase();
+
+    if (!dtInicio && !dtFim && !oficinaFiltro) {
+        alert('Preencha pelo menos um filtro para gerar o relatório.');
+        return;
+    }
+
+    relatorioMecanicoTemp = (db.mecanico || []).filter(m => {
+        if (m.pago) return false; // Já pago
+        if (dtInicio && m.data < dtInicio) return false;
+        if (dtFim && m.data > dtFim) return false;
+        if (oficinaFiltro && !(m.oficina || '').toUpperCase().includes(oficinaFiltro)) return false;
+        return true;
+    });
+
+    const tbody = document.querySelector('#tabelaRelatorioMecanico tbody');
+    tbody.innerHTML = '';
+    let total = 0;
+
+    if (relatorioMecanicoTemp.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#999;">Nenhum registro pendente de pagamento encontrado.</td></tr>';
+        document.getElementById('totalRelatorioMecanico').textContent = 'R$ 0,00';
+        document.getElementById('btnPagarRelatorio').style.display = 'none';
+    } else {
+        relatorioMecanicoTemp.forEach(m => {
+            const val = parseMoeda(m.valor);
+            total += val;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${formatarDataBR(m.data)}</td>
+                <td>${m.oficina}</td>
+                <td>${m.servico}</td>
+                <td>${m.valor}</td>
+                <td><span class="status-pendente">PENDENTE</span></td>
+            `;
+            tbody.appendChild(tr);
+        });
+        document.getElementById('totalRelatorioMecanico').textContent = formatarMoedaBR(total);
+        document.getElementById('btnPagarRelatorio').style.display = 'inline-block';
+    }
+
+    document.getElementById('relatorioMecanicoResultado').style.display = 'block';
+}
+
+function pagarRelatorioMecanico() {
+    if (!confirmarSenhaADM()) return;
+    if (relatorioMecanicoTemp.length === 0) { alert('Nenhum item para pagar.'); return; }
+
+    const total = relatorioMecanicoTemp.reduce((s, m) => s + parseMoeda(m.valor), 0);
+    if (!confirm(`Confirmar pagamento total de ${formatarMoedaBR(total)}?`)) return;
+
+    const hojeISO = new Date().toISOString().split('T')[0];
+    const oficinas = [...new Set(relatorioMecanicoTemp.map(m => m.oficina))].join(', ');
+
+    // 1. Lançar no Fluxo de Caixa como Saída
+    if (!Array.isArray(db.fluxoCaixa)) db.fluxoCaixa = [];
+    db.fluxoCaixa.push({
+        data: hojeISO,
+        descricao: `Pagamento Oficina(s): ${oficinas}`,
+        categoria: 'Mecânica/Oficina',
+        valor: formatarMoedaBR(total),
+        valorNumerico: total,
+        tipo: 'saida'
+    });
+
+    // 2. Marcar como pago no db.mecanico
+    relatorioMecanicoTemp.forEach(itemTemp => {
+        const realItem = db.mecanico.find(m => m.data === itemTemp.data && m.oficina === itemTemp.oficina && m.servico === itemTemp.servico && m.valor === itemTemp.valor && !m.pago);
+        if (realItem) realItem.pago = true;
+    });
+
+    registrarAuditoria('Pagamento', `Pagamento de oficina(s) realizado: ${oficinas} | Total: ${formatarMoedaBR(total)}`);
+    salvarDB();
+
+    // 3. Gerar PDF (Print Area)
+    gerarPDFReciboMecanico(relatorioMecanicoTemp, total, oficinas);
+
+    // 4. Limpar UI e atualizar tabelas
+    document.getElementById('relatorioMecanicoResultado').style.display = 'none';
+    relatorioMecanicoTemp = [];
+    atualizarTabelaMecanico();
+    atualizarTabelaFluxoCaixa();
+    alert('✅ Pagamento realizado com sucesso! Lançamento efetuado no Fluxo de Caixa.');
+}
+
+function gerarPDFReciboMecanico(lista, total, oficinas) {
+    let html = `
+        <div style="padding: 40px; font-family: Arial, sans-serif; color: #333;">
+            <div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid #1a3c6e; padding-bottom: 10px;">
+                <h1 style="color: #1a3c6e; margin: 0; font-size: 24px;">PAIZÃO UBER 2.0</h1>
+                <h3 style="color: #e63946; margin: 5px 0; font-size: 18px;">RECIBO DE PAGAMENTO DE MECÂNICA</h3>
+                <p style="margin: 5px 0; color: #555; font-size: 14px;">Data do Pagamento: ${new Date().toLocaleDateString('pt-BR')}</p>
+                <p style="margin: 5px 0; color: #555; font-size: 14px; font-weight: bold;">Oficina(s): ${oficinas}</p>
+            </div>
+            
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 14px;">
+                <thead>
+                    <tr style="background: #1a3c6e; color: white;">
+                        <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Data</th>
+                        <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Oficina</th>
+                        <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Serviço</th>
+                        <th style="border: 1px solid #ddd; padding: 10px; text-align: right;">Valor</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+    
+    lista.forEach(m => {
+        html += `
+            <tr>
+                <td style="border: 1px solid #ddd; padding: 10px;">${formatarDataBR(m.data)}</td>
+                <td style="border: 1px solid #ddd; padding: 10px;">${m.oficina}</td>
+                <td style="border: 1px solid #ddd; padding: 10px;">${m.servico}</td>
+                <td style="border: 1px solid #ddd; padding: 10px; text-align: right;">${m.valor}</td>
+            </tr>
+        `;
+    });
+    
+    html += `
+                </tbody>
+                <tfoot>
+                    <tr style="background: #f8f9fa; font-weight: bold; font-size: 16px;">
+                        <td colspan="3" style="border: 1px solid #ddd; padding: 10px; text-align: right;">TOTAL PAGO:</td>
+                        <td style="border: 1px solid #ddd; padding: 10px; text-align: right; color: #28a745;">${formatarMoedaBR(total)}</td>
+                    </tr>
+                </tfoot>
+            </table>
+            
+            <div style="margin-top: 60px; text-align: center;">
+                <p style="border-top: 1px solid #333; width: 300px; margin: 0 auto; padding-top: 10px; font-size: 14px;">Assinatura do Responsável</p>
+            </div>
+            
+            <div style="margin-top: 40px; text-align: center; color: #888; font-size: 12px;">
+                <p>Documento gerado automaticamente pelo sistema PAIZÃO UBER 2.0</p>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('printArea').innerHTML = html;
+    window.print();
+}
+
+function limparCamposMecanico() {
+    ['mecData','mecOficina','mecServico','mecResponsavel','mecCarro','mecPlaca','mecValor','mecObs'].forEach(id => {
+        const el = document.getElementById(id); if (el) el.value = '';
+    });
+}
+
+function atualizarTabelaMecanico() {
+    const tbody = document.querySelector('#tabelaMecanico tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    (db.mecanico || []).forEach((m, i) => {
+        const statusBadge = m.pago ? '<span class="status-pago">PAGO</span>' : '<span class="status-pendente">PENDENTE</span>';
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${m.data||''}</td><td>${m.oficina||''}</td><td>${m.servico||''}</td><td>${m.carro||''}</td><td>${m.valor||''}</td>
+            <td>${statusBadge}</td>
             <td><button class="btn-danger" onclick="db.mecanico.splice(${i},1);atualizarTabelaMecanico();salvarDB();">🗑️</button></td>`;
         tbody.appendChild(tr);
     });

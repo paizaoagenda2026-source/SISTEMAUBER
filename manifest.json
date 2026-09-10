@@ -1,0 +1,20 @@
+{
+  "name": "PAIZÃO UBER 2.0",
+  "short_name": "PAIZÃO UBER",
+  "description": "Sistema de Locação de Carros - PAIZÃO UBER 2.0",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#1a3c6e",
+  "theme_color": "#1a3c6e",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

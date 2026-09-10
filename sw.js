@@ -3,7 +3,7 @@ const ARQUIVOS = [
   './',
   './index.html',
   './manifest.json',
-  './icon.svg'
+  './lobao.jpg'
 ];
 
 self.addEventListener('install', (e) => {

@@ -287,7 +287,7 @@
             <div class="form-group"><label>Ano Fabr</label><input type="text" id="locAnoFabr" readonly></div>
             <div class="form-group"><label>Ano Model</label><input type="text" id="locAnoModel" readonly></div>
             <div class="form-group"><label>R$ Caução</label><input type="text" id="locCaucao" class="money campo-enter"></div>
-            <div class="form-group"><label>Valor Aluguel</label><input type="text" id="locValorAluguel" class="money campo-enter"></div>
+            <div class="form-group"><label>Valor Aluguel (Semanal)</label><input type="text" id="locValorAluguel" class="money campo-enter"></div>
             <div class="form-group"><label>ALUGUEL MENSAL</label><input type="text" id="locAluguelMensal" class="money campo-enter"></div>
             <div class="form-group"><label>Proprietário</label><input type="text" id="locProprietario" readonly></div>
             <div class="form-group"><label>CPF Propr</label><input type="text" id="locCpfPropr" readonly></div>
@@ -297,13 +297,6 @@
                 </select>
             </div>
             <div class="form-group"><label>R$ CAUÇÃO PAGO</label><input type="text" id="locCaucaoPago" class="money campo-enter"></div>
-            <div class="form-group"><label>Tipo de Pagamento</label>
-                <select id="locTipoPagamento" class="campo-enter">
-                    <option value="semanal">Semanal</option>
-                    <option value="mensal" selected>Mensal</option>
-                    <option value="unico">Único</option>
-                </select>
-            </div>
         </div>
         <button class="btn-primary" id="btnSalvarLocacao" onclick="salvarLocacao()">💾 Salvar</button>
         <button class="btn-secondary" onclick="abrirModalContratos()">📄 Contrato</button>
@@ -355,11 +348,50 @@
 
     <div class="tab-content" id="comprovantes"><h2>📄 Documentos</h2><div class="sub-tabs"><button class="sub-tab active" onclick="switchSubTab('novo')">📤 Novo</button><button class="sub-tab" onclick="switchSubTab('salvos')">📁 Salvos</button></div><div class="sub-tab-content active" id="subTabNovo"><input type="file" id="compImagem" accept="image/*" style="display:none;"><button class="btn-buscar" onclick="document.getElementById('compImagem').click()">📂 Buscar</button><button class="btn-primary" onclick="salvarComprovante()">💾 Salvar</button></div><div class="sub-tab-content" id="subTabSalvos"><div class="saved-images" id="compSavedImages"></div></div></div>
 
-    <div class="tab-content" id="pagamentos"><h2>💰 Sub Pagamentos</h2><div class="table-container"><table id="tabelaPagamentos"><thead><tr><th>Locatário</th><th>Data</th><th>Placa</th><th>R$</th><th>Vencimento</th><th>Status</th><th>Ação</th></tr></thead><tbody></tbody></table></div></div>
+    <div class="tab-content" id="pagamentos">
+        <h2>💰 Sub Pagamentos</h2>
+        <div class="table-container">
+            <table id="tabelaPagamentos">
+                <thead>
+                    <tr>
+                        <th>Locatário</th>
+                        <th>Veículo</th>
+                        <th>Placa</th>
+                        <th>Início</th>
+                        <th>Fim</th>
+                        <th>Aluguel / Total c/ Caução</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
 
     <div class="tab-content" id="banco"><h2>🏦 Banco</h2><div class="form-grid"><div class="form-group"><label>Banco</label><input type="text" id="bancoNome"></div><div class="form-group"><label>Agência</label><input type="text" id="bancoAgencia"></div><div class="form-group"><label>Conta</label><input type="text" id="bancoConta"></div><div class="form-group"><label>PIX</label><input type="text" id="bancoPix"></div><div class="form-group"><label>Titular</label><input type="text" id="bancoTitular"></div></div><button class="btn-primary" onclick="salvarBanco()">💾 Salvar</button><div class="table-container"><table id="tabelaBancos"><thead><tr><th>Banco</th><th>Agência</th><th>Conta</th><th>PIX</th><th>Titular</th><th>Ações</th></tr></thead><tbody></tbody></table></div></div>
 
-    <div class="tab-content" id="fluxocaixa"><h2>💵 Fluxo de Caixa</h2><div class="form-grid"><div class="form-group"><label>Data</label><input type="date" id="fcData"></div><div class="form-group"><label>Descrição</label><input type="text" id="fcDescricao"></div><div class="form-group"><label>Categoria</label><input type="text" id="fcCategoria"></div><div class="form-group"><label>Valor</label><input type="text" id="fcValor" class="money"></div><div class="form-group"><label>Tipo</label><select id="fcTipo"><option value="entrada">Entrada</option><option value="saida">Saída</option></select></div></div><button class="btn-primary" onclick="salvarFluxoCaixa()">💾 Salvar</button><div class="dashboard-encerradas" style="margin-top:20px;"><div class="kpi-card green"><div class="kpi-value" id="totalEntradas">R$ 0,00</div><div class="kpi-label">Entradas</div></div><div class="kpi-card red"><div class="kpi-value" id="totalSaidas">R$ 0,00</div><div class="kpi-label">Saídas</div></div><div class="kpi-card blue"><div class="kpi-value" id="saldoTotal">R$ 0,00</div><div class="kpi-label">Saldo</div></div></div><div class="table-container"><table id="tabelaFluxoCaixa"><thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Valor</th><th>Tipo</th><th>Ações</th></tr></thead><tbody></tbody></table></div></div>
+    <div class="tab-content" id="fluxocaixa">
+        <h2>💵 Fluxo de Caixa</h2>
+        <div class="form-grid">
+            <div class="form-group"><label>Data</label><input type="date" id="fcData"></div>
+            <div class="form-group"><label>Descrição</label><input type="text" id="fcDescricao"></div>
+            <div class="form-group"><label>Categoria</label><input type="text" id="fcCategoria"></div>
+            <div class="form-group"><label>Valor</label><input type="text" id="fcValor" class="money"></div>
+            <div class="form-group"><label>Tipo</label><select id="fcTipo"><option value="entrada">Entrada</option><option value="saida">Saída</option></select></div>
+        </div>
+        <button class="btn-primary" onclick="salvarFluxoCaixa()">💾 Salvar Lançamento Manual</button>
+        <div class="dashboard-encerradas" style="margin-top:20px;">
+            <div class="kpi-card green"><div class="kpi-value" id="totalEntradas">R$ 0,00</div><div class="kpi-label">Entradas</div></div>
+            <div class="kpi-card red"><div class="kpi-value" id="totalSaidas">R$ 0,00</div><div class="kpi-label">Saídas</div></div>
+            <div class="kpi-card blue"><div class="kpi-value" id="saldoTotal">R$ 0,00</div><div class="kpi-label">Saldo</div></div>
+        </div>
+        <div class="table-container">
+            <table id="tabelaFluxoCaixa">
+                <thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Valor</th><th>Tipo</th><th>Ações</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
 
     <div class="tab-content" id="doc"><h2>📁 Comprovante</h2><div class="form-grid"><div class="form-group"><label>Nome</label><input type="text" id="docNome"></div><div class="form-group"><label>R$ LOCAÇÃO</label><input type="text" id="docTipo" class="money"></div><div class="form-group"><label>VENCIMENTO</label><input type="date" id="docData"></div><div class="form-group"><label>Veículo/Cliente</label><select id="docReferencia"><option value="">Selecione</option></select></div><div class="form-group"><label>Obs</label><textarea id="docObs"></textarea></div></div><button class="btn-primary" onclick="salvarDoc()">💾 Salvar</button><div class="table-container"><table id="tabelaDoc"><thead><tr><th>Nome</th><th>R$</th><th>Vencimento</th><th>Veículo</th><th>Ações</th></tr></thead><tbody></tbody></table></div></div>
 
@@ -484,7 +516,6 @@ async function carregarDB() {
     if (!db.config) db.config = criarDBPadrao().config;
     if (db.locacoes) db.locacoes.forEach(l => {
         if (!l.vistoria) l.vistoria = [];
-        if (!l.tipoPagamento) l.tipoPagamento = 'mensal';
     });
     db.pendentes.forEach(p => { if (!p.status) p.status = 'Pendente'; });
 
@@ -570,14 +601,17 @@ function gerarParcelasPagamento(opts) {
     const { dataInicio, valorAluguel, caucao, caucaoPago, tipoPagCaucao, tipoPagamento } = opts;
     const parcelas = [];
     if ((!valorAluguel || valorAluguel <= 0) && (!caucao || caucao <= 0)) return parcelas;
+    
     let intervalDias = 30;
     if (tipoPagamento === 'semanal') intervalDias = 7;
+    
     function calcVencimento(index) {
         if (!dataInicio) return '';
         const d = new Date(dataInicio + 'T00:00:00');
         d.setDate(d.getDate() + (intervalDias * index));
         return d.toISOString().split('T')[0];
     }
+    
     if (!caucao || caucao <= 0) {
         parcelas.push({ valor: valorAluguel, vencimento: dataInicio, parcela: 1, descricao: 'Aluguel' });
         return parcelas;
@@ -672,6 +706,7 @@ document.querySelectorAll('.tab').forEach(tab => {
         if (tabId === 'historico') { atualizarTabelaHistorico(); atualizarTabelaHistoricoAlugueis(); }
         if (tabId === 'auditoria') atualizarTabelaAuditoria();
         if (tabId === 'pagamentos') atualizarTabelaAlugueis();
+        if (tabId === 'fluxocaixa') atualizarTabelaFluxoCaixa(); // NOVO: Atualiza o Fluxo de Caixa ao clicar na aba
         if (tabId === 'garagem') atualizarGaleriaGaragem();
         if (tabId === 'sos') atualizarGaleriaSOS();
     });
@@ -1285,9 +1320,9 @@ function calcularDataFim() {
 function obterValorAluguelEfetivo() {
     const vAluguel = parseMoeda(document.getElementById('locValorAluguel').value);
     const vMensal  = parseMoeda(document.getElementById('locAluguelMensal').value);
-    if (vAluguel > 0) return { valor: vAluguel, origem: 'Valor Aluguel' };
-    if (vMensal > 0)  return { valor: vMensal,  origem: 'Aluguel Mensal' };
-    return { valor: 0, origem: null };
+    if (vAluguel > 0) return { valor: vAluguel, origem: 'Valor Aluguel', tipo: 'semanal' };
+    if (vMensal > 0)  return { valor: vMensal,  origem: 'Aluguel Mensal', tipo: 'mensal' };
+    return { valor: 0, origem: null, tipo: 'mensal' };
 }
 
 function salvarLocacao() {
@@ -1297,15 +1332,17 @@ function salvarLocacao() {
     const dataInicio  = document.getElementById('locDataInicio').value;
     const dataFim     = document.getElementById('locDataFim').value;
     if (!locatario || !fabricante || !placa || !dataInicio) { alert('Preencha todos os campos obrigatórios!'); return; }
-    const { valor: valorEfetivo, origem: origemValor } = obterValorAluguelEfetivo();
+    
+    const { valor: valorEfetivo, origem: origemValor, tipo: tipoPagamento } = obterValorAluguelEfetivo();
+    
     const valorAluguelStr = document.getElementById('locValorAluguel').value;
     const aluguelMensalStr = document.getElementById('locAluguelMensal').value;
-    const tipoPagamento = document.getElementById('locTipoPagamento').value || 'mensal';
     const caucaoStr = document.getElementById('locCaucao').value;
     const caucaoPagoStr = document.getElementById('locCaucaoPago').value;
     const tipoPagCaucao = document.getElementById('locPagCaucao').value || 'avista';
     const caucaoValor = parseMoeda(caucaoStr);
     const caucaoPagoValor = parseMoeda(caucaoPagoStr);
+    
     const locacaoObj = {
         locatario, fabricante, placa, dataInicio, dataFim,
         valorAluguel: valorEfetivo > 0 ? formatarMoedaBR(valorEfetivo) : (valorAluguelStr || 'R$ 0,00'),
@@ -1317,9 +1354,15 @@ function salvarLocacao() {
         pagCaucao:   tipoPagCaucao,
         vistoria: []
     };
+    
     if (locacaoEditandoIndex !== null && db.locacoes[locacaoEditandoIndex]) {
         locacaoObj.vistoria = db.locacoes[locacaoEditandoIndex].vistoria || [];
         locacaoObj.valorTotalParcelas = db.locacoes[locacaoEditandoIndex].valorTotalParcelas || null;
+        
+        db.alugueis = (db.alugueis || []).filter(al => 
+            !(al.locatario === locatario && al.placa === placa && al.status !== 'pago')
+        );
+
         db.locacoes[locacaoEditandoIndex] = locacaoObj;
         registrarAuditoria('Edição', `Locação atualizada: ${locatario} - ${placa}`);
         locacaoEditandoIndex = null;
@@ -1330,36 +1373,43 @@ function salvarLocacao() {
         limparCamposLocacao();
         return;
     }
+    
     const parcelas = gerarParcelasPagamento({
         dataInicio, valorAluguel: valorEfetivo, caucao: caucaoValor,
         caucaoPago: caucaoPagoValor, tipoPagCaucao: tipoPagCaucao, tipoPagamento: tipoPagamento
     });
+    
     let totalParcelas = 0;
     parcelas.forEach(p => { totalParcelas += p.valor; });
     locacaoObj.valorTotalParcelas = totalParcelas;
     db.locacoes.push(locacaoObj);
+    
     if (parcelas.length > 0) {
         if (!Array.isArray(db.alugueis)) db.alugueis = [];
         const hojeISO = new Date().toISOString().split('T')[0];
-        parcelas.forEach(p => {
-            db.alugueis.push({
-                locatario, fabricante, placa,
-                data: hojeISO, vencimento: p.vencimento,
-                valor: formatarMoedaBR(p.valor), valorNumerico: p.valor,
-                origem: p.descricao, tipoPagamento: tipoPagamento,
-                status: 'pendente', parcela: p.parcela,
-                dataInicio, dataFim
-            });
+        const primeiraParcela = parcelas[0];
+        
+        db.alugueis.push({
+            locatario, fabricante, placa,
+            data: hojeISO, vencimento: primeiraParcela.vencimento,
+            valor: formatarMoedaBR(primeiraParcela.valor), valorNumerico: primeiraParcela.valor,
+            origem: primeiraParcela.descricao, tipoPagamento: tipoPagamento,
+            status: 'pendente', parcela: 1,
+            dataInicio, dataFim,
+            pagCaucao: tipoPagCaucao,
+            totalParcelas: formatarMoedaBR(totalParcelas)
         });
         atualizarTabelaAlugueis();
     }
+    
     atualizarTabelaLocacoes();
-    registrarAuditoria('Cadastro', `Nova locação: ${locatario} - ${placa} | Caução: ${tipoPagCaucao} | ${parcelas.length} parcela(s) | Total: ${formatarMoedaBR(totalParcelas)}`);
+    registrarAuditoria('Cadastro', `Nova locação: ${locatario} - ${placa} | Caução: ${tipoPagCaucao} | 1ª parcela gerada | Total: ${formatarMoedaBR(totalParcelas)}`);
     salvarDB();
+    
     if (parcelas.length > 0) {
         let resumo = '✅ Locação salva!\n\n';
         resumo += 'Forma de pagamento da caução: ' + tipoPagCaucao.toUpperCase() + '\n';
-        resumo += 'Parcelas geradas: ' + parcelas.length + '\n';
+        resumo += 'Total de parcelas previstas: ' + parcelas.length + '\n';
         resumo += 'Valor total: ' + formatarMoedaBR(totalParcelas);
         alert(resumo);
     } else {
@@ -1375,7 +1425,6 @@ function limparCamposLocacao() {
         const el = document.getElementById(id); if (el) el.value = '';
     });
     const selPag = document.getElementById('locPagCaucao'); if (selPag) selPag.selectedIndex = 0;
-    const selTipo = document.getElementById('locTipoPagamento'); if (selTipo) selTipo.value = 'mensal';
     locacaoEditandoIndex = null;
     atualizarEstadoEdicaoLocacao();
 }
@@ -1442,7 +1491,6 @@ function editarLocacao(i) {
     document.getElementById('locDataFim').value = l.dataFim || '';
     document.getElementById('locCaucaoPago').value = l.caucaoPago || '';
     document.getElementById('locPagCaucao').value = l.pagCaucao || 'avista';
-    document.getElementById('locTipoPagamento').value = l.tipoPagamento || 'mensal';
     atualizarEstadoEdicaoLocacao();
     window.scrollTo(0, 0);
     document.getElementById('locLocatario').focus();
@@ -2068,21 +2116,27 @@ function atualizarTabelaAlugueis() {
     if (!tbody) return;
     tbody.innerHTML = '';
     const hojeISO = new Date().toISOString().split('T')[0];
+    
     (db.alugueis || []).forEach((a, i) => {
         let status = a.status || 'pendente';
         if (status === 'pendente' && a.vencimento && a.vencimento < hojeISO) { status = 'atrasado'; a.status = status; }
         const badge = status === 'pago' ? '<span class="status-pago">PAGO</span>'
                     : status === 'atrasado' ? '<span class="status-atrasado">ATRASADO</span>'
                     : '<span class="status-pendente">PENDENTE</span>';
+        
+        const tipoLabel = (a.tipoPagamento || 'mensal').toUpperCase();
+        const caucaoLabel = a.pagCaucao ? a.pagCaucao.toUpperCase() : 'À VISTA';
+        const totalTxt = a.totalParcelas ? `<br><small style="color:#e63946;font-weight:bold;">Total: ${a.totalParcelas}</small>` : '';
         const origemTxt = a.origem ? `<br><small style="color:#666;">${a.origem}</small>` : '';
+
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${a.locatario || ''}</td>
-            <td>${formatarDataBR(a.data)}</td>
+            <td>${a.fabricante || ''}</td>
             <td>${a.placa || ''}</td>
-            <td>${a.valor || ''}${origemTxt}</td>
-            <td>${formatarDataBR(a.vencimento)}</td>
-            <td>${badge}</td>
+            <td>${formatarDataBR(a.dataInicio)}</td>
+            <td>${formatarDataBR(a.dataFim)}</td>
+            <td>${a.valor || ''}${origemTxt}<br><small style="color:#666;">${tipoLabel} · Caução: ${caucaoLabel}</small>${totalTxt}</td>
             <td>
                 ${status !== 'pago' ? `<button class="btn-success" onclick="marcarPagamentoPago(${i})" title="Marcar como pago">✅</button>` : ''}
                 <button class="btn-danger" onclick="excluirPagamento(${i})" title="Excluir">🗑️</button>
@@ -2096,15 +2150,23 @@ function marcarPagamentoPago(i) {
     const a = db.alugueis[i];
     if (!a) return;
     if (!confirm(`Confirmar pagamento de ${a.valor} referente a ${a.locatario}?`)) return;
+    
     const hojeISO = new Date().toISOString().split('T')[0];
     a.status = 'pago';
     a.dataPagamento = hojeISO;
+    
+    // 1. Envia para o Fluxo de Caixa
     if (!Array.isArray(db.fluxoCaixa)) db.fluxoCaixa = [];
     db.fluxoCaixa.push({
         data: a.dataPagamento,
         descricao: `Aluguel - ${a.locatario} - ${a.placa}`,
-        categoria: 'Aluguel', valor: a.valor, tipo: 'entrada'
+        categoria: 'Aluguel', 
+        valor: a.valor, 
+        valorNumerico: a.valorNumerico,
+        tipo: 'entrada'
     });
+
+    // 2. Envia para o Histórico de Aluguéis
     if (!Array.isArray(db.historicoAlugueis)) db.historicoAlugueis = [];
     db.historicoAlugueis.push({
         data: a.dataPagamento, dataPagamento: a.dataPagamento,
@@ -2116,62 +2178,70 @@ function marcarPagamentoPago(i) {
         tipoPagamento: a.tipoPagamento || 'mensal',
         status: 'pago'
     });
-    const tipoPag = (a.tipoPagamento || 'mensal').toLowerCase();
-    if (tipoPag === 'semanal' || tipoPag === 'mensal') {
-        const locAtiva = (db.locacoes || []).find(l => l.locatario === a.locatario && l.placa === a.placa);
-        if (locAtiva) {
-            const intervalDias = tipoPag === 'semanal' ? 7 : 30;
-            const baseVenc = a.vencimento || hojeISO;
-            const d = new Date(baseVenc + 'T00:00:00');
-            d.setDate(d.getDate() + intervalDias);
-            const proximoVenc = d.toISOString().split('T')[0];
-            const jaExiste = (db.alugueis || []).some(x => x.locatario === a.locatario && x.placa === a.placa && x.vencimento === proximoVenc && x.status !== 'pago');
-            if (!jaExiste) {
-                const parcelasExistentes = (db.alugueis || []).filter(x => x.locatario === a.locatario && x.placa === a.placa).length;
-                let totalCaucaoParcelas = 0;
-                const pagCaucao = locAtiva.pagCaucao || 'avista';
-                if (pagCaucao === 'parcelado' || pagCaucao === 'entrada') totalCaucaoParcelas = 10;
-                else if (pagCaucao === 'avista') totalCaucaoParcelas = 1;
-                const aindaTemCaucao = parcelasExistentes < totalCaucaoParcelas;
-                const aluguelBase = parseMoeda(locAtiva.valorAluguel) || parseMoeda(locAtiva.aluguelMensal);
-                const caucaoTotal = parseMoeda(locAtiva.caucao);
-                let valorProx = aluguelBase;
-                let descricaoProx = 'Aluguel';
-                const parcelaProx = parcelasExistentes + 1;
-                if (aindaTemCaucao) {
-                    if (pagCaucao === 'parcelado') {
-                        valorProx = aluguelBase + (caucaoTotal / 10);
-                        descricaoProx = `Aluguel + Caução ${parcelaProx}/10`;
-                    } else if (pagCaucao === 'entrada') {
-                        const entrada = parseMoeda(locAtiva.caucaoPago);
-                        const saldo = Math.max(0, caucaoTotal - entrada);
-                        valorProx = aluguelBase + (saldo / 9);
-                        descricaoProx = `Aluguel + Saldo Caução ${parcelaProx - 1}/9`;
-                    }
+
+    // 3. Gera a próxima parcela
+    const locAtiva = (db.locacoes || []).find(l => l.locatario === a.locatario && l.placa === a.placa);
+    
+    if (locAtiva) {
+        const tipoPag = (a.tipoPagamento || 'mensal').toLowerCase();
+        const intervalDias = tipoPag === 'semanal' ? 7 : 30;
+        const baseVenc = a.vencimento || hojeISO;
+        const d = new Date(baseVenc + 'T00:00:00');
+        d.setDate(d.getDate() + intervalDias);
+        const proximoVenc = d.toISOString().split('T')[0];
+        
+        const jaExiste = (db.alugueis || []).some(x => x.locatario === a.locatario && x.placa === a.placa && x.vencimento === proximoVenc && x.status !== 'pago');
+        
+        if (!jaExiste) {
+            const valorBase = parseMoeda(locAtiva.valorAluguel) || parseMoeda(locAtiva.aluguelMensal);
+            let valorProx = valorBase;
+            let descricaoProx = 'Aluguel';
+            
+            const parcelasExistentes = (db.alugueis || []).filter(x => x.locatario === a.locatario && x.placa === a.placa).length;
+            const pagCaucao = locAtiva.pagCaucao || 'avista';
+            const caucaoTotal = parseMoeda(locAtiva.caucao);
+            
+            let totalCaucaoParcelas = 0;
+            if (pagCaucao === 'parcelado') totalCaucaoParcelas = 10;
+            else if (pagCaucao === 'entrada') totalCaucaoParcelas = 10;
+            else if (pagCaucao === 'avista') totalCaucaoParcelas = 1;
+
+            if (parcelasExistentes < totalCaucaoParcelas && pagCaucao !== 'avista') {
+                if (pagCaucao === 'parcelado') {
+                    valorProx = valorBase + (caucaoTotal / 10);
+                    descricaoProx = `Aluguel + Caução ${parcelasExistentes + 1}/10`;
+                } else if (pagCaucao === 'entrada') {
+                    const entrada = parseMoeda(locAtiva.caucaoPago);
+                    const saldo = Math.max(0, caucaoTotal - entrada);
+                    valorProx = valorBase + (saldo / 9);
+                    descricaoProx = `Aluguel + Saldo Caução ${parcelasExistentes}/9`;
                 }
-                db.alugueis.push({
-                    locatario: a.locatario, fabricante: a.fabricante || '',
-                    placa: a.placa, data: hojeISO, vencimento: proximoVenc,
-                    valor: formatarMoedaBR(valorProx), valorNumerico: valorProx,
-                    origem: descricaoProx, tipoPagamento: a.tipoPagamento || 'mensal',
-                    status: 'pendente', parcela: parcelaProx,
-                    dataInicio: a.dataInicio || locAtiva.dataInicio,
-                    dataFim: a.dataFim || locAtiva.dataFim
-                });
-                registrarAuditoria('Pagamento', `Recebido: ${a.locatario} - ${a.valor} | Próximo: ${formatarDataBR(proximoVenc)}`);
-            } else {
-                registrarAuditoria('Pagamento', `Recebido: ${a.locatario} - ${a.valor}`);
             }
+
+            db.alugueis.push({
+                locatario: a.locatario, fabricante: a.fabricante || '',
+                placa: a.placa, data: hojeISO, vencimento: proximoVenc,
+                valor: formatarMoedaBR(valorProx), valorNumerico: valorProx,
+                origem: descricaoProx, tipoPagamento: a.tipoPagamento || 'mensal',
+                status: 'pendente', parcela: parcelasExistentes + 1,
+                dataInicio: a.dataInicio || locAtiva.dataInicio,
+                dataFim: a.dataFim || locAtiva.dataFim,
+                pagCaucao: pagCaucao,
+                totalParcelas: a.totalParcelas || formatarMoedaBR(locAtiva.valorTotalParcelas)
+            });
+            registrarAuditoria('Pagamento', `Recebido: ${a.locatario} - ${a.valor} | Próximo gerado: ${formatarDataBR(proximoVenc)}`);
         } else {
-            registrarAuditoria('Pagamento', `Recebido: ${a.locatario} - ${a.valor} (locação inativa)`);
+            registrarAuditoria('Pagamento', `Recebido: ${a.locatario} - ${a.valor}`);
         }
     } else {
-        registrarAuditoria('Pagamento', `Recebido: ${a.locatario} - ${a.valor}`);
+        registrarAuditoria('Pagamento', `Recebido: ${a.locatario} - ${a.valor} (locação inativa)`);
     }
+    
     atualizarTabelaAlugueis();
     atualizarTabelaHistoricoAlugueis();
+    atualizarTabelaFluxoCaixa(); // NOVO: Atualiza a tabela do fluxo de caixa imediatamente
     salvarDB();
-    alert('✅ Pagamento registrado!');
+    alert('✅ Pagamento registrado, enviado para o Fluxo de Caixa e próxima parcela gerada!');
 }
 
 function excluirPagamento(i) {
@@ -2184,7 +2254,74 @@ function excluirPagamento(i) {
 function atualizarResumoFinanceiro() {}
 function atualizarTabelaCompras() { const t = document.querySelector('#tabelaCompras tbody'); if (t) t.innerHTML = ''; }
 function atualizarTabelaBancos() { const t = document.querySelector('#tabelaBancos tbody'); if (t) t.innerHTML = ''; }
-function atualizarTabelaFluxoCaixa() { const t = document.querySelector('#tabelaFluxoCaixa tbody'); if (t) t.innerHTML = ''; }
+
+// ===== FUNÇÃO CORRIGIDA: ATUALIZA O FLUXO DE CAIXA =====
+function atualizarTabelaFluxoCaixa() {
+    const tbody = document.querySelector('#tabelaFluxoCaixa tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    const lista = db.fluxoCaixa || [];
+    let totalEntradas = 0;
+    let totalSaidas = 0;
+    
+    lista.slice().reverse().forEach((f, index) => {
+        const valorNum = Number(f.valorNumerico) || parseMoeda(f.valor) || 0;
+        if (f.tipo === 'entrada') totalEntradas += valorNum;
+        else totalSaidas += valorNum;
+        
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${formatarDataBR(f.data)}</td>
+            <td>${f.descricao || ''}</td>
+            <td>${f.categoria || ''}</td>
+            <td>${f.valor || formatarMoedaBR(valorNum)}</td>
+            <td>${(f.tipo || '').toUpperCase()}</td>
+            <td>
+                <button class="btn-danger" onclick="excluirFluxoCaixa(${lista.length - 1 - index})" title="Excluir">🗑️</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+    
+    const saldo = totalEntradas - totalSaidas;
+    const elEntradas = document.getElementById('totalEntradas'); if (elEntradas) elEntradas.textContent = formatarMoedaBR(totalEntradas);
+    const elSaidas = document.getElementById('totalSaidas'); if (elSaidas) elSaidas.textContent = formatarMoedaBR(totalSaidas);
+    const elSaldo = document.getElementById('saldoTotal'); if (elSaldo) elSaldo.textContent = formatarMoedaBR(saldo);
+}
+
+function excluirFluxoCaixa(i) {
+    if (!confirm('Excluir este lançamento do fluxo de caixa?')) return;
+    db.fluxoCaixa.splice(i, 1);
+    atualizarTabelaFluxoCaixa();
+    salvarDB();
+}
+
+function salvarFluxoCaixa() {
+    const data = document.getElementById('fcData').value;
+    const descricao = document.getElementById('fcDescricao').value.trim();
+    const categoria = document.getElementById('fcCategoria').value.trim();
+    const valorStr = document.getElementById('fcValor').value;
+    const tipo = document.getElementById('fcTipo').value;
+    
+    if (!data || !descricao || !valorStr) { alert('Preencha Data, Descrição e Valor!'); return; }
+    
+    const valorNum = parseMoeda(valorStr);
+    
+    if (!Array.isArray(db.fluxoCaixa)) db.fluxoCaixa = [];
+    db.fluxoCaixa.push({
+        data, descricao, categoria, valor: valorStr, valorNumerico: valorNum, tipo
+    });
+    
+    document.getElementById('fcData').value = '';
+    document.getElementById('fcDescricao').value = '';
+    document.getElementById('fcCategoria').value = '';
+    document.getElementById('fcValor').value = '';
+    
+    atualizarTabelaFluxoCaixa();
+    salvarDB();
+    alert('Lançamento salvo no Fluxo de Caixa!');
+}
+
 function atualizarTabelaDoc() { const t = document.querySelector('#tabelaDoc tbody'); if (t) t.innerHTML = ''; }
 function atualizarTabelaPendentes() { const t = document.querySelector('#tabelaPendentes tbody'); if (t) t.innerHTML = ''; }
 function atualizarGaleriaComprovantes() {}
@@ -2201,7 +2338,6 @@ function limparCamposCompra() {}
 function excluirCompra() {}
 function salvarBanco() { alert('Função em implementação.'); }
 function editarBanco() {}
-function salvarFluxoCaixa() { alert('Função em implementação.'); }
 function salvarDoc() { alert('Função em implementação.'); }
 function limparCamposDoc() {}
 function processarDocumentoComprovante() {}
@@ -2313,6 +2449,7 @@ async function inicializarSistemaCompleto() {
     atualizarTabelaHistoricoAlugueis();
     atualizarTabelaAuditoria();
     atualizarTabelaAlugueis();
+    atualizarTabelaFluxoCaixa(); // NOVO: Inicializa a tabela do Fluxo de Caixa
     atualizarEstadoEdicaoVeiculo();
     atualizarEstadoEdicaoCliente();
     atualizarEstadoEdicaoLocacao();

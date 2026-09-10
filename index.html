@@ -1989,26 +1989,6 @@ function gerarPDFReciboMecanico(lista, total, oficinas) {
     window.print();
 }
 
-function limparCamposMecanico() {
-    ['mecData','mecOficina','mecServico','mecResponsavel','mecCarro','mecPlaca','mecValor','mecObs'].forEach(id => {
-        const el = document.getElementById(id); if (el) el.value = '';
-    });
-}
-
-function atualizarTabelaMecanico() {
-    const tbody = document.querySelector('#tabelaMecanico tbody');
-    if (!tbody) return;
-    tbody.innerHTML = '';
-    (db.mecanico || []).forEach((m, i) => {
-        const statusBadge = m.pago ? '<span class="status-pago">PAGO</span>' : '<span class="status-pendente">PENDENTE</span>';
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${m.data||''}</td><td>${m.oficina||''}</td><td>${m.servico||''}</td><td>${m.carro||''}</td><td>${m.valor||''}</td>
-            <td>${statusBadge}</td>
-            <td><button class="btn-danger" onclick="db.mecanico.splice(${i},1);atualizarTabelaMecanico();salvarDB();">🗑️</button></td>`;
-        tbody.appendChild(tr);
-    });
-}
-
 // ===== FUNÇÃO CORRIGIDA: ATUALIZA O HISTÓRICO GERAL =====
 function atualizarTabelaHistorico() {
     const tbody = document.querySelector('#tabelaHistorico tbody');
@@ -2401,11 +2381,15 @@ function atualizarGaleriaGaragem() {
     });
 }
 
+// ===== ALTERAÇÃO: SOLICITA SENHA ADM PARA EXCLUIR FOTO DA GARAGEM =====
 function excluirFotoGaragem(i) {
-    if (!confirm('Excluir esta imagem?')) return;
+    if (!confirmarSenhaADM()) return;
+    if (!confirm('Excluir esta imagem da Garagem?')) return;
     if (!db.imagens || !db.imagens.garagem || !Array.isArray(db.imagens.garagem.fotos)) return;
     db.imagens.garagem.fotos.splice(i, 1);
-    atualizarGaleriaGaragem(); salvarDB();
+    atualizarGaleriaGaragem(); 
+    salvarDB();
+    registrarAuditoria('Exclusão', `Foto excluída da Garagem (índice ${i})`);
 }
 
 function salvarSOS() {
@@ -2444,11 +2428,15 @@ function atualizarGaleriaSOS() {
     });
 }
 
+// ===== ALTERAÇÃO: SOLICITA SENHA ADM PARA EXCLUIR FOTO DO SOS =====
 function excluirFotoSOS(i) {
-    if (!confirm('Excluir esta imagem?')) return;
+    if (!confirmarSenhaADM()) return;
+    if (!confirm('Excluir esta imagem do SOS?')) return;
     if (!db.imagens || !db.imagens.sos || !Array.isArray(db.imagens.sos.fotos)) return;
     db.imagens.sos.fotos.splice(i, 1);
-    atualizarGaleriaSOS(); salvarDB();
+    atualizarGaleriaSOS(); 
+    salvarDB();
+    registrarAuditoria('Exclusão', `Foto excluída do SOS (índice ${i})`);
 }
 
 function atualizarTabelaAlugueis() {

@@ -454,7 +454,24 @@
         </div>
     </div>
 
-    <div class="tab-content" id="banco"><h2>🏦 Banco</h2><div class="form-grid"><div class="form-group"><label>Banco</label><input type="text" id="bancoNome"></div><div class="form-group"><label>Agência</label><input type="text" id="bancoAgencia"></div><div class="form-group"><label>Conta</label><input type="text" id="bancoConta"></div><div class="form-group"><label>PIX</label><input type="text" id="bancoPix"></div><div class="form-group"><label>Titular</label><input type="text" id="bancoTitular"></div></div><button class="btn-primary" onclick="salvarBanco()">💾 Salvar</button><div class="table-container"><table id="tabelaBancos"><thead><tr><th>Banco</th><th>Agência</th><th>Conta</th><th>PIX</th><th>Titular</th><th>Ações</th></tr></thead><tbody></tbody></table></div></div>
+    <div class="tab-content" id="banco">
+        <h2>🏦 Banco</h2>
+        <div class="editando-aviso" id="avisoEditandoBanco">✏️ <strong>Modo Edição</strong> — Você está editando um banco existente. Salve para confirmar ou limpe o formulário.</div>
+        <div class="form-grid">
+            <div class="form-group"><label>Banco</label><input type="text" id="bancoNome" class="campo-enter"></div>
+            <div class="form-group"><label>Agência</label><input type="text" id="bancoAgencia" class="campo-enter"></div>
+            <div class="form-group"><label>Conta</label><input type="text" id="bancoConta" class="campo-enter"></div>
+            <div class="form-group"><label>PIX</label><input type="text" id="bancoPix" class="campo-enter"></div>
+            <div class="form-group"><label>Titular</label><input type="text" id="bancoTitular" class="campo-enter"></div>
+        </div>
+        <button class="btn-primary" id="btnSalvarBanco" data-permissao="banco_salvar" onclick="salvarBanco()">💾 Salvar</button>
+        <div class="table-container">
+            <table id="tabelaBancos">
+                <thead><tr><th>Banco</th><th>Agência</th><th>Conta</th><th>PIX</th><th>Titular</th><th>Ações</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
 
     <div class="tab-content" id="fluxocaixa">
         <h2>💵 Fluxo de Caixa</h2>
@@ -695,6 +712,7 @@ let selfieStream = null, selfieDataUrl = null, selfieClienteTemp = null, selfieU
 let vistoriaStream = null, vistoriaDataUrl = null, vistoriaLocacaoIndex = null;
 let usuarioEditandoIndex = null, compraEditandoIndex = null, pendenciaEditandoIndex = null;
 let veiculoEditandoIndex = null, clienteEditandoIndex = null, locacaoEditandoIndex = null;
+let bancoEditandoIndex = null;
 let garagemImagensTemp = [];
 let sosImagensTemp = [];
 let galeriaAtual = [];
@@ -707,14 +725,16 @@ function normalizarPlaca(p) { return String(p || '').toUpperCase().replace(/[^A-
 function formatarDataBR(d) { if (!d) return ''; const p = d.split('-'); return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : d; }
 function parseMoeda(s) { if (typeof s === 'number') return s; return parseFloat(String(s || '0').replace('R$', '').replace(/\./g, '').replace(',', '.').trim()) || 0; }
 
+function temPermissao(perm) {
+    if (!usuarioLogado) return false;
+    if (usuarioLogado.tipo === 'ADM') return true;
+    return !!(usuarioLogado.permissoes && usuarioLogado.permissoes.botoes && usuarioLogado.permissoes.botoes[perm]);
+}
+
 function getNumDivisoesCaucao(tipoPagamento) {
     return (String(tipoPagamento || '').toLowerCase() === 'mensal') ? 6 : 10;
 }
 
-/* ============================================================
-   NOVA FUNÇÃO: Calcula o valor do CAUÇÃO efetivamente PAGO
-   dentro do período da locação (dataInicio → dataFimEfetiva).
-   ============================================================ */
 function calcularCaucaoPagoNoPeriodo(locacao, dataInicio, dataFimEfetiva) {
     const pagCaucao = String(locacao.pagCaucao || 'avista').toLowerCase();
     const tipoPag = String(locacao.tipoPagamento || 'mensal').toLowerCase();
@@ -877,6 +897,7 @@ document.querySelectorAll('.tab').forEach(tab => {
         if (tabId === 'garagem') atualizarGaleriaGaragem();
         if (tabId === 'sos') atualizarGaleriaSOS();
         if (tabId === 'comprovantes') { atualizarComboPlacasDocumentos(); atualizarGaleriaComprovantes(); }
+        if (tabId === 'banco') atualizarTabelaBancos();
     });
 });
 
@@ -1732,13 +1753,6 @@ function excluirLocacao(i) {
     salvarDB();
 }
 
-/* ============================================================
-   ENCERRAR LOCAÇÃO
-   1) Calcula receita real (aluguéis pagos) dentro do período
-   2) Calcula caução efetivamente pago dentro do período
-   3) Extorna automaticamente o valor do caução calculado
-   4) ABATE o valor do extorno no lucro (adiciona nas despesas)
-   ============================================================ */
 function encerrarLocacao(i) {
     if (!confirmarSenhaADM()) return;
     const l = db.locacoes[i];
@@ -1748,12 +1762,10 @@ function encerrarLocacao(i) {
 
     const hojeISO = new Date().toISOString().split('T')[0];
 
-    // 1) Data fim efetiva
     const dataInicio = l.dataInicio || '';
     const dataFimContrato = l.dataFim || '';
     const dataFimEfetiva = (dataFimContrato && hojeISO > dataFimContrato) ? dataFimContrato : hojeISO;
 
-    // 2) Receita: pagamentos de aluguel dentro do período
     const pagamentosNoPeriodo = (db.alugueis || []).filter(a => {
         if (!a) return false;
         if (a.locatario !== l.locatario) return false;
@@ -1770,11 +1782,9 @@ function encerrarLocacao(i) {
         return s + (Number(a.valorNumerico) || parseMoeda(a.valor) || 0);
     }, 0);
 
-    // 3) Caução efetivamente pago dentro do período
     const calcCaucao = calcularCaucaoPagoNoPeriodo(l, dataInicio, dataFimEfetiva);
     const caucaoPagoNoPeriodo = calcCaucao.total;
 
-    // 4) Extorno automático do caução calculado
     let caucaoExtornada = false;
     if (caucaoPagoNoPeriodo > 0) {
         const msgCaucao = `💰 CAUÇÃO PAGA NO PERÍODO\n\n` +
@@ -1803,18 +1813,15 @@ function encerrarLocacao(i) {
         }
     }
 
-    // 5) Despesas do veículo
     const despMec = (db.mecanico || []).filter(m => m.placa === l.placa).reduce((s, m) => s + parseMoeda(m.valor), 0);
     const despMan = (db.manutencao || []).filter(m => m.placa === l.placa).reduce((s, m) => s + parseMoeda(m.custo || 0), 0);
     const despComp = (db.compras || []).filter(c => c.placa === l.placa).reduce((s, c) => s + parseMoeda(c.valorTotal || c.valorUnitario), 0);
     const despesasVeiculo = despMec + despMan + despComp;
 
-    // ✅ CORREÇÃO: valor do extorno ABATIDO nas despesas (reduz o lucro)
     const valorExtorno = caucaoExtornada ? caucaoPagoNoPeriodo : 0;
     const despesasTotais = despesasVeiculo + valorExtorno;
     const lucro = receitaTotalPeriodo - despesasTotais;
 
-    // 6) Objeto da locação encerrada
     const encerrada = Object.assign({}, l, {
         dataEncerramento: hojeISO,
         dataFimEfetiva: dataFimEfetiva,
@@ -1831,7 +1838,6 @@ function encerrarLocacao(i) {
             origem: p.origem || 'Aluguel'
         })),
         tipoPagamento: (l.tipoPagamento || 'mensal'),
-        // ✅ Novos campos: despesas do veículo separadas + valor do extorno + total
         despesasVeiculoNumerica: despesasVeiculo,
         despesasVeiculoFormatado: formatarMoedaBR(despesasVeiculo),
         extornoNumerico: valorExtorno,
@@ -1855,7 +1861,6 @@ function encerrarLocacao(i) {
     registrarAuditoria('Encerramento', `Locação encerrada: ${l.locatario} - ${l.placa} | Recebido: ${formatarMoedaBR(receitaTotalPeriodo)} | Extorno: ${formatarMoedaBR(valorExtorno)} | Lucro: ${formatarMoedaBR(lucro)}`);
     salvarDB();
 
-    // 7) Mensagem final
     let msgAlerta = `✅ LOCAÇÃO ENCERRADA!\n\n`;
     msgAlerta += `Locatário: ${l.locatario}\n`;
     msgAlerta += `Veículo: ${l.fabricante} - ${l.placa}\n`;
@@ -2053,7 +2058,6 @@ function atualizarTabelaMecanico() {
     });
 }
 
-// ===== RELATÓRIO E PAGAMENTO DE MECÂNICA =====
 function gerarRelatorioMecanico() {
     const dtInicio = document.getElementById('relMecDataInicio').value;
     const dtFim = document.getElementById('relMecDataFim').value;
@@ -2784,7 +2788,6 @@ function excluirPagamento(i) {
 
 function atualizarResumoFinanceiro() {}
 function atualizarTabelaCompras() { const t = document.querySelector('#tabelaCompras tbody'); if (t) t.innerHTML = ''; }
-function atualizarTabelaBancos() { const t = document.querySelector('#tabelaBancos tbody'); if (t) t.innerHTML = ''; }
 
 function atualizarTabelaFluxoCaixa() {
     const tbody = document.querySelector('#tabelaFluxoCaixa tbody');
@@ -2852,6 +2855,174 @@ function salvarFluxoCaixa() {
     alert('Lançamento salvo no Fluxo de Caixa!');
 }
 
+/* ============================================================
+   BANCO - SALVAR, EDITAR, EXCLUIR, COPIAR PIX
+   ============================================================ */
+
+function limparCamposBanco() {
+    ['bancoNome','bancoAgencia','bancoConta','bancoPix','bancoTitular'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    bancoEditandoIndex = null;
+    atualizarEstadoEdicaoBanco();
+}
+
+function atualizarEstadoEdicaoBanco() {
+    const btn = document.getElementById('btnSalvarBanco');
+    const aviso = document.getElementById('avisoEditandoBanco');
+    if (bancoEditandoIndex !== null) {
+        if (btn) btn.textContent = '💾 Atualizar Banco';
+        if (aviso) aviso.classList.add('ativo');
+    } else {
+        if (btn) btn.textContent = '💾 Salvar';
+        if (aviso) aviso.classList.remove('ativo');
+    }
+}
+
+function salvarBanco() {
+    const nome = document.getElementById('bancoNome').value.trim();
+    const agencia = document.getElementById('bancoAgencia').value.trim();
+    const conta = document.getElementById('bancoConta').value.trim();
+    const pix = document.getElementById('bancoPix').value.trim();
+    const titular = document.getElementById('bancoTitular').value.trim();
+
+    if (!nome || !agencia || !conta || !pix || !titular) {
+        alert('Preencha todos os campos do banco!');
+        return;
+    }
+
+    if (!Array.isArray(db.bancos)) db.bancos = [];
+
+    const banco = { nome, agencia, conta, pix, titular };
+
+    if (bancoEditandoIndex !== null && db.bancos[bancoEditandoIndex]) {
+        db.bancos[bancoEditandoIndex] = banco;
+        registrarAuditoria('Edição', `Banco atualizado: ${banco.nome} - PIX: ${banco.pix}`);
+        bancoEditandoIndex = null;
+        atualizarEstadoEdicaoBanco();
+        alert('✅ Banco atualizado com sucesso!');
+    } else {
+        db.bancos.push(banco);
+        registrarAuditoria('Cadastro', `Novo banco: ${banco.nome} - PIX: ${banco.pix}`);
+        alert('✅ Banco salvo com sucesso!');
+    }
+
+    atualizarTabelaBancos();
+    salvarDB();
+    limparCamposBanco();
+}
+
+function editarBanco(i) {
+    if (!confirmarSenhaADM()) return;
+    const b = db.bancos[i];
+    if (!b) { alert('Banco não encontrado.'); return; }
+    bancoEditandoIndex = i;
+    document.getElementById('bancoNome').value = b.nome || '';
+    document.getElementById('bancoAgencia').value = b.agencia || '';
+    document.getElementById('bancoConta').value = b.conta || '';
+    document.getElementById('bancoPix').value = b.pix || '';
+    document.getElementById('bancoTitular').value = b.titular || '';
+    atualizarEstadoEdicaoBanco();
+    window.scrollTo(0, 0);
+    document.getElementById('bancoNome').focus();
+}
+
+function excluirBanco(i) {
+    if (!confirmarSenhaADM()) return;
+    const b = db.bancos[i];
+    if (!b) return;
+    if (!confirm(`Excluir o banco "${b.nome}"?`)) return;
+    db.bancos.splice(i, 1);
+    if (bancoEditandoIndex === i) { bancoEditandoIndex = null; limparCamposBanco(); }
+    else if (bancoEditandoIndex !== null && bancoEditandoIndex > i) bancoEditandoIndex--;
+    atualizarTabelaBancos();
+    registrarAuditoria('Exclusão', `Banco excluído: ${b.nome}`);
+    salvarDB();
+    alert('✅ Banco excluído.');
+}
+
+function copiarPix(i) {
+    const b = db.bancos[i];
+    if (!b) return;
+    if (!b.pix) { alert('Este banco não tem PIX cadastrado.'); return; }
+
+    const pixTexto = b.pix;
+
+    function sucessoCopiar() {
+        alert('✅ PIX copiado!\n\n' + pixTexto);
+    }
+    function falhaCopiar() {
+        alert('❌ Não foi possível copiar automaticamente.\n\nPIX: ' + pixTexto);
+    }
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(pixTexto).then(sucessoCopiar).catch(function() {
+            copiarPixFallback(pixTexto, sucessoCopiar, falhaCopiar);
+        });
+    } else {
+        copiarPixFallback(pixTexto, sucessoCopiar, falhaCopiar);
+    }
+}
+
+function copiarPixFallback(texto, onSucesso, onFalha) {
+    try {
+        const ta = document.createElement('textarea');
+        ta.value = texto;
+        ta.style.position = 'fixed';
+        ta.style.top = '-1000px';
+        ta.style.left = '-1000px';
+        ta.setAttribute('readonly', '');
+        document.body.appendChild(ta);
+        ta.select();
+        ta.setSelectionRange(0, ta.value.length);
+        const ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+        if (ok) onSucesso(); else onFalha();
+    } catch (e) {
+        if (typeof onFalha === 'function') onFalha();
+    }
+}
+
+function atualizarTabelaBancos() {
+    const tbody = document.querySelector('#tabelaBancos tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    const lista = db.bancos || [];
+
+    if (lista.length === 0) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td colspan="6" style="text-align:center;color:#999;padding:20px;">Nenhum banco cadastrado.</td>`;
+        tbody.appendChild(tr);
+        return;
+    }
+
+    lista.forEach((b, i) => {
+        const botoes = [];
+        if (temPermissao('banco_editar')) {
+            botoes.push(`<button class="btn-warning" onclick="editarBanco(${i})" title="Editar">✏️</button>`);
+        }
+        if (temPermissao('banco_copiar')) {
+            botoes.push(`<button class="btn-copy" onclick="copiarPix(${i})" title="Copiar PIX">📋 Copiar PIX</button>`);
+        }
+        if (temPermissao('banco_excluir')) {
+            botoes.push(`<button class="btn-danger" onclick="excluirBanco(${i})" title="Excluir">🗑️</button>`);
+        }
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${b.nome || ''}</td>
+            <td>${b.agencia || ''}</td>
+            <td>${b.conta || ''}</td>
+            <td>${b.pix || ''}</td>
+            <td>${b.titular || ''}</td>
+            <td>${botoes.join(' ')}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
 function atualizarTabelaDoc() { const t = document.querySelector('#tabelaDoc tbody'); if (t) t.innerHTML = ''; }
 function atualizarTabelaPendentes() { const t = document.querySelector('#tabelaPendentes tbody'); if (t) t.innerHTML = ''; }
 function carregarDadosContratos() {}
@@ -2865,8 +3036,6 @@ function salvarCompra() { alert('Função em implementação.'); }
 function editarCompra() { alert('Função em implementação.'); }
 function limparCamposCompra() {}
 function excluirCompra() {}
-function salvarBanco() { alert('Função em implementação.'); }
-function editarBanco() {}
 function salvarDoc() { alert('Função em implementação.'); }
 function limparCamposDoc() {}
 function processarDocumentoComprovante() {}
@@ -2889,8 +3058,6 @@ function switchSubTabPagamentos() {}
 function switchContratoTab() {}
 function imprimirDocumento() { window.print(); }
 function abrirModalSelfie_() {}
-
-// ===== DOCUMENTOS POR PLACA =====
 
 function atualizarComboPlacasDocumentos() {
     const sel = document.getElementById('docPlacaSelect');
@@ -3126,9 +3293,11 @@ async function inicializarSistemaCompleto() {
     atualizarTabelaAuditoria();
     atualizarTabelaAlugueis();
     atualizarTabelaFluxoCaixa();
+    atualizarTabelaBancos();
     atualizarEstadoEdicaoVeiculo();
     atualizarEstadoEdicaoCliente();
     atualizarEstadoEdicaoLocacao();
+    atualizarEstadoEdicaoBanco();
     atualizarGaleriaGaragem();
     atualizarGaleriaSOS();
     atualizarComboPlacasDocumentos();

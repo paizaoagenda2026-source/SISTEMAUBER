@@ -15,7 +15,6 @@
     <meta name="application-name" content="PAIZÃO UBER">
     <link rel="manifest" href="manifest.json">
 
-    <!-- ===== ÍCONE = FOTO lobao.jpg (a MESMA do login) ===== -->
     <link rel="icon" type="image/jpeg" href="lobao.jpg">
     <link rel="shortcut icon" type="image/jpeg" href="lobao.jpg">
     <link rel="apple-touch-icon" href="lobao.jpg">
@@ -165,7 +164,6 @@
         .vistoria-sub-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
         .vistoria-foto-container { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 15px; }
         
-        /* ===== NOVOS ESTILOS PARA DOCUMENTOS POR PLACA ===== */
         .documento-folder { background: #fff; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); overflow: hidden; }
         .documento-folder-header { background: var(--primary); color: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; }
         .documento-folder-header h4 { margin: 0; font-size: 16px; display: flex; align-items: center; gap: 10px; }
@@ -341,7 +339,6 @@
         </div>
         <button class="btn-primary" onclick="salvarMecanico()">💾 Salvar</button>
         
-        <!-- NOVA SEÇÃO: RELATÓRIO E PAGAMENTO -->
         <div class="config-section" style="margin-top: 30px; border-left-color: var(--info); background: #e9f2fa;">
             <h3>📊 Gerar Relatório de Pagamento (Oficina)</h3>
             <div class="form-grid">
@@ -409,7 +406,6 @@
         </div>
     </div>
 
-    <!-- ===== ABA DOCUMENTOS ATUALIZADA ===== -->
     <div class="tab-content" id="comprovantes">
         <h2>📄 Documentos por Placa</h2>
         <div class="sub-tabs">
@@ -417,7 +413,6 @@
             <button class="sub-tab" onclick="switchSubTab('salvos')">📁 Documentos Salvos</button>
         </div>
         
-        <!-- Sub-tab Novo -->
         <div class="sub-tab-content active" id="subTabNovo">
             <div class="form-group" style="max-width: 400px; margin-bottom: 15px;">
                 <label>Selecione a Placa do Veículo</label>
@@ -433,14 +428,10 @@
             <button class="btn-primary" onclick="salvarDocumentosPlaca()">💾 Salvar Documentos</button>
         </div>
         
-        <!-- Sub-tab Salvos -->
         <div class="sub-tab-content" id="subTabSalvos">
-            <div id="documentosSalvosContainer" style="margin-top: 20px;">
-                <!-- Renderizado via JS -->
-            </div>
+            <div id="documentosSalvosContainer" style="margin-top: 20px;"></div>
         </div>
     </div>
-    <!-- ===== FIM DA ABA DOCUMENTOS ===== -->
 
     <div class="tab-content" id="pagamentos">
         <h2>💰 Sub Pagamentos</h2>
@@ -595,7 +586,7 @@ function criarDBPadrao() {
         usuarios: [{ nome: 'SERGIO', senha: '080888', tipo: 'ADM', permissoes: JSON.parse(JSON.stringify(permissoesPadrao.ADM)), selfie: null }],
         alugueis: [], fluxoCaixa: [], documentos: [], compras: [], auditoria: [], bancos: [], pendentes: [], historico: [],
         historicoAlugueis: [],
-        documentosPlacas: {}, // NOVO CAMPO PARA DOCUMENTOS POR PLACA
+        documentosPlacas: {},
         contratos: { contratoLocacao:{}, termoResponsabilidade:{}, notaPromissoria:{} },
         imagens: { garagem:{fotos:[]}, sos:{fotos:[]}, comprovantes:{fotos:[]} },
         config: { empresa: 'LOBÃO', cnpj:'', telefone:'', email:'', endereco:'', ultimaLimpezaAuditoria: null }
@@ -637,13 +628,13 @@ async function carregarDB() {
     if (!Array.isArray(db.imagens.garagem.fotos)) db.imagens.garagem.fotos = [];
     if (!Array.isArray(db.imagens.sos.fotos)) db.imagens.sos.fotos = [];
     if (!Array.isArray(db.imagens.comprovantes.fotos)) db.imagens.comprovantes.fotos = [];
-    if (!db.documentosPlacas) db.documentosPlacas = {}; // Garante que o novo campo exista
+    if (!db.documentosPlacas) db.documentosPlacas = {};
     if (!db.config) db.config = criarDBPadrao().config;
     if (db.locacoes) db.locacoes.forEach(l => {
         if (!l.vistoria) l.vistoria = [];
     });
     db.pendentes.forEach(p => { if (!p.status) p.status = 'Pendente'; });
-    db.mecanico.forEach(m => { if (m.pago === undefined) m.pago = false; }); // Garante compatibilidade com registros antigos
+    db.mecanico.forEach(m => { if (m.pago === undefined) m.pago = false; });
 
     let precisaSalvar = false;
     const lobao = db.usuarios.find(u => u && u.nome === 'LOBÃO');
@@ -708,7 +699,7 @@ let garagemImagensTemp = [];
 let sosImagensTemp = [];
 let galeriaAtual = [];
 let galeriaIndexAtual = 0;
-let relatorioMecanicoTemp = []; // Armazena temporariamente os itens filtrados para pagamento
+let relatorioMecanicoTemp = [];
 
 function campoVazio(v) { return !v || String(v).trim() === ''; }
 function formatarMoedaBR(v) { return 'R$ ' + (Number(v) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
@@ -716,70 +707,104 @@ function normalizarPlaca(p) { return String(p || '').toUpperCase().replace(/[^A-
 function formatarDataBR(d) { if (!d) return ''; const p = d.split('-'); return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : d; }
 function parseMoeda(s) { if (typeof s === 'number') return s; return parseFloat(String(s || '0').replace('R$', '').replace(/\./g, '').replace(',', '.').trim()) || 0; }
 
-function calcularReceitaEsperada(locacao, dataEncerramentoISO) {
-    const tipoPag = (locacao.tipoPagamento || 'mensal').toLowerCase();
-    const inicio = new Date(locacao.dataInicio + 'T00:00:00');
-    const fim = new Date(dataEncerramentoISO + 'T00:00:00');
-    if (isNaN(inicio.getTime()) || isNaN(fim.getTime())) return { total: 0, periodos: 0, valorPeriodo: 0, tipoPagamento: tipoPag };
-    const diffMs = Math.max(0, fim - inicio);
-    const diffDias = Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
-    let periodos = 0, valorPeriodo = 0;
-    if (tipoPag === 'semanal') {
-        valorPeriodo = parseMoeda(locacao.valorAluguel);
-        if (valorPeriodo <= 0) { const mensal = parseMoeda(locacao.aluguelMensal); valorPeriodo = mensal > 0 ? mensal / 4 : 0; }
-        periodos = Math.ceil(diffDias / 7);
-    } else if (tipoPag === 'mensal') {
-        valorPeriodo = parseMoeda(locacao.aluguelMensal);
-        if (valorPeriodo <= 0) valorPeriodo = parseMoeda(locacao.valorAluguel);
-        periodos = Math.ceil(diffDias / 30);
-    } else {
-        valorPeriodo = parseMoeda(locacao.valorAluguel) || parseMoeda(locacao.aluguelMensal);
-        periodos = 1;
-    }
-    return { total: periodos * valorPeriodo, periodos, valorPeriodo, tipoPagamento: tipoPag };
+function getNumDivisoesCaucao(tipoPagamento) {
+    return (String(tipoPagamento || '').toLowerCase() === 'mensal') ? 6 : 10;
 }
 
-function gerarParcelasPagamento(opts) {
-    const { dataInicio, valorAluguel, caucao, caucaoPago, tipoPagCaucao, tipoPagamento } = opts;
-    const parcelas = [];
-    if ((!valorAluguel || valorAluguel <= 0) && (!caucao || caucao <= 0)) return parcelas;
-    
-    let intervalDias = 30;
-    if (tipoPagamento === 'semanal') intervalDias = 7;
-    
-    function calcVencimento(index) {
-        if (!dataInicio) return '';
-        const d = new Date(dataInicio + 'T00:00:00');
-        d.setDate(d.getDate() + (intervalDias * index));
-        return d.toISOString().split('T')[0];
+/* ============================================================
+   NOVA FUNÇÃO: Calcula o valor do CAUÇÃO efetivamente PAGO
+   dentro do período da locação (dataInicio → dataFimEfetiva).
+   ============================================================ */
+function calcularCaucaoPagoNoPeriodo(locacao, dataInicio, dataFimEfetiva) {
+    const pagCaucao = String(locacao.pagCaucao || 'avista').toLowerCase();
+    const tipoPag = String(locacao.tipoPagamento || 'mensal').toLowerCase();
+    const caucaoTotal = parseMoeda(locacao.caucao);
+    const caucaoPagoInicial = parseMoeda(locacao.caucaoPago);
+
+    if (caucaoTotal <= 0) {
+        return { total: 0, detalhes: [], quantidadeParcelas: 0 };
     }
-    
-    if (!caucao || caucao <= 0) {
-        parcelas.push({ valor: valorAluguel, vencimento: dataInicio, parcela: 1, descricao: 'Aluguel' });
-        return parcelas;
-    }
-    if (tipoPagCaucao === 'avista') {
-        parcelas.push({ valor: valorAluguel + caucao, vencimento: dataInicio, parcela: 1, descricao: 'Aluguel + Caução (À Vista)' });
-        return parcelas;
-    }
-    if (tipoPagCaucao === 'parcelado') {
-        const parcelaCaucao = caucao / 10;
-        for (let i = 0; i < 10; i++) {
-            parcelas.push({ valor: valorAluguel + parcelaCaucao, vencimento: calcVencimento(i), parcela: i + 1, descricao: `Aluguel + Caução ${i + 1}/10` });
+
+    const numDivisoes = getNumDivisoesCaucao(tipoPag);
+
+    const pagamentos = (db.alugueis || []).filter(a => {
+        if (!a) return false;
+        if (a.locatario !== locacao.locatario) return false;
+        if (a.placa !== locacao.placa) return false;
+        if (a.status !== 'pago') return false;
+        const dtPgto = a.dataPagamento || a.data || '';
+        if (!dtPgto) return false;
+        if (dataInicio && dtPgto < dataInicio) return false;
+        if (dataFimEfetiva && dtPgto > dataFimEfetiva) return false;
+        return true;
+    });
+
+    let totalCaucaoRecebido = 0;
+    const detalhes = [];
+
+    if (pagCaucao === 'avista') {
+        const primeira = pagamentos.find(a => {
+            const origem = (a.origem || '').toUpperCase();
+            return origem.includes('VISTA') && origem.includes('CAU');
+        });
+        if (primeira) {
+            totalCaucaoRecebido = caucaoTotal;
+            detalhes.push({
+                parcela: primeira.parcela || 1,
+                valorCaucao: caucaoTotal,
+                dataPagamento: primeira.dataPagamento || primeira.data,
+                descricao: primeira.origem || 'Aluguel + Caução (À Vista)'
+            });
         }
-        return parcelas;
+    } else if (pagCaucao === 'parcelado') {
+        const valorPorParcela = caucaoTotal / numDivisoes;
+        pagamentos.forEach(p => {
+            const origem = (p.origem || '').toUpperCase();
+            if (origem.includes('CAU') && !origem.includes('ENTRADA') && !origem.includes('SALDO')) {
+                totalCaucaoRecebido += valorPorParcela;
+                detalhes.push({
+                    parcela: p.parcela || '',
+                    valorCaucao: valorPorParcela,
+                    dataPagamento: p.dataPagamento || p.data,
+                    descricao: p.origem
+                });
+            }
+        });
+    } else if (pagCaucao === 'entrada') {
+        const entrada = caucaoPagoInicial > 0 ? caucaoPagoInicial : 0;
+        const saldo = Math.max(0, caucaoTotal - entrada);
+        const numSaldo = numDivisoes - 1;
+        const valorSaldoPorParcela = numSaldo > 0 ? saldo / numSaldo : 0;
+
+        pagamentos.forEach(p => {
+            const origem = (p.origem || '').toUpperCase();
+            if (origem.includes('ENTRADA') && origem.includes('CAU')) {
+                totalCaucaoRecebido += entrada;
+                detalhes.push({
+                    parcela: p.parcela || '',
+                    valorCaucao: entrada,
+                    dataPagamento: p.dataPagamento || p.data,
+                    descricao: p.origem
+                });
+            } else if (origem.includes('SALDO') && origem.includes('CAU')) {
+                totalCaucaoRecebido += valorSaldoPorParcela;
+                detalhes.push({
+                    parcela: p.parcela || '',
+                    valorCaucao: valorSaldoPorParcela,
+                    dataPagamento: p.dataPagamento || p.data,
+                    descricao: p.origem
+                });
+            }
+        });
     }
-    if (tipoPagCaucao === 'entrada') {
-        const entrada = caucaoPago > 0 ? caucaoPago : 0;
-        const saldo = Math.max(0, caucao - entrada);
-        const parcelaSaldo = saldo / 9;
-        parcelas.push({ valor: valorAluguel + entrada, vencimento: calcVencimento(0), parcela: 1, descricao: 'Aluguel + Entrada Caução' });
-        for (let i = 1; i <= 9; i++) {
-            parcelas.push({ valor: valorAluguel + parcelaSaldo, vencimento: calcVencimento(i), parcela: i + 1, descricao: `Aluguel + Saldo Caução ${i}/9` });
-        }
-        return parcelas;
-    }
-    return parcelas;
+
+    if (totalCaucaoRecebido > caucaoTotal) totalCaucaoRecebido = caucaoTotal;
+
+    return {
+        total: totalCaucaoRecebido,
+        detalhes: detalhes,
+        quantidadeParcelas: detalhes.length
+    };
 }
 
 function confirmarSenhaADM() {
@@ -1004,7 +1029,7 @@ function salvarVeiculo() {
     atualizarCombosLocacao();
     atualizarPlacasManutencao();
     atualizarPlacasMecanico();
-    atualizarComboPlacasDocumentos(); // Atualiza o combo de documentos com a nova placa
+    atualizarComboPlacasDocumentos();
     salvarDB();
     limparCamposVeiculo();
 }
@@ -1084,7 +1109,7 @@ function excluirVeiculo(i) {
     atualizarCombosLocacao();
     atualizarPlacasManutencao();
     atualizarPlacasMecanico();
-    atualizarComboPlacasDocumentos(); // Atualiza o combo de documentos
+    atualizarComboPlacasDocumentos();
     registrarAuditoria('Exclusão', `Veículo excluído índice ${i}`);
     salvarDB();
 }
@@ -1470,6 +1495,62 @@ function obterValorAluguelEfetivo() {
     return { valor: 0, origem: null, tipo: 'mensal' };
 }
 
+function gerarParcelasPagamento(opts) {
+    const { dataInicio, valorAluguel, caucao, caucaoPago, tipoPagCaucao, tipoPagamento } = opts;
+    const parcelas = [];
+    if ((!valorAluguel || valorAluguel <= 0) && (!caucao || caucao <= 0)) return parcelas;
+    
+    let intervalDias = 30;
+    if (tipoPagamento === 'semanal') intervalDias = 7;
+    
+    const numDivisoes = getNumDivisoesCaucao(tipoPagamento);
+    
+    function calcVencimento(index) {
+        if (!dataInicio) return '';
+        const d = new Date(dataInicio + 'T00:00:00');
+        d.setDate(d.getDate() + (intervalDias * index));
+        return d.toISOString().split('T')[0];
+    }
+    
+    if (!caucao || caucao <= 0) {
+        parcelas.push({ valor: valorAluguel, vencimento: dataInicio, parcela: 1, descricao: 'Aluguel' });
+        return parcelas;
+    }
+    if (tipoPagCaucao === 'avista') {
+        parcelas.push({ valor: valorAluguel + caucao, vencimento: dataInicio, parcela: 1, descricao: 'Aluguel + Caução (À Vista)' });
+        return parcelas;
+    }
+    if (tipoPagCaucao === 'parcelado') {
+        const parcelaCaucao = caucao / numDivisoes;
+        for (let i = 0; i < numDivisoes; i++) {
+            parcelas.push({ 
+                valor: valorAluguel + parcelaCaucao, 
+                vencimento: calcVencimento(i), 
+                parcela: i + 1, 
+                descricao: `Aluguel + Caução ${i + 1}/${numDivisoes}` 
+            });
+        }
+        return parcelas;
+    }
+    if (tipoPagCaucao === 'entrada') {
+        const entrada = caucaoPago > 0 ? caucaoPago : 0;
+        const saldo = Math.max(0, caucao - entrada);
+        const numSaldo = numDivisoes - 1;
+        const parcelaSaldo = numSaldo > 0 ? (saldo / numSaldo) : 0;
+        parcelas.push({ valor: valorAluguel + entrada, vencimento: calcVencimento(0), parcela: 1, descricao: 'Aluguel + Entrada Caução' });
+        for (let i = 1; i <= numSaldo; i++) {
+            parcelas.push({ 
+                valor: valorAluguel + parcelaSaldo, 
+                vencimento: calcVencimento(i), 
+                parcela: i + 1, 
+                descricao: `Aluguel + Saldo Caução ${i}/${numSaldo}` 
+            });
+        }
+        return parcelas;
+    }
+    return parcelas;
+}
+
 function salvarLocacao() {
     const locatario   = document.getElementById('locLocatario').value;
     const fabricante  = document.getElementById('locFabModelo').value;
@@ -1651,74 +1732,146 @@ function excluirLocacao(i) {
     salvarDB();
 }
 
+/* ============================================================
+   ENCERRAR LOCAÇÃO
+   1) Calcula receita real (aluguéis pagos) dentro do período
+   2) Calcula caução efetivamente pago dentro do período
+   3) Extorna automaticamente o valor do caução calculado
+   4) ABATE o valor do extorno no lucro (adiciona nas despesas)
+   ============================================================ */
 function encerrarLocacao(i) {
     if (!confirmarSenhaADM()) return;
     const l = db.locacoes[i];
     if (!l) { alert('Locação não encontrada.'); return; }
     const tipoLabel = (l.tipoPagamento || 'mensal').toUpperCase();
     if (!confirm(`Encerrar a locação de ${l.locatario} - ${l.placa}?\n\nTipo: ${tipoLabel}`)) return;
-    
+
     const hojeISO = new Date().toISOString().split('T')[0];
 
-    // ===== NOVA FUNCIONALIDADE: EXTORNO DE CAUÇÃO =====
+    // 1) Data fim efetiva
+    const dataInicio = l.dataInicio || '';
+    const dataFimContrato = l.dataFim || '';
+    const dataFimEfetiva = (dataFimContrato && hojeISO > dataFimContrato) ? dataFimContrato : hojeISO;
+
+    // 2) Receita: pagamentos de aluguel dentro do período
+    const pagamentosNoPeriodo = (db.alugueis || []).filter(a => {
+        if (!a) return false;
+        if (a.locatario !== l.locatario) return false;
+        if (a.placa !== l.placa) return false;
+        if (a.status !== 'pago') return false;
+        const dtPgto = a.dataPagamento || a.data || '';
+        if (!dtPgto) return false;
+        if (dataInicio && dtPgto < dataInicio) return false;
+        if (dataFimEfetiva && dtPgto > dataFimEfetiva) return false;
+        return true;
+    });
+
+    const receitaTotalPeriodo = pagamentosNoPeriodo.reduce((s, a) => {
+        return s + (Number(a.valorNumerico) || parseMoeda(a.valor) || 0);
+    }, 0);
+
+    // 3) Caução efetivamente pago dentro do período
+    const calcCaucao = calcularCaucaoPagoNoPeriodo(l, dataInicio, dataFimEfetiva);
+    const caucaoPagoNoPeriodo = calcCaucao.total;
+
+    // 4) Extorno automático do caução calculado
     let caucaoExtornada = false;
-    const valorCaucao = parseMoeda(l.caucao);
-    if (valorCaucao > 0) {
-        caucaoExtornada = confirm(`Deseja extornar a caução de ${l.caucao} para o locatário ${l.locatario}?`);
+    if (caucaoPagoNoPeriodo > 0) {
+        const msgCaucao = `💰 CAUÇÃO PAGA NO PERÍODO\n\n` +
+            `Locatário: ${l.locatario}\n` +
+            `Período: ${formatarDataBR(dataInicio)} até ${formatarDataBR(dataFimEfetiva)}\n\n` +
+            `Valor total do caução (contrato): ${l.caucao || 'R$ 0,00'}\n` +
+            `Forma de pagamento: ${(l.pagCaucao || 'avista').toUpperCase()}\n` +
+            `Parcelas do caução pagas no período: ${calcCaucao.quantidadeParcelas}\n` +
+            `──────────────────────────\n` +
+            `VALOR DO CAUÇÃO A EXTORNAR: ${formatarMoedaBR(caucaoPagoNoPeriodo)}\n\n` +
+            `Deseja extornar esse valor para ${l.locatario}?`;
+        caucaoExtornada = confirm(msgCaucao);
+
         if (caucaoExtornada) {
             if (!Array.isArray(db.fluxoCaixa)) db.fluxoCaixa = [];
             db.fluxoCaixa.push({
                 data: hojeISO,
                 descricao: `Extorno de Caução - ${l.locatario} - ${l.placa}`,
                 categoria: 'Extorno Caução',
-                valor: l.caucao,
-                valorNumerico: valorCaucao,
+                valor: formatarMoedaBR(caucaoPagoNoPeriodo),
+                valorNumerico: caucaoPagoNoPeriodo,
                 tipo: 'saida'
             });
-            registrarAuditoria('Extorno', `Caução extornada para ${l.locatario} - ${l.placa} | Valor: ${l.caucao}`);
-            atualizarTabelaFluxoCaixa(); // Atualiza imediatamente a tabela do Fluxo de Caixa
+            registrarAuditoria('Extorno', `Caução extornada: ${l.locatario} - ${l.placa} | Valor pago no período: ${formatarMoedaBR(caucaoPagoNoPeriodo)} | Parcelas: ${calcCaucao.quantidadeParcelas}`);
+            atualizarTabelaFluxoCaixa();
         }
     }
-    // ==================================================
 
-    const calculo = calcularReceitaEsperada(l, hojeISO);
-    const receitaCalculada = calculo.total;
-    const pagos = (db.alugueis || []).filter(a => a.locatario === l.locatario && a.placa === l.placa && a.status === 'pago');
-    const receitaPaga = pagos.reduce((s, a) => s + (Number(a.valorNumerico) || parseMoeda(a.valor) || 0), 0);
-    const receita = Math.max(receitaCalculada, receitaPaga);
+    // 5) Despesas do veículo
     const despMec = (db.mecanico || []).filter(m => m.placa === l.placa).reduce((s, m) => s + parseMoeda(m.valor), 0);
     const despMan = (db.manutencao || []).filter(m => m.placa === l.placa).reduce((s, m) => s + parseMoeda(m.custo || 0), 0);
     const despComp = (db.compras || []).filter(c => c.placa === l.placa).reduce((s, c) => s + parseMoeda(c.valorTotal || c.valorUnitario), 0);
-    const despesas = despMec + despMan + despComp;
-    const lucro = receita - despesas;
-    
+    const despesasVeiculo = despMec + despMan + despComp;
+
+    // ✅ CORREÇÃO: valor do extorno ABATIDO nas despesas (reduz o lucro)
+    const valorExtorno = caucaoExtornada ? caucaoPagoNoPeriodo : 0;
+    const despesasTotais = despesasVeiculo + valorExtorno;
+    const lucro = receitaTotalPeriodo - despesasTotais;
+
+    // 6) Objeto da locação encerrada
     const encerrada = Object.assign({}, l, {
         dataEncerramento: hojeISO,
+        dataFimEfetiva: dataFimEfetiva,
         caucaoExtornada: caucaoExtornada ? 'SIM' : 'NÃO',
-        periodosCalculados: calculo.periodos,
-        valorPeriodo: formatarMoedaBR(calculo.valorPeriodo),
-        receitaCalculada: formatarMoedaBR(receitaCalculada),
-        receitaPagaJaRegistrada: formatarMoedaBR(receitaPaga),
-        tipoPagamento: calculo.tipoPagamento,
-        receitaNumerica: receita, despesasNumerica: despesas, lucroNumerico: lucro,
-        valorGerado: formatarMoedaBR(receita),
-        despesas: formatarMoedaBR(despesas),
+        caucaoPagoPeriodoNumerico: caucaoPagoNoPeriodo,
+        caucaoPagoPeriodoFormatado: formatarMoedaBR(caucaoPagoNoPeriodo),
+        qtdParcelasCaucaoPeriodo: calcCaucao.quantidadeParcelas,
+        detalheCaucaoPeriodo: calcCaucao.detalhes,
+        qtdPagamentosPeriodo: pagamentosNoPeriodo.length,
+        detalhePagamentosPeriodo: pagamentosNoPeriodo.map(p => ({
+            data: p.dataPagamento || p.data,
+            valor: p.valor,
+            parcela: p.parcela || '',
+            origem: p.origem || 'Aluguel'
+        })),
+        tipoPagamento: (l.tipoPagamento || 'mensal'),
+        // ✅ Novos campos: despesas do veículo separadas + valor do extorno + total
+        despesasVeiculoNumerica: despesasVeiculo,
+        despesasVeiculoFormatado: formatarMoedaBR(despesasVeiculo),
+        extornoNumerico: valorExtorno,
+        extornoFormatado: formatarMoedaBR(valorExtorno),
+        receitaNumerica: receitaTotalPeriodo,
+        despesasNumerica: despesasTotais,
+        lucroNumerico: lucro,
+        valorGerado: formatarMoedaBR(receitaTotalPeriodo),
+        despesas: formatarMoedaBR(despesasTotais),
         lucro: formatarMoedaBR(lucro)
     });
+
     if (!Array.isArray(db.locacoesEncerradas)) db.locacoesEncerradas = [];
     db.locacoesEncerradas.push(encerrada);
     db.locacoes.splice(i, 1);
     if (locacaoEditandoIndex === i) { locacaoEditandoIndex = null; atualizarEstadoEdicaoLocacao(); limparCamposLocacao(); }
     else if (locacaoEditandoIndex !== null && locacaoEditandoIndex > i) locacaoEditandoIndex--;
-    
+
     atualizarTabelaLocacoes();
     atualizarTabelaLocEncerrada();
-    registrarAuditoria('Encerramento', `Locação encerrada: ${l.locatario} - ${l.placa}`);
+    registrarAuditoria('Encerramento', `Locação encerrada: ${l.locatario} - ${l.placa} | Recebido: ${formatarMoedaBR(receitaTotalPeriodo)} | Extorno: ${formatarMoedaBR(valorExtorno)} | Lucro: ${formatarMoedaBR(lucro)}`);
     salvarDB();
-    
-    let msgAlerta = `✅ Locação encerrada!\n\nReceita: ${formatarMoedaBR(receita)}`;
+
+    // 7) Mensagem final
+    let msgAlerta = `✅ LOCAÇÃO ENCERRADA!\n\n`;
+    msgAlerta += `Locatário: ${l.locatario}\n`;
+    msgAlerta += `Veículo: ${l.fabricante} - ${l.placa}\n`;
+    msgAlerta += `Período considerado: ${formatarDataBR(dataInicio)} até ${formatarDataBR(dataFimEfetiva)}\n`;
+    msgAlerta += `──────────────────────────\n`;
+    msgAlerta += `💰 RECEITA (alugueis pagos no período): ${formatarMoedaBR(receitaTotalPeriodo)} (${pagamentosNoPeriodo.length} pagamento(s))\n`;
+    msgAlerta += `🏦 CAUÇÃO PAGO NO PERÍODO: ${formatarMoedaBR(caucaoPagoNoPeriodo)} (${calcCaucao.quantidadeParcelas} parcela(s))\n`;
+    msgAlerta += `📉 Despesas do veículo: ${formatarMoedaBR(despesasVeiculo)}\n`;
+    if (valorExtorno > 0) {
+        msgAlerta += `↩️ Extorno do caução (ABATIDO no lucro): -${formatarMoedaBR(valorExtorno)}\n`;
+    }
+    msgAlerta += `📈 Lucro final: ${formatarMoedaBR(lucro)}\n`;
     if (caucaoExtornada) {
-        msgAlerta += `\nCaução Extornada: ${l.caucao}`;
+        msgAlerta += `\n↩️ CAUÇÃO EXTORNADA: ${formatarMoedaBR(caucaoPagoNoPeriodo)}`;
+    } else if (caucaoPagoNoPeriodo > 0) {
+        msgAlerta += `\nℹ️ Caução NÃO extornado (opção do usuário).`;
     }
     alert(msgAlerta);
 }
@@ -1744,6 +1897,12 @@ function atualizarTabelaLocEncerrada() {
     }
     lista.forEach((l, i) => {
         const tipoLabel = (l.tipoPagamento || 'mensal').toUpperCase();
+        const caucaoInfo = l.caucaoPagoPeriodoFormatado && l.caucaoPagoPeriodoFormatado !== 'R$ 0,00'
+            ? `<br><small style="color:#e63946;font-weight:bold;">Caução pago: ${l.caucaoPagoPeriodoFormatado} (${l.caucaoExtornada === 'SIM' ? 'EXTORNADO' : 'NÃO EXTORNADO'})</small>`
+            : '';
+        const extornoInfo = (Number(l.extornoNumerico) || 0) > 0
+            ? `<br><small style="color:#dc3545;font-weight:bold;">↩️ Extorno abatido: -${formatarMoedaBR(l.extornoNumerico)}</small>`
+            : '';
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${l.locatario || ''}</td>
@@ -1752,8 +1911,8 @@ function atualizarTabelaLocEncerrada() {
             <td>${formatarDataBR(l.dataInicio)}</td>
             <td>${formatarDataBR(l.dataFim)}</td>
             <td>${formatarDataBR(l.dataEncerramento)}</td>
-            <td>${l.valorGerado || 'R$ 0,00'}<br><small style="color:#666;">${tipoLabel}</small></td>
-            <td>${l.despesas || 'R$ 0,00'}</td>
+            <td>${l.valorGerado || 'R$ 0,00'}<br><small style="color:#666;">${tipoLabel}</small>${caucaoInfo}</td>
+            <td>${l.despesas || 'R$ 0,00'}${extornoInfo}</td>
             <td>${l.lucro || 'R$ 0,00'}</td>
             <td>
                 <button class="btn-warning" onclick="reabrirLocacao(${i})" title="Reabrir">↩️</button>
@@ -1770,7 +1929,7 @@ function reabrirLocacao(i) {
     if (!l) { alert('Locação não encontrada.'); return; }
     if (!confirm(`Reabrir a locação de ${l.locatario} - ${l.placa}?`)) return;
     const copia = Object.assign({}, l);
-    ['dataEncerramento','receitaNumerica','despesasNumerica','lucroNumerico','valorGerado','despesas','lucro','periodosCalculados','valorPeriodo','receitaCalculada','receitaPagaJaRegistrada','caucaoExtornada'].forEach(k => delete copia[k]);
+    ['dataEncerramento','dataFimEfetiva','caucaoExtornada','caucaoPagoPeriodoNumerico','caucaoPagoPeriodoFormatado','qtdParcelasCaucaoPeriodo','detalheCaucaoPeriodo','qtdPagamentosPeriodo','detalhePagamentosPeriodo','receitaNumerica','despesasNumerica','lucroNumerico','valorGerado','despesas','lucro','extornoNumerico','extornoFormatado','despesasVeiculoNumerica','despesasVeiculoFormatado'].forEach(k => delete copia[k]);
     if (!Array.isArray(db.locacoes)) db.locacoes = [];
     db.locacoes.push(copia);
     db.locacoesEncerradas.splice(i, 1);
@@ -1861,7 +2020,7 @@ async function salvarMecanico() {
         responsavel: document.getElementById('mecResponsavel').value,
         carro, placa, valor,
         obs: document.getElementById('mecObs').value,
-        pago: false // Novo campo para controle de pagamento
+        pago: false
     });
     db.historico.push({
         data, descricao: servico, placa, valor,
@@ -1894,7 +2053,7 @@ function atualizarTabelaMecanico() {
     });
 }
 
-// ===== NOVAS FUNÇÕES: RELATÓRIO E PAGAMENTO DE MECÂNICA =====
+// ===== RELATÓRIO E PAGAMENTO DE MECÂNICA =====
 function gerarRelatorioMecanico() {
     const dtInicio = document.getElementById('relMecDataInicio').value;
     const dtFim = document.getElementById('relMecDataFim').value;
@@ -1906,7 +2065,7 @@ function gerarRelatorioMecanico() {
     }
 
     relatorioMecanicoTemp = (db.mecanico || []).filter(m => {
-        if (m.pago) return false; // Já pago
+        if (m.pago) return false;
         if (dtInicio && m.data < dtInicio) return false;
         if (dtFim && m.data > dtFim) return false;
         if (oficinaFiltro && !(m.oficina || '').toUpperCase().includes(oficinaFiltro)) return false;
@@ -1952,7 +2111,6 @@ function pagarRelatorioMecanico() {
     const hojeISO = new Date().toISOString().split('T')[0];
     const oficinas = [...new Set(relatorioMecanicoTemp.map(m => m.oficina))].join(', ');
 
-    // 1. Lançar no Fluxo de Caixa como Saída
     if (!Array.isArray(db.fluxoCaixa)) db.fluxoCaixa = [];
     db.fluxoCaixa.push({
         data: hojeISO,
@@ -1963,7 +2121,6 @@ function pagarRelatorioMecanico() {
         tipo: 'saida'
     });
 
-    // 2. Marcar como pago no db.mecanico
     relatorioMecanicoTemp.forEach(itemTemp => {
         const realItem = db.mecanico.find(m => m.data === itemTemp.data && m.oficina === itemTemp.oficina && m.servico === itemTemp.servico && m.valor === itemTemp.valor && !m.pago);
         if (realItem) realItem.pago = true;
@@ -1972,10 +2129,8 @@ function pagarRelatorioMecanico() {
     registrarAuditoria('Pagamento', `Pagamento de oficina(s) realizado: ${oficinas} | Total: ${formatarMoedaBR(total)}`);
     salvarDB();
 
-    // 3. Gerar PDF (Print Area)
     gerarPDFReciboMecanico(relatorioMecanicoTemp, total, oficinas);
 
-    // 4. Limpar UI e atualizar tabelas
     document.getElementById('relatorioMecanicoResultado').style.display = 'none';
     relatorioMecanicoTemp = [];
     atualizarTabelaMecanico();
@@ -2040,7 +2195,6 @@ function gerarPDFReciboMecanico(lista, total, oficinas) {
     window.print();
 }
 
-// ===== FUNÇÃO CORRIGIDA: ATUALIZA O HISTÓRICO GERAL =====
 function atualizarTabelaHistorico() {
     const tbody = document.querySelector('#tabelaHistorico tbody');
     if (!tbody) return;
@@ -2070,7 +2224,6 @@ function atualizarTabelaHistorico() {
     });
 }
 
-// ===== NOVA FUNÇÃO: EXCLUIR ITEM DO HISTÓRICO GERAL =====
 function excluirHistorico(index) {
     if (!confirmarSenhaADM()) return;
     if (!confirm('Excluir este registro do histórico geral?')) return;
@@ -2080,7 +2233,6 @@ function excluirHistorico(index) {
     registrarAuditoria('Exclusão', 'Registro do histórico geral excluído');
 }
 
-// ===== FUNÇÃO CORRIGIDA: ATUALIZA O HISTÓRICO DE ALUGUÉIS =====
 function atualizarTabelaHistoricoAlugueis() {
     const tbody = document.querySelector('#tabelaHistoricoAlugueis tbody');
     if (!tbody) return;
@@ -2119,7 +2271,6 @@ function atualizarTabelaHistoricoAlugueis() {
     });
 }
 
-// ===== NOVA FUNÇÃO: EXCLUIR ITEM DO HISTÓRICO DE ALUGUÉIS =====
 function excluirHistoricoAluguel(index) {
     if (!confirmarSenhaADM()) return;
     if (!confirm('Excluir este registro do histórico de aluguéis?')) return;
@@ -2434,7 +2585,6 @@ function atualizarGaleriaGaragem() {
     });
 }
 
-// ===== ALTERAÇÃO: SOLICITA SENHA ADM PARA EXCLUIR FOTO DA GARAGEM =====
 function excluirFotoGaragem(i) {
     if (!confirmarSenhaADM()) return;
     if (!confirm('Excluir esta imagem da Garagem?')) return;
@@ -2481,7 +2631,6 @@ function atualizarGaleriaSOS() {
     });
 }
 
-// ===== ALTERAÇÃO: SOLICITA SENHA ADM PARA EXCLUIR FOTO DO SOS =====
 function excluirFotoSOS(i) {
     if (!confirmarSenhaADM()) return;
     if (!confirm('Excluir esta imagem do SOS?')) return;
@@ -2537,7 +2686,6 @@ function marcarPagamentoPago(i) {
     a.status = 'pago';
     a.dataPagamento = hojeISO;
     
-    // 1. Envia para o Fluxo de Caixa
     if (!Array.isArray(db.fluxoCaixa)) db.fluxoCaixa = [];
     db.fluxoCaixa.push({
         data: a.dataPagamento,
@@ -2548,7 +2696,6 @@ function marcarPagamentoPago(i) {
         tipo: 'entrada'
     });
 
-    // 2. Envia para o Histórico de Aluguéis
     if (!Array.isArray(db.historicoAlugueis)) db.historicoAlugueis = [];
     db.historicoAlugueis.push({
         data: a.dataPagamento, dataPagamento: a.dataPagamento,
@@ -2561,7 +2708,6 @@ function marcarPagamentoPago(i) {
         status: 'pago'
     });
 
-    // 3. Gera a próxima parcela
     const locAtiva = (db.locacoes || []).find(l => l.locatario === a.locatario && l.placa === a.placa);
     
     if (locAtiva) {
@@ -2583,20 +2729,23 @@ function marcarPagamentoPago(i) {
             const pagCaucao = locAtiva.pagCaucao || 'avista';
             const caucaoTotal = parseMoeda(locAtiva.caucao);
             
+            const numDivisoes = getNumDivisoesCaucao(tipoPag);
+            
             let totalCaucaoParcelas = 0;
-            if (pagCaucao === 'parcelado') totalCaucaoParcelas = 10;
-            else if (pagCaucao === 'entrada') totalCaucaoParcelas = 10;
+            if (pagCaucao === 'parcelado') totalCaucaoParcelas = numDivisoes;
+            else if (pagCaucao === 'entrada') totalCaucaoParcelas = numDivisoes;
             else if (pagCaucao === 'avista') totalCaucaoParcelas = 1;
 
             if (parcelasExistentes < totalCaucaoParcelas && pagCaucao !== 'avista') {
                 if (pagCaucao === 'parcelado') {
-                    valorProx = valorBase + (caucaoTotal / 10);
-                    descricaoProx = `Aluguel + Caução ${parcelasExistentes + 1}/10`;
+                    valorProx = valorBase + (caucaoTotal / numDivisoes);
+                    descricaoProx = `Aluguel + Caução ${parcelasExistentes + 1}/${numDivisoes}`;
                 } else if (pagCaucao === 'entrada') {
                     const entrada = parseMoeda(locAtiva.caucaoPago);
                     const saldo = Math.max(0, caucaoTotal - entrada);
-                    valorProx = valorBase + (saldo / 9);
-                    descricaoProx = `Aluguel + Saldo Caução ${parcelasExistentes}/9`;
+                    const numSaldo = numDivisoes - 1;
+                    valorProx = valorBase + (numSaldo > 0 ? (saldo / numSaldo) : 0);
+                    descricaoProx = `Aluguel + Saldo Caução ${parcelasExistentes}/${numSaldo}`;
                 }
             }
 
@@ -2741,7 +2890,7 @@ function switchContratoTab() {}
 function imprimirDocumento() { window.print(); }
 function abrirModalSelfie_() {}
 
-// ===== NOVAS FUNÇÕES: DOCUMENTOS POR PLACA =====
+// ===== DOCUMENTOS POR PLACA =====
 
 function atualizarComboPlacasDocumentos() {
     const sel = document.getElementById('docPlacaSelect');
@@ -2767,29 +2916,30 @@ function salvarDocumentosPlaca() {
     
     const files = Array.from(input.files);
     let processados = 0;
+    let aceitos = 0;
     
     files.forEach(file => {
-        // Verifica tamanho do arquivo (limite de 700KB para evitar estourar o Firestore de 1MB)
         if (file.size > 700 * 1024) {
             alert(`O arquivo "${file.name}" é muito grande (${(file.size / 1024).toFixed(0)}KB). O limite é 700KB para garantir o funcionamento do banco de dados.`);
             return;
         }
+        aceitos++;
 
         const reader = new FileReader();
         reader.onload = function(e) {
             db.documentosPlacas[placa].push({
                 nome: file.name,
                 tipo: file.type,
-                data: e.target.result, // Base64
+                data: e.target.result,
                 dataUpload: new Date().toLocaleString('pt-BR')
             });
             processados++;
-            if (processados === files.length) {
+            if (processados === aceitos) {
                 salvarDB();
                 atualizarGaleriaComprovantes();
-                input.value = ''; // Limpar input
-                alert(`✅ ${files.length} documento(s) anexado(s) à placa ${placa}!`);
-                switchSubTab('salvos'); // Mudar para aba de salvos
+                input.value = '';
+                alert(`✅ ${aceitos} documento(s) anexado(s) à placa ${placa}!`);
+                switchSubTab('salvos');
             }
         };
         reader.readAsDataURL(file);
@@ -2806,12 +2956,11 @@ function atualizarGaleriaComprovantes() {
         return;
     }
 
-    // Ordenar as placas alfabeticamente
     const placasOrdenadas = Object.keys(db.documentosPlacas).sort();
 
     placasOrdenadas.forEach(placa => {
         const docs = db.documentosPlacas[placa] || [];
-        if (docs.length === 0) return; // Pula se não tiver documentos
+        if (docs.length === 0) return;
 
         const veiculo = (db.veiculos || []).find(v => v.placa === placa);
         const nomeVeiculo = veiculo ? `${veiculo.fabricante} - ${veiculo.cor}` : 'Veículo Desconhecido';
@@ -2819,7 +2968,6 @@ function atualizarGaleriaComprovantes() {
         const folderDiv = document.createElement('div');
         folderDiv.className = 'documento-folder';
         
-        // Cabeçalho da Pasta (Placa)
         const headerDiv = document.createElement('div');
         headerDiv.className = 'documento-folder-header';
         headerDiv.innerHTML = `
@@ -2983,8 +3131,8 @@ async function inicializarSistemaCompleto() {
     atualizarEstadoEdicaoLocacao();
     atualizarGaleriaGaragem();
     atualizarGaleriaSOS();
-    atualizarComboPlacasDocumentos(); // Inicializa o combo de documentos
-    atualizarGaleriaComprovantes();   // Inicializa a galeria de documentos
+    atualizarComboPlacasDocumentos();
+    atualizarGaleriaComprovantes();
     configurarInputMultiplasImagens();
     configurarBotaoInstalar();
     console.log('🚀 Sistema inicializado.');

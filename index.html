@@ -827,7 +827,16 @@ function calcularCaucaoPagoNoPeriodo(locacao, dataInicio, dataFimEfetiva) {
     };
 }
 
+/* ============================================================
+   CONFIRMAÇÃO DE SENHA ADM
+   - Se o usuário logado for ADM: NÃO pede senha (retorna true)
+   - Se NÃO for ADM: pede a senha do ADM
+   ============================================================ */
 function confirmarSenhaADM() {
+    // Se o usuário logado já é ADM, não precisa pedir senha
+    if (usuarioLogado && usuarioLogado.tipo === 'ADM') {
+        return true;
+    }
     const senha = prompt('🔐 Digite a senha do ADM para continuar:');
     if (senha === null) return false;
     if (String(senha).trim() === '') { alert('❌ Senha vazia! Operação cancelada.'); return false; }
@@ -1122,6 +1131,7 @@ function editarVeiculo(i) {
 }
 
 function excluirVeiculo(i) {
+    if (!confirmarSenhaADM()) return;
     if (!confirm('Excluir permanentemente este veículo?')) return;
     db.veiculos.splice(i, 1);
     if (veiculoEditandoIndex === i) { veiculoEditandoIndex = null; atualizarEstadoEdicaoVeiculo(); limparCamposVeiculo(); }
@@ -1266,6 +1276,7 @@ function editarCliente(i) {
 }
 
 function excluirCliente(i) {
+    if (!confirmarSenhaADM()) return;
     if (!confirm('Excluir este cliente?')) return;
     db.clientes.splice(i, 1);
     if (clienteEditandoIndex === i) { clienteEditandoIndex = null; atualizarEstadoEdicaoCliente(); limparCamposCliente(); limparSelfieCliente(); }
@@ -1327,6 +1338,7 @@ function editarUsuario(i) {
 }
 
 function excluirUsuario(i) {
+    if (!confirmarSenhaADM()) return;
     if (!confirm('Excluir este usuário?')) return;
     if ((db.usuarios[i].nome || '').toUpperCase() === 'SERGIO') { alert('Não é possível excluir o SERGIO.'); return; }
     db.usuarios.splice(i, 1);
@@ -1744,6 +1756,7 @@ function editarLocacao(i) {
 }
 
 function excluirLocacao(i) {
+    if (!confirmarSenhaADM()) return;
     if (!confirm('Excluir esta locação?')) return;
     db.locacoes.splice(i, 1);
     if (locacaoEditandoIndex === i) { locacaoEditandoIndex = null; atualizarEstadoEdicaoLocacao(); limparCamposLocacao(); }
@@ -1946,6 +1959,7 @@ function reabrirLocacao(i) {
 }
 
 function excluirLocacaoEncerrada(i) {
+    if (!confirmarSenhaADM()) return;
     if (!confirm('Excluir permanentemente esta locação encerrada?')) return;
     db.locacoesEncerradas.splice(i, 1);
     atualizarTabelaLocEncerrada();
@@ -1990,9 +2004,18 @@ function atualizarTabelaManutencao() {
     (db.manutencao || []).forEach((m, i) => {
         const tr = document.createElement('tr');
         tr.innerHTML = `<td>${m.veiculo||''}</td><td>${m.placa||''}</td><td>${m.tipo||''}</td><td>${m.km||''}</td>
-            <td><button class="btn-danger" onclick="db.manutencao.splice(${i},1);atualizarTabelaManutencao();salvarDB();">🗑️</button></td>`;
+            <td><button class="btn-danger" onclick="excluirManutencao(${i})">🗑️</button></td>`;
         tbody.appendChild(tr);
     });
+}
+
+function excluirManutencao(i) {
+    if (!confirmarSenhaADM()) return;
+    if (!confirm('Excluir esta manutenção?')) return;
+    db.manutencao.splice(i, 1);
+    atualizarTabelaManutencao();
+    salvarDB();
+    registrarAuditoria('Exclusão', `Manutenção excluída (índice ${i})`);
 }
 
 function atualizarPlacasMecanico() {
@@ -2053,9 +2076,18 @@ function atualizarTabelaMecanico() {
         const tr = document.createElement('tr');
         tr.innerHTML = `<td>${m.data||''}</td><td>${m.oficina||''}</td><td>${m.servico||''}</td><td>${m.carro||''}</td><td>${m.valor||''}</td>
             <td>${statusBadge}</td>
-            <td><button class="btn-danger" onclick="db.mecanico.splice(${i},1);atualizarTabelaMecanico();salvarDB();">🗑️</button></td>`;
+            <td><button class="btn-danger" onclick="excluirMecanico(${i})">🗑️</button></td>`;
         tbody.appendChild(tr);
     });
+}
+
+function excluirMecanico(i) {
+    if (!confirmarSenhaADM()) return;
+    if (!confirm('Excluir este serviço de mecânica?')) return;
+    db.mecanico.splice(i, 1);
+    atualizarTabelaMecanico();
+    salvarDB();
+    registrarAuditoria('Exclusão', `Serviço de mecânica excluído (índice ${i})`);
 }
 
 function gerarRelatorioMecanico() {
@@ -2780,6 +2812,7 @@ function marcarPagamentoPago(i) {
 }
 
 function excluirPagamento(i) {
+    if (!confirmarSenhaADM()) return;
     if (!confirm('Excluir este pagamento?')) return;
     db.alugueis.splice(i, 1);
     atualizarTabelaAlugueis();
@@ -2823,6 +2856,7 @@ function atualizarTabelaFluxoCaixa() {
 }
 
 function excluirFluxoCaixa(i) {
+    if (!confirmarSenhaADM()) return;
     if (!confirm('Excluir este lançamento do fluxo de caixa?')) return;
     db.fluxoCaixa.splice(i, 1);
     atualizarTabelaFluxoCaixa();
@@ -3047,7 +3081,7 @@ function salvarConfiguracao() { alert('Função em implementação.'); }
 function restaurarPadroes() {}
 function aplicarFiltroAuditoria() {}
 function limparFiltroAuditoria() {}
-function limparAuditoriaManual() { if (confirm('Limpar auditoria?')) { db.auditoria = []; atualizarTabelaAuditoria(); salvarDB(); } }
+function limparAuditoriaManual() { if (confirmarSenhaADM()) { if (confirm('Limpar auditoria?')) { db.auditoria = []; atualizarTabelaAuditoria(); salvarDB(); } } }
 function limparVistoriaSelecionada() {}
 function capturarVistoria() {}
 function confirmarVistoria() {}

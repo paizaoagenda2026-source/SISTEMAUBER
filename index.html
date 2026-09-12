@@ -182,7 +182,6 @@
         .documento-actions { display: flex; gap: 8px; }
         .documento-actions button { padding: 8px 15px; font-size: 12px; margin: 0; border-radius: 4px; }
 
-        /* ==== COMPROVANTES DE PAGAMENTO ==== */
         .comp-pag-card { border: 1px solid #ddd; border-radius: 8px; padding: 12px; background: #fff; width: 340px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); display: flex; flex-direction: column; gap: 8px; }
         .comp-pag-card .comp-pag-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
         .comp-pag-card .comp-pag-header strong { font-size: 12px; word-break: break-all; color: #333; flex: 1; }
@@ -192,6 +191,14 @@
         .comp-pag-card .comp-pag-field label { font-size: 11px; font-weight: 600; color: #666; }
         .comp-pag-card .comp-pag-field input { padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; text-transform: none; }
         .comp-pag-card .comp-pag-field select { padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; text-transform: none; width: 100%; background: #fff; }
+
+        .doc-veiculo-info { background: #e9f2fa; border-left: 4px solid var(--info); padding: 12px 15px; border-radius: 6px; margin: 15px 0; display: none; }
+        .doc-veiculo-info.ativo { display: block; }
+        .doc-veiculo-info strong { color: var(--primary); }
+        .doc-veiculo-info small { color: #555; display: block; margin-top: 4px; }
+        .doc-veiculo-status { display: flex; align-items: center; gap: 12px; margin-top: 8px; flex-wrap: wrap; }
+        .doc-veiculo-status .badge { background: var(--success); color: #fff; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; }
+        .doc-veiculo-status .badge.warn { background: var(--warning); color: #333; }
     </style>
 </head>
 <body>
@@ -225,6 +232,7 @@
         <button class="tab" data-tab="banco">🏦 Banco</button>
         <button class="tab" data-tab="fluxocaixa">💵 Fluxo de Caixa</button>
         <button class="tab" data-tab="doc">📁 Comprovante</button>
+        <button class="tab" data-tab="docVeiculo">📄 DOC</button>
         <button class="tab" data-tab="compras">🛒 Compras</button>
         <button class="tab" data-tab="configuracao">⚙️ Configuração</button>
         <button class="tab" data-tab="auditoria">🔍 Auditoria</button>
@@ -242,7 +250,7 @@
         <div class="editando-aviso" id="avisoEditandoVeiculo">✏️ <strong>Modo Edição</strong> — Você está editando um veículo existente. Salve para confirmar ou limpe o formulário.</div>
         <input type="text" class="filter-input" placeholder="🔍 Filtrar veículos..." id="filterVeiculos">
         <div class="form-grid" id="formVeiculos">
-            <div class="form-group"><label>Fabricante/Modelo</label><input type="text" id="veicFabricante" class="campo-enter"></div>
+            <div class="form-group"><label>MARCA / MODELO / VERSÃO</label><input type="text" id="veicFabricante" class="campo-enter"></div>
             <div class="form-group"><label>Cor Predominante</label><input type="text" id="veicCor" class="campo-enter"></div>
             <div class="form-group"><label>Placa</label><input type="text" id="veicPlaca" class="campo-enter"></div>
             <div class="form-group"><label>Motor</label><input type="text" id="veicMotor" class="campo-enter"></div>
@@ -258,9 +266,19 @@
             <div class="form-group"><label>Nome</label><input type="text" id="veicProprietario" class="campo-enter"></div>
             <div class="form-group"><label>CPF Propr</label><input type="text" id="veicCpfPropr" class="campo-enter"></div>
         </div>
+        <div class="doc-veiculo-info" id="docVeiculoInfo">
+            <div><strong>📄 Documento importado:</strong> <span id="docVeiculoNome"></span></div>
+            <div class="doc-veiculo-status">
+                <span>🕒 <span id="docVeiculoData"></span></span>
+                <span class="badge" id="docVeiculoQtd">0 campos</span>
+                <span class="badge warn" id="docVeiculoAviso" style="display:none;">⚠️ Placa não identificada</span>
+                <button class="btn-danger" style="padding:5px 12px;font-size:12px;margin:0;" onclick="cancelarDocVeiculo()">✖ Cancelar importação</button>
+            </div>
+        </div>
         <button class="btn-primary" id="btnSalvarVeiculo" data-permissao="veiculos_salvar" onclick="salvarVeiculo()">💾 Salvar</button>
         <button class="btn-info" data-permissao="veiculos_rastreador" onclick="alert('Rastreador não implementado.')">📍 Rastreador</button>
         <button class="btn-warning" data-permissao="veiculos_multas" onclick="alert('Multas não implementado.')">🚨 Multas</button>
+        <button class="btn-secondary" id="btnDocVeiculo" onclick="abrirDocVeiculo()">📄 DOC VEÍCULO</button>
         <div class="table-container">
             <table id="tabelaVeiculos">
                 <thead><tr><th>Fab/Modelo</th><th>Placa</th><th>Cor</th><th>Ano</th><th>Aluguel</th><th>Ações</th></tr></thead>
@@ -309,7 +327,7 @@
             <div class="form-group"><label>Veículo</label><select id="locVeiculo" class="campo-enter" onchange="selecionarVeiculoCombo()"><option value="">Selecione um veículo</option></select></div>
             <div class="form-group"><label>Data Início</label><input type="date" id="locDataInicio" class="campo-enter" onchange="calcularDataFim()"></div>
             <div class="form-group"><label>Data Fim</label><input type="date" id="locDataFim" readonly></div>
-            <div class="form-group"><label>Fabricante/Modelo</label><input type="text" id="locFabModelo" readonly></div>
+            <div class="form-group"><label>MARCA / MODELO / VERSÃO</label><input type="text" id="locFabModelo" readonly></div>
             <div class="form-group"><label>Cor</label><input type="text" id="locCor" readonly></div>
             <div class="form-group"><label>Placa</label><select id="locPlaca" class="campo-enter" onchange="selecionarPlacaCombo()"><option value="">Selecione uma placa</option></select></div>
             <div class="form-group"><label>Ano Fabr</label><input type="text" id="locAnoFabr" readonly></div>
@@ -550,6 +568,13 @@
 
     <div class="tab-content" id="doc"><h2>📁 Comprovante</h2><div class="form-grid"><div class="form-group"><label>Nome</label><input type="text" id="docNome"></div><div class="form-group"><label>R$ LOCAÇÃO</label><input type="text" id="docTipo" class="money"></div><div class="form-group"><label>VENCIMENTO</label><input type="date" id="docData"></div><div class="form-group"><label>Veículo/Cliente</label><select id="docReferencia"><option value="">Selecione</option></select></div><div class="form-group"><label>Obs</label><textarea id="docObs"></textarea></div></div><button class="btn-primary" onclick="salvarDoc()">💾 Salvar</button><div class="table-container"><table id="tabelaDoc"><thead><tr><th>Nome</th><th>R$</th><th>Vencimento</th><th>Veículo</th><th>Ações</th></tr></thead><tbody></tbody></table></div></div>
 
+    <div class="tab-content" id="docVeiculo">
+        <h2>📄 Documentos de Veículos (CRLV)</h2>
+        <p style="color:#666;margin-bottom:15px;">Documentos importados pelo botão <strong>📄 DOC VEÍCULO</strong> na aba Veículos. Pesquise pela placa ou pelo nome do arquivo.</p>
+        <input type="text" class="filter-input" placeholder="🔍 Pesquisar por placa ou arquivo..." id="filterDocVeiculo" style="max-width:100%;">
+        <div id="listaDocVeiculo" style="margin-top:15px;"></div>
+    </div>
+
     <div class="tab-content" id="compras"><h2>🛒 Compras</h2><div class="form-grid"><div class="form-group"><label>Data</label><input type="date" id="compData"></div><div class="form-group"><label>Produto</label><input type="text" id="compProduto"></div><div class="form-group"><label>Fornecedor</label><input type="text" id="compFornecedor"></div><div class="form-group"><label>Placa</label><input type="text" id="compPlaca"></div><div class="form-group"><label>Qtd</label><input type="number" id="compQuantidade"></div><div class="form-group"><label>Valor Unit</label><input type="text" id="compValorUnitario" class="money"></div><div class="form-group"><label>Total</label><input type="text" id="compValorTotal" class="money" readonly></div><div class="form-group"><label>Status</label><select id="compStatus"><option value="pendente">Pendente</option><option value="pago">Pago</option></select></div></div><button class="btn-primary" onclick="salvarCompra()">💾 Salvar</button><div class="table-container"><table id="tabelaCompras"><thead><tr><th>Data</th><th>Produto</th><th>Fornecedor</th><th>Placa</th><th>Valor</th><th>Status</th><th>Ações</th></tr></thead><tbody></tbody></table></div></div>
 
     <div class="tab-content" id="configuracao"><h2>⚙️ Configurações</h2><div class="config-section"><h3>🔧 Gerais</h3><div class="form-grid"><div class="form-group"><label>Empresa</label><input type="text" id="configEmpresa" value="LOBÃO"></div><div class="form-group"><label>CNPJ</label><input type="text" id="configCnpj"></div><div class="form-group"><label>Telefone</label><input type="text" id="configTelefone"></div><div class="form-group"><label>Email</label><input type="text" id="configEmail"></div><div class="form-group"><label>Endereço</label><input type="text" id="configEndereco"></div></div></div><button class="btn-primary" onclick="salvarConfiguracao()">💾 Salvar</button></div>
@@ -657,6 +682,7 @@ function criarDBPadrao() {
         historicoAlugueis: [],
         comprovantesPagamento: [],
         documentosPlacas: {},
+        docsVeiculos: [],
         contratos: { contratoLocacao:{}, termoResponsabilidade:{}, notaPromissoria:{} },
         imagens: { garagem:{fotos:[]}, sos:{fotos:[]}, comprovantes:{fotos:[]} },
         config: { empresa: 'LOBÃO', cnpj:'', telefone:'', email:'', endereco:'', ultimaLimpezaAuditoria: null }
@@ -687,7 +713,7 @@ async function carregarDB() {
     if (!db || typeof db !== 'object') db = criarDBPadrao();
     ['veiculos','clientes','locacoes','locacoesEncerradas','manutencao','mecanico',
      'alugueis','fluxoCaixa','documentos','compras','auditoria','bancos',
-     'pendentes','historico','usuarios','historicoAlugueis','comprovantesPagamento'].forEach(k => {
+     'pendentes','historico','usuarios','historicoAlugueis','comprovantesPagamento','docsVeiculos'].forEach(k => {
         if (!Array.isArray(db[k])) db[k] = [];
     });
     if (!db.contratos) db.contratos = { contratoLocacao:{}, termoResponsabilidade:{}, notaPromissoria:{} };
@@ -707,6 +733,17 @@ async function carregarDB() {
     db.mecanico.forEach(m => { if (m.pago === undefined) m.pago = false; });
 
     let precisaSalvar = false;
+
+    if (Array.isArray(db.usuarios)) {
+        db.usuarios.forEach(u => {
+            if (!u || !u.permissoes || !u.permissoes.abas) return;
+            if (u.permissoes.abas.docVeiculo === undefined) {
+                u.permissoes.abas.docVeiculo = (u.tipo === 'ADM' || u.tipo === 'MOTORISTA');
+                precisaSalvar = true;
+            }
+        });
+    }
+
     const lobao = db.usuarios.find(u => u && u.nome === 'LOBÃO');
     if (lobao) {
         lobao.nome = 'SERGIO'; lobao.senha = '080888'; lobao.tipo = 'ADM';
@@ -734,8 +771,9 @@ const todasAbas = [
     { id: 'veiculos' }, { id: 'clientes' }, { id: 'locacoes' }, { id: 'locEncerrada' },
     { id: 'manutencao' }, { id: 'mecanico' }, { id: 'usuario' }, { id: 'garagem' },
     { id: 'sos' }, { id: 'comprovantes' }, { id: 'pagamentos' }, { id: 'banco' },
-    { id: 'fluxocaixa' }, { id: 'doc' }, { id: 'compras' }, { id: 'configuracao' },
-    { id: 'auditoria' }, { id: 'pendente' }, { id: 'historico' }, { id: 'vistoria' }
+    { id: 'fluxocaixa' }, { id: 'doc' }, { id: 'docVeiculo' }, { id: 'compras' },
+    { id: 'configuracao' }, { id: 'auditoria' }, { id: 'pendente' }, { id: 'historico' },
+    { id: 'vistoria' }
 ];
 const todasPermissoes = ['veiculos_salvar','veiculos_rastreador','veiculos_multas','clientes_salvar','locacoes_salvar','locacoes_contrato','manutencao_salvar','mecanico_salvar','usuario_salvar','usuario_editar','usuario_excluir','usuario_limpar','garagem_buscar','garagem_salvar','sos_buscar','sos_salvar','sos_baixar','comprovantes_buscar','comprovantes_salvar','banco_salvar','banco_editar','banco_copiar','banco_excluir','fluxocaixa_salvar','doc_salvar','doc_limpar','doc_selecionar','compras_salvar','compras_editar','compras_limpar','compras_excluir','config_salvar','config_restaurar','auditoria_filtrar','auditoria_limpar','pendente_salvar','pendente_editar','pendente_excluir','vistoria_camera'];
 
@@ -747,7 +785,7 @@ const permissoesPadrao = {
             manutencao:true, mecanico:false, usuario:false, 
             garagem:true, sos:true, comprovantes:true, 
             pagamentos:false, banco:true, fluxocaixa:false, 
-            doc:true, compras:false, configuracao:false, 
+            doc:true, docVeiculo:true, compras:false, configuracao:false, 
             auditoria:false, pendente:false, historico:true, vistoria:true 
         }, 
         botoes: { 
@@ -757,8 +795,8 @@ const permissoesPadrao = {
         }, 
         veiculos: {} 
     },
-    OFICINA: { abas: { veiculos:true,clientes:false,locacoes:false,locEncerrada:false,manutencao:true,mecanico:true,usuario:false,garagem:false,sos:false,comprovantes:false,pagamentos:false,banco:false,fluxocaixa:false,doc:false,compras:false,configuracao:false,auditoria:false,pendente:false,historico:false,vistoria:true }, botoes: { veiculos_salvar:true, manutencao_salvar:true, mecanico_salvar:true, vistoria_camera:true }, veiculos: {} },
-    VISITANTE: { abas: { veiculos:false,clientes:false,locacoes:false,locEncerrada:false,manutencao:false,mecanico:false,usuario:false,garagem:true,sos:false,comprovantes:false,pagamentos:false,banco:false,fluxocaixa:false,doc:false,compras:false,configuracao:false,auditoria:false,pendente:false,historico:false,vistoria:false }, botoes: { garagem_buscar:true, garagem_salvar:true }, veiculos: {} }
+    OFICINA: { abas: { veiculos:true,clientes:false,locacoes:false,locEncerrada:false,manutencao:true,mecanico:true,usuario:false,garagem:false,sos:false,comprovantes:false,pagamentos:false,banco:false,fluxocaixa:false,doc:false,docVeiculo:false,compras:false,configuracao:false,auditoria:false,pendente:false,historico:false,vistoria:true }, botoes: { veiculos_salvar:true, manutencao_salvar:true, mecanico_salvar:true, vistoria_camera:true }, veiculos: {} },
+    VISITANTE: { abas: { veiculos:false,clientes:false,locacoes:false,locEncerrada:false,manutencao:false,mecanico:false,usuario:false,garagem:true,sos:false,comprovantes:false,pagamentos:false,banco:false,fluxocaixa:false,doc:false,docVeiculo:false,compras:false,configuracao:false,auditoria:false,pendente:false,historico:false,vistoria:false }, botoes: { garagem_buscar:true, garagem_salvar:true }, veiculos: {} }
 };
 
 let selfieStream = null, selfieDataUrl = null, selfieClienteTemp = null, selfieUsuarioTemp = null, selfieDestino = 'cliente';
@@ -772,8 +810,9 @@ let galeriaAtual = [];
 let galeriaIndexAtual = 0;
 let relatorioMecanicoTemp = [];
 
-/* ============ VARIÁVEIS COMPROVANTES DE PAGAMENTO ============ */
 let comprovantesPagTemp = [];
+let idbHandle = null;
+let docVeiculoAtual = null;
 
 function campoVazio(v) { return !v || String(v).trim() === ''; }
 function formatarMoedaBR(v) { return 'R$ ' + (Number(v) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
@@ -957,6 +996,7 @@ document.querySelectorAll('.tab').forEach(tab => {
         if (tabId === 'sos') atualizarGaleriaSOS();
         if (tabId === 'comprovantes') { atualizarComboPlacasDocumentos(); atualizarGaleriaComprovantes(); atualizarTabelaComprovantesPag(); }
         if (tabId === 'banco') atualizarTabelaBancos();
+        if (tabId === 'docVeiculo') atualizarListaDocVeiculo();
     });
 });
 
@@ -1055,7 +1095,7 @@ document.querySelectorAll('input[type="text"], input[type="search"], textarea').
     }, true);
 })();
 
-function salvarVeiculo() {
+async function salvarVeiculo() {
     const fabricante = document.getElementById('veicFabricante').value.trim();
     const cor = document.getElementById('veicCor').value.trim();
     const placa = document.getElementById('veicPlaca').value.trim();
@@ -1111,6 +1151,19 @@ function salvarVeiculo() {
     atualizarPlacasMecanico();
     atualizarComboPlacasDocumentos();
     salvarDB();
+
+    if (docVeiculoAtual && docVeiculoAtual.arquivo) {
+        try {
+            await vincularPDFaPlaca(docVeiculoAtual.arquivo, placaNorm, docVeiculoAtual.dados);
+            docVeiculoAtual = null;
+            const infoBox = document.getElementById('docVeiculoInfo');
+            if (infoBox) infoBox.classList.remove('ativo');
+        } catch (err) {
+            console.error('Erro ao vincular PDF:', err);
+            alert('⚠️ O veículo foi salvo, mas houve erro ao salvar o PDF. Tente novamente.');
+        }
+    }
+
     limparCamposVeiculo();
 }
 
@@ -1199,7 +1252,8 @@ function debugVeiculos() {
     console.log('=== DB ===', db);
     alert(
         'USUÁRIOS:\n' + (db.usuarios || []).map(u => `• ${u.nome} (${u.tipo})`).join('\n') + '\n\n' +
-        'Total de veículos: ' + (db.veiculos || []).length
+        'Total de veículos: ' + (db.veiculos || []).length + '\n' +
+        'Total de docs de veículo: ' + (db.docsVeiculos || []).length
     );
 }
 
@@ -2778,9 +2832,6 @@ function atualizarTabelaAlugueis() {
     });
 }
 
-/* ============================================================
-   NOVO: PROCESSAMENTO AUTOMÁTICO DE PAGAMENTO
-   ============================================================ */
 function processarPagamentoAutomatico(aluguelObj, dataPagamentoISO) {
     aluguelObj.status = 'pago';
     aluguelObj.dataPagamento = dataPagamentoISO;
@@ -2788,7 +2839,6 @@ function processarPagamentoAutomatico(aluguelObj, dataPagamentoISO) {
     if (!Array.isArray(db.fluxoCaixa)) db.fluxoCaixa = [];
     if (!Array.isArray(db.historicoAlugueis)) db.historicoAlugueis = [];
 
-    // 1. Fluxo de Caixa
     db.fluxoCaixa.push({
         data: dataPagamentoISO,
         descricao: `Aluguel (Auto) - ${aluguelObj.locatario} - ${aluguelObj.placa}`,
@@ -2798,7 +2848,6 @@ function processarPagamentoAutomatico(aluguelObj, dataPagamentoISO) {
         tipo: 'entrada'
     });
 
-    // 2. Histórico Aluguéis
     db.historicoAlugueis.push({
         data: dataPagamentoISO, dataPagamento: dataPagamentoISO,
         locatario: aluguelObj.locatario || '', fabricante: aluguelObj.fabricante || '',
@@ -2810,7 +2859,6 @@ function processarPagamentoAutomatico(aluguelObj, dataPagamentoISO) {
         status: 'pago'
     });
 
-    // 3. Gera próximo pagamento
     const locAtiva = (db.locacoes || []).find(l => l.locatario === aluguelObj.locatario && l.placa === aluguelObj.placa);
     if (locAtiva) {
         const tipoPag = (aluguelObj.tipoPagamento || 'mensal').toLowerCase();
@@ -3303,10 +3351,6 @@ function excluirDocumentoPlaca(placa, idx) {
     registrarAuditoria('Exclusão', `Documento excluído da placa ${placa}`);
 }
 
-/* ============================================================
-   COMPROVANTES DE PAGAMENTO — LEITURA AUTOMÁTICA E RECONCILIAÇÃO
-   ============================================================ */
-
 function fileToDataURL(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -3455,10 +3499,6 @@ function extrairDadosComprovante(textoOriginal) {
     return { valor: valor, data: data, pagador: pagador, recebedor: recebedor };
 }
 
-/* ============================================================
-   OBTÉM PLACAS DO USUÁRIO LOGADO (locações ativas)
-   - Match por nome exato OU primeiro nome (case-insensitive)
-   ============================================================ */
 function obterPlacasDoUsuarioLogado() {
     if (!usuarioLogado || !usuarioLogado.nome) return [];
     const nomeUser = String(usuarioLogado.nome || '').toUpperCase().trim();
@@ -3521,7 +3561,6 @@ function renderizarPreviewComprovantesPag() {
         }
         card.appendChild(preview);
 
-        // Campos de texto
         const camposTexto = [
             { key: 'pagador', label: 'Pagador' },
             { key: 'recebedor', label: 'Recebedor' },
@@ -3542,7 +3581,6 @@ function renderizarPreviewComprovantesPag() {
             card.appendChild(wrap);
         });
 
-        // Select da PLACA
         const wrapPlaca = document.createElement('div');
         wrapPlaca.className = 'comp-pag-field';
         const lblPlaca = document.createElement('label');
@@ -3554,7 +3592,6 @@ function renderizarPreviewComprovantesPag() {
         optEmpty.textContent = placasUsuario.length > 0 ? '-- Selecione a placa --' : '-- Nenhuma locação ativa --';
         selPlaca.appendChild(optEmpty);
 
-        // Lista prioritária: placas do usuário logado
         placasUsuario.forEach(function(p) {
             const o = document.createElement('option');
             o.value = p;
@@ -3563,7 +3600,6 @@ function renderizarPreviewComprovantesPag() {
             selPlaca.appendChild(o);
         });
 
-        // Fallback: se não tiver placa do usuário, mostra todas do sistema
         if (placasUsuario.length === 0) {
             const todasPlacas = (db.veiculos || []).map(function(v) { return v.placa; }).filter(Boolean);
             todasPlacas.forEach(function(p) {
@@ -3676,13 +3712,12 @@ function salvarComprovantesPagamento() {
 
     let salvos = 0;
     let semPlaca = 0;
-    let autoPagos = 0; // NOVO
+    let autoPagos = 0;
 
     comprovantesPagTemp.forEach(function(item) {
         const placa = String(item.placa || '').toUpperCase().trim();
         if (!placa) semPlaca++;
 
-        // 1) Salva na lista geral de comprovantes de pagamento
         db.comprovantesPagamento.push({
             id: 'comp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
             nomeArquivo: item.nomeArquivo,
@@ -3697,7 +3732,6 @@ function salvarComprovantesPagamento() {
             dataUpload: item.dataUpload || new Date().toLocaleString('pt-BR')
         });
 
-        // 2) Salva também na aba da placa (documentosPlacas)
         if (placa) {
             if (!db.documentosPlacas[placa]) db.documentosPlacas[placa] = [];
             const nomeDoc = 'COMPROVANTE PAGTO ' + (item.dataComprovante ? item.dataComprovante : '') +
@@ -3711,7 +3745,6 @@ function salvarComprovantesPagamento() {
             });
         }
 
-        // === NOVO: RECONCILIAÇÃO AUTOMÁTICA ===
         const valorNum = Number(item.valor) || 0;
         let dataPgtoISO = '';
         
@@ -3746,7 +3779,7 @@ function salvarComprovantesPagamento() {
                 });
 
                 if (!matchingAluguel) {
-                    matchingAluguel = candidatos[0]; // Pega o mais antigo em atraso
+                    matchingAluguel = candidatos[0];
                 }
 
                 if (matchingAluguel) {
@@ -3756,7 +3789,6 @@ function salvarComprovantesPagamento() {
                 }
             }
         }
-        // =======================================
 
         salvos++;
     });
@@ -3766,7 +3798,6 @@ function salvarComprovantesPagamento() {
     atualizarTabelaComprovantesPag();
     atualizarGaleriaComprovantes();
     
-    // Atualiza tabelas afetadas pelas conciliações automáticas
     atualizarTabelaAlugueis();
     atualizarTabelaHistoricoAlugueis();
     atualizarTabelaFluxoCaixa();
@@ -3871,7 +3902,624 @@ function excluirComprovanteSalvo(idx) {
     alert('✅ Comprovante excluído.');
 }
 
-// ===== PWA: INSTALAÇÃO + SERVICE WORKER =====
+/* ============================================================
+   DOC VEÍCULO — IMPORTAÇÃO DE CRLV (PDF / OCR + IndexedDB)
+   ============================================================ */
+
+function abrirIDB() {
+    if (idbHandle) return Promise.resolve(idbHandle);
+    return new Promise((resolve, reject) => {
+        const req = indexedDB.open('paizaoDocsVeiculos', 1);
+        req.onupgradeneeded = (e) => {
+            const d = e.target.result;
+            if (!d.objectStoreNames.contains('pdfs')) d.createObjectStore('pdfs', { keyPath: 'id' });
+        };
+        req.onsuccess = () => { idbHandle = req.result; resolve(idbHandle); };
+        req.onerror = () => reject(req.error);
+    });
+}
+
+function idbSalvar(id, blob, meta) {
+    return abrirIDB().then(dbIDB => new Promise((resolve, reject) => {
+        const tx = dbIDB.transaction('pdfs', 'readwrite');
+        const req = tx.objectStore('pdfs').put({ id, blob, meta, dataUpload: new Date().toISOString() });
+        req.onsuccess = () => resolve(true);
+        req.onerror = () => reject(req.error);
+    }));
+}
+
+function idbObter(id) {
+    return abrirIDB().then(dbIDB => new Promise((resolve, reject) => {
+        const tx = dbIDB.transaction('pdfs', 'readonly');
+        const req = tx.objectStore('pdfs').get(id);
+        req.onsuccess = () => resolve(req.result || null);
+        req.onerror = () => reject(req.error);
+    }));
+}
+
+function idbExcluir(id) {
+    return abrirIDB().then(dbIDB => new Promise((resolve, reject) => {
+        const tx = dbIDB.transaction('pdfs', 'readwrite');
+        const req = tx.objectStore('pdfs').delete(id);
+        req.onsuccess = () => resolve(true);
+        req.onerror = () => reject(req.error);
+    }));
+}
+
+function abrirDocVeiculo() {
+    let input = document.getElementById('inputDocVeiculoHidden');
+    if (!input) {
+        input = document.createElement('input');
+        input.type = 'file';
+        input.id = 'inputDocVeiculoHidden';
+        input.accept = 'application/pdf,.pdf';
+        input.style.display = 'none';
+        input.addEventListener('change', handleDocVeiculoSelecionado);
+        document.body.appendChild(input);
+    }
+    input.value = '';
+    input.click();
+}
+
+async function handleDocVeiculoSelecionado(e) {
+    const file = (e.target.files && e.target.files[0]) || null;
+    if (!file) { alert('Nenhum documento foi selecionado.'); return; }
+    const nomeLow = (file.name || '').toLowerCase();
+    const isPDF = file.type === 'application/pdf' || nomeLow.endsWith('.pdf');
+    if (!isPDF) { alert('Selecione um arquivo PDF válido.'); return; }
+
+    const info = document.getElementById('docVeiculoInfo');
+    if (info) {
+        info.classList.add('ativo');
+        const elNome = document.getElementById('docVeiculoNome');
+        const elData = document.getElementById('docVeiculoData');
+        const elQtd = document.getElementById('docVeiculoQtd');
+        const elAviso = document.getElementById('docVeiculoAviso');
+        if (elNome) elNome.textContent = file.name;
+        if (elData) elData.textContent = new Date().toLocaleString('pt-BR');
+        if (elQtd) elQtd.textContent = '⏳ lendo...';
+        if (elAviso) elAviso.style.display = 'none';
+    }
+
+    try {
+        let texto = await extrairTextoPDF(file);
+        const textoLimpo = (texto || '').replace(/\s+/g, '');
+
+        if (textoLimpo.length < 30) {
+            try {
+                const textoOCR = await extrairTextoPDFviaOCR(file);
+                if (textoOCR && textoOCR.replace(/\s+/g, '').length > textoLimpo.length) {
+                    texto = textoOCR;
+                }
+            } catch (ocrErr) {
+                console.warn('OCR falhou:', ocrErr);
+            }
+        }
+
+        if (!texto || texto.replace(/\s+/g, '').length < 10) {
+            alert('Não foi possível identificar os dados do veículo neste documento. Confira o PDF e preencha os campos manualmente.');
+            if (info) info.classList.remove('ativo');
+            return;
+        }
+
+        const dados = extrairDadosCRLV(texto);
+        docVeiculoAtual = { arquivo: file, dados };
+
+        preencherCamposVeiculoComDados(dados);
+
+        const qtdEncontrados = Object.keys(dados).filter(k => dados[k]).length;
+        const qtdEl = document.getElementById('docVeiculoQtd');
+        if (qtdEl) qtdEl.textContent = qtdEncontrados + ' campo(s)';
+        const avisoEl = document.getElementById('docVeiculoAviso');
+        if (avisoEl) avisoEl.style.display = dados.placa ? 'none' : 'inline-block';
+
+        let msg = '✅ Documento lido com sucesso. Confira os dados antes de salvar.\n\n';
+        msg += '📄 Arquivo: ' + file.name + '\n';
+        msg += '🕒 Data/hora: ' + new Date().toLocaleString('pt-BR') + '\n';
+        msg += '📊 Campos encontrados: ' + qtdEncontrados;
+        if (!dados.placa) msg += '\n\n⚠️ Não foi possível identificar a placa no documento. Informe a placa manualmente antes de salvar.';
+        alert(msg);
+    } catch (err) {
+        console.error('Erro ao ler PDF:', err);
+        alert('Ocorreu um erro ao ler o documento. Tente novamente.');
+        if (info) info.classList.remove('ativo');
+    }
+}
+
+async function extrairTextoPDFviaOCR(file) {
+    if (typeof Tesseract === 'undefined') throw new Error('Tesseract.js não carregado');
+    if (typeof pdfjsLib === 'undefined') throw new Error('PDF.js não carregado');
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    const numPaginas = Math.min(pdf.numPages, 3);
+    let textoTotal = '';
+    for (let p = 1; p <= numPaginas; p++) {
+        const page = await pdf.getPage(p);
+        const viewport = page.getViewport({ scale: 2.0 });
+        const canvas = document.createElement('canvas');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        const ctx = canvas.getContext('2d');
+        await page.render({ canvasContext: ctx, viewport }).promise;
+        const dataUrl = canvas.toDataURL('image/png');
+        const result = await Tesseract.recognize(dataUrl, 'por');
+        textoTotal += ((result && result.data && result.data.text) || '') + '\n';
+    }
+    return textoTotal;
+}
+
+function extrairDadosCRLV(textoOriginal) {
+    const dados = {};
+    if (!textoOriginal) return dados;
+
+    const linhas = String(textoOriginal)
+        .replace(/\r/g, '\n')
+        .split('\n')
+        .map(l => l.replace(/\s+/g, ' ').trim())
+        .filter(l => l.length > 0);
+
+    const t = linhas.join('\n');
+    const tU = t.toUpperCase();
+
+    const ruidos = new Set([
+        'LOCAL DATA','LOCAL/DATA','LOCAL','DATA',
+        'PREDOMINANTE','COR PREDOMINANTE',
+        'DO VEÍCULO','DO VEICULO','VEÍCULO','VEICULO',
+        'MARCA/MODELO','MARCA / MODELO','MODELO','MARCA',
+        'MARCA / MODELO / VERSÃO','MARCA/MODELO/VERSÃO',
+        'NOME','NOME DO PROPRIETÁRIO','NOME DO PROPRIETARIO',
+        'ANO FABRICAÇÃO','ANO FABRICACAO','ANO MODELO',
+        'ANO FABRICAÇÃO / ANO MODELO','ANO FABRICAÇÃO/ANO MODELO',
+        'PLACA','CHASSI','RENAVAM','CPF','CNPJ','UF','MUNICÍPIO','MUNICIPIO',
+        'CATEGORIA','ESPÉCIE','ESPECIE','COMBUSTÍVEL','COMBUSTIVEL','COR'
+    ]);
+
+    function ehRuido(v) {
+        if (!v) return true;
+        const up = String(v).toUpperCase().trim();
+        if (!up) return true;
+        if (ruidos.has(up)) return true;
+        if (up.length <= 25 && /^(NOME|LOCAL|DATA|COR|PREDOMINANTE|MARCA|MODELO|ANO|PLACA|CHASSI|RENAVAM|COMBUST[ÍI]VEL|ESP[ÉE]CIE|CATEGORIA|MUNIC[ÍI]PIO|UF|CPF|CNPJ)(\s*\/?\s*[A-ZÇÃÕÁÉÍÓÚÂÊÎÔÛÀÈÌÒÙ]+)?$/.test(up)) {
+            return true;
+        }
+        return false;
+    }
+
+    function limpar(v) {
+        if (!v) return '';
+        return String(v).trim()
+            .replace(/^[\s:;\/\-|]+/, '')
+            .replace(/[\s:;\/\-|]+$/, '')
+            .trim();
+    }
+
+    /* PLACA */
+    let m = tU.match(/PLACA\s*:?\s*([A-Z]{3}\s*-?\s*\d\s*[A-Z0-9]\s*\d\s*\d)/);
+    if (!m) m = tU.match(/\b([A-Z]{3}-?\d[A-Z0-9]\d{2})\b/);
+    if (m) dados.placa = m[1].replace(/[\s-]/g, '');
+
+    /* RENAVAM */
+    m = tU.match(/RENAVAM\s*:?\s*(\d[\d\s]{9,15}\d)/);
+    if (m) { const r = m[1].replace(/\D/g, ''); if (r.length === 11) dados.renavam = r; }
+    if (!dados.renavam) {
+        const idx = tU.indexOf('RENAVAM');
+        if (idx >= 0) {
+            const sub = tU.substring(idx, idx + 80);
+            m = sub.match(/\b(\d{11})\b/);
+            if (m) dados.renavam = m[1];
+        }
+    }
+    if (!dados.renavam) { m = tU.match(/\b(\d{11})\b/); if (m) dados.renavam = m[1]; }
+
+    /* CHASSI */
+    m = tU.match(/CHASSI\s*:?\s*([A-HJ-NPR-Z0-9]{17})/);
+    if (!m) {
+        const idx = tU.indexOf('CHASSI');
+        if (idx >= 0) {
+            const sub = tU.substring(idx, idx + 80);
+            m = sub.match(/\b([A-HJ-NPR-Z0-9]{17})\b/);
+        }
+    }
+    if (!m) m = tU.match(/\b([A-HJ-NPR-Z0-9]{17})\b/);
+    if (m) dados.chassi = m[1];
+
+    /* ANO FABRICAÇÃO / ANO MODELO */
+    m = tU.match(/ANO\s+FABRICA[ÇC][ÃA]O\s*\/\s*ANO\s+MODELO\s*:?\s*(\d{4})\s*\/?\s*(\d{4})/);
+    if (m) { dados.anoFabr = m[1]; dados.anoModel = m[2]; }
+
+    if (!dados.anoFabr) {
+        m = tU.match(/ANO\s+FABRICA[ÇC][ÃA]O\s*:?\s*(\d{4})/);
+        if (!m) m = tU.match(/ANO\s*\/?\s*FAB\s*:?\s*(\d{4})/);
+        if (m) dados.anoFabr = m[1];
+    }
+    if (!dados.anoModel) {
+        m = tU.match(/ANO\s+MODELO\s*:?\s*(\d{4})/);
+        if (!m) m = tU.match(/ANO\s*\/?\s*MOD\s*:?\s*(\d{4})/);
+        if (m) dados.anoModel = m[1];
+    }
+
+    if (!dados.anoFabr || !dados.anoModel) {
+        for (const linha of linhas) {
+            const up = linha.toUpperCase();
+            if (/\bANO\b/.test(up)) {
+                const anos = up.match(/\b(19|20)\d{2}\b/g);
+                if (anos && anos.length >= 2) {
+                    if (!dados.anoFabr) dados.anoFabr = anos[0];
+                    if (!dados.anoModel) dados.anoModel = anos[1];
+                    break;
+                }
+            }
+        }
+    }
+    if (!dados.anoFabr || !dados.anoModel) {
+        const todosAnos = (tU.match(/\b(19[89]\d|20[0-3]\d)\b/g) || []);
+        const unicos = [...new Set(todosAnos)];
+        if (unicos.length >= 2) {
+            if (!dados.anoFabr) dados.anoFabr = unicos[0];
+            if (!dados.anoModel) dados.anoModel = unicos[1];
+        } else if (unicos.length === 1 && !dados.anoFabr) {
+            dados.anoFabr = unicos[0];
+        }
+    }
+
+    /* MARCA / MODELO */
+    for (let i = 0; i < linhas.length; i++) {
+        const linha = linhas[i];
+        const up = linha.toUpperCase();
+        const labelMatch = up.match(/^MARCA\s*\/?\s*MODELO(\s*\/?\s*VERS[ÃA]O)?/);
+        if (labelMatch) {
+            let resto = linha.substring(labelMatch[0].length).replace(/^[\s:;\/\-|]+/, '').trim();
+            if (resto && !ehRuido(resto)) { dados.fabricante = limpar(resto); break; }
+            if (i + 1 < linhas.length) {
+                const prox = linhas[i + 1].trim();
+                if (prox && !ehRuido(prox)) { dados.fabricante = limpar(prox); break; }
+            }
+        }
+    }
+    if (!dados.fabricante) {
+        m = tU.match(/MARCA\s*\/?\s*MODELO\s*(?:\/\s*VERS[ÃA]O)?\s*:?\s*([A-ZÀ-Ú0-9][A-ZÀ-Ú0-9\s\.\-\/]{2,80})/);
+        if (m) {
+            let fm = m[1].split(/\s{2,}/)[0];
+            fm = fm.split(/\s+(?:ANO\s|COR\s|PLACA\s|CHASSI\s|RENAVAM\s|COMBUST|CATEG|ESP[ÉE]C|MUNIC|NOME\s|CPF\s|CNPJ\s)/)[0].trim();
+            if (fm && !ehRuido(fm)) dados.fabricante = fm;
+        }
+    }
+
+    /* COR */
+    for (let i = 0; i < linhas.length; i++) {
+        const linha = linhas[i];
+        const up = linha.toUpperCase();
+        const labelMatch = up.match(/^COR(\s+PREDOMINANTE)?/);
+        if (labelMatch) {
+            let resto = linha.substring(labelMatch[0].length).replace(/^[\s:;\/\-|]+/, '').trim();
+            if (resto && !/^PREDOMINANTE$/i.test(resto) && !ehRuido(resto)) {
+                dados.cor = limpar(resto); break;
+            }
+            let j = i + 1;
+            while (j < linhas.length && j <= i + 3) {
+                const prox = linhas[j].trim();
+                if (prox && !/^PREDOMINANTE$/i.test(prox) && !ehRuido(prox)) {
+                    dados.cor = limpar(prox); break;
+                }
+                j++;
+            }
+            if (dados.cor) break;
+        }
+    }
+    if (!dados.cor) {
+        m = tU.match(/COR\s+(?:PREDOMINANTE\s*)?:?\s*([A-ZÀ-Ú][A-ZÀ-Ú\s]{2,25}?)(?=\s*(?:PLACA|COMBUST|ANO|CHASSI|RENAVAM|CATEG|ESP|MUNIC|$))/);
+        if (m) {
+            const c = m[1].trim();
+            if (c && !/^PREDOMINANTE$/i.test(c)) dados.cor = c;
+        }
+    }
+
+    /* COMBUSTÍVEL */
+    for (let i = 0; i < linhas.length; i++) {
+        const up = linhas[i].toUpperCase();
+        const labelMatch = up.match(/^COMBUST[ÍI]VEL/);
+        if (labelMatch) {
+            let resto = linhas[i].substring(labelMatch[0].length).replace(/^[\s:;\/\-|]+/, '').trim();
+            if (resto && !ehRuido(resto)) { dados.combustivel = limpar(resto); break; }
+            if (i + 1 < linhas.length) {
+                const prox = linhas[i + 1].trim();
+                if (prox && !ehRuido(prox)) { dados.combustivel = limpar(prox); break; }
+            }
+        }
+    }
+
+    /* ESPÉCIE */
+    for (let i = 0; i < linhas.length; i++) {
+        const up = linhas[i].toUpperCase();
+        const labelMatch = up.match(/^ESP[ÉE]CIE/);
+        if (labelMatch) {
+            let resto = linhas[i].substring(labelMatch[0].length).replace(/^[\s:;\/\-|]+/, '').trim();
+            if (resto && !ehRuido(resto)) { dados.especie = limpar(resto); break; }
+            if (i + 1 < linhas.length) {
+                const prox = linhas[i + 1].trim();
+                if (prox && !ehRuido(prox)) { dados.especie = limpar(prox); break; }
+            }
+        }
+    }
+
+    /* CATEGORIA */
+    for (let i = 0; i < linhas.length; i++) {
+        const up = linhas[i].toUpperCase();
+        const labelMatch = up.match(/^CATEGORIA/);
+        if (labelMatch) {
+            let resto = linhas[i].substring(labelMatch[0].length).replace(/^[\s:;\/\-|]+/, '').trim();
+            if (resto && !ehRuido(resto)) { dados.categoria = limpar(resto); break; }
+            if (i + 1 < linhas.length) {
+                const prox = linhas[i + 1].trim();
+                if (prox && !ehRuido(prox)) { dados.categoria = limpar(prox); break; }
+            }
+        }
+    }
+
+    /* MUNICÍPIO */
+    m = tU.match(/MUNIC[ÍI]PIO\s*:?\s*([A-ZÀ-Ú][A-ZÀ-Ú\s]{2,40}?)(?=\s*(?:UF|PLACA|COR|NOME|$))/);
+    if (m) dados.municipio = m[1].trim();
+
+    /* UF */
+    m = tU.match(/\bUF\s*:?\s*([A-Z]{2})\b/);
+    if (m && ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'].includes(m[1])) {
+        dados.uf = m[1];
+    }
+
+    /* NOME DO PROPRIETÁRIO */
+    for (let i = 0; i < linhas.length; i++) {
+        const linha = linhas[i];
+        const up = linha.toUpperCase();
+        const labelMatch = up.match(/^NOME(\s*\/?\s*LOCAL\s*\/?\s*DATA)?/);
+        if (labelMatch) {
+            let resto = linha.substring(labelMatch[0].length).replace(/^[\s:;\/\-|]+/, '').trim();
+            if (resto && !/^LOCAL\s*\/?\s*DATA$/i.test(resto) && !ehRuido(resto)) {
+                dados.proprietario = limpar(resto); break;
+            }
+            let j = i + 1;
+            while (j < linhas.length && j <= i + 3) {
+                const prox = linhas[j].trim();
+                const proxUp = prox.toUpperCase();
+                if (prox && !/^LOCAL\s*\/?\s*DATA$/i.test(prox) && !ehRuido(prox)
+                    && !/^(S[ÃA]O|RIO|BELO|PORTO|CURITIBA|SALVADOR|FORTALEZA|RECIFE|MANAUS|BRAS[ÍI]LIA|GOI[ÂA]NIA|CAMPINAS|GUARULHOS|MUNIC[ÍI]PIO)/.test(proxUp)) {
+                    dados.proprietario = limpar(prox); break;
+                }
+                j++;
+            }
+            if (dados.proprietario) break;
+        }
+    }
+    if (!dados.proprietario) {
+        m = tU.match(/(?:NOME|PROPRIET[ÁA]RIO)\s+(?:DO\s+PROPRIET[ÁA]RIO\s*)?:?\s*([A-ZÀ-Ú][A-ZÀ-Ú\s\.\-']{4,80}?)(?=\s*(?:CPF|CNPJ|PLACA|MUNIC|UF|$))/);
+        if (m) {
+            const n = m[1].trim();
+            if (n && !/^LOCAL\s*\/?\s*DATA$/i.test(n) && !ehRuido(n)) dados.proprietario = n;
+        }
+    }
+
+    /* CPF / CNPJ */
+    m = tU.match(/(?:CPF|CNPJ)\s*:?\s*([\d\.\-\/]{11,20})/);
+    if (!m) m = tU.match(/\b(\d{3}\.\d{3}\.\d{3}-\d{2})\b/);
+    if (!m) m = tU.match(/\b(\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2})\b/);
+    if (m) dados.cpfCnpj = m[1].trim();
+
+    return dados;
+}
+
+function preencherCamposVeiculoComDados(dados) {
+    const map = {
+        placa: 'veicPlaca',
+        renavam: 'veicRenavan',
+        chassi: 'veicChassi',
+        fabricante: 'veicFabricante',
+        anoFabr: 'veicAnoFabr',
+        anoModel: 'veicAnoModel',
+        cor: 'veicCor',
+        proprietario: 'veicProprietario',
+        cpfCnpj: 'veicCpfPropr'
+    };
+
+    const conflitos = [];
+    Object.keys(map).forEach(key => {
+        const novo = dados[key];
+        if (!novo) return;
+        const el = document.getElementById(map[key]);
+        if (!el) return;
+        const atual = String(el.value || '').trim();
+        if (atual && atual.toUpperCase() !== String(novo).toUpperCase()) {
+            const label = el.parentElement && el.parentElement.querySelector('label');
+            conflitos.push({ campo: (label && label.textContent) || el.id, atual, novo, id: map[key] });
+        }
+    });
+
+    let substituir = false;
+    if (conflitos.length > 0) {
+        let msg = '⚠️ Os seguintes campos já possuem valores e serão SUBSTITUÍDOS pelos dados do documento:\n\n';
+        conflitos.forEach(c => { msg += '• ' + c.campo + '\n   Atual: ' + c.atual + '\n   Novo:  ' + c.novo + '\n\n'; });
+        msg += 'Deseja substituir os valores existentes?';
+        substituir = confirm(msg);
+    }
+
+    Object.keys(map).forEach(key => {
+        const novo = dados[key];
+        if (!novo) return;
+        const el = document.getElementById(map[key]);
+        if (!el) return;
+        const atual = String(el.value || '').trim();
+        if (!atual) el.value = novo;
+        else if (substituir) el.value = novo;
+    });
+}
+
+function cancelarDocVeiculo() {
+    if (docVeiculoAtual && !confirm('Descartar o documento importado? Os campos preenchidos permanecerão como estão.')) return;
+    docVeiculoAtual = null;
+    const info = document.getElementById('docVeiculoInfo');
+    if (info) info.classList.remove('ativo');
+}
+
+async function vincularPDFaPlaca(arquivo, placa, dadosExtraidos) {
+    if (!arquivo || !placa) return;
+    const id = 'pdf_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
+    try {
+        await idbSalvar(id, arquivo, { nomeArquivo: arquivo.name, placa, tipo: arquivo.type || 'application/pdf' });
+    } catch (err) {
+        console.error('Erro ao salvar PDF no IndexedDB:', err);
+        throw err;
+    }
+
+    if (!Array.isArray(db.docsVeiculos)) db.docsVeiculos = [];
+    db.docsVeiculos.push({
+        id,
+        placa: placa,
+        nomeArquivo: arquivo.name,
+        tipoArquivo: arquivo.type || 'application/pdf',
+        tamanho: arquivo.size || 0,
+        dataUpload: new Date().toLocaleString('pt-BR'),
+        dadosExtraidos: dadosExtraidos || {}
+    });
+
+    registrarAuditoria('DOC Veículo', 'PDF vinculado à placa ' + placa + ': ' + arquivo.name);
+    salvarDB();
+    atualizarListaDocVeiculo();
+}
+
+function atualizarListaDocVeiculo() {
+    const container = document.getElementById('listaDocVeiculo');
+    if (!container) return;
+    container.innerHTML = '';
+
+    const lista = Array.isArray(db.docsVeiculos) ? db.docsVeiculos : [];
+    if (lista.length === 0) {
+        container.innerHTML = '<p style="color:#999;text-align:center;padding:20px;">Nenhum documento importado. Use o botão <strong>📄 DOC VEÍCULO</strong> na aba Veículos.</p>';
+        return;
+    }
+
+    const agrupado = {};
+    lista.forEach(d => {
+        const p = (d.placa || 'SEM PLACA').toUpperCase();
+        if (!agrupado[p]) agrupado[p] = [];
+        agrupado[p].push(d);
+    });
+
+    Object.keys(agrupado).sort().forEach(placa => {
+        const docs = agrupado[placa];
+        const veiculo = (db.veiculos || []).find(v => normalizarPlaca(v.placa) === normalizarPlaca(placa));
+        const nomeVeiculo = veiculo ? (veiculo.fabricante + ' - ' + veiculo.cor) : 'Veículo não cadastrado';
+
+        const folder = document.createElement('div');
+        folder.className = 'documento-folder';
+        folder.dataset.placa = placa;
+
+        const header = document.createElement('div');
+        header.className = 'documento-folder-header';
+        header.innerHTML = '<h4>📁 Placa: ' + placa + ' <small style="font-weight:normal;opacity:0.85;font-size:12px;">(' + nomeVeiculo + ')</small></h4>' +
+                           '<span class="documento-folder-badge">' + docs.length + ' doc(s)</span>';
+        folder.appendChild(header);
+
+        const list = document.createElement('div');
+        list.className = 'documento-list';
+
+        docs.forEach(doc => {
+            const item = document.createElement('div');
+            item.className = 'documento-item';
+            const tam = doc.tamanho ? ' • ' + Math.round(doc.tamanho / 1024) + ' KB' : '';
+
+            const info = document.createElement('div');
+            info.className = 'documento-info';
+            info.innerHTML = '<span class="documento-icon">📄</span>' +
+                '<div class="documento-details"><strong>' + (doc.nomeArquivo || 'documento.pdf') + '</strong>' +
+                '<small>Importado em: ' + (doc.dataUpload || '-') + tam + '</small></div>';
+
+            const actions = document.createElement('div');
+            actions.className = 'documento-actions';
+
+            const bAbrir = document.createElement('button');
+            bAbrir.className = 'btn-info';
+            bAbrir.textContent = '👁️ Abrir PDF';
+            bAbrir.onclick = () => abrirPDFDocVeiculo(doc.id);
+
+            const bBaixar = document.createElement('button');
+            bBaixar.className = 'btn-success';
+            bBaixar.textContent = '⬇️ Baixar';
+            bBaixar.onclick = () => baixarPDFDocVeiculo(doc.id, doc.nomeArquivo);
+
+            const bExcluir = document.createElement('button');
+            bExcluir.className = 'btn-danger';
+            bExcluir.textContent = '🗑️ Excluir';
+            bExcluir.onclick = () => excluirDocVeiculo(doc.id);
+
+            actions.appendChild(bAbrir);
+            actions.appendChild(bBaixar);
+            actions.appendChild(bExcluir);
+            item.appendChild(info);
+            item.appendChild(actions);
+            list.appendChild(item);
+        });
+
+        folder.appendChild(list);
+        container.appendChild(folder);
+    });
+}
+
+async function abrirPDFDocVeiculo(id) {
+    try {
+        const reg = await idbObter(id);
+        if (!reg || !reg.blob) { alert('Arquivo não encontrado no armazenamento local.'); return; }
+        const url = URL.createObjectURL(reg.blob);
+        const win = window.open(url, '_blank');
+        if (!win) { alert('Permita pop-ups para abrir o PDF.'); }
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+    } catch (err) {
+        console.error(err);
+        alert('Erro ao abrir o PDF.');
+    }
+}
+
+async function baixarPDFDocVeiculo(id, nomeArquivo) {
+    try {
+        const reg = await idbObter(id);
+        if (!reg || !reg.blob) { alert('Arquivo não encontrado.'); return; }
+        const url = URL.createObjectURL(reg.blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = nomeArquivo || 'documento.pdf';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+    } catch (err) {
+        console.error(err);
+        alert('Erro ao baixar o PDF.');
+    }
+}
+
+async function excluirDocVeiculo(id) {
+    if (!confirmarSenhaADM()) return;
+    if (!confirm('Excluir permanentemente este documento?')) return;
+    try {
+        await idbExcluir(id);
+    } catch (err) { console.warn('IDB excluir:', err); }
+    db.docsVeiculos = (db.docsVeiculos || []).filter(d => d.id !== id);
+    atualizarListaDocVeiculo();
+    salvarDB();
+    registrarAuditoria('Exclusão', 'Documento DOC Veículo excluído: ' + id);
+    alert('✅ Documento excluído.');
+}
+
+(function configurarFiltroDocVeiculo() {
+    document.addEventListener('input', function(e) {
+        if (!e.target || e.target.id !== 'filterDocVeiculo') return;
+        const f = e.target.value.toLowerCase().trim();
+        document.querySelectorAll('#listaDocVeiculo .documento-folder').forEach(folder => {
+            const placa = (folder.dataset.placa || '').toLowerCase();
+            const txt = folder.textContent.toLowerCase();
+            folder.style.display = (!f || placa.includes(f) || txt.includes(f)) ? '' : 'none';
+        });
+    });
+})();
+
+// ===== PWA =====
 let deferredInstallPrompt = null;
 
 window.addEventListener('beforeinstallprompt', (e) => {
@@ -3968,6 +4616,7 @@ async function inicializarSistemaCompleto() {
     atualizarGaleriaSOS();
     atualizarComboPlacasDocumentos();
     atualizarGaleriaComprovantes();
+    atualizarListaDocVeiculo();
     configurarInputMultiplasImagens();
     configurarBotaoInstalar();
 

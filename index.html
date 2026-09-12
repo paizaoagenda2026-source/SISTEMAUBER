@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>PAIZÃO UBER 2.0</title>
 
-    <!-- ===== PWA: INSTALA COMO APP ===== -->
     <meta name="description" content="PAIZÃO UBER 2.0 - Sistema de Locação de Carros">
     <meta name="theme-color" content="#1a3c6e">
     <meta name="mobile-web-app-capable" content="yes">
@@ -25,6 +24,11 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <script>
+        if (typeof pdfjsLib !== 'undefined') {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+    </script>
     <style>
         :root { --primary: #1a3c6e; --secondary: #e63946; --accent: #f4a261; --bg: #f8f9fa; --text: #333; --white: #fff; --shadow: 0 4px 6px rgba(0,0,0,0.1); --radius: 8px; --success: #28a745; --warning: #ffc107; --danger: #dc3545; --info: #17a2b8; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -105,7 +109,7 @@
         .modal-counter { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); color: white; font-size: 15px; font-weight: bold; background: rgba(0,0,0,0.65); padding: 6px 16px; border-radius: 20px; display: none; white-space: nowrap; z-index: 10001; }
         .config-section { margin-bottom: 30px; padding: 20px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid var(--primary); }
         .config-section h3 { color: var(--primary); margin-bottom: 15px; }
-        .sub-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #ddd; padding-bottom: 10px; }
+        .sub-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #ddd; padding-bottom: 10px; flex-wrap: wrap; }
         .sub-tab { padding: 10px 20px; background: transparent; color: var(--primary); border: 2px solid var(--primary); cursor: pointer; border-radius: 5px; font-size: 14px; transition: all 0.3s; font-weight: 600; }
         .sub-tab.active { background: var(--primary); color: white; }
         .sub-tab-content { display: none; }
@@ -177,6 +181,17 @@
         .documento-details small { color: #888; font-size: 12px; }
         .documento-actions { display: flex; gap: 8px; }
         .documento-actions button { padding: 8px 15px; font-size: 12px; margin: 0; border-radius: 4px; }
+
+        /* ==== COMPROVANTES DE PAGAMENTO ==== */
+        .comp-pag-card { border: 1px solid #ddd; border-radius: 8px; padding: 12px; background: #fff; width: 340px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); display: flex; flex-direction: column; gap: 8px; }
+        .comp-pag-card .comp-pag-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+        .comp-pag-card .comp-pag-header strong { font-size: 12px; word-break: break-all; color: #333; flex: 1; }
+        .comp-pag-card .comp-pag-preview { height: 130px; background: #f8f9fa; border-radius: 5px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid #eee; }
+        .comp-pag-card .comp-pag-preview img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .comp-pag-card .comp-pag-field { display: flex; flex-direction: column; gap: 2px; }
+        .comp-pag-card .comp-pag-field label { font-size: 11px; font-weight: 600; color: #666; }
+        .comp-pag-card .comp-pag-field input { padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; text-transform: none; }
+        .comp-pag-card .comp-pag-field select { padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; text-transform: none; width: 100%; background: #fff; }
     </style>
 </head>
 <body>
@@ -407,10 +422,11 @@
     </div>
 
     <div class="tab-content" id="comprovantes">
-        <h2>📄 Documentos por Placa</h2>
+        <h2>📄 Documentos por Placa / Comprovantes</h2>
         <div class="sub-tabs">
             <button class="sub-tab active" onclick="switchSubTab('novo')">📤 Anexar Novo</button>
             <button class="sub-tab" onclick="switchSubTab('salvos')">📁 Documentos Salvos</button>
+            <button class="sub-tab" onclick="switchSubTab('comprovantesPag')">💰 Comprovantes de Pagamento</button>
         </div>
         
         <div class="sub-tab-content active" id="subTabNovo">
@@ -430,6 +446,42 @@
         
         <div class="sub-tab-content" id="subTabSalvos">
             <div id="documentosSalvosContainer" style="margin-top: 20px;"></div>
+        </div>
+
+        <div class="sub-tab-content" id="subTabComprovantesPag">
+            <div class="config-section" style="border-left-color: var(--success); background: #eaf7ed;">
+                <h3>💰 Buscar Comprovantes de Pagamento</h3>
+                <p style="margin-bottom: 12px; color: #555; font-size: 14px;">
+                    Selecione arquivos <strong>PDF, JPG ou JPEG</strong> do seu computador. O sistema vai ler o comprovante e identificar automaticamente: <strong>pagador, recebedor, valor e data</strong>. A <strong>placa do carro alugado</strong> para você será preenchida automaticamente.
+                </p>
+                <input type="file" id="compPagInput" accept="application/pdf,image/jpeg,image/jpg,image/png" multiple style="display:none;">
+                <button class="btn-buscar" onclick="document.getElementById('compPagInput').click()">📂 Buscar Arquivos</button>
+                <button class="btn-primary" id="btnSalvarComprovantesPag" onclick="salvarComprovantesPagamento()" disabled style="opacity:0.5;">💾 Salvar Comprovantes</button>
+                <small style="display:block;color:#666;margin-top:8px;">Tamanho máximo por arquivo: 700KB. Para PDFs com OCR (imagem) o processamento pode demorar mais.</small>
+            </div>
+
+            <div id="compPagPreviewContainer" style="display:flex;flex-wrap:wrap;gap:15px;margin-top:15px;"></div>
+
+            <div class="subfolder" style="margin-top:25px;">
+                <div class="subfolder-header"><h4>📋 Comprovantes Salvos</h4></div>
+                <input type="text" class="filter-input" placeholder="🔍 Filtrar comprovantes..." id="filterComprovantesPag" style="max-width:100%;">
+                <div class="table-container">
+                    <table id="tabelaComprovantesPag">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Pagador</th>
+                                <th>Recebedor</th>
+                                <th>Valor</th>
+                                <th>Placa</th>
+                                <th>Arquivo</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -603,6 +655,7 @@ function criarDBPadrao() {
         usuarios: [{ nome: 'SERGIO', senha: '080888', tipo: 'ADM', permissoes: JSON.parse(JSON.stringify(permissoesPadrao.ADM)), selfie: null }],
         alugueis: [], fluxoCaixa: [], documentos: [], compras: [], auditoria: [], bancos: [], pendentes: [], historico: [],
         historicoAlugueis: [],
+        comprovantesPagamento: [],
         documentosPlacas: {},
         contratos: { contratoLocacao:{}, termoResponsabilidade:{}, notaPromissoria:{} },
         imagens: { garagem:{fotos:[]}, sos:{fotos:[]}, comprovantes:{fotos:[]} },
@@ -634,7 +687,7 @@ async function carregarDB() {
     if (!db || typeof db !== 'object') db = criarDBPadrao();
     ['veiculos','clientes','locacoes','locacoesEncerradas','manutencao','mecanico',
      'alugueis','fluxoCaixa','documentos','compras','auditoria','bancos',
-     'pendentes','historico','usuarios','historicoAlugueis'].forEach(k => {
+     'pendentes','historico','usuarios','historicoAlugueis','comprovantesPagamento'].forEach(k => {
         if (!Array.isArray(db[k])) db[k] = [];
     });
     if (!db.contratos) db.contratos = { contratoLocacao:{}, termoResponsabilidade:{}, notaPromissoria:{} };
@@ -718,6 +771,9 @@ let sosImagensTemp = [];
 let galeriaAtual = [];
 let galeriaIndexAtual = 0;
 let relatorioMecanicoTemp = [];
+
+/* ============ VARIÁVEIS COMPROVANTES DE PAGAMENTO ============ */
+let comprovantesPagTemp = [];
 
 function campoVazio(v) { return !v || String(v).trim() === ''; }
 function formatarMoedaBR(v) { return 'R$ ' + (Number(v) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
@@ -827,13 +883,7 @@ function calcularCaucaoPagoNoPeriodo(locacao, dataInicio, dataFimEfetiva) {
     };
 }
 
-/* ============================================================
-   CONFIRMAÇÃO DE SENHA ADM
-   - Se o usuário logado for ADM: NÃO pede senha (retorna true)
-   - Se NÃO for ADM: pede a senha do ADM
-   ============================================================ */
 function confirmarSenhaADM() {
-    // Se o usuário logado já é ADM, não precisa pedir senha
     if (usuarioLogado && usuarioLogado.tipo === 'ADM') {
         return true;
     }
@@ -905,7 +955,7 @@ document.querySelectorAll('.tab').forEach(tab => {
         if (tabId === 'fluxocaixa') atualizarTabelaFluxoCaixa();
         if (tabId === 'garagem') atualizarGaleriaGaragem();
         if (tabId === 'sos') atualizarGaleriaSOS();
-        if (tabId === 'comprovantes') { atualizarComboPlacasDocumentos(); atualizarGaleriaComprovantes(); }
+        if (tabId === 'comprovantes') { atualizarComboPlacasDocumentos(); atualizarGaleriaComprovantes(); atualizarTabelaComprovantesPag(); }
         if (tabId === 'banco') atualizarTabelaBancos();
     });
 });
@@ -941,7 +991,7 @@ function setupFilter(inputId, tableId) {
         });
     });
 }
-['filterVeiculos','filterClientes','filterLocacoes','filterManutencao','filterMecanico','filterUsuario','filterPagamentos','filterBancos','filterFluxoCaixa','filterDoc','filterCompras','filterAuditoria','filterLocEncerrada','filterPendentes','filterHistorico','filterHistoricoAlugueis'].forEach(id => {
+['filterVeiculos','filterClientes','filterLocacoes','filterManutencao','filterMecanico','filterUsuario','filterPagamentos','filterBancos','filterFluxoCaixa','filterDoc','filterCompras','filterAuditoria','filterLocEncerrada','filterPendentes','filterHistorico','filterHistoricoAlugueis','filterComprovantesPag'].forEach(id => {
     setupFilter(id, id.replace('filter', 'tabela'));
 });
 
@@ -2474,13 +2524,28 @@ document.addEventListener('keydown', function(e) {
 function abrirModalContratos() { document.getElementById('contratoModal').classList.add('active'); }
 function fecharModalContratos() { document.getElementById('contratoModal').classList.remove('active'); }
 function fecharDespesasModal() { document.getElementById('despesasModal').classList.remove('active'); }
+
 function switchSubTab(t) {
     document.querySelectorAll('#comprovantes .sub-tab').forEach(x => x.classList.remove('active'));
     document.querySelectorAll('#comprovantes .sub-tab-content').forEach(x => x.classList.remove('active'));
-    document.getElementById(t === 'novo' ? 'subTabNovo' : 'subTabSalvos').classList.add('active');
+
+    const map = { novo: 'subTabNovo', salvos: 'subTabSalvos', comprovantesPag: 'subTabComprovantesPag' };
+    const targetId = map[t];
+    if (targetId) {
+        const el = document.getElementById(targetId);
+        if (el) el.classList.add('active');
+    }
+
+    document.querySelectorAll('#comprovantes .sub-tab').forEach(b => {
+        const oc = b.getAttribute('onclick') || '';
+        if (oc.indexOf("'" + t + "'") >= 0) b.classList.add('active');
+    });
+
     if (t === 'novo') atualizarComboPlacasDocumentos();
     if (t === 'salvos') atualizarGaleriaComprovantes();
+    if (t === 'comprovantesPag') atualizarTabelaComprovantesPag();
 }
+
 function abrirCameraVistoria() { alert('Função de vistoria em implementação.'); }
 function fecharCameraVistoria() { document.getElementById('vistoriaCameraModal').classList.remove('active'); }
 
@@ -2889,10 +2954,6 @@ function salvarFluxoCaixa() {
     alert('Lançamento salvo no Fluxo de Caixa!');
 }
 
-/* ============================================================
-   BANCO - SALVAR, EDITAR, EXCLUIR, COPIAR PIX
-   ============================================================ */
-
 function limparCamposBanco() {
     ['bancoNome','bancoAgencia','bancoConta','bancoPix','bancoTitular'].forEach(id => {
         const el = document.getElementById(id);
@@ -3239,6 +3300,517 @@ function excluirDocumentoPlaca(placa, idx) {
     registrarAuditoria('Exclusão', `Documento excluído da placa ${placa}`);
 }
 
+/* ============================================================
+   COMPROVANTES DE PAGAMENTO — LEITURA AUTOMÁTICA
+   ============================================================ */
+
+function fileToDataURL(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = e => resolve(e.target.result);
+        reader.onerror = () => reject(new Error('Erro ao ler arquivo'));
+        reader.readAsDataURL(file);
+    });
+}
+
+async function extrairTextoPDF(file) {
+    if (typeof pdfjsLib === 'undefined') throw new Error('Biblioteca PDF não carregada');
+    if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+    const arrayBuffer = await file.arrayBuffer();
+    const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+    const pdf = await loadingTask.promise;
+    let textoTotal = '';
+    for (let p = 1; p <= pdf.numPages; p++) {
+        const page = await pdf.getPage(p);
+        const content = await page.getTextContent();
+        let lastY = null;
+        let lineBuffer = '';
+        for (const item of content.items) {
+            if (!item.str) continue;
+            const y = item.transform ? item.transform[5] : null;
+            if (lastY !== null && y !== null && Math.abs(y - lastY) > 2) {
+                textoTotal += lineBuffer + '\n';
+                lineBuffer = item.str;
+            } else {
+                if (lineBuffer && !lineBuffer.endsWith(' ') && !item.str.startsWith(' ')) {
+                    lineBuffer += ' ';
+                }
+                lineBuffer += item.str;
+            }
+            if (y !== null) lastY = y;
+        }
+        if (lineBuffer) textoTotal += lineBuffer + '\n';
+    }
+    return textoTotal;
+}
+
+async function extrairTextoImagem(file) {
+    if (typeof Tesseract === 'undefined') throw new Error('Biblioteca OCR não carregada');
+    const result = await Tesseract.recognize(file, 'por');
+    return (result && result.data && result.data.text) ? result.data.text : '';
+}
+
+function extrairDadosComprovante(textoOriginal) {
+    if (!textoOriginal) return { valor: 0, data: '', pagador: '', recebedor: '' };
+    const t = textoOriginal.replace(/\s+/g, ' ').trim();
+    const tU = t.toUpperCase();
+
+    let valor = 0;
+    const valorPatterns = [
+        /VALOR\s+PAGO\s+R\$\s*([\d.,]+)/,
+        /VALOR\s+R\$\s*([\d.,]+)/,
+        /VALOR\s*:\s*R\$\s*([\d.,]+)/,
+        /VALOR\s*:\s*([\d.,]+)/,
+        /R\$\s*([\d]{1,3}(?:\.\d{3})*,\d{2})/,
+        /R\$\s*(\d+\.\d{2})/
+    ];
+    for (const p of valorPatterns) {
+        const m = tU.match(p);
+        if (m) {
+            const s = m[1];
+            let v;
+            if (/,\d{2}$/.test(s)) v = parseFloat(s.replace(/\./g, '').replace(',', '.'));
+            else v = parseFloat(s);
+            if (!isNaN(v) && v > 0) { valor = v; break; }
+        }
+    }
+
+    let data = '';
+    const dataPatterns = [
+        /DATA\s+E\s+HORA\s+DA\s+TRANSA[ÇC][ÃA]O\s+(\d{2}\/\d{2}\/\d{4})/,
+        /DATA\s+DA\s+OPERA[ÇC][ÃA]O\s*:?\s*(\d{2}\/\d{2}\/\d{4})/,
+        /DATA\s*:?\s*(\d{2}\/\d{2}\/\d{4})/
+    ];
+    for (const p of dataPatterns) {
+        const m = tU.match(p);
+        if (m) { data = m[1]; break; }
+    }
+    if (!data) {
+        const m = tU.match(/(\d{2}\/\d{2}\/\d{4})/);
+        if (m) data = m[1];
+    }
+    if (!data) {
+        const meses = { JAN:'01', FEV:'02', MAR:'03', ABR:'04', MAI:'05', JUN:'06',
+                       JUL:'07', AGO:'08', SET:'09', OUT:'10', NOV:'11', DEZ:'12' };
+        const m = tU.match(/(\d{1,2})\s+([A-ZÇ]{3,})\s*,?\s*(\d{4})/);
+        if (m) {
+            const mes = meses[m[2].substring(0, 3)];
+            if (mes) data = m[1].padStart(2, '0') + '/' + mes + '/' + m[3];
+        }
+    }
+
+    function extractName(startIdx, maxLen) {
+        maxLen = maxLen || 320;
+        const sub = t.substring(startIdx, startIdx + maxLen);
+        let m = sub.match(/\bNOME\s*:?\s*([A-ZÀ-Ú][A-ZÀ-Ú\s\.]{3,80}?)(?=\s+(?:CPF|CNPJ|INSTITUI|AG[ÊE]NCIA|CONTA|CHAVE|BANCO|PIX)|$)/i);
+        if (m) return m[1].trim();
+        m = sub.match(/\bPARA\s+([A-ZÀ-Úa-zà-ú][A-ZÀ-Úa-zà-ú\s\.]{3,80}?)(?=\s+(?:CPF|CNPJ|INSTITUI|AG[ÊE]NCIA|CONTA|CHAVE|BANCO|PIX)|$)/i);
+        if (m) return m[1].trim();
+        m = sub.match(/\bDE\s+([A-ZÀ-Ú][A-ZÀ-Úa-zà-ú]+\s+[A-ZÀ-Ú][A-ZÀ-Úa-zà-ú\s\.]{3,80}?)(?=\s+(?:CPF|CNPJ|INSTITUI|AG[ÊE]NCIA|CONTA|CHAVE|BANCO|PIX)|$)/i);
+        if (m) return m[1].trim();
+        return '';
+    }
+
+    let pagador = '';
+    const pagKeys = ['DADOS DO PAGADOR', 'DADOS DE ORIGEM', 'PAGADOR'];
+    for (const key of pagKeys) {
+        const idx = tU.indexOf(key);
+        if (idx >= 0) {
+            const nome = extractName(idx + key.length);
+            if (nome) { pagador = nome; break; }
+        }
+    }
+    if (!pagador) {
+        const idx = tU.indexOf('ORIGEM');
+        if (idx >= 0) {
+            const sub = t.substring(idx + 6);
+            const m = sub.match(/^\s*([A-ZÀ-Ú][A-ZÀ-Ú\s\.]{3,60}?)(?=\s+(?:CPF|CNPJ|INSTITUI|CHAVE)|$)/);
+            if (m) pagador = m[1].trim();
+        }
+    }
+
+    let recebedor = '';
+    const recebKeys = ['DADOS DO RECEBEDOR', 'DADOS DE DESTINO', 'RECEBEDOR'];
+    for (const key of recebKeys) {
+        const idx = tU.indexOf(key);
+        if (idx >= 0) {
+            const nome = extractName(idx + key.length);
+            if (nome) { recebedor = nome; break; }
+        }
+    }
+    if (!recebedor) {
+        const idx = tU.indexOf('DESTINO');
+        if (idx >= 0) {
+            const sub = t.substring(idx + 7);
+            const m = sub.match(/^\s*([A-ZÀ-Ú][A-ZÀ-Ú\s\.]{3,60}?)(?=\s+(?:CPF|CNPJ|INSTITUI|CHAVE)|$)/);
+            if (m) recebedor = m[1].trim();
+        }
+    }
+
+    return { valor: valor, data: data, pagador: pagador, recebedor: recebedor };
+}
+
+/* ============================================================
+   OBTÉM PLACAS DO USUÁRIO LOGADO (locações ativas)
+   - Match por nome exato OU primeiro nome (case-insensitive)
+   ============================================================ */
+function obterPlacasDoUsuarioLogado() {
+    if (!usuarioLogado || !usuarioLogado.nome) return [];
+    const nomeUser = String(usuarioLogado.nome || '').toUpperCase().trim();
+    if (!nomeUser) return [];
+    const primeiroNomeUser = nomeUser.split(/\s+/)[0];
+
+    const placas = [];
+    (db.locacoes || []).forEach(function(l) {
+        if (!l || !l.placa) return;
+        const locatario = String(l.locatario || '').toUpperCase().trim();
+        if (!locatario) return;
+        const primeiroNomeLoc = locatario.split(/\s+/)[0];
+        const bate = (locatario === nomeUser)
+            || (primeiroNomeLoc === primeiroNomeUser && primeiroNomeUser.length >= 3);
+        if (bate && placas.indexOf(l.placa) < 0) {
+            placas.push(l.placa);
+        }
+    });
+    return placas;
+}
+
+function renderizarPreviewComprovantesPag() {
+    const container = document.getElementById('compPagPreviewContainer');
+    if (!container) return;
+    container.innerHTML = '';
+    const btn = document.getElementById('btnSalvarComprovantesPag');
+
+    if (comprovantesPagTemp.length === 0) {
+        if (btn) { btn.disabled = true; btn.style.opacity = '0.5'; }
+        return;
+    }
+    if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+
+    const placasUsuario = obterPlacasDoUsuarioLogado();
+
+    comprovantesPagTemp.forEach(function(item, idx) {
+        const card = document.createElement('div');
+        card.className = 'comp-pag-card';
+
+        const header = document.createElement('div');
+        header.className = 'comp-pag-header';
+        const nomeSafe = (item.nomeArquivo || '').replace(/</g, '&lt;');
+        header.innerHTML = '<strong>' + nomeSafe + '</strong>';
+        const btnDel = document.createElement('button');
+        btnDel.className = 'btn-danger';
+        btnDel.style.cssText = 'padding:4px 8px;font-size:12px;margin:0;';
+        btnDel.textContent = '🗑️';
+        btnDel.onclick = function() { removerComprovanteTemp(idx); };
+        header.appendChild(btnDel);
+        card.appendChild(header);
+
+        const preview = document.createElement('div');
+        preview.className = 'comp-pag-preview';
+        if (item.tipoArquivo && item.tipoArquivo.indexOf('image/') === 0) {
+            const img = document.createElement('img');
+            img.src = item.dataUrl;
+            preview.appendChild(img);
+        } else {
+            preview.innerHTML = '<div style="text-align:center;"><div style="font-size:36px;">📄</div><div style="font-size:11px;color:#666;">PDF</div></div>';
+        }
+        card.appendChild(preview);
+
+        // Campos de texto
+        const camposTexto = [
+            { key: 'pagador', label: 'Pagador' },
+            { key: 'recebedor', label: 'Recebedor' },
+            { key: 'valorFormatado', label: 'Valor (R$)' },
+            { key: 'dataComprovante', label: 'Data (DD/MM/AAAA)' }
+        ];
+        camposTexto.forEach(function(f) {
+            const wrap = document.createElement('div');
+            wrap.className = 'comp-pag-field';
+            const lbl = document.createElement('label');
+            lbl.textContent = f.label;
+            const inp = document.createElement('input');
+            inp.type = 'text';
+            inp.value = item[f.key] || '';
+            inp.onchange = function() { atualizarCampoComprovante(idx, f.key, this.value); };
+            wrap.appendChild(lbl);
+            wrap.appendChild(inp);
+            card.appendChild(wrap);
+        });
+
+        // Select da PLACA
+        const wrapPlaca = document.createElement('div');
+        wrapPlaca.className = 'comp-pag-field';
+        const lblPlaca = document.createElement('label');
+        lblPlaca.textContent = 'Placa do Carro (alugado para você)';
+        const selPlaca = document.createElement('select');
+
+        const optEmpty = document.createElement('option');
+        optEmpty.value = '';
+        optEmpty.textContent = placasUsuario.length > 0 ? '-- Selecione a placa --' : '-- Nenhuma locação ativa --';
+        selPlaca.appendChild(optEmpty);
+
+        // Lista prioritária: placas do usuário logado
+        placasUsuario.forEach(function(p) {
+            const o = document.createElement('option');
+            o.value = p;
+            o.textContent = p;
+            if (item.placa === p) o.selected = true;
+            selPlaca.appendChild(o);
+        });
+
+        // Fallback: se não tiver placa do usuário, mostra todas do sistema
+        if (placasUsuario.length === 0) {
+            const todasPlacas = (db.veiculos || []).map(function(v) { return v.placa; }).filter(Boolean);
+            todasPlacas.forEach(function(p) {
+                if (!placasUsuario.includes(p)) {
+                    const o = document.createElement('option');
+                    o.value = p;
+                    o.textContent = p;
+                    if (item.placa === p) o.selected = true;
+                    selPlaca.appendChild(o);
+                }
+            });
+        }
+
+        selPlaca.onchange = function() { atualizarCampoComprovante(idx, 'placa', this.value); };
+        wrapPlaca.appendChild(lblPlaca);
+        wrapPlaca.appendChild(selPlaca);
+        card.appendChild(wrapPlaca);
+
+        container.appendChild(card);
+    });
+}
+
+function atualizarCampoComprovante(idx, campo, valor) {
+    if (!comprovantesPagTemp[idx]) return;
+    if (campo === 'valorFormatado') {
+        comprovantesPagTemp[idx].valorFormatado = valor;
+        comprovantesPagTemp[idx].valor = parseMoeda(valor);
+    } else if (campo === 'placa') {
+        comprovantesPagTemp[idx].placa = String(valor || '').toUpperCase().trim();
+    } else {
+        comprovantesPagTemp[idx][campo] = valor;
+    }
+}
+
+function removerComprovanteTemp(idx) {
+    if (!comprovantesPagTemp[idx]) return;
+    if (!confirm('Remover este arquivo da pré-visualização?')) return;
+    comprovantesPagTemp.splice(idx, 1);
+    renderizarPreviewComprovantesPag();
+}
+
+async function handleComprovantesPagInputChange(e) {
+    const input = e.target || this;
+    const files = Array.from(input.files || []);
+    if (files.length === 0) return;
+    input.value = '';
+
+    const container = document.getElementById('compPagPreviewContainer');
+    if (container) container.innerHTML = '<p style="color:#666;padding:10px;">⏳ Processando arquivos, aguarde...</p>';
+
+    const placasUsuario = obterPlacasDoUsuarioLogado();
+    const placaAuto = placasUsuario.length > 0 ? placasUsuario[0] : '';
+
+    const errors = [];
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        try {
+            if (file.size > 700 * 1024) {
+                errors.push(file.name + ': arquivo muito grande (' + Math.round(file.size / 1024) + 'KB). Limite: 700KB');
+                continue;
+            }
+            const dataUrl = await fileToDataURL(file);
+            const nomeLow = (file.name || '').toLowerCase();
+            const isPDF = file.type === 'application/pdf' || nomeLow.endsWith('.pdf');
+            const isImg = (file.type && file.type.indexOf('image/') === 0) || /\.(jpe?g|png)$/.test(nomeLow);
+
+            let texto = '';
+            if (isPDF) {
+                texto = await extrairTextoPDF(file);
+            } else if (isImg) {
+                texto = await extrairTextoImagem(file);
+            } else {
+                errors.push(file.name + ': tipo não suportado (use PDF, JPG ou JPEG)');
+                continue;
+            }
+
+            const dados = extrairDadosComprovante(texto);
+            comprovantesPagTemp.push({
+                nomeArquivo: file.name,
+                tipoArquivo: file.type || (isPDF ? 'application/pdf' : 'image/jpeg'),
+                dataUrl: dataUrl,
+                pagador: dados.pagador || '',
+                recebedor: dados.recebedor || '',
+                valor: dados.valor || 0,
+                valorFormatado: dados.valor ? formatarMoedaBR(dados.valor) : '',
+                dataComprovante: dados.data || '',
+                placa: placaAuto,
+                dataUpload: new Date().toLocaleString('pt-BR')
+            });
+        } catch (err) {
+            console.error('Erro em ' + file.name, err);
+            errors.push(file.name + ': ' + (err.message || 'erro ao processar'));
+        }
+    }
+
+    renderizarPreviewComprovantesPag();
+
+    if (errors.length > 0) {
+        alert('⚠️ Alguns arquivos não puderam ser processados:\n\n' + errors.join('\n'));
+    }
+}
+
+function salvarComprovantesPagamento() {
+    if (!comprovantesPagTemp || comprovantesPagTemp.length === 0) {
+        alert('Nenhum comprovante para salvar!');
+        return;
+    }
+    if (!Array.isArray(db.comprovantesPagamento)) db.comprovantesPagamento = [];
+    if (!db.documentosPlacas) db.documentosPlacas = {};
+
+    let salvos = 0;
+    let semPlaca = 0;
+
+    comprovantesPagTemp.forEach(function(item) {
+        const placa = String(item.placa || '').toUpperCase().trim();
+        if (!placa) semPlaca++;
+
+        // 1) Salva na lista geral de comprovantes de pagamento
+        db.comprovantesPagamento.push({
+            id: 'comp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+            nomeArquivo: item.nomeArquivo,
+            tipoArquivo: item.tipoArquivo,
+            dataUrl: item.dataUrl,
+            pagador: item.pagador || '',
+            recebedor: item.recebedor || '',
+            valor: Number(item.valor) || 0,
+            valorFormatado: item.valorFormatado || formatarMoedaBR(item.valor || 0),
+            dataComprovante: item.dataComprovante || '',
+            placa: placa,
+            dataUpload: item.dataUpload || new Date().toLocaleString('pt-BR')
+        });
+
+        // 2) Salva também na aba da placa (documentosPlacas)
+        if (placa) {
+            if (!db.documentosPlacas[placa]) db.documentosPlacas[placa] = [];
+            const nomeDoc = 'COMPROVANTE PAGTO ' + (item.dataComprovante ? item.dataComprovante : '') +
+                            (item.valorFormatado ? ' - ' + item.valorFormatado : '') +
+                            ' - ' + (item.nomeArquivo || 'arquivo');
+            db.documentosPlacas[placa].push({
+                nome: nomeDoc,
+                tipo: item.tipoArquivo || 'application/pdf',
+                data: item.dataUrl,
+                dataUpload: item.dataUpload || new Date().toLocaleString('pt-BR')
+            });
+        }
+
+        salvos++;
+    });
+
+    comprovantesPagTemp = [];
+    renderizarPreviewComprovantesPag();
+    atualizarTabelaComprovantesPag();
+    atualizarGaleriaComprovantes();
+    salvarDB();
+    registrarAuditoria('Cadastro', salvos + ' comprovante(s) de pagamento salvo(s)');
+
+    let msg = '✅ ' + salvos + ' comprovante(s) salvo(s) com sucesso!';
+    if (semPlaca > 0) {
+        msg += '\n\n⚠️ ' + semPlaca + ' comprovante(s) NÃO foram salvos na aba da placa (placa não informada).';
+    }
+    alert(msg);
+}
+
+function atualizarTabelaComprovantesPag() {
+    const tbody = document.querySelector('#tabelaComprovantesPag tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    const lista = db.comprovantesPagamento || [];
+
+    if (lista.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#999;padding:20px;">Nenhum comprovante salvo.</td></tr>';
+        return;
+    }
+
+    const indices = lista.map(function(_, i) { return i; }).reverse();
+    indices.forEach(function(realIdx) {
+        const c = lista[realIdx];
+        const tr = document.createElement('tr');
+        const nomeSafe = (c.nomeArquivo || '').replace(/</g, '&lt;');
+        tr.innerHTML =
+            '<td>' + (c.dataComprovante || '-') + '</td>' +
+            '<td>' + (c.pagador || '-') + '</td>' +
+            '<td>' + (c.recebedor || '-') + '</td>' +
+            '<td><strong style="color:#28a745;">' + (c.valorFormatado || formatarMoedaBR(c.valor)) + '</strong></td>' +
+            '<td>' + (c.placa || '-') + '</td>' +
+            '<td><small>' + nomeSafe + '</small></td>' +
+            '<td>' +
+                '<button class="btn-info" onclick="abrirComprovanteSalvo(' + realIdx + ')" title="Abrir">👁️</button>' +
+                '<button class="btn-warning" onclick="editarComprovanteSalvo(' + realIdx + ')" title="Editar">✏️</button>' +
+                '<button class="btn-danger" onclick="excluirComprovanteSalvo(' + realIdx + ')" title="Excluir">🗑️</button>' +
+            '</td>';
+        tbody.appendChild(tr);
+    });
+}
+
+function abrirComprovanteSalvo(idx) {
+    const c = (db.comprovantesPagamento || [])[idx];
+    if (!c || !c.dataUrl) { alert('Arquivo não disponível.'); return; }
+
+    if (c.tipoArquivo && c.tipoArquivo.indexOf('image/') === 0) {
+        openImageModal(c.dataUrl);
+    } else {
+        const win = window.open();
+        if (!win) { alert('Bloqueio de pop-up. Permita pop-ups para abrir o PDF.'); return; }
+        const nomeSafe = (c.nomeArquivo || 'Comprovante').replace(/</g, '&lt;');
+        win.document.write('<html><head><title>' + nomeSafe + '</title></head><body style="margin:0;"><iframe src="' + c.dataUrl + '" frameborder="0" style="border:0;position:fixed;top:0;left:0;width:100%;height:100%;" allowfullscreen></iframe></body></html>');
+    }
+}
+
+function editarComprovanteSalvo(idx) {
+    if (!confirmarSenhaADM()) return;
+    const c = (db.comprovantesPagamento || [])[idx];
+    if (!c) return;
+
+    const pagador = prompt('Pagador:', c.pagador || '');
+    if (pagador === null) return;
+    const recebedor = prompt('Recebedor:', c.recebedor || '');
+    if (recebedor === null) return;
+    const valorStr = prompt('Valor (ex: R$ 1.000,00):', c.valorFormatado || '');
+    if (valorStr === null) return;
+    const data = prompt('Data (DD/MM/AAAA):', c.dataComprovante || '');
+    if (data === null) return;
+    const placa = prompt('Placa do Carro:', c.placa || '');
+    if (placa === null) return;
+
+    c.pagador = pagador;
+    c.recebedor = recebedor;
+    c.valorFormatado = valorStr;
+    c.valor = parseMoeda(valorStr);
+    c.dataComprovante = data;
+    c.placa = String(placa || '').toUpperCase().trim();
+
+    atualizarTabelaComprovantesPag();
+    salvarDB();
+    registrarAuditoria('Edição', 'Comprovante editado: ' + c.nomeArquivo);
+    alert('✅ Comprovante atualizado!');
+}
+
+function excluirComprovanteSalvo(idx) {
+    if (!confirmarSenhaADM()) return;
+    const c = (db.comprovantesPagamento || [])[idx];
+    if (!c) return;
+    if (!confirm('Excluir o comprovante "' + c.nomeArquivo + '"?')) return;
+    db.comprovantesPagamento.splice(idx, 1);
+    atualizarTabelaComprovantesPag();
+    salvarDB();
+    registrarAuditoria('Exclusão', 'Comprovante excluído: ' + c.nomeArquivo);
+    alert('✅ Comprovante excluído.');
+}
+
 // ===== PWA: INSTALAÇÃO + SERVICE WORKER =====
 let deferredInstallPrompt = null;
 
@@ -3338,6 +3910,17 @@ async function inicializarSistemaCompleto() {
     atualizarGaleriaComprovantes();
     configurarInputMultiplasImagens();
     configurarBotaoInstalar();
+
+    if (typeof pdfjsLib !== 'undefined') {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+    const compPagInput = document.getElementById('compPagInput');
+    if (compPagInput) {
+        compPagInput.removeEventListener('change', handleComprovantesPagInputChange);
+        compPagInput.addEventListener('change', handleComprovantesPagInputChange);
+    }
+    atualizarTabelaComprovantesPag();
+
     console.log('🚀 Sistema inicializado.');
 }
 

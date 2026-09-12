@@ -234,7 +234,6 @@
         <button class="tab" data-tab="banco">🏦 Banco</button>
         <button class="tab" data-tab="fluxocaixa">💵 Fluxo de Caixa</button>
         <button class="tab" data-tab="doc">📁 Comprovante</button>
-        <button class="tab" data-tab="docVeiculo">📄 DOC</button>
         <button class="tab" data-tab="compras">🛒 Compras</button>
         <button class="tab" data-tab="configuracao">⚙️ Configuração</button>
         <button class="tab" data-tab="auditoria">🔍 Auditoria</button>
@@ -605,13 +604,6 @@
     </div>
     <!-- ====================== FIM ABA COMPROVANTE ====================== -->
 
-    <div class="tab-content" id="docVeiculo">
-        <h2>📄 Documentos de Veículos (CRLV)</h2>
-        <p style="color:#666;margin-bottom:15px;">Documentos importados pelo botão <strong>📄 DOC VEÍCULO</strong> na aba Veículos. Pesquise pela placa ou pelo nome do arquivo.</p>
-        <input type="text" class="filter-input" placeholder="🔍 Pesquisar por placa ou arquivo..." id="filterDocVeiculo" style="max-width:100%;">
-        <div id="listaDocVeiculo" style="margin-top:15px;"></div>
-    </div>
-
     <div class="tab-content" id="compras"><h2>🛒 Compras</h2><div class="form-grid"><div class="form-group"><label>Data</label><input type="date" id="compData"></div><div class="form-group"><label>Produto</label><input type="text" id="compProduto"></div><div class="form-group"><label>Fornecedor</label><input type="text" id="compFornecedor"></div><div class="form-group"><label>Placa</label><input type="text" id="compPlaca"></div><div class="form-group"><label>Qtd</label><input type="number" id="compQuantidade"></div><div class="form-group"><label>Valor Unit</label><input type="text" id="compValorUnitario" class="money"></div><div class="form-group"><label>Total</label><input type="text" id="compValorTotal" class="money" readonly></div><div class="form-group"><label>Status</label><select id="compStatus"><option value="pendente">Pendente</option><option value="pago">Pago</option></select></div></div><button class="btn-primary" onclick="salvarCompra()">💾 Salvar</button><div class="table-container"><table id="tabelaCompras"><thead><tr><th>Data</th><th>Produto</th><th>Fornecedor</th><th>Placa</th><th>Valor</th><th>Status</th><th>Ações</th></tr></thead><tbody></tbody></table></div></div>
 
     <div class="tab-content" id="configuracao"><h2>⚙️ Configurações</h2><div class="config-section"><h3>🔧 Gerais</h3><div class="form-grid"><div class="form-group"><label>Empresa</label><input type="text" id="configEmpresa" value="LOBÃO"></div><div class="form-group"><label>CNPJ</label><input type="text" id="configCnpj"></div><div class="form-group"><label>Telefone</label><input type="text" id="configTelefone"></div><div class="form-group"><label>Email</label><input type="text" id="configEmail"></div><div class="form-group"><label>Endereço</label><input type="text" id="configEndereco"></div></div></div><button class="btn-primary" onclick="salvarConfiguracao()">💾 Salvar</button></div>
@@ -879,16 +871,6 @@ async function carregarDB() {
 
     let precisaSalvar = false;
 
-    if (Array.isArray(db.usuarios)) {
-        db.usuarios.forEach(u => {
-            if (!u || !u.permissoes || !u.permissoes.abas) return;
-            if (u.permissoes.abas.docVeiculo === undefined) {
-                u.permissoes.abas.docVeiculo = (u.tipo === 'ADM' || u.tipo === 'MOTORISTA');
-                precisaSalvar = true;
-            }
-        });
-    }
-
     const lobao = db.usuarios.find(u => u && u.nome === 'LOBÃO');
     if (lobao) {
         lobao.nome = 'SERGIO'; lobao.senha = '080888'; lobao.tipo = 'ADM';
@@ -916,7 +898,7 @@ const todasAbas = [
     { id: 'veiculos' }, { id: 'clientes' }, { id: 'locacoes' }, { id: 'locEncerrada' },
     { id: 'manutencao' }, { id: 'mecanico' }, { id: 'usuario' }, { id: 'garagem' },
     { id: 'sos' }, { id: 'comprovantes' }, { id: 'pagamentos' }, { id: 'banco' },
-    { id: 'fluxocaixa' }, { id: 'doc' }, { id: 'docVeiculo' }, { id: 'compras' },
+    { id: 'fluxocaixa' }, { id: 'doc' }, { id: 'compras' },
     { id: 'configuracao' }, { id: 'auditoria' }, { id: 'pendente' }, { id: 'historico' },
     { id: 'vistoria' }
 ];
@@ -930,7 +912,7 @@ const permissoesPadrao = {
             manutencao:true, mecanico:false, usuario:false, 
             garagem:true, sos:true, comprovantes:true, 
             pagamentos:false, banco:true, fluxocaixa:false, 
-            doc:true, docVeiculo:true, compras:false, configuracao:false, 
+            doc:true, compras:false, configuracao:false, 
             auditoria:false, pendente:false, historico:true, vistoria:true 
         }, 
         botoes: { 
@@ -940,8 +922,8 @@ const permissoesPadrao = {
         }, 
         veiculos: {} 
     },
-    OFICINA: { abas: { veiculos:true,clientes:false,locacoes:false,locEncerrada:false,manutencao:true,mecanico:true,usuario:false,garagem:false,sos:false,comprovantes:false,pagamentos:false,banco:false,fluxocaixa:false,doc:false,docVeiculo:false,compras:false,configuracao:false,auditoria:false,pendente:false,historico:false,vistoria:true }, botoes: { veiculos_salvar:true, manutencao_salvar:true, mecanico_salvar:true, vistoria_camera:true }, veiculos: {} },
-    VISITANTE: { abas: { veiculos:false,clientes:false,locacoes:false,locEncerrada:false,manutencao:false,mecanico:false,usuario:false,garagem:true,sos:false,comprovantes:false,pagamentos:false,banco:false,fluxocaixa:false,doc:false,docVeiculo:false,compras:false,configuracao:false,auditoria:false,pendente:false,historico:false,vistoria:false }, botoes: { garagem_buscar:true, garagem_salvar:true }, veiculos: {} }
+    OFICINA: { abas: { veiculos:true,clientes:false,locacoes:false,locEncerrada:false,manutencao:true,mecanico:true,usuario:false,garagem:false,sos:false,comprovantes:false,pagamentos:false,banco:false,fluxocaixa:false,doc:false,compras:false,configuracao:false,auditoria:false,pendente:false,historico:false,vistoria:true }, botoes: { veiculos_salvar:true, manutencao_salvar:true, mecanico_salvar:true, vistoria_camera:true }, veiculos: {} },
+    VISITANTE: { abas: { veiculos:false,clientes:false,locacoes:false,locEncerrada:false,manutencao:false,mecanico:false,usuario:false,garagem:true,sos:false,comprovantes:false,pagamentos:false,banco:false,fluxocaixa:false,doc:false,compras:false,configuracao:false,auditoria:false,pendente:false,historico:false,vistoria:false }, botoes: { garagem_buscar:true, garagem_salvar:true }, veiculos: {} }
 };
 
 let selfieStream = null, selfieDataUrl = null, selfieClienteTemp = null, selfieUsuarioTemp = null, selfieDestino = 'cliente';
@@ -1142,7 +1124,6 @@ document.querySelectorAll('.tab').forEach(tab => {
         if (tabId === 'sos') atualizarGaleriaSOS();
         if (tabId === 'comprovantes') { atualizarComboPlacasDocumentos(); atualizarGaleriaComprovantes(); atualizarTabelaComprovantesPag(); }
         if (tabId === 'banco') atualizarTabelaBancos();
-        if (tabId === 'docVeiculo') atualizarListaDocVeiculo();
         if (tabId === 'doc') atualizarTabelaDoc();
     });
 });
@@ -4810,24 +4791,31 @@ function cancelarDocVeiculo() {
 async function vincularPDFaPlaca(arquivo, placa, dadosExtraidos) {
     if (!arquivo || !placa) return;
     const id = 'pdf_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
+    
     try {
         await idbSalvar(id, arquivo, { nomeArquivo: arquivo.name, placa, tipo: arquivo.type || 'application/pdf' });
     } catch (err) {
         console.error('Erro ao salvar PDF no IndexedDB:', err);
         throw err;
     }
-    if (!Array.isArray(db.docsVeiculos)) db.docsVeiculos = [];
-    db.docsVeiculos.push({
-        id, placa: placa,
-        nomeArquivo: arquivo.name,
-        tipoArquivo: arquivo.type || 'application/pdf',
-        tamanho: arquivo.size || 0,
-        dataUpload: new Date().toLocaleString('pt-BR'),
-        dadosExtraidos: dadosExtraidos || {}
+    
+    // ALTERAÇÃO SOLICITADA: Salva na aba "Documentos Salvos" -> Placa em vez de "DOC"
+    if (!db.documentosPlacas) db.documentosPlacas = {};
+    if (!db.documentosPlacas[placa]) db.documentosPlacas[placa] = [];
+    
+    db.documentosPlacas[placa].push({
+        nome: arquivo.name,
+        tipo: arquivo.type || 'application/pdf',
+        storageId: id,
+        dataUpload: new Date().toLocaleString('pt-BR')
     });
-    registrarAuditoria('DOC Veículo', 'PDF vinculado à placa ' + placa + ': ' + arquivo.name);
+    
+    registrarAuditoria('Documento Salvo', 'PDF vinculado à placa ' + placa + ': ' + arquivo.name);
     salvarDB();
-    atualizarListaDocVeiculo();
+    
+    if (typeof atualizarGaleriaComprovantes === 'function') {
+        atualizarGaleriaComprovantes();
+    }
 }
 
 function atualizarListaDocVeiculo() {
@@ -5400,7 +5388,6 @@ async function inicializarSistemaCompleto() {
     atualizarGaleriaSOS();
     atualizarComboPlacasDocumentos();
     atualizarGaleriaComprovantes();
-    atualizarListaDocVeiculo();
     atualizarTabelaDoc();
     configurarInputMultiplasImagens();
     configurarBotaoInstalar();

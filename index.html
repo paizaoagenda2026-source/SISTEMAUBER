@@ -2778,60 +2778,59 @@ function atualizarTabelaAlugueis() {
     });
 }
 
-function marcarPagamentoPago(i) {
-    const a = db.alugueis[i];
-    if (!a) return;
-    if (!confirm(`Confirmar pagamento de ${a.valor} referente a ${a.locatario}?`)) return;
-    
-    const hojeISO = new Date().toISOString().split('T')[0];
-    a.status = 'pago';
-    a.dataPagamento = hojeISO;
-    
+/* ============================================================
+   NOVO: PROCESSAMENTO AUTOMÁTICO DE PAGAMENTO
+   ============================================================ */
+function processarPagamentoAutomatico(aluguelObj, dataPagamentoISO) {
+    aluguelObj.status = 'pago';
+    aluguelObj.dataPagamento = dataPagamentoISO;
+
     if (!Array.isArray(db.fluxoCaixa)) db.fluxoCaixa = [];
+    if (!Array.isArray(db.historicoAlugueis)) db.historicoAlugueis = [];
+
+    // 1. Fluxo de Caixa
     db.fluxoCaixa.push({
-        data: a.dataPagamento,
-        descricao: `Aluguel - ${a.locatario} - ${a.placa}`,
-        categoria: 'Aluguel', 
-        valor: a.valor, 
-        valorNumerico: a.valorNumerico,
+        data: dataPagamentoISO,
+        descricao: `Aluguel (Auto) - ${aluguelObj.locatario} - ${aluguelObj.placa}`,
+        categoria: 'Aluguel',
+        valor: aluguelObj.valor,
+        valorNumerico: Number(aluguelObj.valorNumerico) || parseMoeda(aluguelObj.valor),
         tipo: 'entrada'
     });
 
-    if (!Array.isArray(db.historicoAlugueis)) db.historicoAlugueis = [];
+    // 2. Histórico Aluguéis
     db.historicoAlugueis.push({
-        data: a.dataPagamento, dataPagamento: a.dataPagamento,
-        locatario: a.locatario || '', fabricante: a.fabricante || '',
-        placa: a.placa || '', parcela: a.parcela || '',
-        origem: a.origem || 'Aluguel', valor: a.valor || '',
-        valorNumerico: Number(a.valorNumerico) || parseMoeda(a.valor) || 0,
-        vencimento: a.vencimento || '',
-        tipoPagamento: a.tipoPagamento || 'mensal',
+        data: dataPagamentoISO, dataPagamento: dataPagamentoISO,
+        locatario: aluguelObj.locatario || '', fabricante: aluguelObj.fabricante || '',
+        placa: aluguelObj.placa || '', parcela: aluguelObj.parcela || '',
+        origem: aluguelObj.origem || 'Aluguel', valor: aluguelObj.valor || '',
+        valorNumerico: Number(aluguelObj.valorNumerico) || parseMoeda(aluguelObj.valor) || 0,
+        vencimento: aluguelObj.vencimento || '',
+        tipoPagamento: aluguelObj.tipoPagamento || 'mensal',
         status: 'pago'
     });
 
-    const locAtiva = (db.locacoes || []).find(l => l.locatario === a.locatario && l.placa === a.placa);
-    
+    // 3. Gera próximo pagamento
+    const locAtiva = (db.locacoes || []).find(l => l.locatario === aluguelObj.locatario && l.placa === aluguelObj.placa);
     if (locAtiva) {
-        const tipoPag = (a.tipoPagamento || 'mensal').toLowerCase();
+        const tipoPag = (aluguelObj.tipoPagamento || 'mensal').toLowerCase();
         const intervalDias = tipoPag === 'semanal' ? 7 : 30;
-        const baseVenc = a.vencimento || hojeISO;
+        const baseVenc = aluguelObj.vencimento || dataPagamentoISO;
         const d = new Date(baseVenc + 'T00:00:00');
         d.setDate(d.getDate() + intervalDias);
         const proximoVenc = d.toISOString().split('T')[0];
-        
-        const jaExiste = (db.alugueis || []).some(x => x.locatario === a.locatario && x.placa === a.placa && x.vencimento === proximoVenc && x.status !== 'pago');
-        
+
+        const jaExiste = (db.alugueis || []).some(x => x.locatario === aluguelObj.locatario && x.placa === aluguelObj.placa && x.vencimento === proximoVenc && x.status !== 'pago');
+
         if (!jaExiste) {
             const valorBase = parseMoeda(locAtiva.valorAluguel) || parseMoeda(locAtiva.aluguelMensal);
             let valorProx = valorBase;
             let descricaoProx = 'Aluguel';
-            
-            const parcelasExistentes = (db.alugueis || []).filter(x => x.locatario === a.locatario && x.placa === a.placa).length;
+
+            const parcelasExistentes = (db.alugueis || []).filter(x => x.locatario === aluguelObj.locatario && x.placa === aluguelObj.placa).length;
             const pagCaucao = locAtiva.pagCaucao || 'avista';
             const caucaoTotal = parseMoeda(locAtiva.caucao);
-            
             const numDivisoes = getNumDivisoesCaucao(tipoPag);
-            
             let totalCaucaoParcelas = 0;
             if (pagCaucao === 'parcelado') totalCaucaoParcelas = numDivisoes;
             else if (pagCaucao === 'entrada') totalCaucaoParcelas = numDivisoes;
@@ -2851,23 +2850,27 @@ function marcarPagamentoPago(i) {
             }
 
             db.alugueis.push({
-                locatario: a.locatario, fabricante: a.fabricante || '',
-                placa: a.placa, data: hojeISO, vencimento: proximoVenc,
+                locatario: aluguelObj.locatario, fabricante: aluguelObj.fabricante || '',
+                placa: aluguelObj.placa, data: dataPagamentoISO, vencimento: proximoVenc,
                 valor: formatarMoedaBR(valorProx), valorNumerico: valorProx,
-                origem: descricaoProx, tipoPagamento: a.tipoPagamento || 'mensal',
+                origem: descricaoProx, tipoPagamento: aluguelObj.tipoPagamento || 'mensal',
                 status: 'pendente', parcela: parcelasExistentes + 1,
-                dataInicio: a.dataInicio || locAtiva.dataInicio,
-                dataFim: a.dataFim || locAtiva.dataFim,
+                dataInicio: aluguelObj.dataInicio || locAtiva.dataInicio,
+                dataFim: aluguelObj.dataFim || locAtiva.dataFim,
                 pagCaucao: pagCaucao,
-                totalParcelas: a.totalParcelas || formatarMoedaBR(locAtiva.valorTotalParcelas)
+                totalParcelas: aluguelObj.totalParcelas || formatarMoedaBR(locAtiva.valorTotalParcelas)
             });
-            registrarAuditoria('Pagamento', `Recebido: ${a.locatario} - ${a.valor} | Próximo gerado: ${formatarDataBR(proximoVenc)}`);
-        } else {
-            registrarAuditoria('Pagamento', `Recebido: ${a.locatario} - ${a.valor}`);
         }
-    } else {
-        registrarAuditoria('Pagamento', `Recebido: ${a.locatario} - ${a.valor} (locação inativa)`);
     }
+}
+
+function marcarPagamentoPago(i) {
+    const a = db.alugueis[i];
+    if (!a) return;
+    if (!confirm(`Confirmar pagamento de ${a.valor} referente a ${a.locatario}?`)) return;
+    
+    const hojeISO = new Date().toISOString().split('T')[0];
+    processarPagamentoAutomatico(a, hojeISO);
     
     atualizarTabelaAlugueis();
     atualizarTabelaHistoricoAlugueis();
@@ -3301,7 +3304,7 @@ function excluirDocumentoPlaca(placa, idx) {
 }
 
 /* ============================================================
-   COMPROVANTES DE PAGAMENTO — LEITURA AUTOMÁTICA
+   COMPROVANTES DE PAGAMENTO — LEITURA AUTOMÁTICA E RECONCILIAÇÃO
    ============================================================ */
 
 function fileToDataURL(file) {
@@ -3673,6 +3676,7 @@ function salvarComprovantesPagamento() {
 
     let salvos = 0;
     let semPlaca = 0;
+    let autoPagos = 0; // NOVO
 
     comprovantesPagTemp.forEach(function(item) {
         const placa = String(item.placa || '').toUpperCase().trim();
@@ -3707,6 +3711,53 @@ function salvarComprovantesPagamento() {
             });
         }
 
+        // === NOVO: RECONCILIAÇÃO AUTOMÁTICA ===
+        const valorNum = Number(item.valor) || 0;
+        let dataPgtoISO = '';
+        
+        if (item.dataComprovante && item.dataComprovante.includes('/')) {
+            const parts = item.dataComprovante.split('/');
+            if (parts.length === 3) {
+                dataPgtoISO = `${parts[2]}-${parts[1]}-${parts[0]}`;
+            }
+        }
+        if (!dataPgtoISO) {
+            dataPgtoISO = new Date().toISOString().split('T')[0];
+        }
+
+        if (placa && valorNum > 0 && Array.isArray(db.alugueis)) {
+            const candidatos = db.alugueis.filter(a => {
+                if (a.placa !== placa) return false;
+                if (a.status === 'pago') return false;
+                const valA = Number(a.valorNumerico) || parseMoeda(a.valor) || 0;
+                return Math.abs(valA - valorNum) < 0.01;
+            });
+
+            if (candidatos.length > 0) {
+                candidatos.sort((a, b) => {
+                    const dtA = a.vencimento ? new Date(a.vencimento + 'T00:00:00') : new Date('2099-12-31');
+                    const dtB = b.vencimento ? new Date(b.vencimento + 'T00:00:00') : new Date('2099-12-31');
+                    return dtA - dtB;
+                });
+
+                let matchingAluguel = candidatos.find(a => {
+                    if (!a.vencimento) return false;
+                    return dataPgtoISO <= a.vencimento;
+                });
+
+                if (!matchingAluguel) {
+                    matchingAluguel = candidatos[0]; // Pega o mais antigo em atraso
+                }
+
+                if (matchingAluguel) {
+                    processarPagamentoAutomatico(matchingAluguel, dataPgtoISO);
+                    autoPagos++;
+                    registrarAuditoria('Pagamento Automático', `Comprovante conciliado: ${matchingAluguel.locatario} - ${placa} - R$ ${valorNum.toFixed(2)}`);
+                }
+            }
+        }
+        // =======================================
+
         salvos++;
     });
 
@@ -3714,10 +3765,19 @@ function salvarComprovantesPagamento() {
     renderizarPreviewComprovantesPag();
     atualizarTabelaComprovantesPag();
     atualizarGaleriaComprovantes();
+    
+    // Atualiza tabelas afetadas pelas conciliações automáticas
+    atualizarTabelaAlugueis();
+    atualizarTabelaHistoricoAlugueis();
+    atualizarTabelaFluxoCaixa();
+    
     salvarDB();
     registrarAuditoria('Cadastro', salvos + ' comprovante(s) de pagamento salvo(s)');
 
     let msg = '✅ ' + salvos + ' comprovante(s) salvo(s) com sucesso!';
+    if (autoPagos > 0) {
+        msg += '\n\n🤖 ' + autoPagos + ' pagamento(s) foram conciliados automaticamente (Status: PAGO, Fluxo de Caixa atualizado, Próxima parcela gerada).';
+    }
     if (semPlaca > 0) {
         msg += '\n\n⚠️ ' + semPlaca + ' comprovante(s) NÃO foram salvos na aba da placa (placa não informada).';
     }

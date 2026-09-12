@@ -25,7 +25,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <!-- ===== NOVO: jsPDF para geração de PDFs de texto completos ===== -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script>
         if (typeof pdfjsLib !== 'undefined') {
@@ -564,7 +563,47 @@
         </div>
     </div>
 
-    <div class="tab-content" id="doc"><h2>📁 Comprovante</h2><div class="form-grid"><div class="form-group"><label>Nome</label><input type="text" id="docNome"></div><div class="form-group"><label>R$ LOCAÇÃO</label><input type="text" id="docTipo" class="money"></div><div class="form-group"><label>VENCIMENTO</label><input type="date" id="docData"></div><div class="form-group"><label>Veículo/Cliente</label><select id="docReferencia"><option value="">Selecione</option></select></div><div class="form-group"><label>Obs</label><textarea id="docObs"></textarea></div></div><button class="btn-primary" onclick="salvarDoc()">💾 Salvar</button><div class="table-container"><table id="tabelaDoc"><thead><tr><th>Nome</th><th>R$</th><th>Vencimento</th><th>Veículo</th><th>Ações</th></tr></thead><tbody></tbody></table></div></div>
+    <!-- ====================== ABA COMPROVANTE (NOVA IMPLEMENTAÇÃO) ====================== -->
+    <div class="tab-content" id="doc">
+        <h2>📁 Comprovante</h2>
+
+        <div class="config-section" style="border-left-color: var(--success); background: #eaf7ed;">
+            <h3>📤 Leitura Automática de Comprovante</h3>
+            <p style="margin-bottom: 12px; color: #555; font-size: 14px;">
+                Selecione arquivos <strong>PDF, JPG, JPEG ou PNG</strong>. O sistema vai ler o comprovante e identificar automaticamente: <strong>pagador, recebedor, valor e data</strong>. Em seguida localiza o pagamento correspondente em <strong>Sub Pagamentos</strong> e, quando os dados conferirem, marca como <strong>PAGO</strong>, lança no <strong>Fluxo de Caixa</strong> e registra no <strong>Histórico de Aluguéis</strong>.
+            </p>
+            <input type="file" id="docComprovanteInput" accept="application/pdf,image/jpeg,image/jpg,image/png" multiple style="display:none;">
+            <button class="btn-buscar" onclick="document.getElementById('docComprovanteInput').click()">📂 Buscar Arquivos</button>
+            <button class="btn-primary" id="btnSalvarDocComprovante" onclick="salvarDoc()" disabled style="opacity:0.5;">💾 Salvar e Conciliar</button>
+            <small style="display:block;color:#666;margin-top:8px;">Tamanho máximo por arquivo: 700KB. PDFs com OCR (imagem) podem demorar mais.</small>
+        </div>
+
+        <div id="docComprovantePreview" style="display:flex;flex-wrap:wrap;gap:15px;margin-top:15px;"></div>
+
+        <div class="subfolder" style="margin-top:25px;">
+            <div class="subfolder-header"><h4>📋 Comprovantes Registrados</h4></div>
+            <input type="text" class="filter-input" placeholder="🔍 Filtrar comprovantes..." id="filterDoc" style="max-width:100%;">
+            <div class="table-container">
+                <table id="tabelaDoc">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Nome/Arquivo</th>
+                            <th>Pagador</th>
+                            <th>Recebedor</th>
+                            <th>Valor</th>
+                            <th>Pgto (Lançamento)</th>
+                            <th>Placa</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <!-- ====================== FIM ABA COMPROVANTE ====================== -->
 
     <div class="tab-content" id="docVeiculo">
         <h2>📄 Documentos de Veículos (CRLV)</h2>
@@ -783,6 +822,7 @@ function criarDBPadrao() {
         alugueis: [], fluxoCaixa: [], documentos: [], compras: [], auditoria: [], bancos: [], pendentes: [], historico: [],
         historicoAlugueis: [],
         comprovantesPagamento: [],
+        comprovantesDoc: [],
         documentosPlacas: {},
         docsVeiculos: [],
         contratos: { contratoLocacao:{}, termoResponsabilidade:{}, notaPromissoria:{} },
@@ -815,7 +855,7 @@ async function carregarDB() {
     if (!db || typeof db !== 'object') db = criarDBPadrao();
     ['veiculos','clientes','locacoes','locacoesEncerradas','manutencao','mecanico',
      'alugueis','fluxoCaixa','documentos','compras','auditoria','bancos',
-     'pendentes','historico','usuarios','historicoAlugueis','comprovantesPagamento','docsVeiculos'].forEach(k => {
+     'pendentes','historico','usuarios','historicoAlugueis','comprovantesPagamento','docsVeiculos','comprovantesDoc'].forEach(k => {
         if (!Array.isArray(db[k])) db[k] = [];
     });
     if (!db.contratos) db.contratos = { contratoLocacao:{}, termoResponsabilidade:{}, notaPromissoria:{} };
@@ -916,6 +956,7 @@ let galeriaIndexAtual = 0;
 let relatorioMecanicoTemp = [];
 
 let comprovantesPagTemp = [];
+let docComprovantesTemp = [];
 let idbHandle = null;
 let docVeiculoAtual = null;
 
@@ -1102,6 +1143,7 @@ document.querySelectorAll('.tab').forEach(tab => {
         if (tabId === 'comprovantes') { atualizarComboPlacasDocumentos(); atualizarGaleriaComprovantes(); atualizarTabelaComprovantesPag(); }
         if (tabId === 'banco') atualizarTabelaBancos();
         if (tabId === 'docVeiculo') atualizarListaDocVeiculo();
+        if (tabId === 'doc') atualizarTabelaDoc();
     });
 });
 
@@ -2979,11 +3021,6 @@ function preencherContratosAutomatico(locacao) {
     db.contratos.notaPromissoria = objNot;
 }
 
-/* ============================================================
-   GERAÇÃO DE PDFs DE CONTRATO COM jsPDF (TEXTO COMPLETO)
-   - Usa texto puro para garantir que NENHUMA cláusula seja cortada
-   - Quebra de página automática
-   ============================================================ */
 function _getJsPDF() {
     if (window.jspdf && window.jspdf.jsPDF) return window.jspdf.jsPDF;
     if (window.jsPDF) return window.jsPDF;
@@ -3042,21 +3079,16 @@ function gerarPDFContratoLocacaoBlob() {
     }
 
     addTitle('INSTRUMENTO PARTICULAR DE CONTRATO DE LOCAÇÃO DE VEÍCULOS');
-
     addParagraph('Contrato Número: "' + v('numero') + '"');
-
     addParagraph('Pelo presente Instrumento Particular de Contrato de Locação de Veículos, número ' + v('numeroInterno') + ', e na melhor forma de direito, de um lado, "' + v('locadora') + '", com sede na "' + v('locadoraEndereco') + '", inscrita no CNPJ sob o nº "' + v('locadoraCnpj') + '", doravante denominada LOCADORA, e, de outro lado, "' + v('locatario') + '", residente e domiciliado à "' + v('locatarioEndereco') + '", CEP "' + v('locatarioCep') + '", portador do RG nº "' + v('locatarioRg') + '" e inscrito no CPF sob o nº ' + v('locatarioCpf') + ', doravante denominado LOCATÁRIO, têm, entre si, justo e contratado o presente, o qual se regerá pelas cláusulas e condições que a seguir se aduzem, com inteira submissão às disposições legais e regulamentares atinentes à espécie.');
-
     addClauseTitle('CLÁUSULA PRIMEIRA - DO OBJETO.');
     addParagraph('1. O presente contrato tem por objeto a locação do veículo "' + v('veiculo') + '", cor ' + v('veiculoCor') + ', placas "' + v('veiculoPlaca') + '", quatro portas, com ar-condicionado, direção hidráulica, trava elétrica, vidro elétrico e sistema de som com multimidia, ano de fabricação "' + v('anoFabr') + '" e ano modelo "' + v('anoModel') + '".');
-
     addClauseTitle('CLÁUSULA SEGUNDA - DAS OBRIGAÇÕES DO LOCADOR');
     addParagraph('2. É dever do locador manter em dia o pagamento dos impostos, tais como IPVA, DPVAT e licenciamento.');
     addParagraph('3. Manter o seguro do veículo vigente.');
     addParagraph('4. É dever do locador providenciar a manutenção do automóvel locado tão logo seja identificada falha dos sistemas ou pane em geral, admitindo que o custo da manutenção ou reparo seja suportado por ele, salvo em caso de este não ter dado causa à ocorrência.');
     addParagraph('5. As revisões preventivas do veículo serão custeadas pelo locador, que indicará ao locatário o local onde o veículo deverá ser conduzido.');
     addParagraph('6. As revisões periódicas obrigatórias que se fizerem necessárias serão procedidas em oficina credenciada ou indicada pelo locador. Contudo, não haverá desconto no valor do aluguel, exceto se o veículo necessitar permanecer na oficina por mais de vinte e quatro horas, hipótese em que serão descontadas as diárias correspondentes até a efetiva entrega do veículo.');
-
     addClauseTitle('CLÁUSULA TERCEIRA - DAS OBRIGAÇÕES DO LOCATÁRIO');
     addParagraph('6.1 O locatário se compromete a utilizar o veículo de forma pessoal e exclusiva para o transporte em aplicativos de transporte remunerado privado individual de passageiros em conformidade com a Lei nº 12.587/2012, sendo expressamente proibido o empréstimo, compartilhamento, cessão ou sublocação a terceiros.');
     addParagraph('7. É de responsabilidade do locatário zelar pelo veículo, guardando-o e protegendo-o, utilizá-lo de maneira correta durante o período da locação.');
@@ -3072,7 +3104,6 @@ function gerarPDFContratoLocacaoBlob() {
     addParagraph('14. A apresentação do Boletim de Ocorrência citado na cláusula 3.4 deste Contrato, não exime o Locatário de arcar com todas as despesas decorrentes do evento danoso.');
     addParagraph('15. O locatário se compromete a arcar com as despesas inerentes à utilização de combustível, conserto de pneus, câmaras de ar, lâmpadas e troca de peças de reposição por mal uso.');
     addParagraph('16. Devolver o veículo nas mesmas condições de conservação nas quais lhe foram entregues no ato da retirada, inclusive devolvendo-o limpo, no endereço indicado pelo gestor do contrato, Sr. "' + v('gestor') + '".');
-
     addClauseTitle('CLÁUSULA QUARTA - DO ACOMPANHAMENTO E FISCALIZAÇÃO');
     addParagraph('17. O acompanhamento e a vistoria a serem exercidos pelo Locador, por meio de seus prepostos, consistirão no direito de vistoriar o veículo quando de sua restituição e durante o período de vigência do contrato, mediante prévia comunicação.');
     addParagraph('18. As partes ajustam que a vistoria obrigatória ocorrerá a cada 15 dias em local situado a "' + v('localVistoria') + '", por sua vez a recusa no cumprimento desta condição poderá dar ensejo à rescisão do contrato com a retenção do valor dado em caução.');
@@ -3080,25 +3111,21 @@ function gerarPDFContratoLocacaoBlob() {
     addParagraph('20. Havendo sinistro, independentemente de culpa exclusiva de terceiros, o Locatário se compromete a arcar com os custos do reparo conduzindo o veículo ao estado original.');
     addParagraph('21. Optando o Locatário por não acionar o seguro mediante o pagamento de franquia para reparar o veículo, o Locador apresentará a ele três orçamentos para que escolha a oficina e proceda ao pagamento.');
     addParagraph('22. Em caso de necessidade de remoção do veículo em decorrência de acidente, o locatário arcará com o pagamento de eventuais custas e estadias em pátio até sua liberação.');
-
     addClauseTitle('CLÁUSULA QUINTA - DO PRAZO DE LOCAÇÃO E VIGÊNCIA');
     addParagraph('23. O presente Contrato tem vigência de ' + v('prazo') + ' (cento e oitenta) dias, com início na data de sua assinatura, podendo ser prorrogado automaticamente e sua rescisão antecipada ensejará a cobrança de multa de "' + v('multaRescisao') + '".');
     addParagraph('23.1. Após os primeiros 90 dias de contrato o LOCATÁRIO poderá, se achar necessário, solicitar a troca de veículo para outra categoria (se houver veículo disponível) sem a necessidade de fazer o cancelamento do contrato e cumprir os próximos 90 dias, pagando apenas uma taxa de troca de veículo no valor de "' + v('taxaTroca') + '".');
     addParagraph('24. A seu critério, o Locador poderá rescindir o contrato devendo, no entanto, restituir o valor pago referente à semana vigente, bem como a caução no prazo estipulado neste contrato.');
     addParagraph('25. Após o vencimento do primeiro prazo, o contrato passará a ter duração de 30 (trinta) dias, podendo ser rescindido sem gerar ônus, desde que previamente comunicada a outra parte com antecedência de 30 (trinta) dias.');
-
     addClauseTitle('CLÁUSULA SEXTA - DO PREÇO.');
     addParagraph('26. Preço da Locação: O valor ajustado entre as partes neste contrato é de "' + v('valorAluguel') + '" semanais, bem como de que o limite de quilometragem estabelecido será de "' + v('limiteKm') + '" km por semana, e que por quilômetro excedente o locatário pagará o equivalente a "' + v('valorKm') + '". As partes ajustam ainda que nesse contrato a caução no valor de "' + v('caucao') + '", deverá ser dividida em "' + v('caucaoParcelas') + '" e a primeira parcela deverá ser paga na retirada do veículo e somente será devolvido 60 dias após o término do contrato o valor de "' + v('caucaoDevolucao') + '" não havendo multas e nenhuma avaria no veículo. O locatário outorga Nota Promissória prévia garantindo ao locador ressarcimento de eventuais gastos futuros, ocasião em que de comum acordo as partes inserirão o valor a ser confessado. Não havendo gastos a serem descontados, o título será restituído ao locatário em até sessenta dias após a entrega do veículo.');
     addParagraph('27. Estão inclusos no preço: Manutenção preventiva (por desgaste), Documentação atualizada, Seguro, Troca de óleo, Pneus, Pastilha de freio.');
     addParagraph('28. Não estão inclusos nos preços: Motorista, Combustível, Troca de sonda lambda, Peças de suspensão do veículo, Lâmpadas, Bomba de combustível, Pré-filtro de combustível, Taxa administrativa para cobrir despesas de transferência de pontos referentes a multas que o Locatário levar.');
     addParagraph('29. Todas as multas deverão ser pagas na semana seguinte à sua comunicação.');
     addParagraph('30. O locatário declara ter ciência de que os valores das multas e penalidades variam de acordo com o município de sua ocorrência.');
-
     addClauseTitle('CLÁUSULA SÉTIMA - DO FATURAMENTO E PAGAMENTO');
     addParagraph('31. O locatário concorda com que sua conta vinculada à Uber seja vinculada à conta do Sr. "' + v('gestor') + '" para que em caso de o saldo de débito não cobrir as despesas do aluguel, esta poderá ser utilizada até o limite das despesas, e em caso de ainda remanescer dívida, o locatário deverá proceder ao complemento do valor.');
     addParagraph('31.1. CASO O VALOR DO ALUGUEL NÃO SEJA FEITO EM SUA TOTALIDADE PELO APLICATIVO DA UBER, DEVERÁ SER FEITO O PAGAMENTO DA DIFERENÇA VIA PIX ATÉ AS 13:00 da data determinada.');
     addParagraph('32. O não pagamento do aluguel semanal e outros débitos em sua totalidade permitirá ao Locador rescindir o contrato imediatamente, incidindo a multa de "' + v('multaInadimplencia') + '".');
-
     addClauseTitle('CLÁUSULA OITAVA - DA RESCISÃO');
     addParagraph('33. Este Contrato poderá ser rescindido pelo LOCADOR a qualquer momento, mediante notificação escrita, desde que a comunicação seja feita com antecedência mínima de 7 (sete) dias, eximindo a parte de multas pela rescisão, excetuando-se eventuais dívidas inerentes a infrações, saldo de locação e avarias. No ato da rescisão, será cobrada taxa de "' + v('taxaHigienizacao') + '" caso seja necessária a higienização do veículo. O locatário poderá entregar o veículo em local diverso do ajustado, porém será cobrada taxa no valor de "' + v('taxaEntrega') + '".');
     addParagraph('34. A inobservância da notificação prévia obriga a parte a pagar o valor referente aos dias de locação não pagos.');
@@ -3106,10 +3133,8 @@ function gerarPDFContratoLocacaoBlob() {
     addParagraph('36. Este contrato permanecerá vigente até seu integral cumprimento com a prestação de contas.');
     addParagraph('37. O veículo possui cobertura para a atividade comercial de passageiros. Havendo necessidade de acionamento do seguro, o locatário arcará com os custos da franquia que corresponde a 10% (dez por cento) da tabela Fipe. Em caso de necessidade de acionamento da franquia para terceiros, será cobrado do locatário o equivalente a 2% da tabela Fipe do veículo.');
     addParagraph('38. Motivos que podem levar à rescisão contratual sem a necessidade de prévio aviso: Inadimplência no pagamento semanal; Perda ou suspensão da habilitação (conforme legislação de trânsito vigente); emprestar ou dividir o veículo com outro motorista sem autorização da empresa; deixar o veículo pernoitar na rua, sem acomodá-lo em garagem; Promover alterações no veículo sem prévia autorização do locador; deixar de comparecer à vistoria previamente agendada; Não comparecer para manutenções programadas; Omitir o registro semanal de quilometragem até as 10:00; Informar endereço diverso do que reside.');
-
     addClauseTitle('CLÁUSULA NONA - DO FORO');
     addParagraph('39. Fica eleito o Foro da Comarca de ' + v('foro') + ' como o único competente para a solução de questões oriundas do presente Contrato, renunciando a outro por mais privilegiado que seja, arcando a parte vencida, em caso de demanda, com todas as despesas processuais e honorários advocatícios.');
-
     addParagraph('E, por estarem assim justas e contratadas, as partes assinam o presente Contrato em duas vias de igual teor, forma e idêntico valor jurídico, para um só efeito, na presença das testemunhas abaixo assinadas dando tudo por bom, firme e valioso.');
     addParagraph('São Paulo, "' + v('data') + '"');
 
@@ -3152,21 +3177,13 @@ function gerarPDFTermoResponsabilidadeBlob() {
         lines.forEach(line => { ensurePage(5); doc.text(line, margin, y); y += 4.5; });
         y += 1.5;
     }
-    function addCenter(text, bold) {
-        doc.setFont('times', bold ? 'bold' : 'normal'); doc.setFontSize(10);
-        const lines = doc.splitTextToSize(text, maxW);
-        lines.forEach(line => { ensurePage(5); doc.text(line, pageW / 2, y, { align: 'center' }); y += 4.5; });
-    }
 
     addTitle('TERMO DE RESPONSABILIDADE E AUTORIZAÇÃO DE TRANSFERÊNCIA DE PONTUAÇÕES');
-
     addParagraph('Eu, "' + v('nome') + '", portador da cédula de identidade RG nº "' + v('rg') + '" e inscrito no CPF sob o nº "' + v('cpf') + '", CNH número de registro: "' + v('cnh') + '" validade "' + v('cnhValidade') + '" que sou contratante do veículo de marca "' + v('veiculo') + '", placas "' + v('placa') + '" de propriedade da Sra. "' + v('proprietario') + '", devidamente inscrita no C.P.F N. "' + v('proprietarioCpf') + '", assumo qualquer responsabilidade civil, criminal e judicial, responsabilizo-me também pelas penalidades pecuniárias ou de pontuação caso venha cometer qualquer infração que viole o código de trânsito brasileiro, autorizando a transferência de pontos das mesmas com o veículo acima descrito e de ' + v('prazo') + ' dias a contar da assinatura do mesmo. Sem mais.');
-
     y += 4;
     addParagraph('São Paulo "' + v('data') + '"');
     y += 2;
     addParagraph('Atenciosamente:');
-
     y += 20; ensurePage(30);
     doc.setFont('times', 'normal'); doc.setFontSize(10);
     doc.text('_____________________________________', pageW / 2, y, { align: 'center' }); y += 6;
@@ -3174,7 +3191,6 @@ function gerarPDFTermoResponsabilidadeBlob() {
     doc.text('CPF nº "' + v('cpf') + '"', pageW / 2, y, { align: 'center' }); y += 5;
     doc.text('RG nº "' + v('rg') + '"', pageW / 2, y, { align: 'center' }); y += 5;
     doc.text('CNH: "' + v('cnh') + '"', pageW / 2, y, { align: 'center' });
-
     return doc.output('blob');
 }
 
@@ -3207,14 +3223,11 @@ function gerarPDFNotaPromissoriaBlob() {
     }
 
     addTitle('NOTA PROMISSÓRIA');
-
     addRight('Nº: "' + v('numero') + '"');
     addRight('Vencimento: "' + v('vencimento') + '"');
     addRight('Valor: ' + v('valor'));
     y += 4;
-
     addParagraph('Aos "' + v('dataEmissao') + '", pagarei por esta única via de NOTA PROMISSÓRIA a "' + v('credor') + '", CNPJ nº "' + v('credorCnpj') + '", ou a sua ordem, a quantia de "' + v('valorExtenso') + '", em moeda corrente nacional. Pagável em: ' + v('cidade') + '.');
-
     y += 4;
     doc.setFont('times', 'bold'); doc.setFontSize(10);
     ensurePage(6);
@@ -3228,19 +3241,15 @@ function gerarPDFNotaPromissoriaBlob() {
     doc.text('CEP "' + v('emitenteCep') + '"', margin, y); y += 8;
     doc.text('"' + v('cartorio') + '"', margin, y); y += 5;
     doc.text('São Paulo "' + v('data') + '"', margin, y);
-
     y += 25; ensurePage(20);
     doc.text('_____________________________________', pageW / 2, y, { align: 'center' }); y += 6;
     doc.text('"' + v('emitenteNome') + '"', pageW / 2, y, { align: 'center' });
-
     return doc.output('blob');
 }
 
 async function gerarESalvarContratosAutomaticos(locacao) {
     if (!locacao || !locacao.placa) return 0;
-
     preencherContratosAutomatico(locacao);
-
     let pdfContrato, pdfTermo, pdfNota;
     try {
         pdfContrato = gerarPDFContratoLocacaoBlob();
@@ -3250,59 +3259,44 @@ async function gerarESalvarContratosAutomaticos(locacao) {
         console.error('Erro ao gerar PDFs dos contratos (jsPDF):', err);
         return 0;
     }
-
     if (!db.documentosPlacas) db.documentosPlacas = {};
     if (!db.documentosPlacas[locacao.placa]) db.documentosPlacas[locacao.placa] = [];
-
     const dataHoje = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
     const agora = new Date().toLocaleString('pt-BR');
-
     const docs = [
         { nome: 'CONTRATO DE LOCAÇÃO - ' + (locacao.locatario || '') + ' - ' + dataHoje + '.pdf', blob: pdfContrato },
         { nome: 'TERMO DE RESPONSABILIDADE - ' + (locacao.locatario || '') + ' - ' + dataHoje + '.pdf', blob: pdfTermo },
         { nome: 'NOTA PROMISSÓRIA - ' + (locacao.locatario || '') + ' - ' + dataHoje + '.pdf', blob: pdfNota }
     ];
-
     let salvos = 0;
     for (const d of docs) {
         const id = 'doc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
         try {
             await idbSalvar(id, d.blob, { nomeArquivo: d.nome, placa: locacao.placa, tipo: 'application/pdf' });
-            db.documentosPlacas[locacao.placa].push({
-                nome: d.nome,
-                tipo: 'application/pdf',
-                storageId: id,
-                dataUpload: agora
-            });
+            db.documentosPlacas[locacao.placa].push({ nome: d.nome, tipo: 'application/pdf', storageId: id, dataUpload: agora });
             salvos++;
         } catch (err) {
             console.error('Erro ao salvar PDF no IndexedDB:', err);
         }
     }
-
     registrarAuditoria('Contrato', salvos + ' contrato(s) gerado(s) em PDF para locação de ' + (locacao.locatario || '') + ' - ' + locacao.placa);
-
     try { atualizarGaleriaComprovantes(); } catch(e) {}
-
     return salvos;
 }
 
 function switchSubTab(t) {
     document.querySelectorAll('#comprovantes .sub-tab').forEach(x => x.classList.remove('active'));
     document.querySelectorAll('#comprovantes .sub-tab-content').forEach(x => x.classList.remove('active'));
-
     const map = { novo: 'subTabNovo', salvos: 'subTabSalvos', comprovantesPag: 'subTabComprovantesPag' };
     const targetId = map[t];
     if (targetId) {
         const el = document.getElementById(targetId);
         if (el) el.classList.add('active');
     }
-
     document.querySelectorAll('#comprovantes .sub-tab').forEach(b => {
         const oc = b.getAttribute('onclick') || '';
         if (oc.indexOf("'" + t + "'") >= 0) b.classList.add('active');
     });
-
     if (t === 'novo') atualizarComboPlacasDocumentos();
     if (t === 'salvos') atualizarGaleriaComprovantes();
     if (t === 'comprovantesPag') atualizarTabelaComprovantesPag();
@@ -3624,10 +3618,8 @@ function marcarPagamentoPago(i) {
     const a = db.alugueis[i];
     if (!a) return;
     if (!confirm(`Confirmar pagamento de ${a.valor} referente a ${a.locatario}?`)) return;
-    
     const hojeISO = new Date().toISOString().split('T')[0];
     processarPagamentoAutomatico(a, hojeISO);
-    
     atualizarTabelaAlugueis();
     atualizarTabelaHistoricoAlugueis();
     atualizarTabelaFluxoCaixa();
@@ -3693,21 +3685,14 @@ function salvarFluxoCaixa() {
     const categoria = document.getElementById('fcCategoria').value.trim();
     const valorStr = document.getElementById('fcValor').value;
     const tipo = document.getElementById('fcTipo').value;
-    
     if (!data || !descricao || !valorStr) { alert('Preencha Data, Descrição e Valor!'); return; }
-    
     const valorNum = parseMoeda(valorStr);
-    
     if (!Array.isArray(db.fluxoCaixa)) db.fluxoCaixa = [];
-    db.fluxoCaixa.push({
-        data, descricao, categoria, valor: valorStr, valorNumerico: valorNum, tipo
-    });
-    
+    db.fluxoCaixa.push({ data, descricao, categoria, valor: valorStr, valorNumerico: valorNum, tipo });
     document.getElementById('fcData').value = '';
     document.getElementById('fcDescricao').value = '';
     document.getElementById('fcCategoria').value = '';
     document.getElementById('fcValor').value = '';
-    
     atualizarTabelaFluxoCaixa();
     salvarDB();
     alert('Lançamento salvo no Fluxo de Caixa!');
@@ -3740,16 +3725,12 @@ function salvarBanco() {
     const conta = document.getElementById('bancoConta').value.trim();
     const pix = document.getElementById('bancoPix').value.trim();
     const titular = document.getElementById('bancoTitular').value.trim();
-
     if (!nome || !agencia || !conta || !pix || !titular) {
         alert('Preencha todos os campos do banco!');
         return;
     }
-
     if (!Array.isArray(db.bancos)) db.bancos = [];
-
     const banco = { nome, agencia, conta, pix, titular };
-
     if (bancoEditandoIndex !== null && db.bancos[bancoEditandoIndex]) {
         db.bancos[bancoEditandoIndex] = banco;
         registrarAuditoria('Edição', `Banco atualizado: ${banco.nome} - PIX: ${banco.pix}`);
@@ -3761,7 +3742,6 @@ function salvarBanco() {
         registrarAuditoria('Cadastro', `Novo banco: ${banco.nome} - PIX: ${banco.pix}`);
         alert('✅ Banco salvo com sucesso!');
     }
-
     atualizarTabelaBancos();
     salvarDB();
     limparCamposBanco();
@@ -3800,16 +3780,9 @@ function copiarPix(i) {
     const b = db.bancos[i];
     if (!b) return;
     if (!b.pix) { alert('Este banco não tem PIX cadastrado.'); return; }
-
     const pixTexto = b.pix;
-
-    function sucessoCopiar() {
-        alert('✅ PIX copiado!\n\n' + pixTexto);
-    }
-    function falhaCopiar() {
-        alert('❌ Não foi possível copiar automaticamente.\n\nPIX: ' + pixTexto);
-    }
-
+    function sucessoCopiar() { alert('✅ PIX copiado!\n\n' + pixTexto); }
+    function falhaCopiar() { alert('❌ Não foi possível copiar automaticamente.\n\nPIX: ' + pixTexto); }
     if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(pixTexto).then(sucessoCopiar).catch(function() {
             copiarPixFallback(pixTexto, sucessoCopiar, falhaCopiar);
@@ -3842,28 +3815,18 @@ function atualizarTabelaBancos() {
     const tbody = document.querySelector('#tabelaBancos tbody');
     if (!tbody) return;
     tbody.innerHTML = '';
-
     const lista = db.bancos || [];
-
     if (lista.length === 0) {
         const tr = document.createElement('tr');
         tr.innerHTML = `<td colspan="6" style="text-align:center;color:#999;padding:20px;">Nenhum banco cadastrado.</td>`;
         tbody.appendChild(tr);
         return;
     }
-
     lista.forEach((b, i) => {
         const botoes = [];
-        if (temPermissao('banco_editar')) {
-            botoes.push(`<button class="btn-warning" onclick="editarBanco(${i})" title="Editar">✏️</button>`);
-        }
-        if (temPermissao('banco_copiar')) {
-            botoes.push(`<button class="btn-copy" onclick="copiarPix(${i})" title="Copiar PIX">📋 Copiar PIX</button>`);
-        }
-        if (temPermissao('banco_excluir')) {
-            botoes.push(`<button class="btn-danger" onclick="excluirBanco(${i})" title="Excluir">🗑️</button>`);
-        }
-
+        if (temPermissao('banco_editar')) botoes.push(`<button class="btn-warning" onclick="editarBanco(${i})" title="Editar">✏️</button>`);
+        if (temPermissao('banco_copiar')) botoes.push(`<button class="btn-copy" onclick="copiarPix(${i})" title="Copiar PIX">📋 Copiar PIX</button>`);
+        if (temPermissao('banco_excluir')) botoes.push(`<button class="btn-danger" onclick="excluirBanco(${i})" title="Excluir">🗑️</button>`);
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${b.nome || ''}</td>
@@ -3877,7 +3840,6 @@ function atualizarTabelaBancos() {
     });
 }
 
-function atualizarTabelaDoc() { const t = document.querySelector('#tabelaDoc tbody'); if (t) t.innerHTML = ''; }
 function atualizarTabelaPendentes() { const t = document.querySelector('#tabelaPendentes tbody'); if (t) t.innerHTML = ''; }
 function carregarDadosContratos() {}
 function carregarConfiguracoes() {}
@@ -3890,9 +3852,7 @@ function salvarCompra() { alert('Função em implementação.'); }
 function editarCompra() { alert('Função em implementação.'); }
 function limparCamposCompra() {}
 function excluirCompra() {}
-function salvarDoc() { alert('Função em implementação.'); }
-function limparCamposDoc() {}
-function processarDocumentoComprovante() {}
+function processarDocumentoComprovante() { const input = document.getElementById('docComprovanteInput'); if (input) input.click(); }
 function salvarPendencia() { alert('Função em implementação.'); }
 function editarPendencia() {}
 function excluirPendencia() {}
@@ -3927,24 +3887,19 @@ function atualizarComboPlacasDocumentos() {
 function salvarDocumentosPlaca() {
     const placa = document.getElementById('docPlacaSelect').value;
     const input = document.getElementById('docPdfInput');
-    
     if (!placa) { alert('Selecione uma placa!'); return; }
     if (!input.files || input.files.length === 0) { alert('Selecione pelo menos um arquivo!'); return; }
-    
     if (!db.documentosPlacas) db.documentosPlacas = {};
     if (!db.documentosPlacas[placa]) db.documentosPlacas[placa] = [];
-    
     const files = Array.from(input.files);
     let processados = 0;
     let aceitos = 0;
-    
     files.forEach(file => {
         if (file.size > 700 * 1024) {
             alert(`O arquivo "${file.name}" é muito grande (${(file.size / 1024).toFixed(0)}KB). O limite é 700KB para garantir o funcionamento do banco de dados.`);
             return;
         }
         aceitos++;
-
         const reader = new FileReader();
         reader.onload = function(e) {
             db.documentosPlacas[placa].push({
@@ -3970,24 +3925,18 @@ function atualizarGaleriaComprovantes() {
     const container = document.getElementById('documentosSalvosContainer');
     if (!container) return;
     container.innerHTML = '';
-    
     if (!db.documentosPlacas || Object.keys(db.documentosPlacas).length === 0) {
         container.innerHTML = '<p style="color:#999;text-align:center;padding:20px;">Nenhum documento anexado ainda.</p>';
         return;
     }
-
     const placasOrdenadas = Object.keys(db.documentosPlacas).sort();
-
     placasOrdenadas.forEach(placa => {
         const docs = db.documentosPlacas[placa] || [];
         if (docs.length === 0) return;
-
         const veiculo = (db.veiculos || []).find(v => v.placa === placa);
         const nomeVeiculo = veiculo ? `${veiculo.fabricante} - ${veiculo.cor}` : 'Veículo Desconhecido';
-
         const folderDiv = document.createElement('div');
         folderDiv.className = 'documento-folder';
-        
         const headerDiv = document.createElement('div');
         headerDiv.className = 'documento-folder-header';
         headerDiv.innerHTML = `
@@ -3995,17 +3944,13 @@ function atualizarGaleriaComprovantes() {
             <span class="documento-folder-badge">${docs.length} doc(s)</span>
         `;
         folderDiv.appendChild(headerDiv);
-
         const listContainer = document.createElement('div');
         listContainer.className = 'documento-list';
-
         docs.forEach((doc, idx) => {
             const itemDiv = document.createElement('div');
             itemDiv.className = 'documento-item';
-
             const infoDiv = document.createElement('div');
             infoDiv.className = 'documento-info';
-            
             const isPdf = doc.tipo && doc.tipo.includes('pdf');
             infoDiv.innerHTML = `
                 <span class="documento-icon">${isPdf ? '📄' : '🖼️'}</span>
@@ -4014,10 +3959,8 @@ function atualizarGaleriaComprovantes() {
                     <small>Enviado em: ${doc.dataUpload}</small>
                 </div>
             `;
-
             const actionDiv = document.createElement('div');
             actionDiv.className = 'documento-actions';
-
             const btnAbrir = document.createElement('button');
             btnAbrir.className = 'btn-info';
             btnAbrir.textContent = '👁️ Abrir';
@@ -4028,41 +3971,26 @@ function atualizarGaleriaComprovantes() {
                         if (reg && reg.blob) {
                             const url = URL.createObjectURL(reg.blob);
                             const win = window.open();
-                            if (win) {
-                                win.document.write(`<iframe src="${url}" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>`);
-                            }
+                            if (win) win.document.write(`<iframe src="${url}" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>`);
                             setTimeout(() => URL.revokeObjectURL(url), 120000);
                             return;
-                        } else {
-                            alert('Arquivo não encontrado no armazenamento local.');
-                            return;
-                        }
-                    } catch (e) {
-                        console.error('Erro ao carregar PDF:', e);
-                        alert('Erro ao carregar o PDF.');
-                        return;
-                    }
+                        } else { alert('Arquivo não encontrado no armazenamento local.'); return; }
+                    } catch (e) { alert('Erro ao carregar o PDF.'); return; }
                 }
                 if (!doc.data) { alert('Documento sem conteúdo.'); return; }
                 const win = window.open();
-                if (win) {
-                    win.document.write(`<iframe src="${doc.data}" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>`);
-                }
+                if (win) win.document.write(`<iframe src="${doc.data}" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>`);
             };
-
             const btnExcluir = document.createElement('button');
             btnExcluir.className = 'btn-danger';
             btnExcluir.textContent = '🗑️ Excluir';
             btnExcluir.onclick = () => excluirDocumentoPlaca(placa, idx);
-
             actionDiv.appendChild(btnAbrir);
             actionDiv.appendChild(btnExcluir);
-
             itemDiv.appendChild(infoDiv);
             itemDiv.appendChild(actionDiv);
             listContainer.appendChild(itemDiv);
         });
-
         folderDiv.appendChild(listContainer);
         container.appendChild(folderDiv);
     });
@@ -4073,16 +4001,11 @@ function excluirDocumentoPlaca(placa, idx) {
     const doc = db.documentosPlacas[placa][idx];
     if (!doc) return;
     if (!confirm(`Excluir o documento "${doc.nome}"?`)) return;
-    
     if (doc.storageId) {
         try { idbExcluir(doc.storageId).catch(e => console.warn('IDB excluir:', e)); } catch(e) {}
     }
-    
     db.documentosPlacas[placa].splice(idx, 1);
-    if (db.documentosPlacas[placa].length === 0) {
-        delete db.documentosPlacas[placa];
-    }
-    
+    if (db.documentosPlacas[placa].length === 0) delete db.documentosPlacas[placa];
     salvarDB();
     atualizarGaleriaComprovantes();
     registrarAuditoria('Exclusão', `Documento excluído da placa ${placa}`);
@@ -4118,9 +4041,7 @@ async function extrairTextoPDF(file) {
                 textoTotal += lineBuffer + '\n';
                 lineBuffer = item.str;
             } else {
-                if (lineBuffer && !lineBuffer.endsWith(' ') && !item.str.startsWith(' ')) {
-                    lineBuffer += ' ';
-                }
+                if (lineBuffer && !lineBuffer.endsWith(' ') && !item.str.startsWith(' ')) lineBuffer += ' ';
                 lineBuffer += item.str;
             }
             if (y !== null) lastY = y;
@@ -4140,7 +4061,6 @@ function extrairDadosComprovante(textoOriginal) {
     if (!textoOriginal) return { valor: 0, data: '', pagador: '', recebedor: '' };
     const t = textoOriginal.replace(/\s+/g, ' ').trim();
     const tU = t.toUpperCase();
-
     let valor = 0;
     const valorPatterns = [
         /VALOR\s+PAGO\s+R\$\s*([\d.,]+)/,
@@ -4160,7 +4080,6 @@ function extrairDadosComprovante(textoOriginal) {
             if (!isNaN(v) && v > 0) { valor = v; break; }
         }
     }
-
     let data = '';
     const dataPatterns = [
         /DATA\s+E\s+HORA\s+DA\s+TRANSA[ÇC][ÃA]O\s+(\d{2}\/\d{2}\/\d{4})/,
@@ -4171,20 +4090,15 @@ function extrairDadosComprovante(textoOriginal) {
         const m = tU.match(p);
         if (m) { data = m[1]; break; }
     }
+    if (!data) { const m = tU.match(/(\d{2}\/\d{2}\/\d{4})/); if (m) data = m[1]; }
     if (!data) {
-        const m = tU.match(/(\d{2}\/\d{2}\/\d{4})/);
-        if (m) data = m[1];
-    }
-    if (!data) {
-        const meses = { JAN:'01', FEV:'02', MAR:'03', ABR:'04', MAI:'05', JUN:'06',
-                       JUL:'07', AGO:'08', SET:'09', OUT:'10', NOV:'11', DEZ:'12' };
+        const meses = { JAN:'01', FEV:'02', MAR:'03', ABR:'04', MAI:'05', JUN:'06', JUL:'07', AGO:'08', SET:'09', OUT:'10', NOV:'11', DEZ:'12' };
         const m = tU.match(/(\d{1,2})\s+([A-ZÇ]{3,})\s*,?\s*(\d{4})/);
         if (m) {
             const mes = meses[m[2].substring(0, 3)];
             if (mes) data = m[1].padStart(2, '0') + '/' + mes + '/' + m[3];
         }
     }
-
     function extractName(startIdx, maxLen) {
         maxLen = maxLen || 320;
         const sub = t.substring(startIdx, startIdx + maxLen);
@@ -4196,15 +4110,11 @@ function extrairDadosComprovante(textoOriginal) {
         if (m) return m[1].trim();
         return '';
     }
-
     let pagador = '';
     const pagKeys = ['DADOS DO PAGADOR', 'DADOS DE ORIGEM', 'PAGADOR'];
     for (const key of pagKeys) {
         const idx = tU.indexOf(key);
-        if (idx >= 0) {
-            const nome = extractName(idx + key.length);
-            if (nome) { pagador = nome; break; }
-        }
+        if (idx >= 0) { const nome = extractName(idx + key.length); if (nome) { pagador = nome; break; } }
     }
     if (!pagador) {
         const idx = tU.indexOf('ORIGEM');
@@ -4214,15 +4124,11 @@ function extrairDadosComprovante(textoOriginal) {
             if (m) pagador = m[1].trim();
         }
     }
-
     let recebedor = '';
     const recebKeys = ['DADOS DO RECEBEDOR', 'DADOS DE DESTINO', 'RECEBEDOR'];
     for (const key of recebKeys) {
         const idx = tU.indexOf(key);
-        if (idx >= 0) {
-            const nome = extractName(idx + key.length);
-            if (nome) { recebedor = nome; break; }
-        }
+        if (idx >= 0) { const nome = extractName(idx + key.length); if (nome) { recebedor = nome; break; } }
     }
     if (!recebedor) {
         const idx = tU.indexOf('DESTINO');
@@ -4232,7 +4138,6 @@ function extrairDadosComprovante(textoOriginal) {
             if (m) recebedor = m[1].trim();
         }
     }
-
     return { valor: valor, data: data, pagador: pagador, recebedor: recebedor };
 }
 
@@ -4241,18 +4146,14 @@ function obterPlacasDoUsuarioLogado() {
     const nomeUser = String(usuarioLogado.nome || '').toUpperCase().trim();
     if (!nomeUser) return [];
     const primeiroNomeUser = nomeUser.split(/\s+/)[0];
-
     const placas = [];
     (db.locacoes || []).forEach(function(l) {
         if (!l || !l.placa) return;
         const locatario = String(l.locatario || '').toUpperCase().trim();
         if (!locatario) return;
         const primeiroNomeLoc = locatario.split(/\s+/)[0];
-        const bate = (locatario === nomeUser)
-            || (primeiroNomeLoc === primeiroNomeUser && primeiroNomeUser.length >= 3);
-        if (bate && placas.indexOf(l.placa) < 0) {
-            placas.push(l.placa);
-        }
+        const bate = (locatario === nomeUser) || (primeiroNomeLoc === primeiroNomeUser && primeiroNomeUser.length >= 3);
+        if (bate && placas.indexOf(l.placa) < 0) placas.push(l.placa);
     });
     return placas;
 }
@@ -4262,19 +4163,15 @@ function renderizarPreviewComprovantesPag() {
     if (!container) return;
     container.innerHTML = '';
     const btn = document.getElementById('btnSalvarComprovantesPag');
-
     if (comprovantesPagTemp.length === 0) {
         if (btn) { btn.disabled = true; btn.style.opacity = '0.5'; }
         return;
     }
     if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
-
     const placasUsuario = obterPlacasDoUsuarioLogado();
-
     comprovantesPagTemp.forEach(function(item, idx) {
         const card = document.createElement('div');
         card.className = 'comp-pag-card';
-
         const header = document.createElement('div');
         header.className = 'comp-pag-header';
         const nomeSafe = (item.nomeArquivo || '').replace(/</g, '&lt;');
@@ -4286,7 +4183,6 @@ function renderizarPreviewComprovantesPag() {
         btnDel.onclick = function() { removerComprovanteTemp(idx); };
         header.appendChild(btnDel);
         card.appendChild(header);
-
         const preview = document.createElement('div');
         preview.className = 'comp-pag-preview';
         if (item.tipoArquivo && item.tipoArquivo.indexOf('image/') === 0) {
@@ -4297,7 +4193,6 @@ function renderizarPreviewComprovantesPag() {
             preview.innerHTML = '<div style="text-align:center;"><div style="font-size:36px;">📄</div><div style="font-size:11px;color:#666;">PDF</div></div>';
         }
         card.appendChild(preview);
-
         const camposTexto = [
             { key: 'pagador', label: 'Pagador' },
             { key: 'recebedor', label: 'Recebedor' },
@@ -4317,44 +4212,36 @@ function renderizarPreviewComprovantesPag() {
             wrap.appendChild(inp);
             card.appendChild(wrap);
         });
-
         const wrapPlaca = document.createElement('div');
         wrapPlaca.className = 'comp-pag-field';
         const lblPlaca = document.createElement('label');
         lblPlaca.textContent = 'Placa do Carro (alugado para você)';
         const selPlaca = document.createElement('select');
-
         const optEmpty = document.createElement('option');
         optEmpty.value = '';
         optEmpty.textContent = placasUsuario.length > 0 ? '-- Selecione a placa --' : '-- Nenhuma locação ativa --';
         selPlaca.appendChild(optEmpty);
-
         placasUsuario.forEach(function(p) {
             const o = document.createElement('option');
-            o.value = p;
-            o.textContent = p;
+            o.value = p; o.textContent = p;
             if (item.placa === p) o.selected = true;
             selPlaca.appendChild(o);
         });
-
         if (placasUsuario.length === 0) {
             const todasPlacas = (db.veiculos || []).map(function(v) { return v.placa; }).filter(Boolean);
             todasPlacas.forEach(function(p) {
                 if (!placasUsuario.includes(p)) {
                     const o = document.createElement('option');
-                    o.value = p;
-                    o.textContent = p;
+                    o.value = p; o.textContent = p;
                     if (item.placa === p) o.selected = true;
                     selPlaca.appendChild(o);
                 }
             });
         }
-
         selPlaca.onchange = function() { atualizarCampoComprovante(idx, 'placa', this.value); };
         wrapPlaca.appendChild(lblPlaca);
         wrapPlaca.appendChild(selPlaca);
         card.appendChild(wrapPlaca);
-
         container.appendChild(card);
     });
 }
@@ -4383,36 +4270,23 @@ async function handleComprovantesPagInputChange(e) {
     const files = Array.from(input.files || []);
     if (files.length === 0) return;
     input.value = '';
-
     const container = document.getElementById('compPagPreviewContainer');
     if (container) container.innerHTML = '<p style="color:#666;padding:10px;">⏳ Processando arquivos, aguarde...</p>';
-
     const placasUsuario = obterPlacasDoUsuarioLogado();
     const placaAuto = placasUsuario.length > 0 ? placasUsuario[0] : '';
-
     const errors = [];
     for (let i = 0; i < files.length; i++) {
         const file = files[i];
         try {
-            if (file.size > 700 * 1024) {
-                errors.push(file.name + ': arquivo muito grande (' + Math.round(file.size / 1024) + 'KB). Limite: 700KB');
-                continue;
-            }
+            if (file.size > 700 * 1024) { errors.push(file.name + ': arquivo muito grande (' + Math.round(file.size / 1024) + 'KB). Limite: 700KB'); continue; }
             const dataUrl = await fileToDataURL(file);
             const nomeLow = (file.name || '').toLowerCase();
             const isPDF = file.type === 'application/pdf' || nomeLow.endsWith('.pdf');
             const isImg = (file.type && file.type.indexOf('image/') === 0) || /\.(jpe?g|png)$/.test(nomeLow);
-
             let texto = '';
-            if (isPDF) {
-                texto = await extrairTextoPDF(file);
-            } else if (isImg) {
-                texto = await extrairTextoImagem(file);
-            } else {
-                errors.push(file.name + ': tipo não suportado (use PDF, JPG ou JPEG)');
-                continue;
-            }
-
+            if (isPDF) texto = await extrairTextoPDF(file);
+            else if (isImg) texto = await extrairTextoImagem(file);
+            else { errors.push(file.name + ': tipo não suportado (use PDF, JPG ou JPEG)'); continue; }
             const dados = extrairDadosComprovante(texto);
             comprovantesPagTemp.push({
                 nomeArquivo: file.name,
@@ -4431,30 +4305,20 @@ async function handleComprovantesPagInputChange(e) {
             errors.push(file.name + ': ' + (err.message || 'erro ao processar'));
         }
     }
-
     renderizarPreviewComprovantesPag();
-
-    if (errors.length > 0) {
-        alert('⚠️ Alguns arquivos não puderam ser processados:\n\n' + errors.join('\n'));
-    }
+    if (errors.length > 0) alert('⚠️ Alguns arquivos não puderam ser processados:\n\n' + errors.join('\n'));
 }
 
 function salvarComprovantesPagamento() {
-    if (!comprovantesPagTemp || comprovantesPagTemp.length === 0) {
-        alert('Nenhum comprovante para salvar!');
-        return;
-    }
+    if (!comprovantesPagTemp || comprovantesPagTemp.length === 0) { alert('Nenhum comprovante para salvar!'); return; }
     if (!Array.isArray(db.comprovantesPagamento)) db.comprovantesPagamento = [];
     if (!db.documentosPlacas) db.documentosPlacas = {};
-
     let salvos = 0;
     let semPlaca = 0;
     let autoPagos = 0;
-
     comprovantesPagTemp.forEach(function(item) {
         const placa = String(item.placa || '').toUpperCase().trim();
         if (!placa) semPlaca++;
-
         db.comprovantesPagamento.push({
             id: 'comp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
             nomeArquivo: item.nomeArquivo,
@@ -4468,12 +4332,9 @@ function salvarComprovantesPagamento() {
             placa: placa,
             dataUpload: item.dataUpload || new Date().toLocaleString('pt-BR')
         });
-
         if (placa) {
             if (!db.documentosPlacas[placa]) db.documentosPlacas[placa] = [];
-            const nomeDoc = 'COMPROVANTE PAGTO ' + (item.dataComprovante ? item.dataComprovante : '') +
-                            (item.valorFormatado ? ' - ' + item.valorFormatado : '') +
-                            ' - ' + (item.nomeArquivo || 'arquivo');
+            const nomeDoc = 'COMPROVANTE PAGTO ' + (item.dataComprovante ? item.dataComprovante : '') + (item.valorFormatado ? ' - ' + item.valorFormatado : '') + ' - ' + (item.nomeArquivo || 'arquivo');
             db.documentosPlacas[placa].push({
                 nome: nomeDoc,
                 tipo: item.tipoArquivo || 'application/pdf',
@@ -4481,20 +4342,13 @@ function salvarComprovantesPagamento() {
                 dataUpload: item.dataUpload || new Date().toLocaleString('pt-BR')
             });
         }
-
         const valorNum = Number(item.valor) || 0;
         let dataPgtoISO = '';
-        
         if (item.dataComprovante && item.dataComprovante.includes('/')) {
             const parts = item.dataComprovante.split('/');
-            if (parts.length === 3) {
-                dataPgtoISO = `${parts[2]}-${parts[1]}-${parts[0]}`;
-            }
+            if (parts.length === 3) dataPgtoISO = `${parts[2]}-${parts[1]}-${parts[0]}`;
         }
-        if (!dataPgtoISO) {
-            dataPgtoISO = new Date().toISOString().split('T')[0];
-        }
-
+        if (!dataPgtoISO) dataPgtoISO = new Date().toISOString().split('T')[0];
         if (placa && valorNum > 0 && Array.isArray(db.alugueis)) {
             const candidatos = db.alugueis.filter(a => {
                 if (a.placa !== placa) return false;
@@ -4502,23 +4356,14 @@ function salvarComprovantesPagamento() {
                 const valA = Number(a.valorNumerico) || parseMoeda(a.valor) || 0;
                 return Math.abs(valA - valorNum) < 0.01;
             });
-
             if (candidatos.length > 0) {
                 candidatos.sort((a, b) => {
                     const dtA = a.vencimento ? new Date(a.vencimento + 'T00:00:00') : new Date('2099-12-31');
                     const dtB = b.vencimento ? new Date(b.vencimento + 'T00:00:00') : new Date('2099-12-31');
                     return dtA - dtB;
                 });
-
-                let matchingAluguel = candidatos.find(a => {
-                    if (!a.vencimento) return false;
-                    return dataPgtoISO <= a.vencimento;
-                });
-
-                if (!matchingAluguel) {
-                    matchingAluguel = candidatos[0];
-                }
-
+                let matchingAluguel = candidatos.find(a => { if (!a.vencimento) return false; return dataPgtoISO <= a.vencimento; });
+                if (!matchingAluguel) matchingAluguel = candidatos[0];
                 if (matchingAluguel) {
                     processarPagamentoAutomatico(matchingAluguel, dataPgtoISO);
                     autoPagos++;
@@ -4526,29 +4371,20 @@ function salvarComprovantesPagamento() {
                 }
             }
         }
-
         salvos++;
     });
-
     comprovantesPagTemp = [];
     renderizarPreviewComprovantesPag();
     atualizarTabelaComprovantesPag();
     atualizarGaleriaComprovantes();
-    
     atualizarTabelaAlugueis();
     atualizarTabelaHistoricoAlugueis();
     atualizarTabelaFluxoCaixa();
-    
     salvarDB();
     registrarAuditoria('Cadastro', salvos + ' comprovante(s) de pagamento salvo(s)');
-
     let msg = '✅ ' + salvos + ' comprovante(s) salvo(s) com sucesso!';
-    if (autoPagos > 0) {
-        msg += '\n\n🤖 ' + autoPagos + ' pagamento(s) foram conciliados automaticamente (Status: PAGO, Fluxo de Caixa atualizado, Próxima parcela gerada).';
-    }
-    if (semPlaca > 0) {
-        msg += '\n\n⚠️ ' + semPlaca + ' comprovante(s) NÃO foram salvos na aba da placa (placa não informada).';
-    }
+    if (autoPagos > 0) msg += '\n\n🤖 ' + autoPagos + ' pagamento(s) foram conciliados automaticamente (Status: PAGO, Fluxo de Caixa atualizado, Próxima parcela gerada).';
+    if (semPlaca > 0) msg += '\n\n⚠️ ' + semPlaca + ' comprovante(s) NÃO foram salvos na aba da placa (placa não informada).';
     alert(msg);
 }
 
@@ -4557,12 +4393,10 @@ function atualizarTabelaComprovantesPag() {
     if (!tbody) return;
     tbody.innerHTML = '';
     const lista = db.comprovantesPagamento || [];
-
     if (lista.length === 0) {
         tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#999;padding:20px;">Nenhum comprovante salvo.</td></tr>';
         return;
     }
-
     const indices = lista.map(function(_, i) { return i; }).reverse();
     indices.forEach(function(realIdx) {
         const c = lista[realIdx];
@@ -4587,7 +4421,6 @@ function atualizarTabelaComprovantesPag() {
 function abrirComprovanteSalvo(idx) {
     const c = (db.comprovantesPagamento || [])[idx];
     if (!c || !c.dataUrl) { alert('Arquivo não disponível.'); return; }
-
     if (c.tipoArquivo && c.tipoArquivo.indexOf('image/') === 0) {
         openImageModal(c.dataUrl);
     } else {
@@ -4602,7 +4435,6 @@ function editarComprovanteSalvo(idx) {
     if (!confirmarSenhaADM()) return;
     const c = (db.comprovantesPagamento || [])[idx];
     if (!c) return;
-
     const pagador = prompt('Pagador:', c.pagador || '');
     if (pagador === null) return;
     const recebedor = prompt('Recebedor:', c.recebedor || '');
@@ -4613,14 +4445,12 @@ function editarComprovanteSalvo(idx) {
     if (data === null) return;
     const placa = prompt('Placa do Carro:', c.placa || '');
     if (placa === null) return;
-
     c.pagador = pagador;
     c.recebedor = recebedor;
     c.valorFormatado = valorStr;
     c.valor = parseMoeda(valorStr);
     c.dataComprovante = data;
     c.placa = String(placa || '').toUpperCase().trim();
-
     atualizarTabelaComprovantesPag();
     salvarDB();
     registrarAuditoria('Edição', 'Comprovante editado: ' + c.nomeArquivo);
@@ -4642,7 +4472,6 @@ function excluirComprovanteSalvo(idx) {
 /* ============================================================
    DOC VEÍCULO — IMPORTAÇÃO DE CRLV (PDF / OCR + IndexedDB)
    ============================================================ */
-
 function abrirIDB() {
     if (idbHandle) return Promise.resolve(idbHandle);
     return new Promise((resolve, reject) => {
@@ -4704,7 +4533,6 @@ async function handleDocVeiculoSelecionado(e) {
     const nomeLow = (file.name || '').toLowerCase();
     const isPDF = file.type === 'application/pdf' || nomeLow.endsWith('.pdf');
     if (!isPDF) { alert('Selecione um arquivo PDF válido.'); return; }
-
     const info = document.getElementById('docVeiculoInfo');
     if (info) {
         info.classList.add('ativo');
@@ -4717,39 +4545,28 @@ async function handleDocVeiculoSelecionado(e) {
         if (elQtd) elQtd.textContent = '⏳ lendo...';
         if (elAviso) elAviso.style.display = 'none';
     }
-
     try {
         let texto = await extrairTextoPDF(file);
         const textoLimpo = (texto || '').replace(/\s+/g, '');
-
         if (textoLimpo.length < 30) {
             try {
                 const textoOCR = await extrairTextoPDFviaOCR(file);
-                if (textoOCR && textoOCR.replace(/\s+/g, '').length > textoLimpo.length) {
-                    texto = textoOCR;
-                }
-            } catch (ocrErr) {
-                console.warn('OCR falhou:', ocrErr);
-            }
+                if (textoOCR && textoOCR.replace(/\s+/g, '').length > textoLimpo.length) texto = textoOCR;
+            } catch (ocrErr) { console.warn('OCR falhou:', ocrErr); }
         }
-
         if (!texto || texto.replace(/\s+/g, '').length < 10) {
             alert('Não foi possível identificar os dados do veículo neste documento. Confira o PDF e preencha os campos manualmente.');
             if (info) info.classList.remove('ativo');
             return;
         }
-
         const dados = extrairDadosCRLV(texto);
         docVeiculoAtual = { arquivo: file, dados };
-
         preencherCamposVeiculoComDados(dados);
-
         const qtdEncontrados = Object.keys(dados).filter(k => dados[k]).length;
         const qtdEl = document.getElementById('docVeiculoQtd');
         if (qtdEl) qtdEl.textContent = qtdEncontrados + ' campo(s)';
         const avisoEl = document.getElementById('docVeiculoAviso');
         if (avisoEl) avisoEl.style.display = dados.placa ? 'none' : 'inline-block';
-
         let msg = '✅ Documento lido com sucesso. Confira os dados antes de salvar.\n\n';
         msg += '📄 Arquivo: ' + file.name + '\n';
         msg += '🕒 Data/hora: ' + new Date().toLocaleString('pt-BR') + '\n';
@@ -4788,58 +4605,22 @@ async function extrairTextoPDFviaOCR(file) {
 function extrairDadosCRLV(textoOriginal) {
     const dados = {};
     if (!textoOriginal) return dados;
-
-    const linhas = String(textoOriginal)
-        .replace(/\r/g, '\n')
-        .split('\n')
-        .map(l => l.replace(/\s+/g, ' ').trim())
-        .filter(l => l.length > 0);
-
+    const linhas = String(textoOriginal).replace(/\r/g, '\n').split('\n').map(l => l.replace(/\s+/g, ' ').trim()).filter(l => l.length > 0);
     const t = linhas.join('\n');
     const tU = t.toUpperCase();
-
-    const PALAVRAS_ROTULO = [
-        'PLACA','CHASSI','RENAVAM','CAT','CLA','ANTERIOR','SENATRAN','MENSAGENS',
-        'LOCAL','DATA','MARCA','MODELO','ANO','COR','PREDOMINANTE','COMBUST',
-        'ESPÉCIE','ESPECIE','CATEGORIA','MUNICÍPIO','MUNICIPIO','CPF','CNPJ',
-        'NOME','CÓDIGO','CODIGO','SEGURANÇA','SEGURANCA','PROPRIETÁRIO','PROPRIETARIO',
-        'OBSERVAÇÕES','OBSERVACOES','EXERCÍCIO','EXERCICIO','FABRICAÇÃO','FABRICACAO',
-        'LICENCIAMENTO','CRLV','DETRAN','RENACH','VERSÃO','VERSAO','POTÊNCIA','POTENCIA',
-        'CILINDRADA','LOTAÇÃO','LOTACAO','MOTOR','CAPACIDADE','PASSAGEIRO','CARGA',
-        'CMT','EIXOS','DPVAT','SEGURO','SEGURADORA','CORRETOR','APÓLICE','APOLICE',
-        'SINISTRO','INDENIZAÇÃO','INDENIZACAO','BENEFICIÁRIO','BENEFICIARIO',
-        'MARCA/MODELO/VERSÃO','VERSÃO','VERSAO','NÚMERO','NUMERO','CRV','OBSERVAÇÕES',
-        'LOCAL/DATA','LOCAL DATA','TIPO','PROCEDÊNCIA','PROCEDENCIA'
-    ];
-
-    const ROTULOS_FORTES = [
-        'CAT','CLA','ANTERIOR','SENATRAN','MENSAGENS','CMT','EIXOS','DPVAT','SEGURO',
-        'SEGURADORA','CORRETOR','APÓLICE','APOLICE','LOTAÇÃO','LOTACAO','POTÊNCIA','POTENCIA',
-        'CILINDRADA','CAPACIDADE','PASSAGEIRO','CARGA','CRLV','RENACH','LICENCIAMENTO',
-        'EXERCÍCIO','EXERCICIO','FABRICAÇÃO','FABRICACAO'
-    ];
-
+    const PALAVRAS_ROTULO = ['PLACA','CHASSI','RENAVAM','CAT','CLA','ANTERIOR','SENATRAN','MENSAGENS','LOCAL','DATA','MARCA','MODELO','ANO','COR','PREDOMINANTE','COMBUST','ESPÉCIE','ESPECIE','CATEGORIA','MUNICÍPIO','MUNICIPIO','CPF','CNPJ','NOME','CÓDIGO','CODIGO','SEGURANÇA','SEGURANCA','PROPRIETÁRIO','PROPRIETARIO','OBSERVAÇÕES','OBSERVACOES','EXERCÍCIO','EXERCICIO','FABRICAÇÃO','FABRICACAO','LICENCIAMENTO','CRLV','DETRAN','RENACH','VERSÃO','VERSAO','POTÊNCIA','POTENCIA','CILINDRADA','LOTAÇÃO','LOTACAO','MOTOR','CAPACIDADE','PASSAGEIRO','CARGA','CMT','EIXOS','DPVAT','SEGURO','SEGURADORA','CORRETOR','APÓLICE','APOLICE','SINISTRO','INDENIZAÇÃO','INDENIZACAO','BENEFICIÁRIO','BENEFICIARIO','MARCA/MODELO/VERSÃO','VERSÃO','VERSAO','NÚMERO','NUMERO','CRV','OBSERVAÇÕES','LOCAL/DATA','LOCAL DATA','TIPO','PROCEDÊNCIA','PROCEDENCIA'];
+    const ROTULOS_FORTES = ['CAT','CLA','ANTERIOR','SENATRAN','MENSAGENS','CMT','EIXOS','DPVAT','SEGURO','SEGURADORA','CORRETOR','APÓLICE','APOLICE','LOTAÇÃO','LOTACAO','POTÊNCIA','POTENCIA','CILINDRADA','CAPACIDADE','PASSAGEIRO','CARGA','CRLV','RENACH','LICENCIAMENTO','EXERCÍCIO','EXERCICIO','FABRICAÇÃO','FABRICACAO'];
     function ehLabel(linha) {
         if (!linha) return true;
         const up = String(linha).toUpperCase().trim();
         if (!up) return true;
         if (up.length > 60) return false;
-        let count = 0;
-        let fortes = 0;
-        for (const p of PALAVRAS_ROTULO) {
-            if (new RegExp('\\b' + p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b').test(up)) count++;
-        }
-        for (const p of ROTULOS_FORTES) {
-            if (new RegExp('\\b' + p + '\\b').test(up)) fortes++;
-        }
+        let count = 0; let fortes = 0;
+        for (const p of PALAVRAS_ROTULO) if (new RegExp('\\b' + p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b').test(up)) count++;
+        for (const p of ROTULOS_FORTES) if (new RegExp('\\b' + p + '\\b').test(up)) fortes++;
         return fortes >= 1 || count >= 2;
     }
-
-    function limpar(v) {
-        if (!v) return '';
-        return String(v).trim().replace(/^[\s:;\/\-|]+/, '').replace(/[\s:;\/\-|]+$/, '').trim();
-    }
-
+    function limpar(v) { if (!v) return ''; return String(v).trim().replace(/^[\s:;\/\-|]+/, '').replace(/[\s:;\/\-|]+$/, '').trim(); }
     const placasCands = [...tU.matchAll(/\b([A-Z]{3}[0-9][A-Z0-9][0-9]{2})\b/g)];
     if (placasCands.length === 0) {
         const old = [...tU.matchAll(/\b([A-Z]{3}[0-9]{4})\b/g)];
@@ -4854,7 +4635,6 @@ function extrairDadosCRLV(textoOriginal) {
         dados.placa = mm[1];
         break;
     }
-
     const chassisCands = [...tU.matchAll(/\b([A-HJ-NPR-Z0-9]{17})\b/g)];
     for (const mm of chassisCands) {
         const pos = mm.index;
@@ -4863,49 +4643,27 @@ function extrairDadosCRLV(textoOriginal) {
         dados.chassi = mm[1];
         break;
     }
-
     let renavamEncontrado = null;
     let mR = tU.match(/RENAVAM\s*:?\s*(\d{11})/);
     if (mR) renavamEncontrado = mR[1];
     if (!renavamEncontrado) {
         const idx = tU.search(/C[ÓO]DIGO\s*RENAVAM|RENAVAM/);
-        if (idx >= 0) {
-            const sub = tU.substring(idx, idx + 200);
-            const mm = sub.match(/(\d{11})/);
-            if (mm) renavamEncontrado = mm[1];
-        }
+        if (idx >= 0) { const sub = tU.substring(idx, idx + 200); const mm = sub.match(/(\d{11})/); if (mm) renavamEncontrado = mm[1]; }
     }
     if (!renavamEncontrado) {
         const cands = [...tU.matchAll(/\b(\d{11})\b/g)];
-        for (const c of cands) {
-            const antes = tU.substring(Math.max(0, c.index - 30), c.index);
-            if (!/CRV|N[ÚU]MERO/i.test(antes)) { renavamEncontrado = c[1]; break; }
-        }
+        for (const c of cands) { const antes = tU.substring(Math.max(0, c.index - 30), c.index); if (!/CRV|N[ÚU]MERO/i.test(antes)) { renavamEncontrado = c[1]; break; } }
     }
     if (renavamEncontrado) dados.renavam = renavamEncontrado;
-
-    const marcas = ['VOLKSWAGEN','VW','FIAT','CHEVROLET','GM','FORD','TOYOTA','HONDA',
-        'HYUNDAI','RENAULT','NISSAN','JEEP','PEUGEOT','CITROEN','CITROËN','MITSUBISHI',
-        'KIA','BMW','MERCEDES','AUDI','VOLVO','LAND ROVER','JAGUAR','SUZUKI','CHERY',
-        'CAOA','DODGE','CHRYSLER','TROLLER','EFFA','LIFAN','JAC','RAM','IVECO','SCANIA',
-        'BYD','GWM','HAVAL','BENTLEY','FERRARI','LAMBORGHINI','PORSCHE','MASERATI',
-        'SSANGYONG','SUBARU','LEXUS','INFINITI','ACURA','MINI','SMART','DACIA','TATA'];
-
+    const marcas = ['VOLKSWAGEN','VW','FIAT','CHEVROLET','GM','FORD','TOYOTA','HONDA','HYUNDAI','RENAULT','NISSAN','JEEP','PEUGEOT','CITROEN','CITROËN','MITSUBISHI','KIA','BMW','MERCEDES','AUDI','VOLVO','LAND ROVER','JAGUAR','SUZUKI','CHERY','CAOA','DODGE','CHRYSLER','TROLLER','EFFA','LIFAN','JAC','RAM','IVECO','SCANIA','BYD','GWM','HAVAL','BENTLEY','FERRARI','LAMBORGHINI','PORSCHE','MASERATI','SSANGYONG','SUBARU','LEXUS','INFINITI','ACURA','MINI','SMART','DACIA','TATA'];
     for (const linha of linhas) {
         const up = linha.toUpperCase();
         if (ehLabel(linha)) continue;
         for (const mar of marcas) {
             const re = new RegExp('\\b' + mar.replace(/\s+/g, '\\s+') + '\\b');
             if (re.test(up)) {
-                let val = linha
-                    .replace(/MARCA\s*\/?\s*MODELO\s*\/?\s*VERS[ÃA]O\s*:?\s*/i, '')
-                    .replace(/MARCA\s*\/?\s*MODELO\s*:?\s*/i, '')
-                    .replace(/MARCA\s*:?\s*/i, '')
-                    .trim();
-                if (val && val.length >= 4 && val.length <= 80) {
-                    dados.fabricante = val;
-                    break;
-                }
+                let val = linha.replace(/MARCA\s*\/?\s*MODELO\s*\/?\s*VERS[ÃA]O\s*:?\s*/i, '').replace(/MARCA\s*\/?\s*MODELO\s*:?\s*/i, '').replace(/MARCA\s*:?\s*/i, '').trim();
+                if (val && val.length >= 4 && val.length <= 80) { dados.fabricante = val; break; }
             }
         }
         if (dados.fabricante) break;
@@ -4917,7 +4675,6 @@ function extrairDadosCRLV(textoOriginal) {
             if (!ehLabel(cand)) dados.fabricante = cand.replace(/\s+/g, ' ');
         }
     }
-
     function extrairAnosDeUmaLinha(up) {
         const anos = up.match(/\b(19[89]\d|20[0-2]\d)\b/g);
         if (anos && anos.length >= 2) return anos;
@@ -4939,9 +4696,7 @@ function extrairDadosCRLV(textoOriginal) {
             } else if (temFab) {
                 dados.anoFabr = anos[0];
                 if (anos[1]) dados.anoModel = anos[1];
-            } else if (temMod) {
-                dados.anoModel = anos[0];
-            }
+            } else if (temMod) dados.anoModel = anos[0];
             if (dados.anoFabr || dados.anoModel) break;
         }
     }
@@ -4952,21 +4707,13 @@ function extrairDadosCRLV(textoOriginal) {
     if (!dados.anoFabr || !dados.anoModel) {
         const todos = [...tU.matchAll(/\b(19[89]\d|20[0-3]\d)\b/g)].map(x => x[1]);
         const uniq = [...new Set(todos)].filter(a => parseInt(a, 10) <= 2024);
-        if (uniq.length >= 2) {
-            if (!dados.anoFabr) dados.anoFabr = uniq[0];
-            if (!dados.anoModel) dados.anoModel = uniq[1];
-        }
+        if (uniq.length >= 2) { if (!dados.anoFabr) dados.anoFabr = uniq[0]; if (!dados.anoModel) dados.anoModel = uniq[1]; }
     }
-
-    const cores = ['BRANCA','PRETA','PRATA','CINZA','VERMELHA','AZUL','VERDE','AMARELA',
-        'MARROM','BEGE','DOURADA','LARANJA','VINHO','ROSA','ROXA','GRENÁ','GRENA',
-        'BRANCO','PRETO','VERMELHO','AMARELO','DOURADO','LILAS','CREME','BORDÔ','BORDO'];
+    const cores = ['BRANCA','PRETA','PRATA','CINZA','VERMELHA','AZUL','VERDE','AMARELA','MARROM','BEGE','DOURADA','LARANJA','VINHO','ROSA','ROXA','GRENÁ','GRENA','BRANCO','PRETO','VERMELHO','AMARELO','DOURADO','LILAS','CREME','BORDÔ','BORDO'];
     for (const linha of linhas) {
         const up = linha.toUpperCase();
         if (!/\bCOR\b/.test(up)) continue;
-        for (const cor of cores) {
-            if (new RegExp('\\b' + cor + '\\b').test(up)) { dados.cor = cor; break; }
-        }
+        for (const cor of cores) if (new RegExp('\\b' + cor + '\\b').test(up)) { dados.cor = cor; break; }
         if (dados.cor) break;
     }
     if (!dados.cor) {
@@ -4979,13 +4726,9 @@ function extrairDadosCRLV(textoOriginal) {
         for (const cor of cores) {
             const re = new RegExp('\\b' + cor + '\\b');
             const mm = re.exec(tU);
-            if (mm) {
-                const linhaCor = linhas.find(l => l.toUpperCase().includes(cor));
-                if (linhaCor && !ehLabel(linhaCor)) { dados.cor = cor; break; }
-            }
+            if (mm) { const linhaCor = linhas.find(l => l.toUpperCase().includes(cor)); if (linhaCor && !ehLabel(linhaCor)) { dados.cor = cor; break; } }
         }
     }
-
     function pareceNomePessoa(v) {
         if (!v) return false;
         const up = String(v).toUpperCase().trim();
@@ -5015,37 +4758,18 @@ function extrairDadosCRLV(textoOriginal) {
         }
     }
     if (!dados.proprietario) {
-        for (const linha of linhas) {
-            if (pareceNomePessoa(linha)) { dados.proprietario = linha.trim(); break; }
-        }
+        for (const linha of linhas) if (pareceNomePessoa(linha)) { dados.proprietario = linha.trim(); break; }
     }
-
     mR = tU.match(/\b(\d{3}\.\d{3}\.\d{3}-\d{2})\b/);
     if (!mR) mR = tU.match(/\b(\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2})\b/);
     if (mR) dados.cpfCnpj = mR[1];
-
     mR = tU.match(/\bUF\s*:?\s*([A-Z]{2})\b/);
-    if (mR && ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA',
-              'PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'].includes(mR[1])) {
-        dados.uf = mR[1];
-    }
-
+    if (mR && ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'].includes(mR[1])) dados.uf = mR[1];
     return dados;
 }
 
 function preencherCamposVeiculoComDados(dados) {
-    const map = {
-        placa: 'veicPlaca',
-        renavam: 'veicRenavan',
-        chassi: 'veicChassi',
-        fabricante: 'veicFabricante',
-        anoFabr: 'veicAnoFabr',
-        anoModel: 'veicAnoModel',
-        cor: 'veicCor',
-        proprietario: 'veicProprietario',
-        cpfCnpj: 'veicCpfPropr'
-    };
-
+    const map = { placa: 'veicPlaca', renavam: 'veicRenavan', chassi: 'veicChassi', fabricante: 'veicFabricante', anoFabr: 'veicAnoFabr', anoModel: 'veicAnoModel', cor: 'veicCor', proprietario: 'veicProprietario', cpfCnpj: 'veicCpfPropr' };
     const conflitos = [];
     Object.keys(map).forEach(key => {
         const novo = dados[key];
@@ -5058,7 +4782,6 @@ function preencherCamposVeiculoComDados(dados) {
             conflitos.push({ campo: (label && label.textContent) || el.id, atual, novo, id: map[key] });
         }
     });
-
     let substituir = false;
     if (conflitos.length > 0) {
         let msg = '⚠️ Os seguintes campos já possuem valores e serão SUBSTITUÍDOS pelos dados do documento:\n\n';
@@ -5066,7 +4789,6 @@ function preencherCamposVeiculoComDados(dados) {
         msg += 'Deseja substituir os valores existentes?';
         substituir = confirm(msg);
     }
-
     Object.keys(map).forEach(key => {
         const novo = dados[key];
         if (!novo) return;
@@ -5094,18 +4816,15 @@ async function vincularPDFaPlaca(arquivo, placa, dadosExtraidos) {
         console.error('Erro ao salvar PDF no IndexedDB:', err);
         throw err;
     }
-
     if (!Array.isArray(db.docsVeiculos)) db.docsVeiculos = [];
     db.docsVeiculos.push({
-        id,
-        placa: placa,
+        id, placa: placa,
         nomeArquivo: arquivo.name,
         tipoArquivo: arquivo.type || 'application/pdf',
         tamanho: arquivo.size || 0,
         dataUpload: new Date().toLocaleString('pt-BR'),
         dadosExtraidos: dadosExtraidos || {}
     });
-
     registrarAuditoria('DOC Veículo', 'PDF vinculado à placa ' + placa + ': ' + arquivo.name);
     salvarDB();
     atualizarListaDocVeiculo();
@@ -5115,67 +4834,51 @@ function atualizarListaDocVeiculo() {
     const container = document.getElementById('listaDocVeiculo');
     if (!container) return;
     container.innerHTML = '';
-
     const lista = Array.isArray(db.docsVeiculos) ? db.docsVeiculos : [];
     if (lista.length === 0) {
         container.innerHTML = '<p style="color:#999;text-align:center;padding:20px;">Nenhum documento importado. Use o botão <strong>📄 DOC VEÍCULO</strong> na aba Veículos.</p>';
         return;
     }
-
     const agrupado = {};
     lista.forEach(d => {
         const p = (d.placa || 'SEM PLACA').toUpperCase();
         if (!agrupado[p]) agrupado[p] = [];
         agrupado[p].push(d);
     });
-
     Object.keys(agrupado).sort().forEach(placa => {
         const docs = agrupado[placa];
         const veiculo = (db.veiculos || []).find(v => normalizarPlaca(v.placa) === normalizarPlaca(placa));
         const nomeVeiculo = veiculo ? (veiculo.fabricante + ' - ' + veiculo.cor) : 'Veículo não cadastrado';
-
         const folder = document.createElement('div');
         folder.className = 'documento-folder';
         folder.dataset.placa = placa;
-
         const header = document.createElement('div');
         header.className = 'documento-folder-header';
-        header.innerHTML = '<h4>📁 Placa: ' + placa + ' <small style="font-weight:normal;opacity:0.85;font-size:12px;">(' + nomeVeiculo + ')</small></h4>' +
-                           '<span class="documento-folder-badge">' + docs.length + ' doc(s)</span>';
+        header.innerHTML = '<h4>📁 Placa: ' + placa + ' <small style="font-weight:normal;opacity:0.85;font-size:12px;">(' + nomeVeiculo + ')</small></h4>' + '<span class="documento-folder-badge">' + docs.length + ' doc(s)</span>';
         folder.appendChild(header);
-
         const list = document.createElement('div');
         list.className = 'documento-list';
-
         docs.forEach(doc => {
             const item = document.createElement('div');
             item.className = 'documento-item';
             const tam = doc.tamanho ? ' • ' + Math.round(doc.tamanho / 1024) + ' KB' : '';
-
             const info = document.createElement('div');
             info.className = 'documento-info';
-            info.innerHTML = '<span class="documento-icon">📄</span>' +
-                '<div class="documento-details"><strong>' + (doc.nomeArquivo || 'documento.pdf') + '</strong>' +
-                '<small>Importado em: ' + (doc.dataUpload || '-') + tam + '</small></div>';
-
+            info.innerHTML = '<span class="documento-icon">📄</span>' + '<div class="documento-details"><strong>' + (doc.nomeArquivo || 'documento.pdf') + '</strong>' + '<small>Importado em: ' + (doc.dataUpload || '-') + tam + '</small></div>';
             const actions = document.createElement('div');
             actions.className = 'documento-actions';
-
             const bAbrir = document.createElement('button');
             bAbrir.className = 'btn-info';
             bAbrir.textContent = '👁️ Abrir PDF';
             bAbrir.onclick = () => abrirPDFDocVeiculo(doc.id);
-
             const bBaixar = document.createElement('button');
             bBaixar.className = 'btn-success';
             bBaixar.textContent = '⬇️ Baixar';
             bBaixar.onclick = () => baixarPDFDocVeiculo(doc.id, doc.nomeArquivo);
-
             const bExcluir = document.createElement('button');
             bExcluir.className = 'btn-danger';
             bExcluir.textContent = '🗑️ Excluir';
             bExcluir.onclick = () => excluirDocVeiculo(doc.id);
-
             actions.appendChild(bAbrir);
             actions.appendChild(bBaixar);
             actions.appendChild(bExcluir);
@@ -5183,7 +4886,6 @@ function atualizarListaDocVeiculo() {
             item.appendChild(actions);
             list.appendChild(item);
         });
-
         folder.appendChild(list);
         container.appendChild(folder);
     });
@@ -5195,12 +4897,9 @@ async function abrirPDFDocVeiculo(id) {
         if (!reg || !reg.blob) { alert('Arquivo não encontrado no armazenamento local.'); return; }
         const url = URL.createObjectURL(reg.blob);
         const win = window.open(url, '_blank');
-        if (!win) { alert('Permita pop-ups para abrir o PDF.'); }
+        if (!win) alert('Permita pop-ups para abrir o PDF.');
         setTimeout(() => URL.revokeObjectURL(url), 60000);
-    } catch (err) {
-        console.error(err);
-        alert('Erro ao abrir o PDF.');
-    }
+    } catch (err) { console.error(err); alert('Erro ao abrir o PDF.'); }
 }
 
 async function baixarPDFDocVeiculo(id, nomeArquivo) {
@@ -5215,18 +4914,13 @@ async function baixarPDFDocVeiculo(id, nomeArquivo) {
         a.click();
         document.body.removeChild(a);
         setTimeout(() => URL.revokeObjectURL(url), 60000);
-    } catch (err) {
-        console.error(err);
-        alert('Erro ao baixar o PDF.');
-    }
+    } catch (err) { console.error(err); alert('Erro ao baixar o PDF.'); }
 }
 
 async function excluirDocVeiculo(id) {
     if (!confirmarSenhaADM()) return;
     if (!confirm('Excluir permanentemente este documento?')) return;
-    try {
-        await idbExcluir(id);
-    } catch (err) { console.warn('IDB excluir:', err); }
+    try { await idbExcluir(id); } catch (err) { console.warn('IDB excluir:', err); }
     db.docsVeiculos = (db.docsVeiculos || []).filter(d => d.id !== id);
     atualizarListaDocVeiculo();
     salvarDB();
@@ -5245,6 +4939,371 @@ async function excluirDocVeiculo(id) {
         });
     });
 })();
+
+/* ============================================================
+   COMPROVANTE (ABA "DOC") — LEITURA, VALIDAÇÃO E CONCILIAÇÃO
+   ============================================================ */
+function converterDataBRparaISO(dataBR) {
+    if (!dataBR || !dataBR.includes('/')) return '';
+    const parts = dataBR.split('/');
+    if (parts.length !== 3) return '';
+    return `${parts[2]}-${parts[1]}-${parts[0]}`;
+}
+
+function encontrarPagamentoCorrespondente(valor, placa) {
+    if (!valor || valor <= 0) return null;
+    const candidatos = [];
+    (db.alugueis || []).forEach((a, idx) => {
+        if (!a || a.status === 'pago') return;
+        if (placa && a.placa !== placa) return;
+        const valA = Number(a.valorNumerico) || parseMoeda(a.valor) || 0;
+        if (Math.abs(valA - valor) < 0.01) candidatos.push({ idx, aluguel: a });
+    });
+    if (candidatos.length === 0) return null;
+    candidatos.sort((x, y) => {
+        const dtA = x.aluguel.vencimento ? new Date(x.aluguel.vencimento + 'T00:00:00') : new Date('2099-12-31');
+        const dtB = y.aluguel.vencimento ? new Date(y.aluguel.vencimento + 'T00:00:00') : new Date('2099-12-31');
+        return dtA - dtB;
+    });
+    return candidatos[0];
+}
+
+function renderizarPreviewDocComprovante() {
+    const container = document.getElementById('docComprovantePreview');
+    if (!container) return;
+    container.innerHTML = '';
+    const btn = document.getElementById('btnSalvarDocComprovante');
+    if (docComprovantesTemp.length === 0) {
+        if (btn) { btn.disabled = true; btn.style.opacity = '0.5'; }
+        return;
+    }
+    if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+
+    docComprovantesTemp.forEach(function(item, idx) {
+        const card = document.createElement('div');
+        card.className = 'comp-pag-card';
+
+        const header = document.createElement('div');
+        header.className = 'comp-pag-header';
+        header.innerHTML = '<strong>' + (item.nomeArquivo || '').replace(/</g, '&lt;') + '</strong>';
+        const btnDel = document.createElement('button');
+        btnDel.className = 'btn-danger';
+        btnDel.style.cssText = 'padding:4px 8px;font-size:12px;margin:0;';
+        btnDel.textContent = '🗑️';
+        btnDel.onclick = function() { docComprovantesTemp.splice(idx, 1); renderizarPreviewDocComprovante(); };
+        header.appendChild(btnDel);
+        card.appendChild(header);
+
+        const statusDiv = document.createElement('div');
+        statusDiv.style.textAlign = 'center';
+        const aluguelMatch = item.aluguelMatch;
+        if (aluguelMatch) {
+            const valorMatch = Math.abs((Number(aluguelMatch.valorNumerico) || parseMoeda(aluguelMatch.valor) || 0) - (item.valor || 0)) < 0.01;
+            const dataMatch = !item.dataComprovante || !aluguelMatch.vencimento || converterDataBRparaISO(item.dataComprovante) === aluguelMatch.vencimento;
+            if (valorMatch && dataMatch) {
+                statusDiv.innerHTML = '<span class="status-pago" style="font-size:11px;">✅ PAGAMENTO CORRESPONDENTE ENCONTRADO</span>';
+            } else if (!valorMatch) {
+                statusDiv.innerHTML = '<span class="status-atrasado" style="font-size:11px;">⚠️ DIVERGÊNCIA DE VALOR — não será aprovado</span>';
+            } else {
+                statusDiv.innerHTML = '<span class="status-atrasado" style="font-size:11px;">⚠️ DIVERGÊNCIA DE DATA — não será aprovado</span>';
+            }
+        } else {
+            statusDiv.innerHTML = '<span class="status-pendente" style="font-size:11px;">🔍 Nenhum pagamento correspondente</span>';
+        }
+        card.appendChild(statusDiv);
+
+        const preview = document.createElement('div');
+        preview.className = 'comp-pag-preview';
+        if (item.tipoArquivo && item.tipoArquivo.indexOf('image/') === 0) {
+            const img = document.createElement('img');
+            img.src = item.dataUrl;
+            preview.appendChild(img);
+        } else {
+            preview.innerHTML = '<div style="text-align:center;"><div style="font-size:36px;">📄</div><div style="font-size:11px;color:#666;">PDF</div></div>';
+        }
+        card.appendChild(preview);
+
+        const campos = [
+            { key: 'pagador', label: 'Pagador' },
+            { key: 'recebedor', label: 'Recebedor' },
+            { key: 'valorFormatado', label: 'Valor (R$)' },
+            { key: 'dataComprovante', label: 'Data (DD/MM/AAAA)' }
+        ];
+        campos.forEach(function(f) {
+            const wrap = document.createElement('div');
+            wrap.className = 'comp-pag-field';
+            const lbl = document.createElement('label');
+            lbl.textContent = f.label;
+            const inp = document.createElement('input');
+            inp.type = 'text';
+            inp.value = item[f.key] || '';
+            inp.onchange = function() {
+                if (f.key === 'valorFormatado') {
+                    item.valorFormatado = this.value;
+                    item.valor = parseMoeda(this.value);
+                } else {
+                    item[f.key] = this.value;
+                }
+                const m = encontrarPagamentoCorrespondente(item.valor, item.placa);
+                item.aluguelMatch = m ? m.aluguel : null;
+                item.aluguelMatchIdx = m ? m.idx : -1;
+                renderizarPreviewDocComprovante();
+            };
+            wrap.appendChild(lbl);
+            wrap.appendChild(inp);
+            card.appendChild(wrap);
+        });
+
+        const wrapPlaca = document.createElement('div');
+        wrapPlaca.className = 'comp-pag-field';
+        const lblPlaca = document.createElement('label');
+        lblPlaca.textContent = 'Placa do Veículo';
+        const selPlaca = document.createElement('select');
+        const optEmpty = document.createElement('option');
+        optEmpty.value = '';
+        optEmpty.textContent = '-- Selecione --';
+        selPlaca.appendChild(optEmpty);
+        (db.veiculos || []).forEach(function(v) {
+            const o = document.createElement('option');
+            o.value = v.placa;
+            o.textContent = v.placa + ' - ' + (v.fabricante || '');
+            if (item.placa === v.placa) o.selected = true;
+            selPlaca.appendChild(o);
+        });
+        selPlaca.onchange = function() {
+            item.placa = this.value;
+            const m = encontrarPagamentoCorrespondente(item.valor, item.placa);
+            item.aluguelMatch = m ? m.aluguel : null;
+            item.aluguelMatchIdx = m ? m.idx : -1;
+            renderizarPreviewDocComprovante();
+        };
+        wrapPlaca.appendChild(lblPlaca);
+        wrapPlaca.appendChild(selPlaca);
+        card.appendChild(wrapPlaca);
+
+        container.appendChild(card);
+    });
+}
+
+async function handleDocComprovanteInputChange(e) {
+    const input = e.target || this;
+    const files = Array.from(input.files || []);
+    if (files.length === 0) return;
+    input.value = '';
+
+    const container = document.getElementById('docComprovantePreview');
+    if (container) container.innerHTML = '<p style="color:#666;padding:10px;">⏳ Processando arquivos, aguarde...</p>';
+
+    const errors = [];
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        try {
+            if (file.size > 700 * 1024) { errors.push(file.name + ': arquivo muito grande (' + Math.round(file.size / 1024) + 'KB). Limite: 700KB'); continue; }
+            const dataUrl = await fileToDataURL(file);
+            const nomeLow = (file.name || '').toLowerCase();
+            const isPDF = file.type === 'application/pdf' || nomeLow.endsWith('.pdf');
+            const isImg = (file.type && file.type.indexOf('image/') === 0) || /\.(jpe?g|png)$/.test(nomeLow);
+
+            let texto = '';
+            if (isPDF) texto = await extrairTextoPDF(file);
+            else if (isImg) texto = await extrairTextoImagem(file);
+            else { errors.push(file.name + ': tipo não suportado (use PDF, JPG, JPEG ou PNG)'); continue; }
+
+            const dados = extrairDadosComprovante(texto);
+            const match = encontrarPagamentoCorrespondente(dados.valor, '');
+            docComprovantesTemp.push({
+                nomeArquivo: file.name,
+                tipoArquivo: file.type || (isPDF ? 'application/pdf' : 'image/jpeg'),
+                dataUrl: dataUrl,
+                pagador: dados.pagador || '',
+                recebedor: dados.recebedor || '',
+                valor: dados.valor || 0,
+                valorFormatado: dados.valor ? formatarMoedaBR(dados.valor) : '',
+                dataComprovante: dados.data || '',
+                placa: match ? match.aluguel.placa : '',
+                aluguelMatch: match ? match.aluguel : null,
+                aluguelMatchIdx: match ? match.idx : -1,
+                dataUpload: new Date().toLocaleString('pt-BR')
+            });
+        } catch (err) {
+            console.error('Erro em ' + file.name, err);
+            errors.push(file.name + ': ' + (err.message || 'erro ao processar'));
+        }
+    }
+
+    renderizarPreviewDocComprovante();
+
+    if (errors.length > 0) alert('⚠️ Alguns arquivos não puderam ser processados:\n\n' + errors.join('\n'));
+}
+
+function salvarDoc() {
+    if (!docComprovantesTemp || docComprovantesTemp.length === 0) { alert('Nenhum comprovante para salvar!'); return; }
+    if (!Array.isArray(db.comprovantesDoc)) db.comprovantesDoc = [];
+    if (!db.documentosPlacas) db.documentosPlacas = {};
+
+    let salvos = 0;
+    let conciliados = 0;
+    let divergentes = 0;
+    let duplicados = 0;
+    let semPlaca = 0;
+
+    docComprovantesTemp.forEach(function(item) {
+        const placa = String(item.placa || '').toUpperCase().trim();
+        const valorNum = Number(item.valor) || 0;
+        let dataPgtoISO = '';
+        if (item.dataComprovante && item.dataComprovante.includes('/')) {
+            const parts = item.dataComprovante.split('/');
+            if (parts.length === 3) dataPgtoISO = `${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
+        if (!dataPgtoISO) dataPgtoISO = new Date().toISOString().split('T')[0];
+
+        if (!placa) semPlaca++;
+
+        const duplicado = db.comprovantesDoc.some(function(c) {
+            return (c.placa === placa) &&
+                   Math.abs((c.valor || 0) - valorNum) < 0.01 &&
+                   c.dataComprovante === (item.dataComprovante || '') &&
+                   c.nomeArquivo === (item.nomeArquivo || '');
+        });
+        if (duplicado) { duplicados++; return; }
+
+        let aprovado = false;
+        let motivo = 'Sem pagamento correspondente';
+        let aluguelParaConciliar = null;
+
+        if (placa && valorNum > 0) {
+            const match = encontrarPagamentoCorrespondente(valorNum, placa);
+            if (match) {
+                const aluguel = match.aluguel;
+                const valorMatch = Math.abs((Number(aluguel.valorNumerico) || parseMoeda(aluguel.valor) || 0) - valorNum) < 0.01;
+                const dataMatch = !item.dataComprovante || !aluguel.vencimento || converterDataBRparaISO(item.dataComprovante) === aluguel.vencimento;
+                if (valorMatch && dataMatch) {
+                    aprovado = true;
+                    motivo = 'Conciliado automaticamente';
+                    aluguelParaConciliar = aluguel;
+                } else if (!valorMatch) {
+                    motivo = 'Divergência de valor — não aprovado automaticamente';
+                    divergentes++;
+                } else {
+                    motivo = 'Divergência de data — não aprovado automaticamente';
+                    divergentes++;
+                }
+            }
+        }
+
+        const registro = {
+            id: 'doc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+            nomeArquivo: item.nomeArquivo,
+            tipoArquivo: item.tipoArquivo,
+            dataUrl: item.dataUrl,
+            pagador: item.pagador || '',
+            recebedor: item.recebedor || '',
+            valor: valorNum,
+            valorFormatado: item.valorFormatado || formatarMoedaBR(valorNum),
+            dataComprovante: item.dataComprovante || '',
+            dataPagamento: dataPgtoISO,
+            placa: placa,
+            status: aprovado ? 'conciliado' : 'pendente',
+            motivo: motivo,
+            dataUpload: item.dataUpload || new Date().toLocaleString('pt-BR')
+        };
+
+        db.comprovantesDoc.push(registro);
+
+        if (placa) {
+            if (!db.documentosPlacas[placa]) db.documentosPlacas[placa] = [];
+            const nomeDoc = 'COMPROVANTE ' + (item.dataComprovante || '') + (item.valorFormatado ? ' - ' + item.valorFormatado : '') + ' - ' + (item.nomeArquivo || 'arquivo');
+            db.documentosPlacas[placa].push({
+                nome: nomeDoc,
+                tipo: item.tipoArquivo || 'application/pdf',
+                data: item.dataUrl,
+                dataUpload: item.dataUpload || new Date().toLocaleString('pt-BR')
+            });
+        }
+
+        if (aprovado && aluguelParaConciliar) {
+            processarPagamentoAutomatico(aluguelParaConciliar, dataPgtoISO);
+            conciliados++;
+            registrarAuditoria('Comprovante', `Conciliado: ${aluguelParaConciliar.locatario} - ${placa} - ${item.valorFormatado}`);
+        }
+
+        salvos++;
+    });
+
+    docComprovantesTemp = [];
+    renderizarPreviewDocComprovante();
+    atualizarTabelaDoc();
+    atualizarGaleriaComprovantes();
+    atualizarTabelaAlugueis();
+    atualizarTabelaHistoricoAlugueis();
+    atualizarTabelaFluxoCaixa();
+    salvarDB();
+    registrarAuditoria('Cadastro', salvos + ' comprovante(s) salvos na aba Comprovante');
+
+    let msg = '✅ ' + salvos + ' comprovante(s) salvo(s)!';
+    if (conciliados > 0) msg += '\n\n🤖 ' + conciliados + ' pagamento(s) conciliado(s) automaticamente (Status: PAGO, Fluxo de Caixa e Histórico de Aluguéis atualizados).';
+    if (divergentes > 0) msg += '\n\n⚠️ ' + divergentes + ' comprovante(s) com divergência — NÃO foram aprovados automaticamente.';
+    if (duplicados > 0) msg += '\n\n🚫 ' + duplicados + ' comprovante(s) duplicado(s) — ignorado(s).';
+    if (semPlaca > 0) msg += '\n\nℹ️ ' + semPlaca + ' comprovante(s) sem placa informada (não vinculados a aluguel).';
+    alert(msg);
+}
+
+function atualizarTabelaDoc() {
+    const tbody = document.querySelector('#tabelaDoc tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    const lista = db.comprovantesDoc || [];
+    if (lista.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#999;padding:20px;">Nenhum comprovante registrado.</td></tr>';
+        return;
+    }
+    const indices = lista.map(function(_, i) { return i; }).reverse();
+    indices.forEach(function(realIdx) {
+        const c = lista[realIdx];
+        const statusBadge = c.status === 'conciliado'
+            ? '<span class="status-pago">CONCILIADO</span>'
+            : '<span class="status-pendente">PENDENTE</span>';
+        const tr = document.createElement('tr');
+        tr.innerHTML =
+            '<td>' + (c.dataComprovante || '-') + '</td>' +
+            '<td><small>' + (c.nomeArquivo || '').replace(/</g, '&lt;') + '</small></td>' +
+            '<td>' + (c.pagador || '-') + '</td>' +
+            '<td>' + (c.recebedor || '-') + '</td>' +
+            '<td><strong style="color:#28a745;">' + (c.valorFormatado || formatarMoedaBR(c.valor)) + '</strong></td>' +
+            '<td>' + formatarDataBR(c.dataPagamento) + '</td>' +
+            '<td>' + (c.placa || '-') + '</td>' +
+            '<td>' + statusBadge + '<br><small style="color:#666;">' + (c.motivo || '') + '</small></td>' +
+            '<td>' +
+                '<button class="btn-info" onclick="abrirDocComprovante(' + realIdx + ')" title="Abrir">👁️</button>' +
+                '<button class="btn-danger" onclick="excluirDocComprovante(' + realIdx + ')" title="Excluir">🗑️</button>' +
+            '</td>';
+        tbody.appendChild(tr);
+    });
+}
+
+function abrirDocComprovante(idx) {
+    const c = (db.comprovantesDoc || [])[idx];
+    if (!c || !c.dataUrl) { alert('Arquivo indisponível.'); return; }
+    if (c.tipoArquivo && c.tipoArquivo.indexOf('image/') === 0) {
+        openImageModal(c.dataUrl);
+    } else {
+        const win = window.open();
+        if (!win) { alert('Bloqueio de pop-up.'); return; }
+        const nomeSafe = (c.nomeArquivo || 'Comprovante').replace(/</g, '&lt;');
+        win.document.write('<html><head><title>' + nomeSafe + '</title></head><body style="margin:0;"><iframe src="' + c.dataUrl + '" frameborder="0" style="border:0;position:fixed;top:0;left:0;width:100%;height:100%;" allowfullscreen></iframe></body></html>');
+    }
+}
+
+function excluirDocComprovante(idx) {
+    if (!confirmarSenhaADM()) return;
+    const c = (db.comprovantesDoc || [])[idx];
+    if (!c) return;
+    if (!confirm('Excluir este comprovante?')) return;
+    db.comprovantesDoc.splice(idx, 1);
+    atualizarTabelaDoc();
+    salvarDB();
+    registrarAuditoria('Exclusão', 'Comprovante excluído: ' + c.nomeArquivo);
+}
 
 // ===== PWA =====
 let deferredInstallPrompt = null;
@@ -5286,12 +5345,9 @@ function configurarBotaoInstalar() {
         }
         alert(
             '📲 COMO INSTALAR O PAIZÃO UBER 2.0\n\n' +
-            '• ANDROID (Chrome):\n' +
-            '  Menu ⋮ → "Instalar aplicativo"\n\n' +
-            '• iPHONE / iPAD (Safari):\n' +
-            '  Compartilhar (□↑) → "Adicionar à Tela de Início"\n\n' +
-            '• COMPUTADOR (Chrome/Edge):\n' +
-            '  Ícone de instalar na barra de endereço'
+            '• ANDROID (Chrome):\n  Menu ⋮ → "Instalar aplicativo"\n\n' +
+            '• iPHONE / iPAD (Safari):\n  Compartilhar (□↑) → "Adicionar à Tela de Início"\n\n' +
+            '• COMPUTADOR (Chrome/Edge):\n  Ícone de instalar na barra de endereço'
         );
     });
 }
@@ -5345,6 +5401,7 @@ async function inicializarSistemaCompleto() {
     atualizarComboPlacasDocumentos();
     atualizarGaleriaComprovantes();
     atualizarListaDocVeiculo();
+    atualizarTabelaDoc();
     configurarInputMultiplasImagens();
     configurarBotaoInstalar();
 
@@ -5355,6 +5412,11 @@ async function inicializarSistemaCompleto() {
     if (compPagInput) {
         compPagInput.removeEventListener('change', handleComprovantesPagInputChange);
         compPagInput.addEventListener('change', handleComprovantesPagInputChange);
+    }
+    const docCompInput = document.getElementById('docComprovanteInput');
+    if (docCompInput) {
+        docCompInput.removeEventListener('change', handleDocComprovanteInputChange);
+        docCompInput.addEventListener('change', handleDocComprovanteInputChange);
     }
     atualizarTabelaComprovantesPag();
 

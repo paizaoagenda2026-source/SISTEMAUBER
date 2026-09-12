@@ -2067,7 +2067,8 @@ function encerrarLocacao(i) {
                 categoria: 'Extorno Caução',
                 valor: formatarMoedaBR(caucaoPagoNoPeriodo),
                 valorNumerico: caucaoPagoNoPeriodo,
-                tipo: 'saida'
+                tipo: 'saida',
+                _reaberturaTag: 'extorno:' + l.locatario + ':' + l.placa
             });
             registrarAuditoria('Extorno', `Caução extornada: ${l.locatario} - ${l.placa} | Valor pago no período: ${formatarMoedaBR(caucaoPagoNoPeriodo)} | Parcelas: ${calcCaucao.quantidadeParcelas}`);
             atualizarTabelaFluxoCaixa();
@@ -2189,21 +2190,129 @@ function atualizarTabelaLocEncerrada() {
     });
 }
 
+/* ============================================================
+   REABRIR LOCAÇÃO ENCERRADA
+   Reverte todas as ações feitas no encerramento em:
+   • Sub Pagamentos
+   • Fluxo de Caixa
+   • Histórico de Aluguéis
+   ============================================================ */
 function reabrirLocacao(i) {
     if (!confirmarSenhaADM()) return;
     const l = db.locacoesEncerradas[i];
     if (!l) { alert('Locação não encontrada.'); return; }
-    if (!confirm(`Reabrir a locação de ${l.locatario} - ${l.placa}?`)) return;
+
+    if (!confirm(
+        `Reabrir a locação de ${l.locatario} - ${l.placa}?\n\n` +
+        `As seguintes ações feitas no encerramento serão REVERTIDAS:\n` +
+        `• Fluxo de Caixa: lançamento de extorno de caução será removido\n` +
+        `• Histórico de Aluguéis: registros do período de encerramento serão removidos\n` +
+        `• Sub Pagamentos: parcelas geradas após o encerramento serão removidas\n\n` +
+        `Deseja continuar?`
+    )) return;
+
+    const reversoes = [];
+    const lLocUpper = String(l.locatario || '').toUpperCase();
+    const lPlacaUpper = String(l.placa || '').toUpperCase();
+    const dataEncerramento = l.dataEncerramento || '';
+
+    // 1) FLUXO DE CAIXA — remove lançamento de extorno de caução desta locação
+    if (Array.isArray(db.fluxoCaixa)) {
+        const antesFC = db.fluxoCaixa.length;
+        db.fluxoCaixa = db.fluxoCaixa.filter(f => {
+            if (!f) return true;
+            const desc = String(f.descricao || '').toUpperCase();
+            const cat = String(f.categoria || '').toUpperCase();
+            const tag = String(f._reaberturaTag || '').toUpperCase();
+            const isExtorno = cat.includes('EXTORNO') || desc.includes('EXTORNO');
+            const bateLoc = desc.includes(lLocUpper) && desc.includes(lPlacaUpper);
+            const bateTag = tag === ('EXTORNO:' + lLocUpper + ':' + lPlacaUpper);
+            if (isExtorno && (bateLoc || bateTag)) return false;
+            return true;
+        });
+        const removidosFC = antesFC - db.fluxoCaixa.length;
+        if (removidosFC > 0) {
+            reversoes.push(`🗑️ ${removidosFC} lançamento(s) de extorno de caução removido(s) do Fluxo de Caixa`);
+        }
+    }
+
+    // 2) HISTÓRICO DE ALUGUÉIS — remove registros desta locação criados no/ após o encerramento
+    if (Array.isArray(db.historicoAlugueis)) {
+        const antesHA = db.historicoAlugueis.length;
+        db.historicoAlugueis = db.historicoAlugueis.filter(h => {
+            if (!h) return true;
+            if (h.locatario !== l.locatario) return true;
+            if (h.placa !== l.placa) return true;
+            const dt = h.dataPagamento || h.data || '';
+            if (dt && dataEncerramento && dt >= dataEncerramento) return false;
+            // remove também registros sem data que tenham a tag especial
+            if (h._reaberturaTag && String(h._reaberturaTag).toUpperCase().includes('ENCERRAMENTO')) return false;
+            return true;
+        });
+        const removidosHA = antesHA - db.historicoAlugueis.length;
+        if (removidosHA > 0) {
+            reversoes.push(`🗑️ ${removidosHA} registro(s) removido(s) do Histórico de Aluguéis`);
+        }
+    }
+
+    // 3) SUB PAGAMENTOS — remove parcelas geradas APÓS a data de encerramento
+    if (Array.isArray(db.alugueis)) {
+        const antesAL = db.alugueis.length;
+        db.alugueis = db.alugueis.filter(a => {
+            if (!a) return true;
+            if (a.locatario !== l.locatario) return true;
+            if (a.placa !== l.placa) return true;
+            const dt = a.data || a.dataPagamento || '';
+            if (dt && dataEncerramento && dt > dataEncerramento) return false;
+            if (a._reaberturaTag && String(a._reaberturaTag).toUpperCase().includes('ENCERRAMENTO')) return false;
+            return true;
+        });
+        const removidosAL = antesAL - db.alugueis.length;
+        if (removidosAL > 0) {
+            reversoes.push(`🗑️ ${removidosAL} parcela(s) removida(s) do Sub Pagamentos`);
+        }
+    }
+
+    // 4) Restaura a locação na lista de ativas
     const copia = Object.assign({}, l);
-    ['dataEncerramento','dataFimEfetiva','caucaoExtornada','caucaoPagoPeriodoNumerico','caucaoPagoPeriodoFormatado','qtdParcelasCaucaoPeriodo','detalheCaucaoPeriodo','qtdPagamentosPeriodo','detalhePagamentosPeriodo','receitaNumerica','despesasNumerica','lucroNumerico','valorGerado','despesas','lucro','extornoNumerico','extornoFormatado','despesasVeiculoNumerica','despesasVeiculoFormatado'].forEach(k => delete copia[k]);
+    [
+        'dataEncerramento','dataFimEfetiva','caucaoExtornada',
+        'caucaoPagoPeriodoNumerico','caucaoPagoPeriodoFormatado',
+        'qtdParcelasCaucaoPeriodo','detalheCaucaoPeriodo',
+        'qtdPagamentosPeriodo','detalhePagamentosPeriodo',
+        'receitaNumerica','despesasNumerica','lucroNumerico',
+        'valorGerado','despesas','lucro',
+        'extornoNumerico','extornoFormatado',
+        'despesasVeiculoNumerica','despesasVeiculoFormatado'
+    ].forEach(k => delete copia[k]);
+
     if (!Array.isArray(db.locacoes)) db.locacoes = [];
     db.locacoes.push(copia);
     db.locacoesEncerradas.splice(i, 1);
+
+    // 5) Atualiza TODAS as tabelas afetadas
     atualizarTabelaLocacoes();
     atualizarTabelaLocEncerrada();
-    registrarAuditoria('Reabertura', `Locação reaberta: ${l.locatario} - ${l.placa}`);
+    atualizarTabelaAlugueis();
+    atualizarTabelaHistoricoAlugueis();
+    atualizarTabelaFluxoCaixa();
+
+    registrarAuditoria(
+        'Reabertura',
+        `Locação reaberta: ${l.locatario} - ${l.placa}` +
+        (reversoes.length ? ' | ' + reversoes.join('; ') : ' | Nenhuma ação precisou ser revertida')
+    );
     salvarDB();
-    alert('✅ Locação reaberta.');
+
+    let msg = `✅ Locação reaberta com sucesso!\n\n`;
+    msg += `Locatário: ${l.locatario}\n`;
+    msg += `Veículo: ${l.fabricante || ''} - ${l.placa}\n`;
+    if (reversoes.length > 0) {
+        msg += `\n🔄 Ações revertidas:\n• ` + reversoes.join('\n• ');
+    } else {
+        msg += `\nℹ️ Nenhuma ação precisou ser revertida.`;
+    }
+    alert(msg);
 }
 
 function excluirLocacaoEncerrada(i) {
@@ -4799,7 +4908,6 @@ async function vincularPDFaPlaca(arquivo, placa, dadosExtraidos) {
         throw err;
     }
     
-    // ALTERAÇÃO SOLICITADA: Salva na aba "Documentos Salvos" -> Placa em vez de "DOC"
     if (!db.documentosPlacas) db.documentosPlacas = {};
     if (!db.documentosPlacas[placa]) db.documentosPlacas[placa] = [];
     

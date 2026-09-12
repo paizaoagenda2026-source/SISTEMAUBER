@@ -645,7 +645,111 @@
 </div>
 <div class="selfie-modal" id="selfieModal"><div class="selfie-title">📸 Tire sua Selfie</div><div class="selfie-instructions">Posicione o rosto e clique em Capturar</div><div class="selfie-container"><video class="selfie-video" id="selfieVideo" autoplay playsinline></video><canvas class="selfie-canvas" id="selfieCanvas"></canvas><div class="selfie-preview-container" id="selfiePreviewContainer"><img id="selfiePreviewImg" alt=""></div></div><div class="selfie-photo-preview" id="selfiePhotoPreview"><img id="selfiePhotoResult" alt=""><p>Capturada!</p></div><div class="selfie-controls"><button class="selfie-btn-capture" id="selfieCaptureBtn" onclick="capturarSelfie()">📸 Capturar</button><button class="selfie-btn-cancel" onclick="fecharModalSelfie()">❌ Cancelar</button><button class="selfie-btn-capture" id="selfieConfirmBtn" onclick="confirmarSelfie()" style="display:none;">✅ Confirmar</button></div></div>
 <div class="selfie-modal" id="vistoriaCameraModal"><div class="selfie-title">📷 Foto Vistoria</div><div class="selfie-container"><video class="selfie-video" id="vistoriaVideo" autoplay playsinline></video><canvas class="selfie-canvas" id="vistoriaCanvas"></canvas></div><div class="selfie-photo-preview" id="vistoriaPhotoPreview"><img id="vistoriaPhotoResult" alt=""><p>Capturada!</p></div><div class="selfie-controls"><button class="selfie-btn-capture" id="vistoriaCaptureBtn" onclick="capturarVistoria()">📸 Capturar</button><button class="selfie-btn-cancel" onclick="fecharCameraVistoria()">❌ Cancelar</button><button class="selfie-btn-capture" id="vistoriaConfirmBtn" onclick="confirmarVistoria()" style="display:none;">✅ Confirmar</button></div></div>
-<div class="contrato-modal" id="contratoModal"><div class="contrato-modal-content"><div class="contrato-modal-header"><h3>📄 Contratos</h3><button class="contrato-modal-close" onclick="fecharModalContratos()">×</button></div><div class="contrato-modal-body"><p style="padding:20px;text-align:center;color:#666;">Módulo de contratos (a implementar detalhes).</p><button class="btn-secondary" onclick="fecharModalContratos()">Fechar</button></div></div></div>
+
+<div class="contrato-modal" id="contratoModal">
+  <div class="contrato-modal-content">
+    <div class="contrato-modal-header">
+      <h3>📄 Contratos</h3>
+      <button class="contrato-modal-close" onclick="fecharModalContratos()">×</button>
+    </div>
+    <div class="contrato-modal-body">
+      <div class="sub-tabs">
+        <button class="sub-tab active" data-contrato-tab="locacao" onclick="switchContratoTab('locacao')">📄 Contrato de Locação</button>
+        <button class="sub-tab" data-contrato-tab="termo" onclick="switchContratoTab('termo')">📝 Termo de Responsabilidade</button>
+        <button class="sub-tab" data-contrato-tab="nota" onclick="switchContratoTab('nota')">💵 Nota Promissória</button>
+      </div>
+
+      <div class="sub-tab-content active" id="contratoTabLocacao">
+        <div class="form-grid">
+          <div class="contrato-form-group"><label>Contrato Número</label><input type="text" id="ctLoc_numero"></div>
+          <div class="contrato-form-group"><label>Número Interno</label><input type="text" id="ctLoc_numeroInterno"></div>
+          <div class="contrato-form-group"><label>Locadora</label><input type="text" id="ctLoc_locadora"></div>
+          <div class="contrato-form-group"><label>Endereço Locadora</label><input type="text" id="ctLoc_locadoraEndereco"></div>
+          <div class="contrato-form-group"><label>CNPJ Locadora</label><input type="text" id="ctLoc_locadoraCnpj"></div>
+          <div class="contrato-form-group"><label>Locatário</label><input type="text" id="ctLoc_locatario"></div>
+          <div class="contrato-form-group"><label>Endereço Locatário</label><input type="text" id="ctLoc_locatarioEndereco"></div>
+          <div class="contrato-form-group"><label>CEP Locatário</label><input type="text" id="ctLoc_locatarioCep"></div>
+          <div class="contrato-form-group"><label>RG Locatário</label><input type="text" id="ctLoc_locatarioRg"></div>
+          <div class="contrato-form-group"><label>CPF Locatário</label><input type="text" id="ctLoc_locatarioCpf"></div>
+          <div class="contrato-form-group"><label>Veículo</label><input type="text" id="ctLoc_veiculo"></div>
+          <div class="contrato-form-group"><label>Cor do Veículo</label><input type="text" id="ctLoc_veiculoCor"></div>
+          <div class="contrato-form-group"><label>Placa</label><input type="text" id="ctLoc_veiculoPlaca"></div>
+          <div class="contrato-form-group"><label>Ano Fabricação</label><input type="text" id="ctLoc_anoFabr"></div>
+          <div class="contrato-form-group"><label>Ano Modelo</label><input type="text" id="ctLoc_anoModel"></div>
+          <div class="contrato-form-group"><label>Gestor do Contrato</label><input type="text" id="ctLoc_gestor"></div>
+          <div class="contrato-form-group"><label>Local de Vistoria</label><input type="text" id="ctLoc_localVistoria"></div>
+          <div class="contrato-form-group"><label>Prazo de Vigência (dias)</label><input type="text" id="ctLoc_prazo"></div>
+          <div class="contrato-form-group"><label>Multa por Rescisão Antecipada</label><input type="text" id="ctLoc_multaRescisao"></div>
+          <div class="contrato-form-group"><label>Taxa de Troca de Veículo</label><input type="text" id="ctLoc_taxaTroca"></div>
+          <div class="contrato-form-group"><label>Valor do Aluguel (semanal)</label><input type="text" id="ctLoc_valorAluguel"></div>
+          <div class="contrato-form-group"><label>Limite de KM por Semana</label><input type="text" id="ctLoc_limiteKm"></div>
+          <div class="contrato-form-group"><label>Valor por KM Excedente</label><input type="text" id="ctLoc_valorKm"></div>
+          <div class="contrato-form-group"><label>Valor da Caução</label><input type="text" id="ctLoc_caucao"></div>
+          <div class="contrato-form-group"><label>Parcelas da Caução</label><input type="text" id="ctLoc_caucaoParcelas"></div>
+          <div class="contrato-form-group"><label>Devolução da Caução</label><input type="text" id="ctLoc_caucaoDevolucao"></div>
+          <div class="contrato-form-group"><label>Multa por Inadimplência</label><input type="text" id="ctLoc_multaInadimplencia"></div>
+          <div class="contrato-form-group"><label>Taxa de Higienização</label><input type="text" id="ctLoc_taxaHigienizacao"></div>
+          <div class="contrato-form-group"><label>Taxa de Entrega em Local Diverso</label><input type="text" id="ctLoc_taxaEntrega"></div>
+          <div class="contrato-form-group"><label>Foro / Comarca</label><input type="text" id="ctLoc_foro"></div>
+          <div class="contrato-form-group"><label>Data de Assinatura</label><input type="text" id="ctLoc_data"></div>
+        </div>
+        <div class="contrato-actions">
+          <button class="btn-primary" onclick="salvarContratoLocacao()">💾 Salvar</button>
+          <button class="btn-secondary" onclick="imprimirContratoLocacao()">🖨️ Gerar / Imprimir</button>
+          <button class="btn-buscar" onclick="limparContratoLocacao()">🧹 Limpar</button>
+        </div>
+      </div>
+
+      <div class="sub-tab-content" id="contratoTabTermo">
+        <div class="form-grid">
+          <div class="contrato-form-group"><label>Nome do Contratante</label><input type="text" id="ctTer_nome"></div>
+          <div class="contrato-form-group"><label>RG</label><input type="text" id="ctTer_rg"></div>
+          <div class="contrato-form-group"><label>CPF</label><input type="text" id="ctTer_cpf"></div>
+          <div class="contrato-form-group"><label>CNH - Nº de Registro</label><input type="text" id="ctTer_cnh"></div>
+          <div class="contrato-form-group"><label>CNH - Validade</label><input type="text" id="ctTer_cnhValidade"></div>
+          <div class="contrato-form-group"><label>Marca do Veículo</label><input type="text" id="ctTer_veiculo"></div>
+          <div class="contrato-form-group"><label>Placa</label><input type="text" id="ctTer_placa"></div>
+          <div class="contrato-form-group"><label>Proprietário do Veículo</label><input type="text" id="ctTer_proprietario"></div>
+          <div class="contrato-form-group"><label>CPF do Proprietário</label><input type="text" id="ctTer_proprietarioCpf"></div>
+          <div class="contrato-form-group"><label>Prazo (dias)</label><input type="text" id="ctTer_prazo"></div>
+          <div class="contrato-form-group"><label>Data de Assinatura</label><input type="text" id="ctTer_data"></div>
+        </div>
+        <div class="contrato-actions">
+          <button class="btn-primary" onclick="salvarContratoTermo()">💾 Salvar</button>
+          <button class="btn-secondary" onclick="imprimirContratoTermo()">🖨️ Gerar / Imprimir</button>
+          <button class="btn-buscar" onclick="limparContratoTermo()">🧹 Limpar</button>
+        </div>
+      </div>
+
+      <div class="sub-tab-content" id="contratoTabNota">
+        <div class="form-grid">
+          <div class="contrato-form-group"><label>Número</label><input type="text" id="ctNot_numero"></div>
+          <div class="contrato-form-group"><label>Vencimento</label><input type="text" id="ctNot_vencimento"></div>
+          <div class="contrato-form-group"><label>Valor</label><input type="text" id="ctNot_valor"></div>
+          <div class="contrato-form-group"><label>Data de Emissão</label><input type="text" id="ctNot_dataEmissao"></div>
+          <div class="contrato-form-group"><label>Credor</label><input type="text" id="ctNot_credor"></div>
+          <div class="contrato-form-group"><label>CNPJ do Credor</label><input type="text" id="ctNot_credorCnpj"></div>
+          <div class="contrato-form-group"><label>Valor por Extenso</label><input type="text" id="ctNot_valorExtenso"></div>
+          <div class="contrato-form-group"><label>Cidade de Pagamento</label><input type="text" id="ctNot_cidade"></div>
+          <div class="contrato-form-group"><label>Emitente - Nome</label><input type="text" id="ctNot_emitenteNome"></div>
+          <div class="contrato-form-group"><label>Emitente - CPF</label><input type="text" id="ctNot_emitenteCpf"></div>
+          <div class="contrato-form-group"><label>Emitente - Doc. Identificação</label><input type="text" id="ctNot_emitenteDoc"></div>
+          <div class="contrato-form-group"><label>Emitente - Expedidor</label><input type="text" id="ctNot_emitenteDocExp"></div>
+          <div class="contrato-form-group"><label>Emitente - Endereço</label><input type="text" id="ctNot_emitenteEndereco"></div>
+          <div class="contrato-form-group"><label>Emitente - CEP</label><input type="text" id="ctNot_emitenteCep"></div>
+          <div class="contrato-form-group"><label>Cartório</label><input type="text" id="ctNot_cartorio"></div>
+          <div class="contrato-form-group"><label>Data de Assinatura</label><input type="text" id="ctNot_data"></div>
+        </div>
+        <div class="contrato-actions">
+          <button class="btn-primary" onclick="salvarContratoNota()">💾 Salvar</button>
+          <button class="btn-secondary" onclick="imprimirContratoNota()">🖨️ Gerar / Imprimir</button>
+          <button class="btn-buscar" onclick="limparContratoNota()">🧹 Limpar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="despesas-modal" id="despesasModal"><div class="despesas-modal-content"><div class="despesas-modal-header"><h3>📋 Despesas</h3><button class="contrato-modal-close" onclick="fecharDespesasModal()">×</button></div><div class="despesas-modal-body" id="despesasModalBody"></div></div></div>
 <div id="printArea" class="print-area"></div>
 
@@ -712,6 +816,9 @@ async function carregarDB() {
         if (!Array.isArray(db[k])) db[k] = [];
     });
     if (!db.contratos) db.contratos = { contratoLocacao:{}, termoResponsabilidade:{}, notaPromissoria:{} };
+    if (!db.contratos.contratoLocacao) db.contratos.contratoLocacao = {};
+    if (!db.contratos.termoResponsabilidade) db.contratos.termoResponsabilidade = {};
+    if (!db.contratos.notaPromissoria) db.contratos.notaPromissoria = {};
     if (!db.imagens) db.imagens = { garagem:{fotos:[]}, sos:{fotos:[]}, comprovantes:{fotos:[]} };
     if (!db.imagens.garagem) db.imagens.garagem = { fotos: [] };
     if (!db.imagens.sos) db.imagens.sos = { fotos: [] };
@@ -2571,9 +2678,201 @@ document.addEventListener('keydown', function(e) {
     else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeImageModal(); }
 }, true);
 
-function abrirModalContratos() { document.getElementById('contratoModal').classList.add('active'); }
-function fecharModalContratos() { document.getElementById('contratoModal').classList.remove('active'); }
 function fecharDespesasModal() { document.getElementById('despesasModal').classList.remove('active'); }
+
+/* ============================================================
+   CONTRATOS — 3 DOCUMENTOS EDITÁVEIS
+   ============================================================ */
+const CONTRATO_LOC_CAMPOS = ['numero','numeroInterno','locadora','locadoraEndereco','locadoraCnpj','locatario','locatarioEndereco','locatarioCep','locatarioRg','locatarioCpf','veiculo','veiculoCor','veiculoPlaca','anoFabr','anoModel','gestor','localVistoria','prazo','multaRescisao','taxaTroca','valorAluguel','limiteKm','valorKm','caucao','caucaoParcelas','caucaoDevolucao','multaInadimplencia','taxaHigienizacao','taxaEntrega','foro','data'];
+const CONTRATO_TER_CAMPOS = ['nome','rg','cpf','cnh','cnhValidade','veiculo','placa','proprietario','proprietarioCpf','prazo','data'];
+const CONTRATO_NOT_CAMPOS = ['numero','vencimento','valor','dataEmissao','credor','credorCnpj','valorExtenso','cidade','emitenteNome','emitenteCpf','emitenteDoc','emitenteDocExp','emitenteEndereco','emitenteCep','cartorio','data'];
+
+function _ctVal(id) { const el = document.getElementById(id); return el ? String(el.value || '').trim() : ''; }
+
+function carregarContratosForm() {
+    if (!db.contratos) db.contratos = { contratoLocacao:{}, termoResponsabilidade:{}, notaPromissoria:{} };
+    if (!db.contratos.contratoLocacao) db.contratos.contratoLocacao = {};
+    if (!db.contratos.termoResponsabilidade) db.contratos.termoResponsabilidade = {};
+    if (!db.contratos.notaPromissoria) db.contratos.notaPromissoria = {};
+    const c = db.contratos;
+    CONTRATO_LOC_CAMPOS.forEach(k => { const el = document.getElementById('ctLoc_' + k); if (el) el.value = (c.contratoLocacao && c.contratoLocacao[k]) || ''; });
+    CONTRATO_TER_CAMPOS.forEach(k => { const el = document.getElementById('ctTer_' + k); if (el) el.value = (c.termoResponsabilidade && c.termoResponsabilidade[k]) || ''; });
+    CONTRATO_NOT_CAMPOS.forEach(k => { const el = document.getElementById('ctNot_' + k); if (el) el.value = (c.notaPromissoria && c.notaPromissoria[k]) || ''; });
+}
+
+function abrirModalContratos() {
+    carregarContratosForm();
+    document.getElementById('contratoModal').classList.add('active');
+    switchContratoTab('locacao');
+}
+
+function fecharModalContratos() {
+    document.getElementById('contratoModal').classList.remove('active');
+}
+
+function switchContratoTab(tab) {
+    const btns = document.querySelectorAll('#contratoModal [data-contrato-tab]');
+    btns.forEach(b => b.classList.remove('active'));
+    const alvo = document.querySelector('#contratoModal [data-contrato-tab="' + tab + '"]');
+    if (alvo) alvo.classList.add('active');
+    const conts = document.querySelectorAll('#contratoModal .sub-tab-content');
+    conts.forEach(c => c.classList.remove('active'));
+    const map = { locacao: 'contratoTabLocacao', termo: 'contratoTabTermo', nota: 'contratoTabNota' };
+    const el = document.getElementById(map[tab]);
+    if (el) el.classList.add('active');
+}
+
+function salvarContratoLocacao() {
+    if (!db.contratos) db.contratos = {};
+    const obj = {};
+    CONTRATO_LOC_CAMPOS.forEach(k => { obj[k] = _ctVal('ctLoc_' + k); });
+    db.contratos.contratoLocacao = obj;
+    salvarDB();
+    registrarAuditoria('Contrato', 'Contrato de Locação salvo');
+    alert('✅ Contrato de Locação salvo!');
+}
+function salvarContratoTermo() {
+    if (!db.contratos) db.contratos = {};
+    const obj = {};
+    CONTRATO_TER_CAMPOS.forEach(k => { obj[k] = _ctVal('ctTer_' + k); });
+    db.contratos.termoResponsabilidade = obj;
+    salvarDB();
+    registrarAuditoria('Contrato', 'Termo de Responsabilidade salvo');
+    alert('✅ Termo de Responsabilidade salvo!');
+}
+function salvarContratoNota() {
+    if (!db.contratos) db.contratos = {};
+    const obj = {};
+    CONTRATO_NOT_CAMPOS.forEach(k => { obj[k] = _ctVal('ctNot_' + k); });
+    db.contratos.notaPromissoria = obj;
+    salvarDB();
+    registrarAuditoria('Contrato', 'Nota Promissória salva');
+    alert('✅ Nota Promissória salva!');
+}
+
+function limparContratoLocacao() { if (!confirm('Limpar todos os campos do Contrato de Locação?')) return; CONTRATO_LOC_CAMPOS.forEach(k => { const el = document.getElementById('ctLoc_' + k); if (el) el.value = ''; }); }
+function limparContratoTermo() { if (!confirm('Limpar todos os campos do Termo de Responsabilidade?')) return; CONTRATO_TER_CAMPOS.forEach(k => { const el = document.getElementById('ctTer_' + k); if (el) el.value = ''; }); }
+function limparContratoNota()  { if (!confirm('Limpar todos os campos da Nota Promissória?')) return; CONTRATO_NOT_CAMPOS.forEach(k => { const el = document.getElementById('ctNot_' + k); if (el) el.value = ''; }); }
+
+function _ctPrint(html) {
+    const area = document.getElementById('printArea');
+    if (!area) return;
+    area.innerHTML = html;
+    window.print();
+}
+
+function imprimirContratoLocacao() {
+    const v = id => _ctVal('ctLoc_' + id);
+    const html = `
+    <div style="padding:40px;font-family:'Times New Roman',serif;color:#000;line-height:1.6;font-size:13px;">
+      <h1 style="text-align:center;font-size:15px;font-weight:bold;margin-bottom:20px;text-transform:uppercase;">INSTRUMENTO PARTICULAR DE CONTRATO DE LOCAÇÃO DE VEÍCULOS</h1>
+      <p>Contrato Número: "${v('numero')}"</p>
+      <p style="text-align:justify;margin-top:12px;">Pelo presente Instrumento Particular de Contrato de Locação de Veículos, número ${v('numeroInterno')}, e na melhor forma de direito, de um lado, "${v('locadora')}", com sede na "${v('locadoraEndereco')}", inscrita no CNPJ sob o nº "${v('locadoraCnpj')}", doravante denominada LOCADORA, e, de outro lado, "${v('locatario')}", residente e domiciliado à "${v('locatarioEndereco')}", CEP "${v('locatarioCep')}", portador do RG nº "${v('locatarioRg')}" e inscrito no CPF sob o nº ${v('locatarioCpf')}, doravante denominado LOCATÁRIO, têm, entre si, justo e contratado o presente, o qual se regerá pelas cláusulas e condições que a seguir se aduzem, com inteira submissão às disposições legais e regulamentares atinentes à espécie.</p>
+      <p style="margin-top:16px;"><strong>CLÁUSULA PRIMEIRA - DO OBJETO.</strong></p>
+      <p style="text-align:justify;">1. O presente contrato tem por objeto a locação do veículo "${v('veiculo')}", cor ${v('veiculoCor')}, placas "${v('veiculoPlaca')}", quatro portas, com ar-condicionado, direção hidráulica, trava elétrica, vidro elétrico e sistema de som com multimidia, ano de fabricação "${v('anoFabr')}" e ano modelo "${v('anoModel')}".</p>
+      <p style="margin-top:16px;"><strong>CLÁUSULA SEGUNDA - DAS OBRIGAÇÕES DO LOCADOR</strong></p>
+      <p>2. É dever do locador manter em dia o pagamento dos impostos, tais como IPVA, DPVAT e licenciamento.</p>
+      <p>3. Manter o seguro do veículo vigente.</p>
+      <p>4. É dever do locador providenciar a manutenção do automóvel locado tão logo seja identificada falha dos sistemas ou pane em geral, admitindo que o custo da manutenção ou reparo seja suportado por ele, salvo em caso de este não ter dado causa à ocorrência.</p>
+      <p>5. As revisões preventivas do veículo serão custeadas pelo locador, que indicará ao locatário o local onde o veículo deverá ser conduzido.</p>
+      <p>6. As revisões periódicas obrigatórias que se fizerem necessárias serão procedidas em oficina credenciada ou indicada pelo locador. Contudo, não haverá desconto no valor do aluguel, exceto se o veículo necessitar permanecer na oficina por mais de vinte e quatro horas, hipótese em que serão descontadas as diárias correspondentes até a efetiva entrega do veículo.</p>
+      <p style="margin-top:16px;"><strong>CLÁUSULA TERCEIRA - DAS OBRIGAÇÕES DO LOCATÁRIO</strong></p>
+      <p>6.1 O locatário se compromete a utilizar o veículo de forma pessoal e exclusiva para o transporte em aplicativos de transporte remunerado privado individual de passageiros em conformidade com a Lei nº 12.587/2012, sendo expressamente proibido o empréstimo, compartilhamento, cessão ou sublocação a terceiros.</p>
+      <p>7. É de responsabilidade do locatário zelar pelo veículo, guardando-o e protegendo-o, utilizá-lo de maneira correta durante o período da locação.</p>
+      <p>7.1 O locatário compromete-se a utilizar o veículo de forma adequada, em conformidade com as leis de trânsito e as normas de segurança pública, abstendo-se de exceder a lotação e o peso suportado pelo veículo e de praticar atos que possam causar danos ou prejuízos ao veículo ou a terceiros.</p>
+      <p>8. É vedado ao LOCATÁRIO: Utilizar o veículo para fins comerciais de competição ou para qualquer outra finalidade não prevista neste contrato. É vedado conduzir o veículo sob a influência de álcool, drogas ou substâncias psicoativas que possam comprometer sua capacidade de condução. É vedado emprestar, sublocar, ceder ou transferir, de qualquer forma, o veículo a terceiros. O locatário se compromete a não realizar modificações, reparos ou adaptações no veículo sem autorização prévia e expressa do Locador.</p>
+      <p>9. O locatário será o único responsável por eventuais multas, taxas, impostos e outras despesas decorrentes do uso do veículo durante o período de locação.</p>
+      <p>9.1 Considerando o prazo estendido deste contrato de locação, e com o propósito de o veículo manter-se em condições de uso, o locatário assumirá a responsabilidade de realizar checklist semanal, verificando e informando à empresa sobre as condições dos seguintes itens: Nível de óleo do motor; Parte elétrica; Freios; Nível de água; Pneus. A omissão de informação ou a sua prestação inverídica sobre a situação do veículo poderá dar causa à rescisão contratual, e as avarias oportunamente identificadas, e seus respectivos consertos, correrão por conta do locatário.</p>
+      <p>10. O locatário se compromete a utilizar o veículo somente em território nacional e dentro do Estado da Federação em que foi locado, sendo expressamente proibido ultrapassar qualquer fronteira ou limite geográfico diverso deste aqui mencionado. 10.1 As partes ajustam que, havendo necessidade de deslocamento do veículo para além de cem quilômetros a partir desta cidade, o locatário deverá informar previamente o locador.</p>
+      <p>11. Em relação às multas de trânsito, o Locatário, sendo responsável pelo cometimento delas, obriga-se a fornecer, no prazo de 3 (três) dias após ser comunicado, uma cópia da CNH contendo sua assinatura, bem como de arcar com os custos operacionais e administrativos para transferência dos pontos.</p>
+      <p>12. A inobservância das Cláusulas 3.1 e 3.2 ensejará a imediata devolução do veículo locado, e sua retenção imotivada poderá configurar apropriação indébita. 12.1 É de inteira responsabilidade do Locatário os custos de pagamento das multas de trânsito e custos administrativos decorrentes das infrações durante o período em que estiver na posse do veículo, salvo se tais multas ou penalidades forem imputáveis à Locadora por irregularidade na documentação do veículo.</p>
+      <p>12.2 A taxa administrativa por multa será R$ 100,00, que deverá ser paga junto com o valor da multa apresentada.</p>
+      <p>13. Sobrevindo algum sinistro durante a condução do automóvel, o Locatário deverá providenciar Boletim de Ocorrência encaminhando-o imediatamente à Locadora.</p>
+      <p>14. A apresentação do Boletim de Ocorrência citado na cláusula 3.4 deste Contrato, não exime o Locatário de arcar com todas as despesas decorrentes do evento danoso.</p>
+      <p>15. O locatário se compromete a arcar com as despesas inerentes à utilização de combustível, conserto de pneus, câmaras de ar, lâmpadas e troca de peças de reposição por mal uso.</p>
+      <p>16. Devolver o veículo nas mesmas condições de conservação nas quais lhe foram entregues no ato da retirada, inclusive devolvendo-o limpo, no endereço indicado pelo gestor do contrato, Sr. "${v('gestor')}".</p>
+      <p style="margin-top:16px;"><strong>CLÁUSULA QUARTA - DO ACOMPANHAMENTO E FISCALIZAÇÃO</strong></p>
+      <p>17. O acompanhamento e a vistoria a serem exercidos pelo Locador, por meio de seus prepostos, consistirão no direito de vistoriar o veículo quando de sua restituição e durante o período de vigência do contrato, mediante prévia comunicação.</p>
+      <p>18. As partes ajustam que a vistoria obrigatória ocorrerá a cada 15 dias em local situado a "${v('localVistoria')}", por sua vez a recusa no cumprimento desta condição poderá dar ensejo à rescisão do contrato com a retenção do valor dado em caução.</p>
+      <p>19. O Locador se compromete a utilizar o veículo em conformidade com as regras aqui estabelecidas e em obediência às especificidades do veículo, ditadas pela montadora.</p>
+      <p>20. Havendo sinistro, independentemente de culpa exclusiva de terceiros, o Locatário se compromete a arcar com os custos do reparo conduzindo o veículo ao estado original.</p>
+      <p>21. Optando o Locatário por não acionar o seguro mediante o pagamento de franquia para reparar o veículo, o Locador apresentará a ele três orçamentos para que escolha a oficina e proceda ao pagamento.</p>
+      <p>22. Em caso de necessidade de remoção do veículo em decorrência de acidente, o locatário arcará com o pagamento de eventuais custas e estadias em pátio até sua liberação.</p>
+      <p style="margin-top:16px;"><strong>CLÁUSULA QUINTA - DO PRAZO DE LOCAÇÃO E VIGÊNCIA</strong></p>
+      <p>23. O presente Contrato tem vigência de ${v('prazo')} (cento e oitenta) dias, com início na data de sua assinatura, podendo ser prorrogado automaticamente e sua rescisão antecipada ensejará a cobrança de multa de "${v('multaRescisao')}".</p>
+      <p>23.1. Após os primeiros 90 dias de contrato o LOCATÁRIO poderá, se achar necessário, solicitar a troca de veículo para outra categoria (se houver veículo disponível) sem a necessidade de fazer o cancelamento do contrato e cumprir os próximos 90 dias, pagando apenas uma taxa de troca de veículo no valor de "${v('taxaTroca')}".</p>
+      <p>24. A seu critério, o Locador poderá rescindir o contrato devendo, no entanto, restituir o valor pago referente à semana vigente, bem como a caução no prazo estipulado neste contrato.</p>
+      <p>25. Após o vencimento do primeiro prazo, o contrato passará a ter duração de 30 (trinta) dias, podendo ser rescindido sem gerar ônus, desde que previamente comunicada a outra parte com antecedência de 30 (trinta) dias.</p>
+      <p style="margin-top:16px;"><strong>CLÁUSULA SEXTA - DO PREÇO.</strong></p>
+      <p>26. Preço da Locação: O valor ajustado entre as partes neste contrato é de "${v('valorAluguel')}" semanais, bem como de que o limite de quilometragem estabelecido será de "${v('limiteKm')}" km por semana, e que por quilômetro excedente o locatário pagará o equivalente a "${v('valorKm')}". As partes ajustam ainda que nesse contrato a caução no valor de "${v('caucao')}", deverá ser dividida em "${v('caucaoParcelas')}" e a primeira parcela deverá ser paga na retirada do veículo e somente será devolvido 60 dias após o término do contrato o valor de "${v('caucaoDevolucao')}" não havendo multas e nenhuma avaria no veículo. O locatário outorga Nota Promissória prévia garantindo ao locador ressarcimento de eventuais gastos futuros, ocasião em que de comum acordo as partes inserirão o valor a ser confessado. Não havendo gastos a serem descontados, o título será restituído ao locatário em até sessenta dias após a entrega do veículo.</p>
+      <p>27. Estão inclusos no preço: Manutenção preventiva (por desgaste), Documentação atualizada, Seguro, Troca de óleo, Pneus, Pastilha de freio.</p>
+      <p>28. Não estão inclusos nos preços: Motorista, Combustível, Troca de sonda lambda, Peças de suspensão do veículo, Lâmpadas, Bomba de combustível, Pré-filtro de combustível, Taxa administrativa para cobrir despesas de transferência de pontos referentes a multas que o Locatário levar.</p>
+      <p>29. Todas as multas deverão ser pagas na semana seguinte à sua comunicação.</p>
+      <p>30. O locatário declara ter ciência de que os valores das multas e penalidades variam de acordo com o município de sua ocorrência.</p>
+      <p style="margin-top:16px;"><strong>CLÁUSULA SÉTIMA - DO FATURAMENTO E PAGAMENTO</strong></p>
+      <p>31. O locatário concorda com que sua conta vinculada à Uber seja vinculada à conta do Sr. "${v('gestor')}" para que em caso de o saldo de débito não cobrir as despesas do aluguel, esta poderá ser utilizada até o limite das despesas, e em caso de ainda remanescer dívida, o locatário deverá proceder ao complemento do valor.</p>
+      <p>31.1. CASO O VALOR DO ALUGUEL NÃO SEJA FEITO EM SUA TOTALIDADE PELO APLICATIVO DA UBER, DEVERÁ SER FEITO O PAGAMENTO DA DIFERENÇA VIA PIX ATÉ AS 13:00 da data determinada.</p>
+      <p>32. O não pagamento do aluguel semanal e outros débitos em sua totalidade permitirá ao Locador rescindir o contrato imediatamente, incidindo a multa de "${v('multaInadimplencia')}".</p>
+      <p style="margin-top:16px;"><strong>CLÁUSULA OITAVA - DA RESCISÃO</strong></p>
+      <p>33. Este Contrato poderá ser rescindido pelo LOCADOR a qualquer momento, mediante notificação escrita, desde que a comunicação seja feita com antecedência mínima de 7 (sete) dias, eximindo a parte de multas pela rescisão, excetuando-se eventuais dívidas inerentes a infrações, saldo de locação e avarias. No ato da rescisão, será cobrada taxa de "${v('taxaHigienizacao')}" caso seja necessária a higienização do veículo. O locatário poderá entregar o veículo em local diverso do ajustado, porém será cobrada taxa no valor de "${v('taxaEntrega')}".</p>
+      <p>34. A inobservância da notificação prévia obriga a parte a pagar o valor referente aos dias de locação não pagos.</p>
+      <p>35. O não cumprimento de qualquer uma das cláusulas constantes neste contrato por parte do Locatário dará o direito à rescisão sem aviso prévio e aplicação de multa no valor de "${v('multaRescisao')}".</p>
+      <p>36. Este contrato permanecerá vigente até seu integral cumprimento com a prestação de contas.</p>
+      <p>37. O veículo possui cobertura para a atividade comercial de passageiros. Havendo necessidade de acionamento do seguro, o locatário arcará com os custos da franquia que corresponde a 10% (dez por cento) da tabela Fipe. Em caso de necessidade de acionamento da franquia para terceiros, será cobrado do locatário o equivalente a 2% da tabela Fipe do veículo.</p>
+      <p>38. Motivos que podem levar à rescisão contratual sem a necessidade de prévio aviso: Inadimplência no pagamento semanal; Perda ou suspensão da habilitação (conforme legislação de trânsito vigente); emprestar ou dividir o veículo com outro motorista sem autorização da empresa; deixar o veículo pernoitar na rua, sem acomodá-lo em garagem; Promover alterações no veículo sem prévia autorização do locador; deixar de comparecer à vistoria previamente agendada; Não comparecer para manutenções programadas; Omitir o registro semanal de quilometragem até as 10:00; Informar endereço diverso do que reside.</p>
+      <p style="margin-top:16px;"><strong>CLÁUSULA NONA - DO FORO</strong></p>
+      <p>39. Fica eleito o Foro da Comarca de ${v('foro')} como o único competente para a solução de questões oriundas do presente Contrato, renunciando a outro por mais privilegiado que seja, arcando a parte vencida, em caso de demanda, com todas as despesas processuais e honorários advocatícios.</p>
+      <p style="margin-top:20px;">E, por estarem assim justas e contratadas, as partes assinam o presente Contrato em duas vias de igual teor, forma e idêntico valor jurídico, para um só efeito, na presença das testemunhas abaixo assinadas dando tudo por bom, firme e valioso.</p>
+      <p style="margin-top:20px;">São Paulo, "${v('data')}"</p>
+      <p style="margin-top:40px;">"${v('locadora')}", CNPJ nº "${v('locadoraCnpj')}", (Locador).</p>
+      <p style="margin-top:20px;">"${v('locatario')}", CPF nº "${v('locatarioCpf')}" (Locatário)</p>
+      <p style="margin-top:40px;">Testemunhas:</p>
+      <p style="margin-top:30px;">_____________________________________<br>${v('locadora')}</p>
+      <p style="margin-top:30px;">_____________________________________<br>${v('locatario')}</p>
+      <p style="margin-top:30px;">_____________________________________ &nbsp;&nbsp;&nbsp; _____________________________________<br>Testemunha 1 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Testemunha 2</p>
+    </div>`;
+    _ctPrint(html);
+}
+
+function imprimirContratoTermo() {
+    const v = id => _ctVal('ctTer_' + id);
+    const html = `
+    <div style="padding:40px;font-family:'Times New Roman',serif;color:#000;line-height:1.7;font-size:13px;">
+      <h1 style="text-align:center;font-size:14px;font-weight:bold;margin-bottom:24px;text-transform:uppercase;">TERMO DE RESPONSABILIDADE E AUTORIZAÇÃO DE TRANSFERÊNCIA DE PONTUAÇÕES</h1>
+      <p style="text-align:justify;">Eu, "${v('nome')}", portador da cédula de identidade RG nº "${v('rg')}" e inscrito no CPF sob o nº "${v('cpf')}", CNH número de registro: "${v('cnh')}" validade "${v('cnhValidade')}" que sou contratante do veículo de marca "${v('veiculo')}", placas "${v('placa')}" de propriedade da Sra. "${v('proprietario')}", devidamente inscrita no C.P.F N. "${v('proprietarioCpf')}", assumo qualquer responsabilidade civil, criminal e judicial, responsabilizo-me também pelas penalidades pecuniárias ou de pontuação caso venha cometer qualquer infração que viole o código de trânsito brasileiro, autorizando a transferência de pontos das mesmas com o veículo acima descrito e de ${v('prazo')} dias a contar da assinatura do mesmo. Sem mais.</p>
+      <p style="margin-top:24px;">São Paulo "${v('data')}"</p>
+      <p style="margin-top:24px;">Atenciosamente:</p>
+      <p style="margin-top:50px;text-align:center;">_____________________________________</p>
+      <p style="text-align:center;">"${v('nome')}"</p>
+      <p style="text-align:center;">CPF nº "${v('cpf')}"</p>
+      <p style="text-align:center;">RG nº "${v('rg')}"</p>
+      <p style="text-align:center;">CNH: "${v('cnh')}"</p>
+    </div>`;
+    _ctPrint(html);
+}
+
+function imprimirContratoNota() {
+    const v = id => _ctVal('ctNot_' + id);
+    const html = `
+    <div style="padding:40px;font-family:'Times New Roman',serif;color:#000;line-height:1.7;font-size:13px;">
+      <h1 style="text-align:center;font-size:16px;font-weight:bold;margin-bottom:24px;text-transform:uppercase;">NOTA PROMISSÓRIA</h1>
+      <p style="text-align:right;">Nº: "${v('numero')}"</p>
+      <p style="text-align:right;">Vencimento: "${v('vencimento')}"</p>
+      <p style="text-align:right;">Valor: ${v('valor')}</p>
+      <p style="text-align:justify;margin-top:24px;">Aos "${v('dataEmissao')}", pagarei por esta única via de NOTA PROMISSÓRIA a "${v('credor')}", CNPJ nº "${v('credorCnpj')}", ou a sua ordem, a quantia de "${v('valorExtenso')}", em moeda corrente nacional. Pagável em: ${v('cidade')}.</p>
+      <p style="margin-top:24px;"><strong>EMITENTE:</strong> Nome "${v('emitenteNome')}",</p>
+      <p>CPF nº "${v('emitenteCpf')}"</p>
+      <p>Documento de identificação: Carteira Nacional de Habilitação (CNH) n. "${v('emitenteDoc')}", expedida por ${v('emitenteDocExp')}</p>
+      <p>Endereço: "${v('emitenteEndereco')}"</p>
+      <p>São Paulo SP,</p>
+      <p>CEP "${v('emitenteCep')}"</p>
+      <p style="margin-top:24px;">"${v('cartorio')}"</p>
+      <p>São Paulo "${v('data')}"</p>
+      <p style="margin-top:50px;text-align:center;">_____________________________________</p>
+      <p style="text-align:center;">"${v('emitenteNome')}"</p>
+    </div>`;
+    _ctPrint(html);
+}
 
 function switchSubTab(t) {
     document.querySelectorAll('#comprovantes .sub-tab').forEach(x => x.classList.remove('active'));
@@ -3197,7 +3496,6 @@ function previewCompImagem() {}
 function previewMecPdf() {}
 function previewCompPdf() {}
 function switchSubTabPagamentos() {}
-function switchContratoTab() {}
 function imprimirDocumento() { window.print(); }
 function abrirModalSelfie_() {}
 
@@ -4057,7 +4355,6 @@ function extrairDadosCRLV(textoOriginal) {
     const t = linhas.join('\n');
     const tU = t.toUpperCase();
 
-    // Palavras que indicam RÓTULOS do CRLV (nunca podem ser usadas como valor de um campo)
     const PALAVRAS_ROTULO = [
         'PLACA','CHASSI','RENAVAM','CAT','CLA','ANTERIOR','SENATRAN','MENSAGENS',
         'LOCAL','DATA','MARCA','MODELO','ANO','COR','PREDOMINANTE','COMBUST',
@@ -4072,7 +4369,6 @@ function extrairDadosCRLV(textoOriginal) {
         'LOCAL/DATA','LOCAL DATA','TIPO','PROCEDÊNCIA','PROCEDENCIA'
     ];
 
-    // Palavras FORTES: se aparecerem, a linha INTEIRA é rejeitada como valor
     const ROTULOS_FORTES = [
         'CAT','CLA','ANTERIOR','SENATRAN','MENSAGENS','CMT','EIXOS','DPVAT','SEGURO',
         'SEGURADORA','CORRETOR','APÓLICE','APOLICE','LOTAÇÃO','LOTACAO','POTÊNCIA','POTENCIA',
@@ -4101,9 +4397,6 @@ function extrairDadosCRLV(textoOriginal) {
         return String(v).trim().replace(/^[\s:;\/\-|]+/, '').replace(/[\s:;\/\-|]+$/, '').trim();
     }
 
-    /* ============================================================
-       PLACA
-       ============================================================ */
     const placasCands = [...tU.matchAll(/\b([A-Z]{3}[0-9][A-Z0-9][0-9]{2})\b/g)];
     if (placasCands.length === 0) {
         const old = [...tU.matchAll(/\b([A-Z]{3}[0-9]{4})\b/g)];
@@ -4119,9 +4412,6 @@ function extrairDadosCRLV(textoOriginal) {
         break;
     }
 
-    /* ============================================================
-       CHASSI
-       ============================================================ */
     const chassisCands = [...tU.matchAll(/\b([A-HJ-NPR-Z0-9]{17})\b/g)];
     for (const mm of chassisCands) {
         const pos = mm.index;
@@ -4131,18 +4421,9 @@ function extrairDadosCRLV(textoOriginal) {
         break;
     }
 
-    /* ============================================================
-       RENAVAM — busca robusta
-       Estratégia: o rótulo "RENAVAM" pode estar seguido do número
-       na mesma linha OU o QR Code pode ter inserido texto entre eles.
-       Buscamos em até 200 caracteres depois de "RENAVAM" o primeiro
-       número de 11 dígitos.
-       ============================================================ */
     let renavamEncontrado = null;
-    // 1) Padrão direto: "RENAVAM 01130359722" ou "RENAVAM\n01130359722"
     let mR = tU.match(/RENAVAM\s*:?\s*(\d{11})/);
     if (mR) renavamEncontrado = mR[1];
-    // 2) "CÓDIGO RENAVAM" seguido de até 200 chars com qualquer coisa, então 11 dígitos
     if (!renavamEncontrado) {
         const idx = tU.search(/C[ÓO]DIGO\s*RENAVAM|RENAVAM/);
         if (idx >= 0) {
@@ -4151,7 +4432,6 @@ function extrairDadosCRLV(textoOriginal) {
             if (mm) renavamEncontrado = mm[1];
         }
     }
-    // 3) Primeiro número de 11 dígitos que NÃO esteja próximo de "CRV"
     if (!renavamEncontrado) {
         const cands = [...tU.matchAll(/\b(\d{11})\b/g)];
         for (const c of cands) {
@@ -4161,9 +4441,6 @@ function extrairDadosCRLV(textoOriginal) {
     }
     if (renavamEncontrado) dados.renavam = renavamEncontrado;
 
-    /* ============================================================
-       MARCA / MODELO
-       ============================================================ */
     const marcas = ['VOLKSWAGEN','VW','FIAT','CHEVROLET','GM','FORD','TOYOTA','HONDA',
         'HYUNDAI','RENAULT','NISSAN','JEEP','PEUGEOT','CITROEN','CITROËN','MITSUBISHI',
         'KIA','BMW','MERCEDES','AUDI','VOLVO','LAND ROVER','JAGUAR','SUZUKI','CHERY',
@@ -4198,9 +4475,6 @@ function extrairDadosCRLV(textoOriginal) {
         }
     }
 
-    /* ============================================================
-       ANO FABRICAÇÃO / ANO MODELO
-       ============================================================ */
     function extrairAnosDeUmaLinha(up) {
         const anos = up.match(/\b(19[89]\d|20[0-2]\d)\b/g);
         if (anos && anos.length >= 2) return anos;
@@ -4241,9 +4515,6 @@ function extrairDadosCRLV(textoOriginal) {
         }
     }
 
-    /* ============================================================
-       COR
-       ============================================================ */
     const cores = ['BRANCA','PRETA','PRATA','CINZA','VERMELHA','AZUL','VERDE','AMARELA',
         'MARROM','BEGE','DOURADA','LARANJA','VINHO','ROSA','ROXA','GRENÁ','GRENA',
         'BRANCO','PRETO','VERMELHO','AMARELO','DOURADO','LILAS','CREME','BORDÔ','BORDO'];
@@ -4272,9 +4543,6 @@ function extrairDadosCRLV(textoOriginal) {
         }
     }
 
-    /* ============================================================
-       NOME DO PROPRIETÁRIO — rejeita frases de QR Code / órgãos / URLs
-       ============================================================ */
     function pareceNomePessoa(v) {
         if (!v) return false;
         const up = String(v).toUpperCase().trim();
@@ -4282,7 +4550,6 @@ function extrairDadosCRLV(textoOriginal) {
         if (ehLabel(up)) return false;
         if (cores.includes(up)) return false;
         if (/\d/.test(up)) return false;
-        // Rejeita frases de QR Code, avisos, instruções, sites, órgãos públicos, chaves de validação
         if (/\b(QRCODE|QR|CODE|VALIDE|VALIDAR|VIO|APP|APLICATIVO|LEIA|LEITOR|ESCANEIE|ESCANEI|ESCANEAR|ESCANEAMENTO|CONSULTE|CONSULTAR|ACESSE|ACESSAR|BAIXE|BAIXAR|DISPON[ÍI]VEL|OBTENHA|OBTER|AUTENTIC|AUTENTICIDADE|CERTIFIC|CERTIFICADO|ASSINAT|CHAVE|TOKEN|PORTAL|SITE|GOVERNO|DENATRAN|SENATRAN|DETRAN|RENAVAM|CONTRAN|MINIST[ÉE]RIO|REP[ÚU]BLICA|FEDERAL|ESTADUAL|MUNICIPAL|NACIONAL|SECRETARIA|DEPARTAMENTO|DOCUMENTO|DIGITAL|ELETR[ÔO]NICO|IMPRESSO|EMITIDO|EMISS[ÃA]O|VERS[ÃA]O|C[ÓO]DIGO|SEGURAN[ÇC]A|CONFIRA|VERIFIQUE|VERIFICAR|IMPRIMA|IMPRIMIR|HTTP|HTTPS|WWW|COM|\.COM|\.BR|\.GOV|CMT|EIXOS|LOTA[ÇC][ÃA]O|LOTACAO)\b/i.test(up)) return false;
         const palavras = up.split(/\s+/);
         if (palavras.length < 2 || palavras.length > 6) return false;
@@ -4310,16 +4577,10 @@ function extrairDadosCRLV(textoOriginal) {
         }
     }
 
-    /* ============================================================
-       CPF / CNPJ
-       ============================================================ */
     mR = tU.match(/\b(\d{3}\.\d{3}\.\d{3}-\d{2})\b/);
     if (!mR) mR = tU.match(/\b(\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2})\b/);
     if (mR) dados.cpfCnpj = mR[1];
 
-    /* ============================================================
-       UF
-       ============================================================ */
     mR = tU.match(/\bUF\s*:?\s*([A-Z]{2})\b/);
     if (mR && ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA',
               'PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'].includes(mR[1])) {

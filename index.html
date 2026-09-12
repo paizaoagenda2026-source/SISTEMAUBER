@@ -24,6 +24,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script>
         if (typeof pdfjsLib !== 'undefined') {
             pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -1791,7 +1792,7 @@ function gerarParcelasPagamento(opts) {
     return parcelas;
 }
 
-function salvarLocacao() {
+async function salvarLocacao() {
     const locatario   = document.getElementById('locLocatario').value;
     const fabricante  = document.getElementById('locVeiculo').value;
     const placa       = document.getElementById('locPlaca').value;
@@ -1870,6 +1871,15 @@ function salvarLocacao() {
     
     atualizarTabelaLocacoes();
     registrarAuditoria('Cadastro', `Nova locação: ${locatario} - ${placa} | Caução: ${tipoPagCaucao} | 1ª parcela gerada | Total: ${formatarMoedaBR(totalParcelas)}`);
+    
+    // Auto-preenche contratos e gera PDFs
+    let contratosGerados = 0;
+    try {
+        contratosGerados = await gerarESalvarContratosAutomaticos(locacaoObj);
+    } catch (err) {
+        console.error('Erro ao gerar contratos automáticos:', err);
+    }
+    
     salvarDB();
     
     if (parcelas.length > 0) {
@@ -1877,9 +1887,16 @@ function salvarLocacao() {
         resumo += 'Forma de pagamento da caução: ' + tipoPagCaucao.toUpperCase() + '\n';
         resumo += 'Total de parcelas previstas: ' + parcelas.length + '\n';
         resumo += 'Valor total: ' + formatarMoedaBR(totalParcelas);
+        if (contratosGerados > 0) {
+            resumo += '\n\n📄 ' + contratosGerados + ' contrato(s) gerado(s) em PDF e salvos na aba Documentos (placa ' + placa + ').';
+        }
         alert(resumo);
     } else {
-        alert('✅ Locação salva!');
+        let msg = '✅ Locação salva!';
+        if (contratosGerados > 0) {
+            msg += '\n\n📄 ' + contratosGerados + ' contrato(s) gerado(s) em PDF e salvos na aba Documentos (placa ' + placa + ').';
+        }
+        alert(msg);
     }
     limparCamposLocacao();
 }
@@ -2761,9 +2778,9 @@ function _ctPrint(html) {
     window.print();
 }
 
-function imprimirContratoLocacao() {
+function gerarHTMLContratoLocacao() {
     const v = id => _ctVal('ctLoc_' + id);
-    const html = `
+    return `
     <div style="padding:40px;font-family:'Times New Roman',serif;color:#000;line-height:1.6;font-size:13px;">
       <h1 style="text-align:center;font-size:15px;font-weight:bold;margin-bottom:20px;text-transform:uppercase;">INSTRUMENTO PARTICULAR DE CONTRATO DE LOCAÇÃO DE VEÍCULOS</h1>
       <p>Contrato Número: "${v('numero')}"</p>
@@ -2831,12 +2848,11 @@ function imprimirContratoLocacao() {
       <p style="margin-top:30px;">_____________________________________<br>${v('locatario')}</p>
       <p style="margin-top:30px;">_____________________________________ &nbsp;&nbsp;&nbsp; _____________________________________<br>Testemunha 1 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Testemunha 2</p>
     </div>`;
-    _ctPrint(html);
 }
 
-function imprimirContratoTermo() {
+function gerarHTMLTermoResponsabilidade() {
     const v = id => _ctVal('ctTer_' + id);
-    const html = `
+    return `
     <div style="padding:40px;font-family:'Times New Roman',serif;color:#000;line-height:1.7;font-size:13px;">
       <h1 style="text-align:center;font-size:14px;font-weight:bold;margin-bottom:24px;text-transform:uppercase;">TERMO DE RESPONSABILIDADE E AUTORIZAÇÃO DE TRANSFERÊNCIA DE PONTUAÇÕES</h1>
       <p style="text-align:justify;">Eu, "${v('nome')}", portador da cédula de identidade RG nº "${v('rg')}" e inscrito no CPF sob o nº "${v('cpf')}", CNH número de registro: "${v('cnh')}" validade "${v('cnhValidade')}" que sou contratante do veículo de marca "${v('veiculo')}", placas "${v('placa')}" de propriedade da Sra. "${v('proprietario')}", devidamente inscrita no C.P.F N. "${v('proprietarioCpf')}", assumo qualquer responsabilidade civil, criminal e judicial, responsabilizo-me também pelas penalidades pecuniárias ou de pontuação caso venha cometer qualquer infração que viole o código de trânsito brasileiro, autorizando a transferência de pontos das mesmas com o veículo acima descrito e de ${v('prazo')} dias a contar da assinatura do mesmo. Sem mais.</p>
@@ -2848,12 +2864,11 @@ function imprimirContratoTermo() {
       <p style="text-align:center;">RG nº "${v('rg')}"</p>
       <p style="text-align:center;">CNH: "${v('cnh')}"</p>
     </div>`;
-    _ctPrint(html);
 }
 
-function imprimirContratoNota() {
+function gerarHTMLNotaPromissoria() {
     const v = id => _ctVal('ctNot_' + id);
-    const html = `
+    return `
     <div style="padding:40px;font-family:'Times New Roman',serif;color:#000;line-height:1.7;font-size:13px;">
       <h1 style="text-align:center;font-size:16px;font-weight:bold;margin-bottom:24px;text-transform:uppercase;">NOTA PROMISSÓRIA</h1>
       <p style="text-align:right;">Nº: "${v('numero')}"</p>
@@ -2871,7 +2886,189 @@ function imprimirContratoNota() {
       <p style="margin-top:50px;text-align:center;">_____________________________________</p>
       <p style="text-align:center;">"${v('emitenteNome')}"</p>
     </div>`;
-    _ctPrint(html);
+}
+
+function imprimirContratoLocacao() { _ctPrint(gerarHTMLContratoLocacao()); }
+function imprimirContratoTermo() { _ctPrint(gerarHTMLTermoResponsabilidade()); }
+function imprimirContratoNota() { _ctPrint(gerarHTMLNotaPromissoria()); }
+
+/* ============================================================
+   AUTO-PREENCHIMENTO DE CONTRATOS E GERAÇÃO DE PDFs
+   ============================================================ */
+function _setContratoVal(id, valor) {
+    const el = document.getElementById(id);
+    if (el && valor !== undefined && valor !== null && valor !== '') el.value = valor;
+}
+
+function preencherContratosAutomatico(locacao) {
+    if (!locacao) return;
+    const cliente = (db.clientes || []).find(c => c.nome === locacao.locatario) || {};
+    const veiculo = (db.veiculos || []).find(v => v.placa === locacao.placa) || {};
+    const dataHoje = new Date().toLocaleDateString('pt-BR');
+    const numeroInterno = String((db.locacoes || []).length + (db.locacoesEncerradas || []).length).padStart(4, '0');
+
+    // ===== CONTRATO DE LOCAÇÃO =====
+    _setContratoVal('ctLoc_numero', '0001');
+    _setContratoVal('ctLoc_numeroInterno', numeroInterno);
+    _setContratoVal('ctLoc_locadora', 'PAIZAO COMERCIO DE AUTO PEÇAS EIRELI ME');
+    _setContratoVal('ctLoc_locadoraEndereco', 'AV. VILA EMA 5445 VILA EMA SÃO PAULO SP');
+    _setContratoVal('ctLoc_locadoraCnpj', '74.410.606.0001-31');
+    _setContratoVal('ctLoc_locatario', locacao.locatario || cliente.nome || '');
+    _setContratoVal('ctLoc_locatarioEndereco', cliente.endereco || '');
+    _setContratoVal('ctLoc_locatarioCep', cliente.cep || '');
+    _setContratoVal('ctLoc_locatarioRg', cliente.rg || '');
+    _setContratoVal('ctLoc_locatarioCpf', cliente.cpf || '');
+    _setContratoVal('ctLoc_veiculo', veiculo.fabricante || locacao.fabricante || '');
+    _setContratoVal('ctLoc_veiculoCor', veiculo.cor || '');
+    _setContratoVal('ctLoc_veiculoPlaca', locacao.placa || '');
+    _setContratoVal('ctLoc_anoFabr', veiculo.anoFabr || '');
+    _setContratoVal('ctLoc_anoModel', veiculo.anoModel || '');
+    _setContratoVal('ctLoc_gestor', 'SERGIO PEREIRA DA SILVA');
+    _setContratoVal('ctLoc_localVistoria', 'AV. VILA EMA 5445 VILA EMA SÃO PAULO');
+    _setContratoVal('ctLoc_prazo', '180');
+    _setContratoVal('ctLoc_multaRescisao', 'R$ 2.500,00 (dois mil e quinhentos reais)');
+    _setContratoVal('ctLoc_taxaTroca', 'R$ 600,00 (seiscentos reais)');
+    _setContratoVal('ctLoc_valorAluguel', locacao.valorAluguel || '');
+    _setContratoVal('ctLoc_limiteKm', '1.750');
+    _setContratoVal('ctLoc_valorKm', 'R$ 0,90 centavos');
+    _setContratoVal('ctLoc_caucao', locacao.caucao || '');
+    _setContratoVal('ctLoc_caucaoParcelas', '10 semanas');
+    _setContratoVal('ctLoc_caucaoDevolucao', 'R$ 2.000,00');
+    _setContratoVal('ctLoc_multaInadimplencia', 'R$ 2.500,00 (dois mil e quinhentos reais)');
+    _setContratoVal('ctLoc_taxaHigienizacao', 'R$ 220,00');
+    _setContratoVal('ctLoc_taxaEntrega', 'R$ 500,00 (quinhentos reais)');
+    _setContratoVal('ctLoc_foro', 'VILA PRUDENTE');
+    _setContratoVal('ctLoc_data', dataHoje);
+
+    // ===== TERMO DE RESPONSABILIDADE =====
+    _setContratoVal('ctTer_nome', locacao.locatario || cliente.nome || '');
+    _setContratoVal('ctTer_rg', cliente.rg || '');
+    _setContratoVal('ctTer_cpf', cliente.cpf || '');
+    _setContratoVal('ctTer_cnh', cliente.cnh || '');
+    _setContratoVal('ctTer_cnhValidade', cliente.dataCnh ? formatarDataBR(cliente.dataCnh) : '');
+    _setContratoVal('ctTer_veiculo', veiculo.fabricante || locacao.fabricante || '');
+    _setContratoVal('ctTer_placa', locacao.placa || '');
+    _setContratoVal('ctTer_proprietario', veiculo.proprietario || '');
+    _setContratoVal('ctTer_proprietarioCpf', veiculo.cpfPropr || '');
+    _setContratoVal('ctTer_prazo', '90');
+    _setContratoVal('ctTer_data', dataHoje);
+
+    // ===== NOTA PROMISSÓRIA =====
+    _setContratoVal('ctNot_numero', '0001');
+    const dtVenc = new Date(); dtVenc.setDate(dtVenc.getDate() + 1);
+    _setContratoVal('ctNot_vencimento', dtVenc.toLocaleDateString('pt-BR'));
+    _setContratoVal('ctNot_valor', locacao.caucao || 'R$ 2.500,00');
+    _setContratoVal('ctNot_dataEmissao', dataHoje);
+    _setContratoVal('ctNot_credor', 'PAIZAO COMERCIO DE AUTOPEÇAS EIRELI ME');
+    _setContratoVal('ctNot_credorCnpj', '74.410.606.0001-31');
+    _setContratoVal('ctNot_valorExtenso', 'dois mil e quinhentos reais');
+    _setContratoVal('ctNot_cidade', 'São Paulo (SP)');
+    _setContratoVal('ctNot_emitenteNome', locacao.locatario || cliente.nome || '');
+    _setContratoVal('ctNot_emitenteCpf', cliente.cpf || '');
+    _setContratoVal('ctNot_emitenteDoc', cliente.cnh || '');
+    _setContratoVal('ctNot_emitenteDocExp', 'DETRAN SP');
+    _setContratoVal('ctNot_emitenteEndereco', cliente.endereco || '');
+    _setContratoVal('ctNot_emitenteCep', cliente.cep || '');
+    _setContratoVal('ctNot_cartorio', 'Cartório de Registro Civil de Sapopemba');
+    _setContratoVal('ctNot_data', dataHoje);
+
+    // Persiste os dados do contrato no DB
+    if (!db.contratos) db.contratos = { contratoLocacao:{}, termoResponsabilidade:{}, notaPromissoria:{} };
+    const objLoc = {}; CONTRATO_LOC_CAMPOS.forEach(k => { objLoc[k] = _ctVal('ctLoc_' + k); });
+    db.contratos.contratoLocacao = objLoc;
+    const objTer = {}; CONTRATO_TER_CAMPOS.forEach(k => { objTer[k] = _ctVal('ctTer_' + k); });
+    db.contratos.termoResponsabilidade = objTer;
+    const objNot = {}; CONTRATO_NOT_CAMPOS.forEach(k => { objNot[k] = _ctVal('ctNot_' + k); });
+    db.contratos.notaPromissoria = objNot;
+}
+
+async function gerarPDFBlob(htmlContent) {
+    return new Promise((resolve, reject) => {
+        if (typeof html2pdf === 'undefined') {
+            reject(new Error('Biblioteca html2pdf não carregada'));
+            return;
+        }
+        const container = document.createElement('div');
+        container.style.cssText = 'position:fixed;left:-9999px;top:0;width:210mm;background:#ffffff;padding:0;z-index:-1;';
+        container.innerHTML = htmlContent;
+        document.body.appendChild(container);
+
+        const opt = {
+            margin: [10, 10, 10, 10],
+            image: { type: 'jpeg', quality: 0.75 },
+            html2canvas: { scale: 1.5, useCORS: true, logging: false, backgroundColor: '#ffffff' },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true }
+        };
+
+        html2pdf().set(opt).from(container).outputPdf('blob').then(function(blob) {
+            try { document.body.removeChild(container); } catch(e) {}
+            resolve(blob);
+        }).catch(function(err) {
+            try { document.body.removeChild(container); } catch(e) {}
+            reject(err);
+        });
+    });
+}
+
+async function gerarESalvarContratosAutomaticos(locacao) {
+    if (!locacao || !locacao.placa) return 0;
+
+    // 1) Preenche os campos do contrato
+    preencherContratosAutomatico(locacao);
+
+    // 2) Gera os HTMLs com os valores preenchidos
+    const htmlContrato = gerarHTMLContratoLocacao();
+    const htmlTermo = gerarHTMLTermoResponsabilidade();
+    const htmlNota = gerarHTMLNotaPromissoria();
+
+    const placa = locacao.placa;
+    const dataHoje = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
+    const agora = new Date().toLocaleString('pt-BR');
+
+    // 3) Gera os PDFs
+    let pdfContrato, pdfTermo, pdfNota;
+    try {
+        pdfContrato = await gerarPDFBlob(htmlContrato);
+        pdfTermo = await gerarPDFBlob(htmlTermo);
+        pdfNota = await gerarPDFBlob(htmlNota);
+    } catch (err) {
+        console.error('Erro ao gerar PDFs dos contratos:', err);
+        return 0;
+    }
+
+    // 4) Salva os PDFs no IndexedDB e registra nas documentosPlacas
+    if (!db.documentosPlacas) db.documentosPlacas = {};
+    if (!db.documentosPlacas[placa]) db.documentosPlacas[placa] = [];
+
+    const docs = [
+        { nome: `CONTRATO DE LOCAÇÃO - ${locacao.locatario} - ${dataHoje}.pdf`, blob: pdfContrato },
+        { nome: `TERMO DE RESPONSABILIDADE - ${locacao.locatario} - ${dataHoje}.pdf`, blob: pdfTermo },
+        { nome: `NOTA PROMISSÓRIA - ${locacao.locatario} - ${dataHoje}.pdf`, blob: pdfNota }
+    ];
+
+    let salvos = 0;
+    for (const d of docs) {
+        const id = 'doc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
+        try {
+            await idbSalvar(id, d.blob, { nomeArquivo: d.nome, placa, tipo: 'application/pdf' });
+            db.documentosPlacas[placa].push({
+                nome: d.nome,
+                tipo: 'application/pdf',
+                storageId: id,
+                dataUpload: agora
+            });
+            salvos++;
+        } catch (err) {
+            console.error('Erro ao salvar PDF no IndexedDB:', err);
+        }
+    }
+
+    registrarAuditoria('Contrato', `${salvos} contrato(s) gerado(s) em PDF para locação de ${locacao.locatario} - ${placa}`);
+
+    // Atualiza UI se estiver na aba de documentos
+    try { atualizarGaleriaComprovantes(); } catch(e) {}
+
+    return salvos;
 }
 
 function switchSubTab(t) {
@@ -3608,9 +3805,35 @@ function atualizarGaleriaComprovantes() {
             const btnAbrir = document.createElement('button');
             btnAbrir.className = 'btn-info';
             btnAbrir.textContent = '👁️ Abrir';
-            btnAbrir.onclick = () => {
+            btnAbrir.onclick = async () => {
+                // Documento do IndexedDB (storageId)
+                if (doc.storageId) {
+                    try {
+                        const reg = await idbObter(doc.storageId);
+                        if (reg && reg.blob) {
+                            const url = URL.createObjectURL(reg.blob);
+                            const win = window.open();
+                            if (win) {
+                                win.document.write(`<iframe src="${url}" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>`);
+                            }
+                            setTimeout(() => URL.revokeObjectURL(url), 120000);
+                            return;
+                        } else {
+                            alert('Arquivo não encontrado no armazenamento local.');
+                            return;
+                        }
+                    } catch (e) {
+                        console.error('Erro ao carregar PDF:', e);
+                        alert('Erro ao carregar o PDF.');
+                        return;
+                    }
+                }
+                // Documento antigo (dataURL)
+                if (!doc.data) { alert('Documento sem conteúdo.'); return; }
                 const win = window.open();
-                win.document.write(`<iframe src="${doc.data}" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>`);
+                if (win) {
+                    win.document.write(`<iframe src="${doc.data}" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>`);
+                }
             };
 
             const btnExcluir = document.createElement('button');
@@ -3633,7 +3856,13 @@ function atualizarGaleriaComprovantes() {
 
 function excluirDocumentoPlaca(placa, idx) {
     if (!confirmarSenhaADM()) return;
-    if (!confirm(`Excluir o documento "${db.documentosPlacas[placa][idx].nome}"?`)) return;
+    const doc = db.documentosPlacas[placa][idx];
+    if (!doc) return;
+    if (!confirm(`Excluir o documento "${doc.nome}"?`)) return;
+    
+    if (doc.storageId) {
+        try { idbExcluir(doc.storageId).catch(e => console.warn('IDB excluir:', e)); } catch(e) {}
+    }
     
     db.documentosPlacas[placa].splice(idx, 1);
     if (db.documentosPlacas[placa].length === 0) {

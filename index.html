@@ -1537,7 +1537,7 @@ function atualizarCombosLocacao() {
         sCli.innerHTML = '<option value="">Selecione</option>';
         (db.clientes || []).forEach(c => {
             const o = document.createElement('option');
-            o.value = c.nome; o.textContent = `${c.nome} - ${c.cpf}`;
+            o.value = c.nome; o.textContent = c.nome;
             sCli.appendChild(o);
         });
     }

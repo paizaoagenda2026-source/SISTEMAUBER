@@ -250,7 +250,7 @@
         <div class="editando-aviso" id="avisoEditandoVeiculo">✏️ <strong>Modo Edição</strong> — Você está editando um veículo existente. Salve para confirmar ou limpe o formulário.</div>
         <input type="text" class="filter-input" placeholder="🔍 Filtrar veículos..." id="filterVeiculos">
         <div class="form-grid" id="formVeiculos">
-            <div class="form-group"><label>MARCA / MODELO / VERSÃO</label><input type="text" id="veicFabricante" class="campo-enter"></div>
+            <div class="form-group"><label>Fabricante/Modelo</label><input type="text" id="veicFabricante" class="campo-enter"></div>
             <div class="form-group"><label>Cor Predominante</label><input type="text" id="veicCor" class="campo-enter"></div>
             <div class="form-group"><label>Placa</label><input type="text" id="veicPlaca" class="campo-enter"></div>
             <div class="form-group"><label>Motor</label><input type="text" id="veicMotor" class="campo-enter"></div>
@@ -327,7 +327,7 @@
             <div class="form-group"><label>Veículo</label><select id="locVeiculo" class="campo-enter" onchange="selecionarVeiculoCombo()"><option value="">Selecione um veículo</option></select></div>
             <div class="form-group"><label>Data Início</label><input type="date" id="locDataInicio" class="campo-enter" onchange="calcularDataFim()"></div>
             <div class="form-group"><label>Data Fim</label><input type="date" id="locDataFim" readonly></div>
-            <div class="form-group"><label>MARCA / MODELO / VERSÃO</label><input type="text" id="locFabModelo" readonly></div>
+            <div class="form-group"><label>Fabricante/Modelo</label><input type="text" id="locFabModelo" readonly></div>
             <div class="form-group"><label>Cor</label><input type="text" id="locCor" readonly></div>
             <div class="form-group"><label>Placa</label><select id="locPlaca" class="campo-enter" onchange="selecionarPlacaCombo()"><option value="">Selecione uma placa</option></select></div>
             <div class="form-group"><label>Ano Fabr</label><input type="text" id="locAnoFabr" readonly></div>
@@ -4061,247 +4061,222 @@ function extrairDadosCRLV(textoOriginal) {
     const t = linhas.join('\n');
     const tU = t.toUpperCase();
 
-    const ruidos = new Set([
-        'LOCAL DATA','LOCAL/DATA','LOCAL','DATA',
-        'PREDOMINANTE','COR PREDOMINANTE',
-        'DO VEÍCULO','DO VEICULO','VEÍCULO','VEICULO',
-        'MARCA/MODELO','MARCA / MODELO','MODELO','MARCA',
-        'MARCA / MODELO / VERSÃO','MARCA/MODELO/VERSÃO',
-        'NOME','NOME DO PROPRIETÁRIO','NOME DO PROPRIETARIO',
-        'ANO FABRICAÇÃO','ANO FABRICACAO','ANO MODELO',
-        'ANO FABRICAÇÃO / ANO MODELO','ANO FABRICAÇÃO/ANO MODELO',
-        'PLACA','CHASSI','RENAVAM','CPF','CNPJ','UF','MUNICÍPIO','MUNICIPIO',
-        'CATEGORIA','ESPÉCIE','ESPECIE','COMBUSTÍVEL','COMBUSTIVEL','COR'
-    ]);
+    const PALAVRAS_ROTULO = [
+        'PLACA','CHASSI','RENAVAM','CAT','CLA','ANTERIOR','SENATRAN','MENSAGENS',
+        'LOCAL','DATA','MARCA','MODELO','ANO','COR','PREDOMINANTE','COMBUST',
+        'ESPÉCIE','ESPECIE','CATEGORIA','MUNICÍPIO','MUNICIPIO','CPF','CNPJ',
+        'NOME','CÓDIGO','CODIGO','SEGURANÇA','SEGURANCA','PROPRIETÁRIO','PROPRIETARIO',
+        'OBSERVAÇÕES','OBSERVACOES','EXERCÍCIO','EXERCICIO','FABRICAÇÃO','FABRICACAO',
+        'LICENCIAMENTO','CRLV','DETRAN','RENACH','VERSÃO','VERSAO','POTÊNCIA','POTENCIA',
+        'CILINDRADA','LOTAÇÃO','LOTACAO','MOTOR','CAPACIDADE','PASSAGEIRO','CARGA'
+    ];
 
-    function ehRuido(v) {
-        if (!v) return true;
-        const up = String(v).toUpperCase().trim();
+    function ehLabel(linha) {
+        if (!linha) return true;
+        const up = String(linha).toUpperCase().trim();
         if (!up) return true;
-        if (ruidos.has(up)) return true;
-        if (up.length <= 25 && /^(NOME|LOCAL|DATA|COR|PREDOMINANTE|MARCA|MODELO|ANO|PLACA|CHASSI|RENAVAM|COMBUST[ÍI]VEL|ESP[ÉE]CIE|CATEGORIA|MUNIC[ÍI]PIO|UF|CPF|CNPJ)(\s*\/?\s*[A-ZÇÃÕÁÉÍÓÚÂÊÎÔÛÀÈÌÒÙ]+)?$/.test(up)) {
-            return true;
+        if (up.length > 60) return false;
+        let count = 0;
+        for (const p of PALAVRAS_ROTULO) {
+            if (new RegExp('\\b' + p + '\\b').test(up)) count++;
         }
-        return false;
+        return count >= 2;
     }
 
     function limpar(v) {
         if (!v) return '';
-        return String(v).trim()
-            .replace(/^[\s:;\/\-|]+/, '')
-            .replace(/[\s:;\/\-|]+$/, '')
-            .trim();
+        return String(v).trim().replace(/^[\s:;\/\-|]+/, '').replace(/[\s:;\/\-|]+$/, '').trim();
     }
 
     /* PLACA */
-    let m = tU.match(/PLACA\s*:?\s*([A-Z]{3}\s*-?\s*\d\s*[A-Z0-9]\s*\d\s*\d)/);
-    if (!m) m = tU.match(/\b([A-Z]{3}-?\d[A-Z0-9]\d{2})\b/);
-    if (m) dados.placa = m[1].replace(/[\s-]/g, '');
-
-    /* RENAVAM */
-    m = tU.match(/RENAVAM\s*:?\s*(\d[\d\s]{9,15}\d)/);
-    if (m) { const r = m[1].replace(/\D/g, ''); if (r.length === 11) dados.renavam = r; }
-    if (!dados.renavam) {
-        const idx = tU.indexOf('RENAVAM');
-        if (idx >= 0) {
-            const sub = tU.substring(idx, idx + 80);
-            m = sub.match(/\b(\d{11})\b/);
-            if (m) dados.renavam = m[1];
-        }
+    const placasCands = [...tU.matchAll(/\b([A-Z]{3}[0-9][A-Z0-9][0-9]{2})\b/g)];
+    if (placasCands.length === 0) {
+        const old = [...tU.matchAll(/\b([A-Z]{3}[0-9]{4})\b/g)];
+        for (const mm of old) placasCands.push(mm);
     }
-    if (!dados.renavam) { m = tU.match(/\b(\d{11})\b/); if (m) dados.renavam = m[1]; }
+    for (const mm of placasCands) {
+        const pos = mm.index;
+        const antes = tU.substring(Math.max(0, pos - 60), pos);
+        if (/SEGURAN[ÇC]A|C[ÓO]DIGO|CHASSI|CLA\b/.test(antes)) continue;
+        const linhaAtual = linhas.find(l => l.toUpperCase().includes(mm[1]));
+        if (linhaAtual && /ANTERIOR|UF\s+CHASSI/.test(linhaAtual.toUpperCase())) continue;
+        dados.placa = mm[1];
+        break;
+    }
 
     /* CHASSI */
-    m = tU.match(/CHASSI\s*:?\s*([A-HJ-NPR-Z0-9]{17})/);
-    if (!m) {
-        const idx = tU.indexOf('CHASSI');
-        if (idx >= 0) {
-            const sub = tU.substring(idx, idx + 80);
-            m = sub.match(/\b([A-HJ-NPR-Z0-9]{17})\b/);
-        }
-    }
-    if (!m) m = tU.match(/\b([A-HJ-NPR-Z0-9]{17})\b/);
-    if (m) dados.chassi = m[1];
-
-    /* ANO FABRICAÇÃO / ANO MODELO */
-    m = tU.match(/ANO\s+FABRICA[ÇC][ÃA]O\s*\/\s*ANO\s+MODELO\s*:?\s*(\d{4})\s*\/?\s*(\d{4})/);
-    if (m) { dados.anoFabr = m[1]; dados.anoModel = m[2]; }
-
-    if (!dados.anoFabr) {
-        m = tU.match(/ANO\s+FABRICA[ÇC][ÃA]O\s*:?\s*(\d{4})/);
-        if (!m) m = tU.match(/ANO\s*\/?\s*FAB\s*:?\s*(\d{4})/);
-        if (m) dados.anoFabr = m[1];
-    }
-    if (!dados.anoModel) {
-        m = tU.match(/ANO\s+MODELO\s*:?\s*(\d{4})/);
-        if (!m) m = tU.match(/ANO\s*\/?\s*MOD\s*:?\s*(\d{4})/);
-        if (m) dados.anoModel = m[1];
+    const chassisCands = [...tU.matchAll(/\b([A-HJ-NPR-Z0-9]{17})\b/g)];
+    for (const mm of chassisCands) {
+        const pos = mm.index;
+        const antes = tU.substring(Math.max(0, pos - 40), pos);
+        if (/SEGURAN[ÇC]A|SEG\.|CLA\b/.test(antes)) continue;
+        dados.chassi = mm[1];
+        break;
     }
 
-    if (!dados.anoFabr || !dados.anoModel) {
-        for (const linha of linhas) {
-            const up = linha.toUpperCase();
-            if (/\bANO\b/.test(up)) {
-                const anos = up.match(/\b(19|20)\d{2}\b/g);
-                if (anos && anos.length >= 2) {
-                    if (!dados.anoFabr) dados.anoFabr = anos[0];
-                    if (!dados.anoModel) dados.anoModel = anos[1];
-                    break;
-                }
+    /* RENAVAM */
+    let m = tU.match(/RENAVAM\s*:?\s*(\d{11})/);
+    if (m) dados.renavam = m[1];
+    if (!dados.renavam) {
+        const idxRen = tU.indexOf('RENAVAM');
+        const cands = [...tU.matchAll(/\b(\d{11})\b/g)];
+        if (cands.length === 1) dados.renavam = cands[0][1];
+        else if (cands.length > 1 && idxRen >= 0) {
+            for (const c of cands) {
+                if (c.index > idxRen && c.index - idxRen < 200) { dados.renavam = c[1]; break; }
             }
-        }
-    }
-    if (!dados.anoFabr || !dados.anoModel) {
-        const todosAnos = (tU.match(/\b(19[89]\d|20[0-3]\d)\b/g) || []);
-        const unicos = [...new Set(todosAnos)];
-        if (unicos.length >= 2) {
-            if (!dados.anoFabr) dados.anoFabr = unicos[0];
-            if (!dados.anoModel) dados.anoModel = unicos[1];
-        } else if (unicos.length === 1 && !dados.anoFabr) {
-            dados.anoFabr = unicos[0];
         }
     }
 
     /* MARCA / MODELO */
-    for (let i = 0; i < linhas.length; i++) {
-        const linha = linhas[i];
+    const marcas = ['VOLKSWAGEN','VW','FIAT','CHEVROLET','GM','FORD','TOYOTA','HONDA',
+        'HYUNDAI','RENAULT','NISSAN','JEEP','PEUGEOT','CITROEN','CITROËN','MITSUBISHI',
+        'KIA','BMW','MERCEDES','AUDI','VOLVO','LAND ROVER','JAGUAR','SUZUKI','CHERY',
+        'CAOA','DODGE','CHRYSLER','TROLLER','EFFA','LIFAN','JAC','RAM','IVECO','SCANIA',
+        'BYD','GWM','HAVAL','BENTLEY','FERRARI','LAMBORGHINI','PORSCHE','MASERATI',
+        'SSANGYONG','SUBARU','LEXUS','INFINITI','ACURA','MINI','SMART','DACIA','TATA'];
+
+    for (const linha of linhas) {
         const up = linha.toUpperCase();
-        const labelMatch = up.match(/^MARCA\s*\/?\s*MODELO(\s*\/?\s*VERS[ÃA]O)?/);
-        if (labelMatch) {
-            let resto = linha.substring(labelMatch[0].length).replace(/^[\s:;\/\-|]+/, '').trim();
-            if (resto && !ehRuido(resto)) { dados.fabricante = limpar(resto); break; }
-            if (i + 1 < linhas.length) {
-                const prox = linhas[i + 1].trim();
-                if (prox && !ehRuido(prox)) { dados.fabricante = limpar(prox); break; }
+        if (ehLabel(linha)) continue;
+        for (const mar of marcas) {
+            const re = new RegExp('\\b' + mar.replace(/\s+/g, '\\s+') + '\\b');
+            if (re.test(up)) {
+                let val = linha
+                    .replace(/MARCA\s*\/?\s*MODELO\s*\/?\s*VERS[ÃA]O\s*:?\s*/i, '')
+                    .replace(/MARCA\s*\/?\s*MODELO\s*:?\s*/i, '')
+                    .replace(/MARCA\s*:?\s*/i, '')
+                    .trim();
+                if (val && val.length >= 4 && val.length <= 80) {
+                    dados.fabricante = val;
+                    break;
+                }
             }
         }
+        if (dados.fabricante) break;
     }
     if (!dados.fabricante) {
-        m = tU.match(/MARCA\s*\/?\s*MODELO\s*(?:\/\s*VERS[ÃA]O)?\s*:?\s*([A-ZÀ-Ú0-9][A-ZÀ-Ú0-9\s\.\-\/]{2,80})/);
+        m = tU.match(/\b([A-ZÀ-Ú]+(?:\s+[A-ZÀ-Ú]+)?)\s*\/\s*([A-ZÀ-Ú][A-ZÀ-Ú0-9\.\s]{2,30})/);
         if (m) {
-            let fm = m[1].split(/\s{2,}/)[0];
-            fm = fm.split(/\s+(?:ANO\s|COR\s|PLACA\s|CHASSI\s|RENAVAM\s|COMBUST|CATEG|ESP[ÉE]C|MUNIC|NOME\s|CPF\s|CNPJ\s)/)[0].trim();
-            if (fm && !ehRuido(fm)) dados.fabricante = fm;
+            const cand = (m[1] + ' / ' + m[2]).trim();
+            if (!ehLabel(cand)) dados.fabricante = cand.replace(/\s+/g, ' ');
+        }
+    }
+
+    /* ANO FABRICAÇÃO / ANO MODELO */
+    function extrairAnosDeUmaLinha(up) {
+        const anos = up.match(/\b(19[89]\d|20[0-2]\d)\b/g);
+        if (anos && anos.length >= 2) return anos;
+        return null;
+    }
+    for (const linha of linhas) {
+        const up = linha.toUpperCase();
+        if (!/\bANO\b/.test(up)) continue;
+        if (/EXERC[ÍI]CIO|LICENCIAMENTO/.test(up)) continue;
+        const temFab = /ANO\s*\/?\s*FAB/.test(up);
+        const temMod = /ANO\s*\/?\s*MOD/.test(up);
+        const anos = extrairAnosDeUmaLinha(up);
+        if (anos && (temFab || temMod)) {
+            if (temFab && temMod) {
+                const posFab = up.search(/ANO\s*\/?\s*FAB/);
+                const posMod = up.search(/ANO\s*\/?\s*MOD/);
+                if (posFab < posMod) { dados.anoFabr = anos[0]; dados.anoModel = anos[1]; }
+                else { dados.anoModel = anos[0]; dados.anoFabr = anos[1]; }
+            } else if (temFab) {
+                dados.anoFabr = anos[0];
+                if (anos[1]) dados.anoModel = anos[1];
+            } else if (temMod) {
+                dados.anoModel = anos[0];
+            }
+            if (dados.anoFabr || dados.anoModel) break;
+        }
+    }
+    if (!dados.anoFabr || !dados.anoModel) {
+        m = tU.match(/\b(19[89]\d|20[0-2]\d)\s*\/\s*(19[89]\d|20[0-3]\d)\b/);
+        if (m) { dados.anoFabr = m[1]; dados.anoModel = m[2]; }
+    }
+    if (!dados.anoFabr || !dados.anoModel) {
+        const todos = [...tU.matchAll(/\b(19[89]\d|20[0-3]\d)\b/g)].map(x => x[1]);
+        const uniq = [...new Set(todos)].filter(a => parseInt(a, 10) <= 2024);
+        if (uniq.length >= 2) {
+            if (!dados.anoFabr) dados.anoFabr = uniq[0];
+            if (!dados.anoModel) dados.anoModel = uniq[1];
         }
     }
 
     /* COR */
-    for (let i = 0; i < linhas.length; i++) {
-        const linha = linhas[i];
+    const cores = ['BRANCA','PRETA','PRATA','CINZA','VERMELHA','AZUL','VERDE','AMARELA',
+        'MARROM','BEGE','DOURADA','LARANJA','VINHO','ROSA','ROXA','GRENÁ','GRENA',
+        'BRANCO','PRETO','VERMELHO','AMARELO','DOURADO','LILAS','CREME','BORDÔ','BORDO'];
+    for (const linha of linhas) {
         const up = linha.toUpperCase();
-        const labelMatch = up.match(/^COR(\s+PREDOMINANTE)?/);
-        if (labelMatch) {
-            let resto = linha.substring(labelMatch[0].length).replace(/^[\s:;\/\-|]+/, '').trim();
-            if (resto && !/^PREDOMINANTE$/i.test(resto) && !ehRuido(resto)) {
-                dados.cor = limpar(resto); break;
-            }
-            let j = i + 1;
-            while (j < linhas.length && j <= i + 3) {
-                const prox = linhas[j].trim();
-                if (prox && !/^PREDOMINANTE$/i.test(prox) && !ehRuido(prox)) {
-                    dados.cor = limpar(prox); break;
-                }
-                j++;
-            }
-            if (dados.cor) break;
+        if (!/\bCOR\b/.test(up)) continue;
+        for (const cor of cores) {
+            if (new RegExp('\\b' + cor + '\\b').test(up)) { dados.cor = cor; break; }
+        }
+        if (dados.cor) break;
+    }
+    if (!dados.cor) {
+        for (const linha of linhas) {
+            const up = linha.trim().toUpperCase();
+            if (cores.includes(up)) { dados.cor = up; break; }
         }
     }
     if (!dados.cor) {
-        m = tU.match(/COR\s+(?:PREDOMINANTE\s*)?:?\s*([A-ZÀ-Ú][A-ZÀ-Ú\s]{2,25}?)(?=\s*(?:PLACA|COMBUST|ANO|CHASSI|RENAVAM|CATEG|ESP|MUNIC|$))/);
-        if (m) {
-            const c = m[1].trim();
-            if (c && !/^PREDOMINANTE$/i.test(c)) dados.cor = c;
-        }
-    }
-
-    /* COMBUSTÍVEL */
-    for (let i = 0; i < linhas.length; i++) {
-        const up = linhas[i].toUpperCase();
-        const labelMatch = up.match(/^COMBUST[ÍI]VEL/);
-        if (labelMatch) {
-            let resto = linhas[i].substring(labelMatch[0].length).replace(/^[\s:;\/\-|]+/, '').trim();
-            if (resto && !ehRuido(resto)) { dados.combustivel = limpar(resto); break; }
-            if (i + 1 < linhas.length) {
-                const prox = linhas[i + 1].trim();
-                if (prox && !ehRuido(prox)) { dados.combustivel = limpar(prox); break; }
+        for (const cor of cores) {
+            const re = new RegExp('\\b' + cor + '\\b');
+            const mm = re.exec(tU);
+            if (mm) {
+                const linhaCor = linhas.find(l => l.toUpperCase().includes(cor));
+                if (linhaCor && !ehLabel(linhaCor)) { dados.cor = cor; break; }
             }
         }
-    }
-
-    /* ESPÉCIE */
-    for (let i = 0; i < linhas.length; i++) {
-        const up = linhas[i].toUpperCase();
-        const labelMatch = up.match(/^ESP[ÉE]CIE/);
-        if (labelMatch) {
-            let resto = linhas[i].substring(labelMatch[0].length).replace(/^[\s:;\/\-|]+/, '').trim();
-            if (resto && !ehRuido(resto)) { dados.especie = limpar(resto); break; }
-            if (i + 1 < linhas.length) {
-                const prox = linhas[i + 1].trim();
-                if (prox && !ehRuido(prox)) { dados.especie = limpar(prox); break; }
-            }
-        }
-    }
-
-    /* CATEGORIA */
-    for (let i = 0; i < linhas.length; i++) {
-        const up = linhas[i].toUpperCase();
-        const labelMatch = up.match(/^CATEGORIA/);
-        if (labelMatch) {
-            let resto = linhas[i].substring(labelMatch[0].length).replace(/^[\s:;\/\-|]+/, '').trim();
-            if (resto && !ehRuido(resto)) { dados.categoria = limpar(resto); break; }
-            if (i + 1 < linhas.length) {
-                const prox = linhas[i + 1].trim();
-                if (prox && !ehRuido(prox)) { dados.categoria = limpar(prox); break; }
-            }
-        }
-    }
-
-    /* MUNICÍPIO */
-    m = tU.match(/MUNIC[ÍI]PIO\s*:?\s*([A-ZÀ-Ú][A-ZÀ-Ú\s]{2,40}?)(?=\s*(?:UF|PLACA|COR|NOME|$))/);
-    if (m) dados.municipio = m[1].trim();
-
-    /* UF */
-    m = tU.match(/\bUF\s*:?\s*([A-Z]{2})\b/);
-    if (m && ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'].includes(m[1])) {
-        dados.uf = m[1];
     }
 
     /* NOME DO PROPRIETÁRIO */
-    for (let i = 0; i < linhas.length; i++) {
-        const linha = linhas[i];
+    function pareceNomePessoa(v) {
+        if (!v) return false;
+        const up = String(v).toUpperCase().trim();
+        if (up.length < 6 || up.length > 70) return false;
+        if (ehLabel(up)) return false;
+        if (cores.includes(up)) return false;
+        if (/\d/.test(up)) return false;
+        const palavras = up.split(/\s+/);
+        if (palavras.length < 2 || palavras.length > 6) return false;
+        return palavras.every(p => /^[A-ZÀ-Ú][A-ZÀ-Ú'\.\-]{1,}$/.test(p));
+    }
+    for (const linha of linhas) {
         const up = linha.toUpperCase();
-        const labelMatch = up.match(/^NOME(\s*\/?\s*LOCAL\s*\/?\s*DATA)?/);
-        if (labelMatch) {
-            let resto = linha.substring(labelMatch[0].length).replace(/^[\s:;\/\-|]+/, '').trim();
-            if (resto && !/^LOCAL\s*\/?\s*DATA$/i.test(resto) && !ehRuido(resto)) {
-                dados.proprietario = limpar(resto); break;
-            }
-            let j = i + 1;
-            while (j < linhas.length && j <= i + 3) {
-                const prox = linhas[j].trim();
-                const proxUp = prox.toUpperCase();
-                if (prox && !/^LOCAL\s*\/?\s*DATA$/i.test(prox) && !ehRuido(prox)
-                    && !/^(S[ÃA]O|RIO|BELO|PORTO|CURITIBA|SALVADOR|FORTALEZA|RECIFE|MANAUS|BRAS[ÍI]LIA|GOI[ÂA]NIA|CAMPINAS|GUARULHOS|MUNIC[ÍI]PIO)/.test(proxUp)) {
-                    dados.proprietario = limpar(prox); break;
+        const mm = up.match(/^(?:NOME|PROPRIET[ÁA]RIO)(?:\s+DO\s+PROPRIET[ÁA]RIO)?\s*:?\s+(.+)$/);
+        if (mm && pareceNomePessoa(mm[1].trim())) { dados.proprietario = mm[1].trim(); break; }
+    }
+    if (!dados.proprietario) {
+        for (let i = 0; i < linhas.length; i++) {
+            if (/^(?:NOME|PROPRIET[ÁA]RIO)(?:\s+DO\s+PROPRIET[ÁA]RIO)?\s*:?\s*$/.test(linhas[i].toUpperCase())) {
+                for (let j = i + 1; j < Math.min(i + 5, linhas.length); j++) {
+                    if (pareceNomePessoa(linhas[j])) { dados.proprietario = linhas[j].trim(); break; }
                 }
-                j++;
+                if (dados.proprietario) break;
             }
-            if (dados.proprietario) break;
         }
     }
     if (!dados.proprietario) {
-        m = tU.match(/(?:NOME|PROPRIET[ÁA]RIO)\s+(?:DO\s+PROPRIET[ÁA]RIO\s*)?:?\s*([A-ZÀ-Ú][A-ZÀ-Ú\s\.\-']{4,80}?)(?=\s*(?:CPF|CNPJ|PLACA|MUNIC|UF|$))/);
-        if (m) {
-            const n = m[1].trim();
-            if (n && !/^LOCAL\s*\/?\s*DATA$/i.test(n) && !ehRuido(n)) dados.proprietario = n;
+        for (const linha of linhas) {
+            if (pareceNomePessoa(linha)) { dados.proprietario = linha.trim(); break; }
         }
     }
 
     /* CPF / CNPJ */
-    m = tU.match(/(?:CPF|CNPJ)\s*:?\s*([\d\.\-\/]{11,20})/);
-    if (!m) m = tU.match(/\b(\d{3}\.\d{3}\.\d{3}-\d{2})\b/);
+    m = tU.match(/\b(\d{3}\.\d{3}\.\d{3}-\d{2})\b/);
     if (!m) m = tU.match(/\b(\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2})\b/);
-    if (m) dados.cpfCnpj = m[1].trim();
+    if (m) dados.cpfCnpj = m[1];
+
+    /* UF */
+    m = tU.match(/\bUF\s*:?\s*([A-Z]{2})\b/);
+    if (m && ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA',
+              'PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'].includes(m[1])) {
+        dados.uf = m[1];
+    }
 
     return dados;
 }

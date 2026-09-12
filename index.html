@@ -979,7 +979,7 @@ document.querySelectorAll('.tab').forEach(tab => {
         if (content && !content.classList.contains('hidden-content')) content.classList.add('active');
         if (tabId === 'veiculos') atualizarTabelaVeiculos();
         if (tabId === 'clientes') atualizarTabelaClientes();
-        if (tabId === 'locacoes') { atualizarCombosLocacao(); atualizarTabelaLocacoes(); }
+        if (tabId === 'locacoes') { atualizarCombosLocacao(); preencherDataInicioLocacao(); atualizarTabelaLocacoes(); }
         if (tabId === 'locEncerrada') atualizarTabelaLocEncerrada();
         if (tabId === 'manutencao') atualizarPlacasManutencao();
         if (tabId === 'mecanico') atualizarPlacasMecanico();
@@ -1089,6 +1089,23 @@ document.querySelectorAll('input[type="text"], input[type="search"], textarea').
         } else { e.preventDefault(); }
     }, true);
 })();
+
+function obterDataHojeISO() {
+    const hoje = new Date();
+    const yyyy = hoje.getFullYear();
+    const mm = String(hoje.getMonth() + 1).padStart(2, '0');
+    const dd = String(hoje.getDate()).padStart(2, '0');
+    return yyyy + '-' + mm + '-' + dd;
+}
+
+function preencherDataInicioLocacao() {
+    const el = document.getElementById('locDataInicio');
+    if (!el) return;
+    if (!el.value) {
+        el.value = obterDataHojeISO();
+        calcularDataFim();
+    }
+}
 
 async function salvarVeiculo() {
     const fabricante = document.getElementById('veicFabricante').value.trim();
@@ -1769,6 +1786,7 @@ function limparCamposLocacao() {
     const selPag = document.getElementById('locPagCaucao'); if (selPag) selPag.selectedIndex = 0;
     locacaoEditandoIndex = null;
     atualizarEstadoEdicaoLocacao();
+    preencherDataInicioLocacao();
 }
 
 function atualizarEstadoEdicaoLocacao() {
@@ -4601,6 +4619,7 @@ async function inicializarSistemaCompleto() {
     atualizarTabelaClientes();
     atualizarTabelaUsuario();
     atualizarCombosLocacao();
+    preencherDataInicioLocacao();
     atualizarPlacasManutencao();
     atualizarPlacasMecanico();
     atualizarTabelaLocacoes();

@@ -4061,6 +4061,7 @@ function extrairDadosCRLV(textoOriginal) {
     const t = linhas.join('\n');
     const tU = t.toUpperCase();
 
+    // Palavras que indicam RÓTULOS do CRLV (nunca podem ser usadas como valor de um campo)
     const PALAVRAS_ROTULO = [
         'PLACA','CHASSI','RENAVAM','CAT','CLA','ANTERIOR','SENATRAN','MENSAGENS',
         'LOCAL','DATA','MARCA','MODELO','ANO','COR','PREDOMINANTE','COMBUST',
@@ -4068,7 +4069,19 @@ function extrairDadosCRLV(textoOriginal) {
         'NOME','CÓDIGO','CODIGO','SEGURANÇA','SEGURANCA','PROPRIETÁRIO','PROPRIETARIO',
         'OBSERVAÇÕES','OBSERVACOES','EXERCÍCIO','EXERCICIO','FABRICAÇÃO','FABRICACAO',
         'LICENCIAMENTO','CRLV','DETRAN','RENACH','VERSÃO','VERSAO','POTÊNCIA','POTENCIA',
-        'CILINDRADA','LOTAÇÃO','LOTACAO','MOTOR','CAPACIDADE','PASSAGEIRO','CARGA'
+        'CILINDRADA','LOTAÇÃO','LOTACAO','MOTOR','CAPACIDADE','PASSAGEIRO','CARGA',
+        'CMT','EIXOS','DPVAT','SEGURO','SEGURADORA','CORRETOR','APÓLICE','APOLICE',
+        'SINISTRO','INDENIZAÇÃO','INDENIZACAO','BENEFICIÁRIO','BENEFICIARIO',
+        'MARCA/MODELO/VERSÃO','VERSÃO','VERSAO','NÚMERO','NUMERO','CRV','OBSERVAÇÕES',
+        'LOCAL/DATA','LOCAL DATA','TIPO','PROCEDÊNCIA','PROCEDENCIA'
+    ];
+
+    // Palavras FORTES: se aparecerem, a linha INTEIRA é rejeitada como valor
+    const ROTULOS_FORTES = [
+        'CAT','CLA','ANTERIOR','SENATRAN','MENSAGENS','CMT','EIXOS','DPVAT','SEGURO',
+        'SEGURADORA','CORRETOR','APÓLICE','APOLICE','LOTAÇÃO','LOTACAO','POTÊNCIA','POTENCIA',
+        'CILINDRADA','CAPACIDADE','PASSAGEIRO','CARGA','CRLV','RENACH','LICENCIAMENTO',
+        'EXERCÍCIO','EXERCICIO','FABRICAÇÃO','FABRICACAO'
     ];
 
     function ehLabel(linha) {
@@ -4077,10 +4090,14 @@ function extrairDadosCRLV(textoOriginal) {
         if (!up) return true;
         if (up.length > 60) return false;
         let count = 0;
+        let fortes = 0;
         for (const p of PALAVRAS_ROTULO) {
-            if (new RegExp('\\b' + p + '\\b').test(up)) count++;
+            if (new RegExp('\\b' + p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b').test(up)) count++;
         }
-        return count >= 2;
+        for (const p of ROTULOS_FORTES) {
+            if (new RegExp('\\b' + p + '\\b').test(up)) fortes++;
+        }
+        return fortes >= 1 || count >= 2;
     }
 
     function limpar(v) {
@@ -4088,7 +4105,9 @@ function extrairDadosCRLV(textoOriginal) {
         return String(v).trim().replace(/^[\s:;\/\-|]+/, '').replace(/[\s:;\/\-|]+$/, '').trim();
     }
 
-    /* PLACA */
+    /* ============================================================
+       PLACA
+       ============================================================ */
     const placasCands = [...tU.matchAll(/\b([A-Z]{3}[0-9][A-Z0-9][0-9]{2})\b/g)];
     if (placasCands.length === 0) {
         const old = [...tU.matchAll(/\b([A-Z]{3}[0-9]{4})\b/g)];
@@ -4104,7 +4123,9 @@ function extrairDadosCRLV(textoOriginal) {
         break;
     }
 
-    /* CHASSI */
+    /* ============================================================
+       CHASSI
+       ============================================================ */
     const chassisCands = [...tU.matchAll(/\b([A-HJ-NPR-Z0-9]{17})\b/g)];
     for (const mm of chassisCands) {
         const pos = mm.index;
@@ -4114,21 +4135,39 @@ function extrairDadosCRLV(textoOriginal) {
         break;
     }
 
-    /* RENAVAM */
-    let m = tU.match(/RENAVAM\s*:?\s*(\d{11})/);
-    if (m) dados.renavam = m[1];
-    if (!dados.renavam) {
-        const idxRen = tU.indexOf('RENAVAM');
-        const cands = [...tU.matchAll(/\b(\d{11})\b/g)];
-        if (cands.length === 1) dados.renavam = cands[0][1];
-        else if (cands.length > 1 && idxRen >= 0) {
-            for (const c of cands) {
-                if (c.index > idxRen && c.index - idxRen < 200) { dados.renavam = c[1]; break; }
-            }
+    /* ============================================================
+       RENAVAM — busca robusta
+       Estratégia: o rótulo "RENAVAM" pode estar seguido do número
+       na mesma linha OU o QR Code pode ter inserido texto entre eles.
+       Buscamos em até 200 caracteres depois de "RENAVAM" o primeiro
+       número de 11 dígitos.
+       ============================================================ */
+    let renavamEncontrado = null;
+    // 1) Padrão direto: "RENAVAM 01130359722" ou "RENAVAM\n01130359722"
+    let mR = tU.match(/RENAVAM\s*:?\s*(\d{11})/);
+    if (mR) renavamEncontrado = mR[1];
+    // 2) "CÓDIGO RENAVAM" seguido de até 200 chars com qualquer coisa, então 11 dígitos
+    if (!renavamEncontrado) {
+        const idx = tU.search(/C[ÓO]DIGO\s*RENAVAM|RENAVAM/);
+        if (idx >= 0) {
+            const sub = tU.substring(idx, idx + 200);
+            const mm = sub.match(/(\d{11})/);
+            if (mm) renavamEncontrado = mm[1];
         }
     }
+    // 3) Primeiro número de 11 dígitos que NÃO esteja próximo de "CRV"
+    if (!renavamEncontrado) {
+        const cands = [...tU.matchAll(/\b(\d{11})\b/g)];
+        for (const c of cands) {
+            const antes = tU.substring(Math.max(0, c.index - 30), c.index);
+            if (!/CRV|N[ÚU]MERO/i.test(antes)) { renavamEncontrado = c[1]; break; }
+        }
+    }
+    if (renavamEncontrado) dados.renavam = renavamEncontrado;
 
-    /* MARCA / MODELO */
+    /* ============================================================
+       MARCA / MODELO
+       ============================================================ */
     const marcas = ['VOLKSWAGEN','VW','FIAT','CHEVROLET','GM','FORD','TOYOTA','HONDA',
         'HYUNDAI','RENAULT','NISSAN','JEEP','PEUGEOT','CITROEN','CITROËN','MITSUBISHI',
         'KIA','BMW','MERCEDES','AUDI','VOLVO','LAND ROVER','JAGUAR','SUZUKI','CHERY',
@@ -4156,14 +4195,16 @@ function extrairDadosCRLV(textoOriginal) {
         if (dados.fabricante) break;
     }
     if (!dados.fabricante) {
-        m = tU.match(/\b([A-ZÀ-Ú]+(?:\s+[A-ZÀ-Ú]+)?)\s*\/\s*([A-ZÀ-Ú][A-ZÀ-Ú0-9\.\s]{2,30})/);
-        if (m) {
-            const cand = (m[1] + ' / ' + m[2]).trim();
+        mR = tU.match(/\b([A-ZÀ-Ú]+(?:\s+[A-ZÀ-Ú]+)?)\s*\/\s*([A-ZÀ-Ú][A-ZÀ-Ú0-9\.\s]{2,30})/);
+        if (mR) {
+            const cand = (mR[1] + ' / ' + mR[2]).trim();
             if (!ehLabel(cand)) dados.fabricante = cand.replace(/\s+/g, ' ');
         }
     }
 
-    /* ANO FABRICAÇÃO / ANO MODELO */
+    /* ============================================================
+       ANO FABRICAÇÃO / ANO MODELO
+       ============================================================ */
     function extrairAnosDeUmaLinha(up) {
         const anos = up.match(/\b(19[89]\d|20[0-2]\d)\b/g);
         if (anos && anos.length >= 2) return anos;
@@ -4192,8 +4233,8 @@ function extrairDadosCRLV(textoOriginal) {
         }
     }
     if (!dados.anoFabr || !dados.anoModel) {
-        m = tU.match(/\b(19[89]\d|20[0-2]\d)\s*\/\s*(19[89]\d|20[0-3]\d)\b/);
-        if (m) { dados.anoFabr = m[1]; dados.anoModel = m[2]; }
+        mR = tU.match(/\b(19[89]\d|20[0-2]\d)\s*\/\s*(19[89]\d|20[0-3]\d)\b/);
+        if (mR) { dados.anoFabr = mR[1]; dados.anoModel = mR[2]; }
     }
     if (!dados.anoFabr || !dados.anoModel) {
         const todos = [...tU.matchAll(/\b(19[89]\d|20[0-3]\d)\b/g)].map(x => x[1]);
@@ -4204,7 +4245,9 @@ function extrairDadosCRLV(textoOriginal) {
         }
     }
 
-    /* COR */
+    /* ============================================================
+       COR
+       ============================================================ */
     const cores = ['BRANCA','PRETA','PRATA','CINZA','VERMELHA','AZUL','VERDE','AMARELA',
         'MARROM','BEGE','DOURADA','LARANJA','VINHO','ROSA','ROXA','GRENÁ','GRENA',
         'BRANCO','PRETO','VERMELHO','AMARELO','DOURADO','LILAS','CREME','BORDÔ','BORDO'];
@@ -4233,7 +4276,9 @@ function extrairDadosCRLV(textoOriginal) {
         }
     }
 
-    /* NOME DO PROPRIETÁRIO */
+    /* ============================================================
+       NOME DO PROPRIETÁRIO — rejeita frases de QR Code / órgãos / URLs
+       ============================================================ */
     function pareceNomePessoa(v) {
         if (!v) return false;
         const up = String(v).toUpperCase().trim();
@@ -4241,6 +4286,8 @@ function extrairDadosCRLV(textoOriginal) {
         if (ehLabel(up)) return false;
         if (cores.includes(up)) return false;
         if (/\d/.test(up)) return false;
+        // Rejeita frases de QR Code, avisos, instruções, sites, órgãos públicos, chaves de validação
+        if (/\b(QRCODE|QR|CODE|VALIDE|VALIDAR|VIO|APP|APLICATIVO|LEIA|LEITOR|ESCANEIE|ESCANEI|ESCANEAR|ESCANEAMENTO|CONSULTE|CONSULTAR|ACESSE|ACESSAR|BAIXE|BAIXAR|DISPON[ÍI]VEL|OBTENHA|OBTER|AUTENTIC|AUTENTICIDADE|CERTIFIC|CERTIFICADO|ASSINAT|CHAVE|TOKEN|PORTAL|SITE|GOVERNO|DENATRAN|SENATRAN|DETRAN|RENAVAM|CONTRAN|MINIST[ÉE]RIO|REP[ÚU]BLICA|FEDERAL|ESTADUAL|MUNICIPAL|NACIONAL|SECRETARIA|DEPARTAMENTO|DOCUMENTO|DIGITAL|ELETR[ÔO]NICO|IMPRESSO|EMITIDO|EMISS[ÃA]O|VERS[ÃA]O|C[ÓO]DIGO|SEGURAN[ÇC]A|CONFIRA|VERIFIQUE|VERIFICAR|IMPRIMA|IMPRIMIR|HTTP|HTTPS|WWW|COM|\.COM|\.BR|\.GOV|CMT|EIXOS|LOTA[ÇC][ÃA]O|LOTACAO)\b/i.test(up)) return false;
         const palavras = up.split(/\s+/);
         if (palavras.length < 2 || palavras.length > 6) return false;
         return palavras.every(p => /^[A-ZÀ-Ú][A-ZÀ-Ú'\.\-]{1,}$/.test(p));
@@ -4252,7 +4299,8 @@ function extrairDadosCRLV(textoOriginal) {
     }
     if (!dados.proprietario) {
         for (let i = 0; i < linhas.length; i++) {
-            if (/^(?:NOME|PROPRIET[ÁA]RIO)(?:\s+DO\s+PROPRIET[ÁA]RIO)?\s*:?\s*$/.test(linhas[i].toUpperCase())) {
+            const upLinha = linhas[i].toUpperCase();
+            if (/^(?:NOME|PROPRIET[ÁA]RIO)(?:\s+DO\s+PROPRIET[ÁA]RIO)?\s*:?\s*$/.test(upLinha)) {
                 for (let j = i + 1; j < Math.min(i + 5, linhas.length); j++) {
                     if (pareceNomePessoa(linhas[j])) { dados.proprietario = linhas[j].trim(); break; }
                 }
@@ -4266,16 +4314,20 @@ function extrairDadosCRLV(textoOriginal) {
         }
     }
 
-    /* CPF / CNPJ */
-    m = tU.match(/\b(\d{3}\.\d{3}\.\d{3}-\d{2})\b/);
-    if (!m) m = tU.match(/\b(\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2})\b/);
-    if (m) dados.cpfCnpj = m[1];
+    /* ============================================================
+       CPF / CNPJ
+       ============================================================ */
+    mR = tU.match(/\b(\d{3}\.\d{3}\.\d{3}-\d{2})\b/);
+    if (!mR) mR = tU.match(/\b(\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2})\b/);
+    if (mR) dados.cpfCnpj = mR[1];
 
-    /* UF */
-    m = tU.match(/\bUF\s*:?\s*([A-Z]{2})\b/);
-    if (m && ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA',
-              'PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'].includes(m[1])) {
-        dados.uf = m[1];
+    /* ============================================================
+       UF
+       ============================================================ */
+    mR = tU.match(/\bUF\s*:?\s*([A-Z]{2})\b/);
+    if (mR && ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA',
+              'PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'].includes(mR[1])) {
+        dados.uf = mR[1];
     }
 
     return dados;

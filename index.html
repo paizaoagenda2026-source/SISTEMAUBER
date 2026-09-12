@@ -610,7 +610,24 @@
 
     <div class="tab-content" id="auditoria"><h2>🔍 Auditoria</h2><div class="table-container"><table id="tabelaAuditoria"><thead><tr><th>Data/Hora</th><th>Usuário</th><th>Ação</th><th>Descrição</th></tr></thead><tbody></tbody></table></div></div>
 
-    <div class="tab-content" id="pendente"><h2>⏳ Pendências</h2><div class="form-grid"><div class="form-group"><label>Data</label><input type="date" id="pendData"></div><div class="form-group"><label>Descrição</label><input type="text" id="pendDescricao"></div><div class="form-group"><label>Crédito</label><input type="text" id="pendCredito" class="money"></div><div class="form-group"><label>Débito</label><input type="text" id="pendDebito" class="money"></div><div class="form-group"><label>Vencimento</label><input type="date" id="pendVencimento"></div></div><button class="btn-primary" onclick="salvarPendencia()">💾 Salvar</button><div class="table-container"><table id="tabelaPendentes"><thead><tr><th>Data</th><th>Descrição</th><th>Crédito</th><th>Débito</th><th>Vencimento</th><th>Status</th><th>Ações</th></tr></thead><tbody></tbody></table></div></div>
+    <div class="tab-content" id="pendente">
+        <h2>⏳ Pendências</h2>
+        <div class="form-grid">
+            <div class="form-group"><label>Data</label><input type="date" id="pendData"></div>
+            <div class="form-group"><label>Descrição</label><input type="text" id="pendDescricao" class="campo-enter"></div>
+            <div class="form-group"><label>Placa</label><input type="text" id="pendPlaca" class="campo-enter"></div>
+            <div class="form-group"><label>Crédito</label><input type="text" id="pendCredito" class="money"></div>
+            <div class="form-group"><label>Débito</label><input type="text" id="pendDebito" class="money"></div>
+            <div class="form-group"><label>Vencimento</label><input type="date" id="pendVencimento"></div>
+        </div>
+        <button class="btn-primary" onclick="salvarPendencia()">💾 Salvar</button>
+        <div class="table-container">
+            <table id="tabelaPendentes">
+                <thead><tr><th>Data</th><th>Descrição</th><th>Placa</th><th>Crédito</th><th>Débito</th><th>Vencimento</th><th>Status</th><th>Ações</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
 
     <div class="tab-content" id="historico">
         <h2>📜 Histórico</h2>
@@ -1125,6 +1142,7 @@ document.querySelectorAll('.tab').forEach(tab => {
         if (tabId === 'comprovantes') { atualizarComboPlacasDocumentos(); atualizarGaleriaComprovantes(); atualizarTabelaComprovantesPag(); }
         if (tabId === 'banco') atualizarTabelaBancos();
         if (tabId === 'doc') atualizarTabelaDoc();
+        if (tabId === 'pendente') atualizarTabelaPendentes();
     });
 });
 
@@ -2190,13 +2208,6 @@ function atualizarTabelaLocEncerrada() {
     });
 }
 
-/* ============================================================
-   REABRIR LOCAÇÃO ENCERRADA
-   Reverte todas as ações feitas no encerramento em:
-   • Sub Pagamentos
-   • Fluxo de Caixa
-   • Histórico de Aluguéis
-   ============================================================ */
 function reabrirLocacao(i) {
     if (!confirmarSenhaADM()) return;
     const l = db.locacoesEncerradas[i];
@@ -2216,7 +2227,6 @@ function reabrirLocacao(i) {
     const lPlacaUpper = String(l.placa || '').toUpperCase();
     const dataEncerramento = l.dataEncerramento || '';
 
-    // 1) FLUXO DE CAIXA — remove lançamento de extorno de caução desta locação
     if (Array.isArray(db.fluxoCaixa)) {
         const antesFC = db.fluxoCaixa.length;
         db.fluxoCaixa = db.fluxoCaixa.filter(f => {
@@ -2236,7 +2246,6 @@ function reabrirLocacao(i) {
         }
     }
 
-    // 2) HISTÓRICO DE ALUGUÉIS — remove registros desta locação criados no/ após o encerramento
     if (Array.isArray(db.historicoAlugueis)) {
         const antesHA = db.historicoAlugueis.length;
         db.historicoAlugueis = db.historicoAlugueis.filter(h => {
@@ -2245,7 +2254,6 @@ function reabrirLocacao(i) {
             if (h.placa !== l.placa) return true;
             const dt = h.dataPagamento || h.data || '';
             if (dt && dataEncerramento && dt >= dataEncerramento) return false;
-            // remove também registros sem data que tenham a tag especial
             if (h._reaberturaTag && String(h._reaberturaTag).toUpperCase().includes('ENCERRAMENTO')) return false;
             return true;
         });
@@ -2255,7 +2263,6 @@ function reabrirLocacao(i) {
         }
     }
 
-    // 3) SUB PAGAMENTOS — remove parcelas geradas APÓS a data de encerramento
     if (Array.isArray(db.alugueis)) {
         const antesAL = db.alugueis.length;
         db.alugueis = db.alugueis.filter(a => {
@@ -2273,7 +2280,6 @@ function reabrirLocacao(i) {
         }
     }
 
-    // 4) Restaura a locação na lista de ativas
     const copia = Object.assign({}, l);
     [
         'dataEncerramento','dataFimEfetiva','caucaoExtornada',
@@ -2290,7 +2296,6 @@ function reabrirLocacao(i) {
     db.locacoes.push(copia);
     db.locacoesEncerradas.splice(i, 1);
 
-    // 5) Atualiza TODAS as tabelas afetadas
     atualizarTabelaLocacoes();
     atualizarTabelaLocEncerrada();
     atualizarTabelaAlugueis();
@@ -3930,7 +3935,6 @@ function atualizarTabelaBancos() {
     });
 }
 
-function atualizarTabelaPendentes() { const t = document.querySelector('#tabelaPendentes tbody'); if (t) t.innerHTML = ''; }
 function carregarDadosContratos() {}
 function carregarConfiguracoes() {}
 function preencherPlacaUsuarioLogado() {}
@@ -3943,10 +3947,6 @@ function editarCompra() { alert('Função em implementação.'); }
 function limparCamposCompra() {}
 function excluirCompra() {}
 function processarDocumentoComprovante() { const input = document.getElementById('docComprovanteInput'); if (input) input.click(); }
-function salvarPendencia() { alert('Função em implementação.'); }
-function editarPendencia() {}
-function excluirPendencia() {}
-function processarPendenciaPDF() {}
 function salvarConfiguracao() { alert('Função em implementação.'); }
 function restaurarPadroes() {}
 function aplicarFiltroAuditoria() {}
@@ -5401,6 +5401,180 @@ function excluirDocComprovante(idx) {
     registrarAuditoria('Exclusão', 'Comprovante excluído: ' + c.nomeArquivo);
 }
 
+/* ============================================================
+   ABA PENDÊNCIAS — SALVAR E MARCAR COMO PAGO + FLUXO DE CAIXA
+   ============================================================ */
+function salvarPendencia() {
+    const data       = document.getElementById('pendData').value;
+    const descricao  = document.getElementById('pendDescricao').value.trim();
+    const placa      = document.getElementById('pendPlaca').value.trim().toUpperCase();
+    const credito    = document.getElementById('pendCredito').value.trim();
+    const debito     = document.getElementById('pendDebito').value.trim();
+    const vencimento = document.getElementById('pendVencimento').value;
+
+    if (!data || !descricao || !placa || !vencimento || (!credito && !debito)) {
+        alert('Preencha todos os campos obrigatórios!\n\n(Informe Crédito e/ou Débito)');
+        return;
+    }
+
+    if (!Array.isArray(db.pendentes)) db.pendentes = [];
+
+    db.pendentes.push({
+        data,
+        descricao,
+        placa,
+        credito: credito || '',
+        debito:  debito  || '',
+        vencimento,
+        status: 'Pendente',
+        dataPagamento: null
+    });
+
+    ['pendData','pendDescricao','pendPlaca','pendCredito','pendDebito','pendVencimento'].forEach(id => {
+        const el = document.getElementById(id); if (el) el.value = '';
+    });
+
+    atualizarTabelaPendentes();
+    registrarAuditoria('Cadastro', `Nova pendência: ${descricao} - Placa: ${placa}`);
+    salvarDB();
+    alert('✅ Pendência salva com sucesso!');
+}
+
+function atualizarTabelaPendentes() {
+    const tbody = document.querySelector('#tabelaPendentes tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    const lista = db.pendentes || [];
+
+    if (lista.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#999;padding:20px;">Nenhuma pendência registrada.</td></tr>';
+        return;
+    }
+
+    lista.forEach((p, i) => {
+        const statusBadge = (p.status === 'Pago')
+            ? '<span class="status-pago">PAGO</span>'
+            : '<span class="status-pendente">PENDENTE</span>';
+
+        const botoes = [];
+        if (p.status !== 'Pago') {
+            botoes.push(`<button class="btn-success" onclick="marcarPendenciaPaga(${i})" title="Marcar como Pago" style="padding:8px 12px;font-size:13px;">💰 Pago</button>`);
+        }
+        botoes.push(`<button class="btn-danger" onclick="excluirPendencia(${i})" title="Excluir" style="padding:8px 12px;font-size:13px;">🗑️</button>`);
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${formatarDataBR(p.data)}</td>
+            <td>${p.descricao || ''}</td>
+            <td>${p.placa || ''}</td>
+            <td>${p.credito || '-'}</td>
+            <td>${p.debito || '-'}</td>
+            <td>${formatarDataBR(p.vencimento)}</td>
+            <td>${statusBadge}</td>
+            <td>${botoes.join(' ')}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function marcarPendenciaPaga(i) {
+    const p = db.pendentes[i];
+    if (!p) { alert('Pendência não encontrada.'); return; }
+    if (p.status === 'Pago') { alert('Esta pendência já está paga!'); return; }
+
+    const creditoNum = parseMoeda(p.credito);
+    const debitoNum  = parseMoeda(p.debito);
+
+    if (!confirm(
+        `Confirmar PAGAMENTO desta pendência?\n\n` +
+        `Descrição: ${p.descricao}\n` +
+        `Placa:     ${p.placa}\n` +
+        `Crédito:   ${p.credito || '-'}\n` +
+        `Débito:    ${p.debito  || '-'}\n\n` +
+        `Isso lançará automaticamente no Fluxo de Caixa.`
+    )) return;
+
+    const hojeISO = new Date().toISOString().split('T')[0];
+    if (!Array.isArray(db.fluxoCaixa)) db.fluxoCaixa = [];
+
+    if (creditoNum > 0) {
+        db.fluxoCaixa.push({
+            data: hojeISO,
+            descricao: `Pendência Paga - ${p.descricao} - ${p.placa}`,
+            categoria: 'Pendência',
+            valor: p.credito,
+            valorNumerico: creditoNum,
+            tipo: 'entrada'
+        });
+    }
+
+    if (debitoNum > 0) {
+        db.fluxoCaixa.push({
+            data: hojeISO,
+            descricao: `Pendência Paga - ${p.descricao} - ${p.placa}`,
+            categoria: 'Pendência',
+            valor: p.debito,
+            valorNumerico: debitoNum,
+            tipo: 'saida'
+        });
+    }
+
+    p.status = 'Pago';
+    p.dataPagamento = hojeISO;
+
+    atualizarTabelaPendentes();
+    atualizarTabelaFluxoCaixa();
+    registrarAuditoria('Pagamento', `Pendência paga: ${p.descricao} - Placa: ${p.placa}`);
+    salvarDB();
+
+    let msg = '✅ Pendência marcada como PAGA!';
+    if (creditoNum > 0) msg += `\n\n➕ Entrada lançada no Fluxo de Caixa: ${p.credito}`;
+    if (debitoNum  > 0) msg += `\n\n➖ Saída lançada no Fluxo de Caixa: ${p.debito}`;
+    alert(msg);
+}
+
+function excluirPendencia(i) {
+    if (!confirmarSenhaADM()) return;
+    const p = db.pendentes[i];
+    if (!p) return;
+    if (!confirm(`Excluir a pendência "${p.descricao}"?`)) return;
+    db.pendentes.splice(i, 1);
+    atualizarTabelaPendentes();
+    registrarAuditoria('Exclusão', `Pendência excluída: ${p.descricao}`);
+    salvarDB();
+}
+
+function editarPendencia(i) {
+    if (!confirmarSenhaADM()) return;
+    const p = db.pendentes[i];
+    if (!p) return;
+    if (p.status === 'Pago') { alert('Não é possível editar uma pendência já paga.'); return; }
+
+    const novaDesc = prompt('Descrição:', p.descricao || '');
+    if (novaDesc === null) return;
+    const novaPlaca = prompt('Placa:', p.placa || '');
+    if (novaPlaca === null) return;
+    const novoCred = prompt('Crédito (ex: R$ 100,00):', p.credito || '');
+    if (novoCred === null) return;
+    const novoDeb = prompt('Débito (ex: R$ 100,00):', p.debito || '');
+    if (novoDeb === null) return;
+    const novoVenc = prompt('Vencimento (AAAA-MM-DD):', p.vencimento || '');
+    if (novoVenc === null) return;
+
+    p.descricao  = novaDesc.trim();
+    p.placa      = novaPlaca.trim().toUpperCase();
+    p.credito    = novoCred.trim();
+    p.debito     = novoDeb.trim();
+    p.vencimento = novoVenc.trim();
+
+    atualizarTabelaPendentes();
+    registrarAuditoria('Edição', `Pendência editada: ${p.descricao}`);
+    salvarDB();
+    alert('✅ Pendência atualizada!');
+}
+
+function processarPendenciaPDF() { alert('Função em implementação.'); }
+
 // ===== PWA =====
 let deferredInstallPrompt = null;
 
@@ -5497,6 +5671,7 @@ async function inicializarSistemaCompleto() {
     atualizarComboPlacasDocumentos();
     atualizarGaleriaComprovantes();
     atualizarTabelaDoc();
+    atualizarTabelaPendentes();
     configurarInputMultiplasImagens();
     configurarBotaoInstalar();
 

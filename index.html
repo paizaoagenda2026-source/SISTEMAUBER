@@ -253,16 +253,12 @@
             <div class="form-group"><label>Fabricante/Modelo</label><input type="text" id="veicFabricante" class="campo-enter"></div>
             <div class="form-group"><label>Cor Predominante</label><input type="text" id="veicCor" class="campo-enter"></div>
             <div class="form-group"><label>Placa</label><input type="text" id="veicPlaca" class="campo-enter"></div>
-            <div class="form-group"><label>Motor</label><input type="text" id="veicMotor" class="campo-enter"></div>
             <div class="form-group"><label>Câmbio</label><input type="text" id="veicCambio" class="campo-enter"></div>
             <div class="form-group"><label>Ano Fabricação</label><input type="text" id="veicAnoFabr" class="campo-enter"></div>
             <div class="form-group"><label>Ano Modelo</label><input type="text" id="veicAnoModel" class="campo-enter"></div>
-            <div class="form-group"><label>KM</label><input type="text" id="veicKm" class="campo-enter"></div>
             <div class="form-group"><label>Código Renavan</label><input type="text" id="veicRenavan" class="campo-enter"></div>
             <div class="form-group"><label>Chassi</label><input type="text" id="veicChassi" class="campo-enter"></div>
             <div class="form-group"><label>R$ Fipe</label><input type="text" id="veicFipe" class="money campo-enter"></div>
-            <div class="form-group"><label>R$ Caução</label><input type="text" id="veicCaucao" class="money campo-enter"></div>
-            <div class="form-group"><label>R$ Aluguel</label><input type="text" id="veicAluguel" class="money campo-enter"></div>
             <div class="form-group"><label>Nome</label><input type="text" id="veicProprietario" class="campo-enter"></div>
             <div class="form-group"><label>CPF Propr</label><input type="text" id="veicCpfPropr" class="campo-enter"></div>
         </div>
@@ -1101,13 +1097,11 @@ async function salvarVeiculo() {
     const placa = document.getElementById('veicPlaca').value.trim();
     const anoFabr = document.getElementById('veicAnoFabr').value.trim();
     const anoModel = document.getElementById('veicAnoModel').value.trim();
-    const aluguel = document.getElementById('veicAluguel').value;
-    const caucao = document.getElementById('veicCaucao').value;
     const proprietario = document.getElementById('veicProprietario').value.trim();
     const cpfPropr = document.getElementById('veicCpfPropr').value.trim();
+    
     if (campoVazio(fabricante) || campoVazio(cor) || campoVazio(placa) || campoVazio(anoFabr) ||
-        campoVazio(anoModel) || campoVazio(aluguel) || campoVazio(caucao) ||
-        campoVazio(proprietario) || campoVazio(cpfPropr)) {
+        campoVazio(anoModel) || campoVazio(proprietario) || campoVazio(cpfPropr)) {
         alert('Preencha todos os campos obrigatórios do veículo!'); return;
     }
     const placaNorm = normalizarPlaca(placa);
@@ -1125,14 +1119,12 @@ async function salvarVeiculo() {
     }
     const veiculo = {
         fabricante, cor, placa,
-        motor: document.getElementById('veicMotor').value.trim(),
         cambio: document.getElementById('veicCambio').value.trim(),
         anoFabr, anoModel,
-        km: document.getElementById('veicKm').value.trim(),
         renavan: document.getElementById('veicRenavan').value.trim(),
         chassi: document.getElementById('veicChassi').value.trim(),
         fipe: document.getElementById('veicFipe').value,
-        caucao, aluguel, proprietario, cpfPropr
+        proprietario, cpfPropr
     };
     if (veiculoEditandoIndex !== null && db.veiculos[veiculoEditandoIndex]) {
         db.veiculos[veiculoEditandoIndex] = veiculo;
@@ -1168,7 +1160,7 @@ async function salvarVeiculo() {
 }
 
 function limparCamposVeiculo() {
-    ['veicFabricante','veicCor','veicPlaca','veicMotor','veicCambio','veicAnoFabr','veicAnoModel','veicKm','veicRenavan','veicChassi','veicFipe','veicCaucao','veicAluguel','veicProprietario','veicCpfPropr'].forEach(id => {
+    ['veicFabricante','veicCor','veicPlaca','veicCambio','veicAnoFabr','veicAnoModel','veicRenavan','veicChassi','veicFipe','veicProprietario','veicCpfPropr'].forEach(id => {
         const el = document.getElementById(id); if (el) el.value = '';
     });
     veiculoEditandoIndex = null;
@@ -1198,7 +1190,7 @@ function atualizarTabelaVeiculos() {
             <td>${v.placa || ''}</td>
             <td>${v.cor || ''}</td>
             <td>${(v.anoFabr || '')}${v.anoModel ? '/' + v.anoModel : ''}</td>
-            <td>${v.aluguel || ''}</td>
+            <td>${v.aluguel || '-'}</td>
             <td>
                 <button class="btn-warning" onclick="editarVeiculo(${i})">✏️</button>
                 <button class="btn-danger" onclick="excluirVeiculo(${i})">🗑️</button>
@@ -1216,16 +1208,12 @@ function editarVeiculo(i) {
     document.getElementById('veicFabricante').value = v.fabricante || '';
     document.getElementById('veicCor').value = v.cor || '';
     document.getElementById('veicPlaca').value = v.placa || '';
-    document.getElementById('veicMotor').value = v.motor || '';
     document.getElementById('veicCambio').value = v.cambio || '';
     document.getElementById('veicAnoFabr').value = v.anoFabr || '';
     document.getElementById('veicAnoModel').value = v.anoModel || '';
-    document.getElementById('veicKm').value = v.km || '';
     document.getElementById('veicRenavan').value = v.renavan || '';
     document.getElementById('veicChassi').value = v.chassi || '';
     document.getElementById('veicFipe').value = v.fipe || '';
-    document.getElementById('veicCaucao').value = v.caucao || '';
-    document.getElementById('veicAluguel').value = v.aluguel || '';
     document.getElementById('veicProprietario').value = v.proprietario || '';
     document.getElementById('veicCpfPropr').value = v.cpfPropr || '';
     atualizarEstadoEdicaoVeiculo();
@@ -1590,9 +1578,6 @@ function selecionarVeiculoCombo() {
         document.getElementById('locPlaca').value = v.placa || '';
         document.getElementById('locAnoFabr').value = v.anoFabr || '';
         document.getElementById('locAnoModel').value = v.anoModel || '';
-        document.getElementById('locCaucao').value = v.caucao || '';
-        document.getElementById('locValorAluguel').value = v.aluguel || '';
-        document.getElementById('locAluguelMensal').value = v.aluguel || '';
         document.getElementById('locProprietario').value = v.proprietario || '';
         document.getElementById('locCpfPropr').value = v.cpfPropr || '';
     }
@@ -1608,9 +1593,6 @@ function selecionarPlacaCombo() {
         document.getElementById('locCor').value = v.cor || '';
         document.getElementById('locAnoFabr').value = v.anoFabr || '';
         document.getElementById('locAnoModel').value = v.anoModel || '';
-        document.getElementById('locCaucao').value = v.caucao || '';
-        document.getElementById('locValorAluguel').value = v.aluguel || '';
-        document.getElementById('locAluguelMensal').value = v.aluguel || '';
         document.getElementById('locProprietario').value = v.proprietario || '';
         document.getElementById('locCpfPropr').value = v.cpfPropr || '';
     }

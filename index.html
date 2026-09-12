@@ -323,7 +323,6 @@
             <div class="form-group"><label>Veículo</label><select id="locVeiculo" class="campo-enter" onchange="selecionarVeiculoCombo()"><option value="">Selecione um veículo</option></select></div>
             <div class="form-group"><label>Data Início</label><input type="date" id="locDataInicio" class="campo-enter" onchange="calcularDataFim()"></div>
             <div class="form-group"><label>Data Fim</label><input type="date" id="locDataFim" readonly></div>
-            <div class="form-group"><label>Fabricante/Modelo</label><input type="text" id="locFabModelo" readonly></div>
             <div class="form-group"><label>Cor</label><input type="text" id="locCor" readonly></div>
             <div class="form-group"><label>Placa</label><select id="locPlaca" class="campo-enter" onchange="selecionarPlacaCombo()"><option value="">Selecione uma placa</option></select></div>
             <div class="form-group"><label>Ano Fabr</label><input type="text" id="locAnoFabr" readonly></div>
@@ -331,8 +330,8 @@
             <div class="form-group"><label>R$ Caução</label><input type="text" id="locCaucao" class="money campo-enter"></div>
             <div class="form-group"><label>Valor Aluguel (Semanal)</label><input type="text" id="locValorAluguel" class="money campo-enter"></div>
             <div class="form-group"><label>ALUGUEL MENSAL</label><input type="text" id="locAluguelMensal" class="money campo-enter"></div>
-            <div class="form-group"><label>Proprietário</label><input type="text" id="locProprietario" readonly></div>
-            <div class="form-group"><label>CPF Propr</label><input type="text" id="locCpfPropr" readonly></div>
+            <div class="form-group"><label>Proprietário</label><input type="text" id="locProprietario" class="campo-enter"></div>
+            <div class="form-group"><label>CPF Propr</label><input type="text" id="locCpfPropr" class="campo-enter"></div>
             <div class="form-group"><label>Pagamento Caução</label>
                 <select id="locPagCaucao" class="campo-enter">
                     <option value="avista">À Vista</option><option value="parcelado">Parcelado C/Aluguel</option><option value="entrada">Entrada + Parcelas</option>
@@ -1547,7 +1546,7 @@ function atualizarCombosLocacao() {
         sVei.innerHTML = '<option value="">Selecione</option>';
         (db.veiculos || []).forEach(v => {
             const o = document.createElement('option');
-            o.value = v.fabricante; o.textContent = `${v.fabricante} - ${v.placa}`;
+            o.value = v.fabricante; o.textContent = v.fabricante;
             sVei.appendChild(o);
         });
     }
@@ -1556,7 +1555,7 @@ function atualizarCombosLocacao() {
         sPl.innerHTML = '<option value="">Selecione</option>';
         (db.veiculos || []).forEach(v => {
             const o = document.createElement('option');
-            o.value = v.placa; o.textContent = `${v.placa} - ${v.fabricante}`;
+            o.value = v.placa; o.textContent = v.placa;
             sPl.appendChild(o);
         });
     }
@@ -1573,7 +1572,6 @@ function selecionarVeiculoCombo() {
     if (!f) return;
     const v = (db.veiculos || []).find(x => x.fabricante === f);
     if (v) {
-        document.getElementById('locFabModelo').value = v.fabricante || '';
         document.getElementById('locCor').value = v.cor || '';
         document.getElementById('locPlaca').value = v.placa || '';
         document.getElementById('locAnoFabr').value = v.anoFabr || '';
@@ -1589,7 +1587,6 @@ function selecionarPlacaCombo() {
     const v = (db.veiculos || []).find(x => x.placa === p);
     if (v) {
         document.getElementById('locVeiculo').value = v.fabricante || '';
-        document.getElementById('locFabModelo').value = v.fabricante || '';
         document.getElementById('locCor').value = v.cor || '';
         document.getElementById('locAnoFabr').value = v.anoFabr || '';
         document.getElementById('locAnoModel').value = v.anoModel || '';
@@ -1672,7 +1669,7 @@ function gerarParcelasPagamento(opts) {
 
 function salvarLocacao() {
     const locatario   = document.getElementById('locLocatario').value;
-    const fabricante  = document.getElementById('locFabModelo').value;
+    const fabricante  = document.getElementById('locVeiculo').value;
     const placa       = document.getElementById('locPlaca').value;
     const dataInicio  = document.getElementById('locDataInicio').value;
     const dataFim     = document.getElementById('locDataFim').value;
@@ -1764,7 +1761,7 @@ function salvarLocacao() {
 }
 
 function limparCamposLocacao() {
-    ['locLocatario','locVeiculo','locDataInicio','locDataFim','locFabModelo',
+    ['locLocatario','locVeiculo','locDataInicio','locDataFim',
      'locCor','locPlaca','locAnoFabr','locAnoModel','locCaucao','locValorAluguel',
      'locAluguelMensal','locProprietario','locCpfPropr','locCaucaoPago'].forEach(id => {
         const el = document.getElementById(id); if (el) el.value = '';
@@ -1823,7 +1820,6 @@ function editarLocacao(i) {
     const selVei = document.getElementById('locVeiculo'); if (selVei) selVei.value = l.fabricante || '';
     const selPl = document.getElementById('locPlaca'); if (selPl) selPl.value = l.placa || '';
     const v = (db.veiculos || []).find(x => x.placa === l.placa) || {};
-    document.getElementById('locFabModelo').value = l.fabricante || '';
     document.getElementById('locCor').value = v.cor || '';
     document.getElementById('locAnoFabr').value = v.anoFabr || '';
     document.getElementById('locAnoModel').value = v.anoModel || '';

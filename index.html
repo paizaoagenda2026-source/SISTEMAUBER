@@ -242,42 +242,6 @@
             letter-spacing: 6px;
             text-shadow: 0 0 15px rgba(244,162,97,0.8);
         }
-        /* Modo tela cheia do cartão do guincho (exibido ao iniciar o sistema) */
-        .guincho-card.guincho-fullscreen {
-            position: fixed;
-            inset: 0;
-            width: auto;
-            height: auto;
-            min-height: 100vh;
-            margin: 0;
-            border-radius: 0;
-            border-width: 14px;
-            z-index: 99998;
-            cursor: pointer;
-        }
-        .guincho-card.guincho-fullscreen .guincho-emoji {
-            font-size: clamp(120px, 22vw, 260px);
-        }
-        .guincho-card.guincho-fullscreen .guincho-titulo {
-            font-size: clamp(48px, 10vw, 140px);
-        }
-        .guincho-card.guincho-fullscreen .guincho-texto {
-            font-size: clamp(24px, 5vw, 60px);
-        }
-        .guincho-card.guincho-fullscreen::after {
-            content: '👆 Toque para continuar';
-            position: absolute;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: rgba(255,255,255,0.9);
-            font-size: 15px;
-            font-weight: 700;
-            letter-spacing: 3px;
-            text-shadow: 0 0 12px rgba(0,0,0,0.8);
-            animation: guinchoPulse 1.4s infinite alternate;
-            pointer-events: none;
-        }
         @keyframes guinchoBlink {
             0%   { border-color: #ff0000; box-shadow: 0 0 0 8px rgba(255,0,0,0.7), 0 0 60px 25px #ff0000, inset 0 0 60px rgba(255,0,0,0.55); }
             33%  { border-color: #0033ff; box-shadow: 0 0 0 8px rgba(0,51,255,0.7), 0 0 60px 25px #0033ff, inset 0 0 60px rgba(0,51,255,0.55); }
@@ -287,6 +251,55 @@
         @keyframes guinchoPulse {
             from { transform: scale(1); }
             to   { transform: scale(1.12); }
+        }
+
+        /* ===================== OVERLAY TELA CHEIA - GUINCHO AO INICIAR ===================== */
+        .guincho-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.97);
+            z-index: 2147483647;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            box-sizing: border-box;
+        }
+        .guincho-overlay.active {
+            display: flex;
+        }
+        .guincho-overlay .guincho-card {
+            width: 100%;
+            height: 100%;
+            min-height: unset;
+            margin: 0;
+            border-radius: 20px;
+            position: relative;
+        }
+        .guincho-close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+            border: 3px solid #fff;
+            padding: 12px 26px;
+            font-size: 16px;
+            font-weight: 900;
+            border-radius: 40px;
+            cursor: pointer;
+            z-index: 10;
+            letter-spacing: 1px;
+            backdrop-filter: blur(6px);
+            transition: background 0.2s, transform 0.2s;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .guincho-close-btn:hover {
+            background: rgba(230, 57, 70, 0.9);
+            transform: scale(1.05);
         }
     </style>
 </head>
@@ -302,6 +315,18 @@
             <button type="submit" id="loginButton">Entrar</button>
         </form>
         <p id="loginError" style="color: red; margin-top: 10px; display: none;">Usuário ou senha inválidos!</p>
+    </div>
+</div>
+
+<!-- ===================== OVERLAY TELA CHEIA DO GUINCHO (AO INICIAR O SISTEMA) ===================== -->
+<div class="guincho-overlay" id="guinchoOverlay">
+    <div class="guincho-card">
+        <button class="guincho-close-btn" onclick="fecharGuinchoFullscreen()">✕ FECHAR</button>
+        <div class="guincho-content">
+            <div class="guincho-emoji">🚛</div>
+            <h1 class="guincho-titulo">GUINCHO 24 HORAS</h1>
+            <p class="guincho-texto">ATENDIMENTO 24 HORAS</p>
+        </div>
     </div>
 </div>
 
@@ -527,8 +552,8 @@
             <input type="file" id="sosImagem" accept="image/*" multiple style="display:none;">
             <div class="saved-images" id="sosPreviewSelecionadas"></div>
         </div>
-        <button class="btn-buscar" data-permissao="sos_buscar" onclick="document.getElementById('sosImagem').click()">📂 Buscar</button>
-        <button class="btn-primary" data-permissao="sos_salvar" onclick="salvarSOS()">💾 Salvar</button>
+        <button class="btn-buscar" onclick="document.getElementById('sosImagem').click()">📂 Buscar</button>
+        <button class="btn-primary" onclick="salvarSOS()">💾 Salvar</button>
         <div class="subfolder" style="margin-top:20px;">
             <div class="subfolder-header"><h4>📸 Imagens Salvas</h4></div>
             <div class="saved-images" id="sosSavedImages"></div>
@@ -1069,6 +1094,20 @@ function temPermissao(perm) {
     return !!(usuarioLogado.permissoes && usuarioLogado.permissoes.botoes && usuarioLogado.permissoes.botoes[perm]);
 }
 
+/* ===================== FUNÇÕES DO OVERLAY GUINCHO TELA CHEIA ===================== */
+function mostrarGuinchoFullscreen() {
+    const overlay = document.getElementById('guinchoOverlay');
+    if (overlay) {
+        overlay.classList.add('active');
+    }
+}
+function fecharGuinchoFullscreen() {
+    const overlay = document.getElementById('guinchoOverlay');
+    if (overlay) {
+        overlay.classList.remove('active');
+    }
+}
+
 function getNumDivisoesCaucao(tipoPagamento) {
     return (String(tipoPagamento || '').toLowerCase() === 'mensal') ? 6 : 10;
 }
@@ -1204,37 +1243,24 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
         const tabSOS = document.querySelector('.tab[data-tab="sos"]');
         if (tabSOS && !tabSOS.classList.contains('hidden-tab')) {
             tabSOS.click();
-            // Cartão do guincho em tela cheia ao iniciar o sistema
-            abrirGuinchoFullscreen();
         }
+
+        // === MOSTRAR CARTÃO GUINCHO EM TELA CHEIA PISCANTE AO INICIAR ===
+        setTimeout(function() {
+            mostrarGuinchoFullscreen();
+        }, 350);
     } else {
         document.getElementById('loginError').style.display = 'block';
         registrarAuditoria('Login', `Falha login: ${user}`);
     }
 });
 
-/* ============================================================
-   GUINCHO 24 HORAS — TELA CHEIA AO INICIAR O SISTEMA
-   ============================================================ */
-function abrirGuinchoFullscreen() {
-    const card = document.getElementById('guinchoCard');
-    if (!card) return;
-    card.classList.add('guincho-fullscreen');
-    card.onclick = fecharGuinchoFullscreen;
-}
-
-function fecharGuinchoFullscreen() {
-    const card = document.getElementById('guinchoCard');
-    if (!card) return;
-    card.classList.remove('guincho-fullscreen');
-    card.onclick = null;
-}
-
 function sairSistema() {
     if (!confirm('Sair do sistema?')) return;
     try { if (document.fullscreenElement) document.exitFullscreen(); } catch(e){}
-    // Garantir que o guincho saia do modo tela cheia ao sair
-    fecharGuinchoFullscreen();
+    // Garantir que o overlay do guincho seja fechado ao sair
+    const overlay = document.getElementById('guinchoOverlay');
+    if (overlay) overlay.classList.remove('active');
     document.getElementById('mainContainer').style.display = 'none';
     document.getElementById('loginContainer').style.display = 'flex';
     document.getElementById('loginUser').value = '';
@@ -1391,9 +1417,6 @@ function preencherDataInicioLocacao() {
     }
 }
 
-/* ============================================================
-   PREENCHIMENTO AUTOMÁTICO DE DATAS (apenas se vazio)
-   ============================================================ */
 function preencherDatasAutomaticas() {
     const hoje = obterDataHojeISO();
     const campos = ['cliDataCadastro', 'mecData', 'fcData', 'compData', 'pendData', 'relMecDataInicio', 'relMecDataFim'];
@@ -1404,9 +1427,6 @@ function preencherDatasAutomaticas() {
     preencherDataInicioLocacao();
 }
 
-/* ============================================================
-   CONSULTA AUTOMÁTICA DA TABELA FIPE
-   ============================================================ */
 function normalizarTextoFipe(t) {
     return String(t || '')
         .toUpperCase()
@@ -2377,7 +2397,6 @@ async function salvarLocacao() {
     const dataFim     = document.getElementById('locDataFim').value;
     if (!locatario || !fabricante || !placa || !dataInicio) { alert('Preencha todos os campos obrigatórios!'); return; }
 
-    // Prevenir que o MESMO veículo seja alugado para locatários diferentes ao mesmo tempo
     const locacaoDuplicada = db.locacoes.find((l, idx) => {
         if (locacaoEditandoIndex !== null && idx === locacaoEditandoIndex) return false;
         if (!l || !l.placa) return false;
@@ -3064,7 +3083,6 @@ function atualizarTabelaMecanico() {
     const tbody = document.querySelector('#tabelaMecanico tbody');
     if (!tbody) return;
     tbody.innerHTML = '';
-    // PENDENTES para cima, PAGOS para baixo
     const itens = (db.mecanico || []).map((m, idx) => ({
         m, idx, ordem: m.pago ? 1 : 0
     }));
@@ -3494,9 +3512,6 @@ document.addEventListener('keydown', function(e) {
 
 function fecharDespesasModal() { document.getElementById('despesasModal').classList.remove('active'); }
 
-/* ============================================================
-   CONTRATOS — 3 DOCUMENTOS EDITÁVEIS
-   ============================================================ */
 const CONTRATO_LOC_CAMPOS = ['numero','numeroInterno','locadora','locadoraEndereco','locadoraCnpj','locatario','locatarioEndereco','locatarioCep','locatarioRg','locatarioCpf','veiculo','veiculoCor','veiculoPlaca','anoFabr','anoModel','gestor','localVistoria','prazo','multaRescisao','taxaTroca','valorAluguel','limiteKm','valorKm','caucao','caucaoParcelas','caucaoDevolucao','multaInadimplencia','taxaHigienizacao','taxaEntrega','foro','data'];
 const CONTRATO_TER_CAMPOS = ['nome','rg','cpf','cnh','cnhValidade','veiculo','placa','proprietario','proprietarioCpf','prazo','data'];
 const CONTRATO_NOT_CAMPOS = ['numero','vencimento','valor','dataEmissao','credor','credorCnpj','valorExtenso','cidade','emitenteNome','emitenteCpf','emitenteDoc','emitenteDocExp','emitenteEndereco','emitenteCep','cartorio','data'];
@@ -4381,7 +4396,6 @@ function atualizarGaleriaSOS() {
     if (!container) return;
     container.innerHTML = '';
     const fotos = (db.imagens && db.imagens.sos && Array.isArray(db.imagens.sos.fotos)) ? db.imagens.sos.fotos : [];
-    const podeExcluir = temPermissao('sos_salvar');
     if (fotos.length === 0) {
         const p = document.createElement('p'); p.style.color = '#999'; p.textContent = 'Nenhuma imagem salva.';
         container.appendChild(p); return;
@@ -4391,11 +4405,9 @@ function atualizarGaleriaSOS() {
         const img = document.createElement('img'); img.src = src; img.alt = 'foto';
         img.addEventListener('click', (ev) => { ev.stopPropagation(); openImageModal(src, fotos, i); });
         div.appendChild(img);
-        if (podeExcluir) {
-            const btn = document.createElement('button'); btn.className = 'delete-btn'; btn.textContent = '×';
-            btn.addEventListener('click', (ev) => { ev.stopPropagation(); excluirFotoSOS(i); });
-            div.appendChild(btn);
-        }
+        const btn = document.createElement('button'); btn.className = 'delete-btn'; btn.textContent = '×';
+        btn.addEventListener('click', (ev) => { ev.stopPropagation(); excluirFotoSOS(i); });
+        div.appendChild(btn);
         container.appendChild(div);
     });
 }
@@ -4416,14 +4428,12 @@ function atualizarTabelaAlugueis() {
     tbody.innerHTML = '';
     const hojeISO = new Date().toISOString().split('T')[0];
 
-    // Calcula status primeiro
     const itens = (db.alugueis || []).map((a, idx) => {
         let status = a.status || 'pendente';
         if (status === 'pendente' && a.vencimento && a.vencimento < hojeISO) { status = 'atrasado'; a.status = status; }
         return { a, idx, status };
     });
 
-    // PENDENTES/ATRASADOS para cima, PAGOS para baixo (sort estável)
     itens.sort((x, y) => {
         const ox = x.status === 'pago' ? 1 : 0;
         const oy = y.status === 'pago' ? 1 : 0;
@@ -5266,7 +5276,6 @@ function salvarComprovantesPagamento() {
         if (!placa) semPlaca++;
         const valorNum = Number(item.valor) || 0;
 
-        // Prevenir duplicidade de comprovantes
         const duplicado = db.comprovantesPagamento.some(function(c) {
             return (c.placa === placa) &&
                    Math.abs((c.valor || 0) - valorNum) < 0.01 &&
@@ -6215,7 +6224,6 @@ function atualizarTabelaDoc() {
         tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#999;padding:20px;">Nenhum comprovante registrado.</td></tr>';
         return;
     }
-    // PENDENTES primeiro, CONCILIADOS por último
     const itens = lista.map(function(c, i) {
         return { c, idx: i, ordem: c.status === 'conciliado' ? 1 : 0 };
     });
@@ -6332,7 +6340,6 @@ function atualizarTabelaPendentes() {
         return;
     }
 
-    // PENDENTES primeiro, PAGAS por último
     const itens = lista.map((p, i) => ({ p, idx: i, ordem: p.status === 'Pago' ? 1 : 0 }));
     itens.sort((a, b) => a.ordem - b.ordem);
 
@@ -6491,7 +6498,6 @@ function editarPendencia(i) {
 
 function processarPendenciaPDF() { alert('Função em implementação.'); }
 
-// ===== PWA =====
 let deferredInstallPrompt = null;
 
 window.addEventListener('beforeinstallprompt', (e) => {
@@ -6608,7 +6614,6 @@ async function inicializarSistemaCompleto() {
     }
     atualizarTabelaComprovantesPag();
 
-    // Garantir foco no campo de usuário do login ao iniciar
     setTimeout(() => {
         const el = document.getElementById('loginUser');
         if (el && document.getElementById('loginContainer').style.display !== 'none') {

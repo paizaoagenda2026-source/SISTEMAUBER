@@ -374,7 +374,6 @@
         <button class="tab" data-tab="pagamentos">💰 Sub Pagamentos</button>
         <button class="tab" data-tab="banco">🏦 Banco</button>
         <button class="tab" data-tab="fluxocaixa">💵 Fluxo de Caixa</button>
-        <button class="tab" data-tab="doc">📁 Comprovante</button>
         <button class="tab" data-tab="compras">🛒 Compras</button>
         <button class="tab" data-tab="configuracao">⚙️ Configuração</button>
         <button class="tab" data-tab="auditoria">🔍 Auditoria</button>
@@ -596,6 +595,7 @@
             <button class="sub-tab active" onclick="switchSubTab('novo')">📤 Anexar Novo</button>
             <button class="sub-tab" onclick="switchSubTab('salvos')">📁 Documentos Salvos</button>
             <button class="sub-tab" onclick="switchSubTab('comprovantesPag')">💰 Comprovantes de Pagamento</button>
+            <button class="sub-tab" onclick="switchSubTab('leituraAuto')">🔍 Leitura Automática</button>
         </div>
         
         <div class="sub-tab-content active" id="subTabNovo">
@@ -644,6 +644,45 @@
                                 <th>Valor</th>
                                 <th>Placa</th>
                                 <th>Arquivo</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============== NOVA SUB-ABA: LEITURA AUTOMÁTICA (antiga aba "Comprovante") ============== -->
+        <div class="sub-tab-content" id="subTabLeituraAuto">
+            <div class="config-section" style="border-left-color: var(--success); background: #eaf7ed;">
+                <h3>📤 Leitura Automática de Comprovante</h3>
+                <p style="margin-bottom: 12px; color: #555; font-size: 14px;">
+                    Selecione arquivos <strong>PDF, JPG, JPEG ou PNG</strong>. O sistema vai ler o comprovante e identificar automaticamente: <strong>pagador, recebedor, valor e data</strong>. Em seguida localiza o pagamento correspondente em <strong>Sub Pagamentos</strong> e, quando os dados conferirem, marca como <strong>PAGO</strong>, lança no <strong>Fluxo de Caixa</strong> e registra no <strong>Histórico de Aluguéis</strong>.
+                </p>
+                <input type="file" id="docComprovanteInput" accept="application/pdf,image/jpeg,image/jpg,image/png" multiple style="display:none;">
+                <button class="btn-buscar" onclick="document.getElementById('docComprovanteInput').click()">📂 Buscar Arquivos</button>
+                <button class="btn-primary" id="btnSalvarDocComprovante" onclick="salvarDoc()" disabled style="opacity:0.5;">💾 Salvar e Conciliar</button>
+                <small style="display:block;color:#666;margin-top:8px;">Tamanho máximo por arquivo: 700KB. PDFs com OCR (imagem) podem demorar mais.</small>
+            </div>
+
+            <div id="docComprovantePreview" style="display:flex;flex-wrap:wrap;gap:15px;margin-top:15px;"></div>
+
+            <div class="subfolder" style="margin-top:25px;">
+                <div class="subfolder-header"><h4>📋 Comprovantes Registrados</h4></div>
+                <input type="text" class="filter-input" placeholder="🔍 Filtrar comprovantes..." id="filterDoc" style="max-width:100%;">
+                <div class="table-container">
+                    <table id="tabelaDoc">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Nome/Arquivo</th>
+                                <th>Pagador</th>
+                                <th>Recebedor</th>
+                                <th>Valor</th>
+                                <th>Pgto (Lançamento)</th>
+                                <th>Placa</th>
+                                <th>Status</th>
                                 <th>Ações</th>
                             </tr>
                         </thead>
@@ -714,46 +753,6 @@
                 <thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Valor</th><th>Tipo</th><th>Ações</th></tr></thead>
                 <tbody></tbody>
             </table>
-        </div>
-    </div>
-
-    <div class="tab-content" id="doc">
-        <h2>📁 Comprovante</h2>
-
-        <div class="config-section" style="border-left-color: var(--success); background: #eaf7ed;">
-            <h3>📤 Leitura Automática de Comprovante</h3>
-            <p style="margin-bottom: 12px; color: #555; font-size: 14px;">
-                Selecione arquivos <strong>PDF, JPG, JPEG ou PNG</strong>. O sistema vai ler o comprovante e identificar automaticamente: <strong>pagador, recebedor, valor e data</strong>. Em seguida localiza o pagamento correspondente em <strong>Sub Pagamentos</strong> e, quando os dados conferirem, marca como <strong>PAGO</strong>, lança no <strong>Fluxo de Caixa</strong> e registra no <strong>Histórico de Aluguéis</strong>.
-            </p>
-            <input type="file" id="docComprovanteInput" accept="application/pdf,image/jpeg,image/jpg,image/png" multiple style="display:none;">
-            <button class="btn-buscar" onclick="document.getElementById('docComprovanteInput').click()">📂 Buscar Arquivos</button>
-            <button class="btn-primary" id="btnSalvarDocComprovante" onclick="salvarDoc()" disabled style="opacity:0.5;">💾 Salvar e Conciliar</button>
-            <small style="display:block;color:#666;margin-top:8px;">Tamanho máximo por arquivo: 700KB. PDFs com OCR (imagem) podem demorar mais.</small>
-        </div>
-
-        <div id="docComprovantePreview" style="display:flex;flex-wrap:wrap;gap:15px;margin-top:15px;"></div>
-
-        <div class="subfolder" style="margin-top:25px;">
-            <div class="subfolder-header"><h4>📋 Comprovantes Registrados</h4></div>
-            <input type="text" class="filter-input" placeholder="🔍 Filtrar comprovantes..." id="filterDoc" style="max-width:100%;">
-            <div class="table-container">
-                <table id="tabelaDoc">
-                    <thead>
-                        <tr>
-                            <th>Data</th>
-                            <th>Nome/Arquivo</th>
-                            <th>Pagador</th>
-                            <th>Recebedor</th>
-                            <th>Valor</th>
-                            <th>Pgto (Lançamento)</th>
-                            <th>Placa</th>
-                            <th>Status</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
         </div>
     </div>
 
@@ -1068,7 +1067,7 @@ const todasAbas = [
     { id: 'veiculos' }, { id: 'clientes' }, { id: 'locacoes' }, { id: 'locEncerrada' },
     { id: 'manutencao' }, { id: 'mecanico' }, { id: 'usuario' }, { id: 'garagem' },
     { id: 'sos' }, { id: 'comprovantes' }, { id: 'pagamentos' }, { id: 'banco' },
-    { id: 'fluxocaixa' }, { id: 'doc' }, { id: 'compras' },
+    { id: 'fluxocaixa' }, { id: 'compras' },
     { id: 'configuracao' }, { id: 'auditoria' }, { id: 'pendente' }, { id: 'historico' },
     { id: 'vistoria' }
 ];
@@ -1092,8 +1091,8 @@ const permissoesPadrao = {
         }, 
         veiculos: {} 
     },
-    OFICINA: { abas: { veiculos:true,clientes:false,locacoes:false,locEncerrada:false,manutencao:true,mecanico:true,usuario:false,garagem:false,sos:false,comprovantes:false,pagamentos:false,banco:false,fluxocaixa:false,doc:false,compras:false,configuracao:false,auditoria:false,pendente:false,historico:false,vistoria:true }, botoes: { veiculos_salvar:true, manutencao_salvar:true, mecanico_salvar:true, vistoria_camera:true }, veiculos: {} },
-    VISITANTE: { abas: { veiculos:false,clientes:false,locacoes:false,locEncerrada:false,manutencao:false,mecanico:false,usuario:false,garagem:true,sos:false,comprovantes:false,pagamentos:false,banco:false,fluxocaixa:false,doc:false,compras:false,configuracao:false,auditoria:false,pendente:false,historico:false,vistoria:false }, botoes: { garagem_buscar:true, garagem_salvar:true }, veiculos: {} }
+    OFICINA: { abas: { veiculos:true,clientes:false,locacoes:false,locEncerrada:false,manutencao:true,mecanico:true,usuario:false,garagem:false,sos:false,comprovantes:false,pagamentos:false,banco:false,fluxocaixa:false,compras:false,configuracao:false,auditoria:false,pendente:false,historico:false,vistoria:true }, botoes: { veiculos_salvar:true, manutencao_salvar:true, mecanico_salvar:true, vistoria_camera:true }, veiculos: {} },
+    VISITANTE: { abas: { veiculos:false,clientes:false,locacoes:false,locEncerrada:false,manutencao:false,mecanico:false,usuario:false,garagem:true,sos:false,comprovantes:false,pagamentos:false,banco:false,fluxocaixa:false,compras:false,configuracao:false,auditoria:false,pendente:false,historico:false,vistoria:false }, botoes: { garagem_buscar:true, garagem_salvar:true }, veiculos: {} }
 };
 
 let selfieStream = null, selfieDataUrl = null, selfieClienteTemp = null, selfieUsuarioTemp = null, selfieDestino = 'cliente';
@@ -1325,17 +1324,14 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
 function sairSistema() {
     if (!confirm('Sair do sistema?')) return;
     try { if (document.fullscreenElement) document.exitFullscreen(); } catch(e){}
-    // Garantir que o overlay do guincho seja fechado ao sair
     const overlay = document.getElementById('guinchoOverlay');
     if (overlay) { overlay.classList.remove('active'); overlay.style.display = 'none'; }
     document.getElementById('mainContainer').style.display = 'none';
     document.getElementById('loginContainer').style.display = 'flex';
-    // Pré-preenche o usuário padrão e limpa a senha
     document.getElementById('loginUser').value = 'SERGIO';
     document.getElementById('loginPassword').value = '';
     document.getElementById('loginError').style.display = 'none';
     usuarioLogado = null;
-    // Focar no campo de senha ao sair (usuário já está preenchido)
     setTimeout(() => {
         const el = document.getElementById('loginPassword');
         if (el) el.focus();
@@ -1351,7 +1347,6 @@ document.querySelectorAll('.tab').forEach(tab => {
         this.classList.add('active');
         const content = document.getElementById(tabId);
         if (content && !content.classList.contains('hidden-content')) content.classList.add('active');
-        // Reaplica datas automáticas em todas as abas
         preencherDatasAutomaticas();
         if (tabId === 'veiculos') atualizarTabelaVeiculos();
         if (tabId === 'clientes') atualizarTabelaClientes();
@@ -1365,9 +1360,8 @@ document.querySelectorAll('.tab').forEach(tab => {
         if (tabId === 'fluxocaixa') atualizarTabelaFluxoCaixa();
         if (tabId === 'garagem') atualizarGaleriaGaragem();
         if (tabId === 'sos') { atualizarGaleriaSOS(); atualizarImagemGuincho(); }
-        if (tabId === 'comprovantes') { atualizarComboPlacasDocumentos(); atualizarGaleriaComprovantes(); atualizarTabelaComprovantesPag(); }
+        if (tabId === 'comprovantes') { atualizarComboPlacasDocumentos(); atualizarGaleriaComprovantes(); atualizarTabelaComprovantesPag(); atualizarTabelaDoc(); }
         if (tabId === 'banco') atualizarTabelaBancos();
-        if (tabId === 'doc') atualizarTabelaDoc();
         if (tabId === 'pendente') atualizarTabelaPendentes();
         if (tabId === 'vistoria') atualizarAbasVistoria();
         if (tabId === 'compras') atualizarTabelaCompras();
@@ -4124,7 +4118,7 @@ async function gerarESalvarContratosAutomaticos(locacao) {
 function switchSubTab(t) {
     document.querySelectorAll('#comprovantes .sub-tab').forEach(x => x.classList.remove('active'));
     document.querySelectorAll('#comprovantes .sub-tab-content').forEach(x => x.classList.remove('active'));
-    const map = { novo: 'subTabNovo', salvos: 'subTabSalvos', comprovantesPag: 'subTabComprovantesPag' };
+    const map = { novo: 'subTabNovo', salvos: 'subTabSalvos', comprovantesPag: 'subTabComprovantesPag', leituraAuto: 'subTabLeituraAuto' };
     const targetId = map[t];
     if (targetId) {
         const el = document.getElementById(targetId);
@@ -4137,6 +4131,7 @@ function switchSubTab(t) {
     if (t === 'novo') atualizarComboPlacasDocumentos();
     if (t === 'salvos') atualizarGaleriaComprovantes();
     if (t === 'comprovantesPag') atualizarTabelaComprovantesPag();
+    if (t === 'leituraAuto') atualizarTabelaDoc();
 }
 
 function atualizarAbasVistoria() {
@@ -4460,7 +4455,6 @@ function salvarSOS() {
     atualizarGaleriaSOS();
     salvarDB();
     registrarAuditoria('Cadastro', `${qtd} imagem(ns) salva(s) no SOS`);
-    // Atualiza a imagem do cartão/overlay com a última imagem enviada
     atualizarImagemGuincho();
     alert(`✅ ${qtd} imagem(ns) salva(s)!`);
 }
@@ -4493,7 +4487,6 @@ function excluirFotoSOS(i) {
     db.imagens.sos.fotos.splice(i, 1);
     atualizarGaleriaSOS(); 
     salvarDB();
-    // Atualiza a imagem do cartão/overlay (volta ao fallback se não houver mais imagens)
     atualizarImagemGuincho();
     registrarAuditoria('Exclusão', `Foto excluída do SOS (índice ${i})`);
 }
@@ -4737,10 +4730,38 @@ function salvarCompra() {
     } else {
         db.compras.push(compra);
         registrarAuditoria('Cadastro', `Nova compra: ${produto}`);
-        alert('✅ Compra salva!');
+
+        // ============== LANÇAR NO FLUXO DE CAIXA (SAÍDA) ==============
+        const valorNum = parseMoeda(valorTotal || valorUnitario);
+        if (valorNum > 0) {
+            if (!Array.isArray(db.fluxoCaixa)) db.fluxoCaixa = [];
+            db.fluxoCaixa.push({
+                data: data,
+                descricao: `Compra: ${produto} - ${fornecedor}`,
+                categoria: 'Compras',
+                valor: valorTotal || valorUnitario,
+                valorNumerico: valorNum,
+                tipo: 'saida'
+            });
+        }
+
+        // ============== LANÇAR NO HISTÓRICO GERAL ==============
+        if (!Array.isArray(db.historico)) db.historico = [];
+        db.historico.push({
+            data: data,
+            descricao: `Compra: ${produto}${quantidade ? ' (Qtd: ' + quantidade + ')' : ''}`,
+            placa: placa,
+            valor: valorTotal || valorUnitario,
+            fornecedor: fornecedor,
+            oficina: ''
+        });
+
+        alert('✅ Compra salva!\n\n💰 Lançada no Fluxo de Caixa (saída)\n📝 Registrada no Histórico Geral');
     }
 
     atualizarTabelaCompras();
+    atualizarTabelaFluxoCaixa();
+    atualizarTabelaHistorico();
     salvarDB();
     limparCamposCompra();
     preencherDatasAutomaticas();
@@ -4797,7 +4818,6 @@ function limparCamposCompra() {
         const vu = parseMoeda(valEl.value);
         if (qtd > 0 && vu > 0) {
             const total = qtd * vu;
-            // Formata o total sem disparar o listener money novamente (que sobrescreveria)
             const formatado = 'R$ ' + total.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
             totEl.value = formatado;
         }
@@ -6832,7 +6852,6 @@ async function inicializarSistemaCompleto() {
     configurarInputMultiplasImagens();
     configurarBotaoInstalar();
     configurarBuscaFipeAutomatica();
-    // Aplica a imagem salva no cartão do guincho e no overlay (se houver)
     atualizarImagemGuincho();
 
     if (typeof pdfjsLib !== 'undefined') {
@@ -6850,7 +6869,6 @@ async function inicializarSistemaCompleto() {
     }
     atualizarTabelaComprovantesPag();
 
-    // Garantir que o login tenha o usuário padrão pré-preenchido
     const loginUserEl = document.getElementById('loginUser');
     if (loginUserEl && !loginUserEl.value) loginUserEl.value = 'SERGIO';
 

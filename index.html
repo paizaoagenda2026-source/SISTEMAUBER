@@ -242,6 +242,42 @@
             letter-spacing: 6px;
             text-shadow: 0 0 15px rgba(244,162,97,0.8);
         }
+        /* Modo tela cheia do cartão do guincho (exibido ao iniciar o sistema) */
+        .guincho-card.guincho-fullscreen {
+            position: fixed;
+            inset: 0;
+            width: auto;
+            height: auto;
+            min-height: 100vh;
+            margin: 0;
+            border-radius: 0;
+            border-width: 14px;
+            z-index: 99998;
+            cursor: pointer;
+        }
+        .guincho-card.guincho-fullscreen .guincho-emoji {
+            font-size: clamp(120px, 22vw, 260px);
+        }
+        .guincho-card.guincho-fullscreen .guincho-titulo {
+            font-size: clamp(48px, 10vw, 140px);
+        }
+        .guincho-card.guincho-fullscreen .guincho-texto {
+            font-size: clamp(24px, 5vw, 60px);
+        }
+        .guincho-card.guincho-fullscreen::after {
+            content: '👆 Toque para continuar';
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255,255,255,0.9);
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-shadow: 0 0 12px rgba(0,0,0,0.8);
+            animation: guinchoPulse 1.4s infinite alternate;
+            pointer-events: none;
+        }
         @keyframes guinchoBlink {
             0%   { border-color: #ff0000; box-shadow: 0 0 0 8px rgba(255,0,0,0.7), 0 0 60px 25px #ff0000, inset 0 0 60px rgba(255,0,0,0.55); }
             33%  { border-color: #0033ff; box-shadow: 0 0 0 8px rgba(0,51,255,0.7), 0 0 60px 25px #0033ff, inset 0 0 60px rgba(0,51,255,0.55); }
@@ -491,8 +527,8 @@
             <input type="file" id="sosImagem" accept="image/*" multiple style="display:none;">
             <div class="saved-images" id="sosPreviewSelecionadas"></div>
         </div>
-        <button class="btn-buscar" onclick="document.getElementById('sosImagem').click()">📂 Buscar</button>
-        <button class="btn-primary" onclick="salvarSOS()">💾 Salvar</button>
+        <button class="btn-buscar" data-permissao="sos_buscar" onclick="document.getElementById('sosImagem').click()">📂 Buscar</button>
+        <button class="btn-primary" data-permissao="sos_salvar" onclick="salvarSOS()">💾 Salvar</button>
         <div class="subfolder" style="margin-top:20px;">
             <div class="subfolder-header"><h4>📸 Imagens Salvas</h4></div>
             <div class="saved-images" id="sosSavedImages"></div>
@@ -1168,6 +1204,8 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
         const tabSOS = document.querySelector('.tab[data-tab="sos"]');
         if (tabSOS && !tabSOS.classList.contains('hidden-tab')) {
             tabSOS.click();
+            // Cartão do guincho em tela cheia ao iniciar o sistema
+            abrirGuinchoFullscreen();
         }
     } else {
         document.getElementById('loginError').style.display = 'block';
@@ -1175,9 +1213,28 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     }
 });
 
+/* ============================================================
+   GUINCHO 24 HORAS — TELA CHEIA AO INICIAR O SISTEMA
+   ============================================================ */
+function abrirGuinchoFullscreen() {
+    const card = document.getElementById('guinchoCard');
+    if (!card) return;
+    card.classList.add('guincho-fullscreen');
+    card.onclick = fecharGuinchoFullscreen;
+}
+
+function fecharGuinchoFullscreen() {
+    const card = document.getElementById('guinchoCard');
+    if (!card) return;
+    card.classList.remove('guincho-fullscreen');
+    card.onclick = null;
+}
+
 function sairSistema() {
     if (!confirm('Sair do sistema?')) return;
     try { if (document.fullscreenElement) document.exitFullscreen(); } catch(e){}
+    // Garantir que o guincho saia do modo tela cheia ao sair
+    fecharGuinchoFullscreen();
     document.getElementById('mainContainer').style.display = 'none';
     document.getElementById('loginContainer').style.display = 'flex';
     document.getElementById('loginUser').value = '';
@@ -4324,6 +4381,7 @@ function atualizarGaleriaSOS() {
     if (!container) return;
     container.innerHTML = '';
     const fotos = (db.imagens && db.imagens.sos && Array.isArray(db.imagens.sos.fotos)) ? db.imagens.sos.fotos : [];
+    const podeExcluir = temPermissao('sos_salvar');
     if (fotos.length === 0) {
         const p = document.createElement('p'); p.style.color = '#999'; p.textContent = 'Nenhuma imagem salva.';
         container.appendChild(p); return;
@@ -4333,9 +4391,11 @@ function atualizarGaleriaSOS() {
         const img = document.createElement('img'); img.src = src; img.alt = 'foto';
         img.addEventListener('click', (ev) => { ev.stopPropagation(); openImageModal(src, fotos, i); });
         div.appendChild(img);
-        const btn = document.createElement('button'); btn.className = 'delete-btn'; btn.textContent = '×';
-        btn.addEventListener('click', (ev) => { ev.stopPropagation(); excluirFotoSOS(i); });
-        div.appendChild(btn);
+        if (podeExcluir) {
+            const btn = document.createElement('button'); btn.className = 'delete-btn'; btn.textContent = '×';
+            btn.addEventListener('click', (ev) => { ev.stopPropagation(); excluirFotoSOS(i); });
+            div.appendChild(btn);
+        }
         container.appendChild(div);
     });
 }

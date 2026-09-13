@@ -198,6 +198,60 @@
         .doc-veiculo-status { display: flex; align-items: center; gap: 12px; margin-top: 8px; flex-wrap: wrap; }
         .doc-veiculo-status .badge { background: var(--success); color: #fff; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; }
         .doc-veiculo-status .badge.warn { background: var(--warning); color: #333; }
+
+        /* ===================== CARTÃO DE GUINCHO 24 HORAS ===================== */
+        .guincho-card {
+            position: relative;
+            width: 100%;
+            min-height: calc(100vh - 140px);
+            background: linear-gradient(135deg, #0d1b2a 0%, #1a3c6e 50%, #0d1b2a 100%);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 10px solid #ff0000;
+            margin: 0 0 25px 0;
+            overflow: hidden;
+            animation: guinchoBlink 0.5s infinite;
+        }
+        .guincho-content {
+            text-align: center;
+            color: #fff;
+            padding: 30px 20px;
+            z-index: 2;
+        }
+        .guincho-emoji {
+            font-size: clamp(80px, 15vw, 160px);
+            line-height: 1;
+            margin-bottom: 15px;
+            filter: drop-shadow(0 0 25px rgba(255,255,255,0.9));
+            animation: guinchoPulse 1s infinite alternate;
+        }
+        .guincho-titulo {
+            font-size: clamp(32px, 7vw, 80px);
+            font-weight: 900;
+            letter-spacing: 4px;
+            margin-bottom: 15px;
+            text-shadow: 0 0 20px rgba(255,255,255,0.95), 0 0 45px rgba(255,0,0,0.8);
+            color: #fff;
+        }
+        .guincho-texto {
+            font-size: clamp(18px, 3.5vw, 36px);
+            font-weight: bold;
+            color: #f4a261;
+            letter-spacing: 6px;
+            text-shadow: 0 0 15px rgba(244,162,97,0.8);
+        }
+        @keyframes guinchoBlink {
+            0%   { border-color: #ff0000; box-shadow: 0 0 0 8px rgba(255,0,0,0.7), 0 0 60px 25px #ff0000, inset 0 0 60px rgba(255,0,0,0.55); }
+            33%  { border-color: #0033ff; box-shadow: 0 0 0 8px rgba(0,51,255,0.7), 0 0 60px 25px #0033ff, inset 0 0 60px rgba(0,51,255,0.55); }
+            66%  { border-color: #ffffff; box-shadow: 0 0 0 8px rgba(255,255,255,0.85), 0 0 60px 25px #ffffff, inset 0 0 60px rgba(255,255,255,0.6); }
+            100% { border-color: #ff0000; box-shadow: 0 0 0 8px rgba(255,0,0,0.7), 0 0 60px 25px #ff0000, inset 0 0 60px rgba(255,0,0,0.55); }
+        }
+        @keyframes guinchoPulse {
+            from { transform: scale(1); }
+            to   { transform: scale(1.12); }
+        }
     </style>
 </head>
 <body>
@@ -207,7 +261,7 @@
         <h1>🦁 PAIZÃO UBER 2.0</h1>
         <h2>SISTEMA DE LOCAÇÃO DE CARROS</h2>
         <form id="loginForm">
-            <input type="text" id="loginUser" placeholder="Usuário" required autocomplete="off" oninput="this.value = this.value.toUpperCase()">
+            <input type="text" id="loginUser" placeholder="Usuário" required autocomplete="off" autofocus oninput="this.value = this.value.toUpperCase()">
             <input type="password" id="loginPassword" placeholder="Senha" required>
             <button type="submit" id="loginButton">Entrar</button>
         </form>
@@ -230,7 +284,7 @@
         <button class="tab" data-tab="pagamentos">💰 Sub Pagamentos</button>
         <button class="tab" data-tab="banco">🏦 Banco</button>
         <button class="tab" data-tab="fluxocaixa">💵 Fluxo de Caixa</button>
-        <!-- Aba Comprovante (doc) removida conforme solicitado -->
+        <button class="tab" data-tab="doc">📁 Comprovante</button>
         <button class="tab" data-tab="compras">🛒 Compras</button>
         <button class="tab" data-tab="configuracao">⚙️ Configuração</button>
         <button class="tab" data-tab="auditoria">🔍 Auditoria</button>
@@ -423,6 +477,14 @@
     </div>
 
     <div class="tab-content" id="sos">
+        <div class="guincho-card" id="guinchoCard">
+            <div class="guincho-content">
+                <div class="guincho-emoji">🚛</div>
+                <h1 class="guincho-titulo">GUINCHO 24 HORAS</h1>
+                <p class="guincho-texto">ATENDIMENTO 24 HORAS</p>
+            </div>
+        </div>
+
         <h2>🆘 SOS</h2>
         <div class="subfolder">
             <div class="subfolder-header"><h4>📁 Selecionar Imagens (múltiplas)</h4></div>
@@ -564,6 +626,46 @@
         </div>
     </div>
 
+    <div class="tab-content" id="doc">
+        <h2>📁 Comprovante</h2>
+
+        <div class="config-section" style="border-left-color: var(--success); background: #eaf7ed;">
+            <h3>📤 Leitura Automática de Comprovante</h3>
+            <p style="margin-bottom: 12px; color: #555; font-size: 14px;">
+                Selecione arquivos <strong>PDF, JPG, JPEG ou PNG</strong>. O sistema vai ler o comprovante e identificar automaticamente: <strong>pagador, recebedor, valor e data</strong>. Em seguida localiza o pagamento correspondente em <strong>Sub Pagamentos</strong> e, quando os dados conferirem, marca como <strong>PAGO</strong>, lança no <strong>Fluxo de Caixa</strong> e registra no <strong>Histórico de Aluguéis</strong>.
+            </p>
+            <input type="file" id="docComprovanteInput" accept="application/pdf,image/jpeg,image/jpg,image/png" multiple style="display:none;">
+            <button class="btn-buscar" onclick="document.getElementById('docComprovanteInput').click()">📂 Buscar Arquivos</button>
+            <button class="btn-primary" id="btnSalvarDocComprovante" onclick="salvarDoc()" disabled style="opacity:0.5;">💾 Salvar e Conciliar</button>
+            <small style="display:block;color:#666;margin-top:8px;">Tamanho máximo por arquivo: 700KB. PDFs com OCR (imagem) podem demorar mais.</small>
+        </div>
+
+        <div id="docComprovantePreview" style="display:flex;flex-wrap:wrap;gap:15px;margin-top:15px;"></div>
+
+        <div class="subfolder" style="margin-top:25px;">
+            <div class="subfolder-header"><h4>📋 Comprovantes Registrados</h4></div>
+            <input type="text" class="filter-input" placeholder="🔍 Filtrar comprovantes..." id="filterDoc" style="max-width:100%;">
+            <div class="table-container">
+                <table id="tabelaDoc">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Nome/Arquivo</th>
+                            <th>Pagador</th>
+                            <th>Recebedor</th>
+                            <th>Valor</th>
+                            <th>Pgto (Lançamento)</th>
+                            <th>Placa</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     <div class="tab-content" id="compras"><h2>🛒 Compras</h2><div class="form-grid"><div class="form-group"><label>Data</label><input type="date" id="compData"></div><div class="form-group"><label>Produto</label><input type="text" id="compProduto"></div><div class="form-group"><label>Fornecedor</label><input type="text" id="compFornecedor"></div><div class="form-group"><label>Placa</label><input type="text" id="compPlaca"></div><div class="form-group"><label>Qtd</label><input type="number" id="compQuantidade"></div><div class="form-group"><label>Valor Unit</label><input type="text" id="compValorUnitario" class="money"></div><div class="form-group"><label>Total</label><input type="text" id="compValorTotal" class="money" readonly></div><div class="form-group"><label>Status</label><select id="compStatus"><option value="pendente">Pendente</option><option value="pago">Pago</option></select></div></div><button class="btn-primary" onclick="salvarCompra()">💾 Salvar</button><div class="table-container"><table id="tabelaCompras"><thead><tr><th>Data</th><th>Produto</th><th>Fornecedor</th><th>Placa</th><th>Valor</th><th>Status</th><th>Ações</th></tr></thead><tbody></tbody></table></div></div>
 
     <div class="tab-content" id="configuracao"><h2>⚙️ Configurações</h2><div class="config-section"><h3>🔧 Gerais</h3><div class="form-grid"><div class="form-group"><label>Empresa</label><input type="text" id="configEmpresa" value="LOBÃO"></div><div class="form-group"><label>CNPJ</label><input type="text" id="configCnpj"></div><div class="form-group"><label>Telefone</label><input type="text" id="configTelefone"></div><div class="form-group"><label>Email</label><input type="text" id="configEmail"></div><div class="form-group"><label>Endereço</label><input type="text" id="configEndereco"></div></div></div><button class="btn-primary" onclick="salvarConfiguracao()">💾 Salvar</button></div>
@@ -593,8 +695,7 @@
         <h2>📜 Histórico</h2>
         <div class="sub-tabs">
             <button class="sub-tab active" onclick="switchSubTabHistorico('geral')">📜 Histórico Geral</button>
-            <!-- Sub-aba de aluguéis será ocultada via JS para não-ADMs -->
-            <button class="sub-tab" onclick="switchSubTabHistorico('alugueis')" id="subTabHistAlugueisBtn">💰 Histórico de Aluguéis</button>
+            <button class="sub-tab" onclick="switchSubTabHistorico('alugueis')">💰 Histórico de Aluguéis</button>
         </div>
         <div class="sub-tab-content active" id="subTabHistGeral">
             <input type="text" class="filter-input" placeholder="🔍 Filtrar histórico..." id="filterHistorico">
@@ -792,6 +893,7 @@ function criarDBPadrao() {
         alugueis: [], fluxoCaixa: [], documentos: [], compras: [], auditoria: [], bancos: [], pendentes: [], historico: [],
         historicoAlugueis: [],
         comprovantesPagamento: [],
+        comprovantesDoc: [],
         documentosPlacas: {},
         docsVeiculos: [],
         contratos: { contratoLocacao:{}, termoResponsabilidade:{}, notaPromissoria:{} },
@@ -824,7 +926,7 @@ async function carregarDB() {
     if (!db || typeof db !== 'object') db = criarDBPadrao();
     ['veiculos','clientes','locacoes','locacoesEncerradas','manutencao','mecanico',
      'alugueis','fluxoCaixa','documentos','compras','auditoria','bancos',
-     'pendentes','historico','usuarios','historicoAlugueis','comprovantesPagamento','docsVeiculos'].forEach(k => {
+     'pendentes','historico','usuarios','historicoAlugueis','comprovantesPagamento','docsVeiculos','comprovantesDoc'].forEach(k => {
         if (!Array.isArray(db[k])) db[k] = [];
     });
     if (!db.contratos) db.contratos = { contratoLocacao:{}, termoResponsabilidade:{}, notaPromissoria:{} };
@@ -867,33 +969,15 @@ async function carregarDB() {
 
 async function salvarDB() {
     if (!db) return;
-    try {
-        const jsonStr = JSON.stringify(db);
-        const sizeKB = Math.round(new Blob([jsonStr]).size / 1024);
-        if (sizeKB > 900) {
-            console.warn(`Aviso: Banco de dados grande (${sizeKB} KB).`);
-            if (!window._avisoTamanhoDB) {
-                window._avisoTamanhoDB = true;
-                alert(`⚠️ Atenção: O banco de dados está muito grande (${sizeKB} KB).\nPara evitar perda de dados na nuvem, remova algumas imagens antigas da Garagem ou SOS.\nRecomendado: menos de 800 KB.`);
-            }
-        }
-        localStorage.setItem(DB_STORAGE_KEY, jsonStr);
-    } catch (e) {
-        console.error("Erro localStorage:", e);
-    }
-    try { 
-        await dbFirestore.collection('lobao_db').doc('principal').set(db); 
-    } catch (error) { 
-        console.error('Erro Firestore:', error); 
-        alert('⚠️ Erro ao salvar no servidor em nuvem. Verifique sua conexão ou o tamanho dos dados.');
-    }
+    try { localStorage.setItem(DB_STORAGE_KEY, JSON.stringify(db)); } catch (e) {}
+    try { await dbFirestore.collection('lobao_db').doc('principal').set(db); } catch (error) { console.error('Erro Firestore:', error); }
 }
 
 const todasAbas = [
     { id: 'veiculos' }, { id: 'clientes' }, { id: 'locacoes' }, { id: 'locEncerrada' },
     { id: 'manutencao' }, { id: 'mecanico' }, { id: 'usuario' }, { id: 'garagem' },
     { id: 'sos' }, { id: 'comprovantes' }, { id: 'pagamentos' }, { id: 'banco' },
-    { id: 'fluxocaixa' }, { id: 'compras' },
+    { id: 'fluxocaixa' }, { id: 'doc' }, { id: 'compras' },
     { id: 'configuracao' }, { id: 'auditoria' }, { id: 'pendente' }, { id: 'historico' },
     { id: 'vistoria' }
 ];
@@ -907,7 +991,7 @@ const permissoesPadrao = {
             manutencao:true, mecanico:false, usuario:false, 
             garagem:true, sos:true, comprovantes:true, 
             pagamentos:false, banco:true, fluxocaixa:false, 
-            compras:false, configuracao:false, 
+            doc:true, compras:false, configuracao:false, 
             auditoria:false, pendente:false, historico:true, vistoria:true 
         }, 
         botoes: { 
@@ -917,8 +1001,8 @@ const permissoesPadrao = {
         }, 
         veiculos: {} 
     },
-    OFICINA: { abas: { veiculos:true,clientes:false,locacoes:false,locEncerrada:false,manutencao:true,mecanico:true,usuario:false,garagem:false,sos:false,comprovantes:false,pagamentos:false,banco:false,fluxocaixa:false,compras:false,configuracao:false,auditoria:false,pendente:false,historico:false,vistoria:true }, botoes: { veiculos_salvar:true, manutencao_salvar:true, mecanico_salvar:true, vistoria_camera:true }, veiculos: {} },
-    VISITANTE: { abas: { veiculos:false,clientes:false,locacoes:false,locEncerrada:false,manutencao:false,mecanico:false,usuario:false,garagem:true,sos:false,comprovantes:false,pagamentos:false,banco:false,fluxocaixa:false,compras:false,configuracao:false,auditoria:false,pendente:false,historico:false,vistoria:false }, botoes: { garagem_buscar:true, garagem_salvar:true }, veiculos: {} }
+    OFICINA: { abas: { veiculos:true,clientes:false,locacoes:false,locEncerrada:false,manutencao:true,mecanico:true,usuario:false,garagem:false,sos:false,comprovantes:false,pagamentos:false,banco:false,fluxocaixa:false,doc:false,compras:false,configuracao:false,auditoria:false,pendente:false,historico:false,vistoria:true }, botoes: { veiculos_salvar:true, manutencao_salvar:true, mecanico_salvar:true, vistoria_camera:true }, veiculos: {} },
+    VISITANTE: { abas: { veiculos:false,clientes:false,locacoes:false,locEncerrada:false,manutencao:false,mecanico:false,usuario:false,garagem:true,sos:false,comprovantes:false,pagamentos:false,banco:false,fluxocaixa:false,doc:false,compras:false,configuracao:false,auditoria:false,pendente:false,historico:false,vistoria:false }, botoes: { garagem_buscar:true, garagem_salvar:true }, veiculos: {} }
 };
 
 let selfieStream = null, selfieDataUrl = null, selfieClienteTemp = null, selfieUsuarioTemp = null, selfieDestino = 'cliente';
@@ -933,6 +1017,7 @@ let galeriaIndexAtual = 0;
 let relatorioMecanicoTemp = [];
 
 let comprovantesPagTemp = [];
+let docComprovantesTemp = [];
 let idbHandle = null;
 let docVeiculoAtual = null;
 
@@ -1078,6 +1163,12 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
         aplicarPermissoes(u);
         registrarAuditoria('Login', `Login: ${user}`);
         try { if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen(); } catch(e){}
+
+        // === Abrir automaticamente a aba SOS ===
+        const tabSOS = document.querySelector('.tab[data-tab="sos"]');
+        if (tabSOS && !tabSOS.classList.contains('hidden-tab')) {
+            tabSOS.click();
+        }
     } else {
         document.getElementById('loginError').style.display = 'block';
         registrarAuditoria('Login', `Falha login: ${user}`);
@@ -1093,6 +1184,11 @@ function sairSistema() {
     document.getElementById('loginPassword').value = '';
     document.getElementById('loginError').style.display = 'none';
     usuarioLogado = null;
+    // Focar no campo de usuário ao sair
+    setTimeout(() => {
+        const el = document.getElementById('loginUser');
+        if (el) el.focus();
+    }, 50);
 }
 
 document.querySelectorAll('.tab').forEach(tab => {
@@ -1104,6 +1200,7 @@ document.querySelectorAll('.tab').forEach(tab => {
         this.classList.add('active');
         const content = document.getElementById(tabId);
         if (content && !content.classList.contains('hidden-content')) content.classList.add('active');
+        // Reaplica datas automáticas em todas as abas
         preencherDatasAutomaticas();
         if (tabId === 'veiculos') atualizarTabelaVeiculos();
         if (tabId === 'clientes') atualizarTabelaClientes();
@@ -1119,6 +1216,7 @@ document.querySelectorAll('.tab').forEach(tab => {
         if (tabId === 'sos') atualizarGaleriaSOS();
         if (tabId === 'comprovantes') { atualizarComboPlacasDocumentos(); atualizarGaleriaComprovantes(); atualizarTabelaComprovantesPag(); }
         if (tabId === 'banco') atualizarTabelaBancos();
+        if (tabId === 'doc') atualizarTabelaDoc();
         if (tabId === 'pendente') atualizarTabelaPendentes();
         if (tabId === 'vistoria') atualizarAbasVistoria();
     });
@@ -1130,10 +1228,6 @@ document.getElementById('fullscreenBtn').addEventListener('click', function() {
 });
 
 function switchSubTabHistorico(tipo) {
-    if (tipo === 'alugueis' && usuarioLogado && usuarioLogado.tipo !== 'ADM') {
-        alert('⛔ Acesso restrito apenas para Administradores.');
-        return;
-    }
     const tabs = document.querySelectorAll('#historico .sub-tab');
     const contents = document.querySelectorAll('#historico .sub-tab-content');
     tabs.forEach(t => t.classList.remove('active'));
@@ -1159,7 +1253,7 @@ function setupFilter(inputId, tableId) {
         });
     });
 }
-['filterVeiculos','filterClientes','filterLocacoes','filterManutencao','filterMecanico','filterUsuario','filterPagamentos','filterBancos','filterFluxoCaixa','filterCompras','filterAuditoria','filterLocEncerrada','filterPendentes','filterHistorico','filterHistoricoAlugueis','filterComprovantesPag'].forEach(id => {
+['filterVeiculos','filterClientes','filterLocacoes','filterManutencao','filterMecanico','filterUsuario','filterPagamentos','filterBancos','filterFluxoCaixa','filterDoc','filterCompras','filterAuditoria','filterLocEncerrada','filterPendentes','filterHistorico','filterHistoricoAlugueis','filterComprovantesPag'].forEach(id => {
     setupFilter(id, id.replace('filter', 'tabela'));
 });
 
@@ -1240,6 +1334,9 @@ function preencherDataInicioLocacao() {
     }
 }
 
+/* ============================================================
+   PREENCHIMENTO AUTOMÁTICO DE DATAS (apenas se vazio)
+   ============================================================ */
 function preencherDatasAutomaticas() {
     const hoje = obterDataHojeISO();
     const campos = ['cliDataCadastro', 'mecData', 'fcData', 'compData', 'pendData', 'relMecDataInicio', 'relMecDataFim'];
@@ -1250,6 +1347,9 @@ function preencherDatasAutomaticas() {
     preencherDataInicioLocacao();
 }
 
+/* ============================================================
+   CONSULTA AUTOMÁTICA DA TABELA FIPE
+   ============================================================ */
 function normalizarTextoFipe(t) {
     return String(t || '')
         .toUpperCase()
@@ -1680,6 +1780,10 @@ function excluirVeiculo(i) {
     db.comprovantesPagamento = db.comprovantesPagamento.filter(c => !c || normalizarPlaca(c.placa) !== placaNorm);
     if (antes - db.comprovantesPagamento.length > 0) relatorio.push(`• ${antes - db.comprovantesPagamento.length} comprovante(s) de pagamento`);
 
+    antes = db.comprovantesDoc.length;
+    db.comprovantesDoc = db.comprovantesDoc.filter(c => !c || normalizarPlaca(c.placa) !== placaNorm);
+    if (antes - db.comprovantesDoc.length > 0) relatorio.push(`• ${antes - db.comprovantesDoc.length} comprovante(s) DOC`);
+
     if (db.documentosPlacas) {
         const chave = Object.keys(db.documentosPlacas).find(k => normalizarPlaca(k) === placaNorm);
         if (chave) {
@@ -1712,6 +1816,7 @@ function excluirVeiculo(i) {
     atualizarTabelaMecanico();
     atualizarTabelaPendentes();
     atualizarTabelaComprovantesPag();
+    atualizarTabelaDoc();
     atualizarGaleriaComprovantes();
     atualizarTabelaFluxoCaixa();
 
@@ -2066,20 +2171,6 @@ function aplicarPermissoes(usuario) {
     document.querySelectorAll('[data-permissao]').forEach(btn => {
         btn.style.display = p.botoes?.[btn.dataset.permissao] ? '' : 'none';
     });
-    
-    // Restrição específica para Histórico de Aluguéis (somente ADM)
-    const subTabHistAlugueis = document.getElementById('subTabHistAlugueisBtn');
-    if (subTabHistAlugueis) {
-        if (usuario.tipo === 'ADM') {
-            subTabHistAlugueis.style.display = 'inline-block';
-        } else {
-            subTabHistAlugueis.style.display = 'none';
-            // Se não é ADM, força a aba geral
-            const subTabGeral = document.querySelector('#historico .sub-tab');
-            if (subTabGeral) subTabGeral.click();
-        }
-    }
-
     const firstTab = document.querySelector('.tab[data-tab]:not(.hidden-tab)');
     if (firstTab) firstTab.click();
 }
@@ -2229,6 +2320,7 @@ async function salvarLocacao() {
     const dataFim     = document.getElementById('locDataFim').value;
     if (!locatario || !fabricante || !placa || !dataInicio) { alert('Preencha todos os campos obrigatórios!'); return; }
 
+    // Prevenir que o MESMO veículo seja alugado para locatários diferentes ao mesmo tempo
     const locacaoDuplicada = db.locacoes.find((l, idx) => {
         if (locacaoEditandoIndex !== null && idx === locacaoEditandoIndex) return false;
         if (!l || !l.placa) return false;
@@ -2915,6 +3007,7 @@ function atualizarTabelaMecanico() {
     const tbody = document.querySelector('#tabelaMecanico tbody');
     if (!tbody) return;
     tbody.innerHTML = '';
+    // PENDENTES para cima, PAGOS para baixo
     const itens = (db.mecanico || []).map((m, idx) => ({
         m, idx, ordem: m.pago ? 1 : 0
     }));
@@ -3344,6 +3437,9 @@ document.addEventListener('keydown', function(e) {
 
 function fecharDespesasModal() { document.getElementById('despesasModal').classList.remove('active'); }
 
+/* ============================================================
+   CONTRATOS — 3 DOCUMENTOS EDITÁVEIS
+   ============================================================ */
 const CONTRATO_LOC_CAMPOS = ['numero','numeroInterno','locadora','locadoraEndereco','locadoraCnpj','locatario','locatarioEndereco','locatarioCep','locatarioRg','locatarioCpf','veiculo','veiculoCor','veiculoPlaca','anoFabr','anoModel','gestor','localVistoria','prazo','multaRescisao','taxaTroca','valorAluguel','limiteKm','valorKm','caucao','caucaoParcelas','caucaoDevolucao','multaInadimplencia','taxaHigienizacao','taxaEntrega','foro','data'];
 const CONTRATO_TER_CAMPOS = ['nome','rg','cpf','cnh','cnhValidade','veiculo','placa','proprietario','proprietarioCpf','prazo','data'];
 const CONTRATO_NOT_CAMPOS = ['numero','vencimento','valor','dataEmissao','credor','credorCnpj','valorExtenso','cidade','emitenteNome','emitenteCpf','emitenteDoc','emitenteDocExp','emitenteEndereco','emitenteCep','cartorio','data'];
@@ -4130,8 +4226,7 @@ function configurarInputMultiplasImagens() {
             const files = this.files;
             if (!files || files.length === 0) return;
             const inputAtual = this;
-            // Compressão mais agressiva para evitar estourar o limite do Firestore (1MB)
-            lerEComprimirArquivos(files, 600, 0.45, function(dataUrls) {
+            lerEComprimirArquivos(files, 900, 0.65, function(dataUrls) {
                 garagemImagensTemp = dataUrls;
                 renderizarPreviewGaragem();
                 try { inputAtual.value = ''; } catch(e){}
@@ -4143,7 +4238,7 @@ function configurarInputMultiplasImagens() {
             const files = this.files;
             if (!files || files.length === 0) return;
             const inputAtual = this;
-            lerEComprimirArquivos(files, 600, 0.45, function(dataUrls) {
+            lerEComprimirArquivos(files, 900, 0.65, function(dataUrls) {
                 sosImagensTemp = dataUrls;
                 renderizarPreviewSOS();
                 try { inputAtual.value = ''; } catch(e){}
@@ -4261,12 +4356,14 @@ function atualizarTabelaAlugueis() {
     tbody.innerHTML = '';
     const hojeISO = new Date().toISOString().split('T')[0];
 
+    // Calcula status primeiro
     const itens = (db.alugueis || []).map((a, idx) => {
         let status = a.status || 'pendente';
         if (status === 'pendente' && a.vencimento && a.vencimento < hojeISO) { status = 'atrasado'; a.status = status; }
         return { a, idx, status };
     });
 
+    // PENDENTES/ATRASADOS para cima, PAGOS para baixo (sort estável)
     itens.sort((x, y) => {
         const ox = x.status === 'pago' ? 1 : 0;
         const oy = y.status === 'pago' ? 1 : 0;
@@ -5109,6 +5206,7 @@ function salvarComprovantesPagamento() {
         if (!placa) semPlaca++;
         const valorNum = Number(item.valor) || 0;
 
+        // Prevenir duplicidade de comprovantes
         const duplicado = db.comprovantesPagamento.some(function(c) {
             return (c.placa === placa) &&
                    Math.abs((c.valor || 0) - valorNum) < 0.01 &&
@@ -5768,6 +5866,351 @@ function encontrarPagamentoCorrespondente(valor, placa) {
     return candidatos[0];
 }
 
+function renderizarPreviewDocComprovante() {
+    const container = document.getElementById('docComprovantePreview');
+    if (!container) return;
+    container.innerHTML = '';
+    const btn = document.getElementById('btnSalvarDocComprovante');
+    if (docComprovantesTemp.length === 0) {
+        if (btn) { btn.disabled = true; btn.style.opacity = '0.5'; }
+        return;
+    }
+    if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+
+    docComprovantesTemp.forEach(function(item, idx) {
+        const card = document.createElement('div');
+        card.className = 'comp-pag-card';
+
+        const header = document.createElement('div');
+        header.className = 'comp-pag-header';
+        header.innerHTML = '<strong>' + (item.nomeArquivo || '').replace(/</g, '&lt;') + '</strong>';
+        const btnDel = document.createElement('button');
+        btnDel.className = 'btn-danger';
+        btnDel.style.cssText = 'padding:4px 8px;font-size:12px;margin:0;';
+        btnDel.textContent = '🗑️';
+        btnDel.onclick = function() { docComprovantesTemp.splice(idx, 1); renderizarPreviewDocComprovante(); };
+        header.appendChild(btnDel);
+        card.appendChild(header);
+
+        const statusDiv = document.createElement('div');
+        statusDiv.style.textAlign = 'center';
+        const aluguelMatch = item.aluguelMatch;
+        if (aluguelMatch) {
+            const valorMatch = Math.abs((Number(aluguelMatch.valorNumerico) || parseMoeda(aluguelMatch.valor) || 0) - (item.valor || 0)) < 0.01;
+            const dataMatch = !item.dataComprovante || !aluguelMatch.vencimento || converterDataBRparaISO(item.dataComprovante) === aluguelMatch.vencimento;
+            if (valorMatch && dataMatch) {
+                statusDiv.innerHTML = '<span class="status-pago" style="font-size:11px;">✅ PAGAMENTO CORRESPONDENTE ENCONTRADO</span>';
+            } else if (!valorMatch) {
+                statusDiv.innerHTML = '<span class="status-atrasado" style="font-size:11px;">⚠️ DIVERGÊNCIA DE VALOR — não será aprovado</span>';
+            } else {
+                statusDiv.innerHTML = '<span class="status-atrasado" style="font-size:11px;">⚠️ DIVERGÊNCIA DE DATA — não será aprovado</span>';
+            }
+        } else {
+            statusDiv.innerHTML = '<span class="status-pendente" style="font-size:11px;">🔍 Nenhum pagamento correspondente</span>';
+        }
+        card.appendChild(statusDiv);
+
+        const preview = document.createElement('div');
+        preview.className = 'comp-pag-preview';
+        if (item.tipoArquivo && item.tipoArquivo.indexOf('image/') === 0) {
+            const img = document.createElement('img');
+            img.src = item.dataUrl;
+            preview.appendChild(img);
+        } else {
+            preview.innerHTML = '<div style="text-align:center;"><div style="font-size:36px;">📄</div><div style="font-size:11px;color:#666;">PDF</div></div>';
+        }
+        card.appendChild(preview);
+
+        const campos = [
+            { key: 'pagador', label: 'Pagador' },
+            { key: 'recebedor', label: 'Recebedor' },
+            { key: 'valorFormatado', label: 'Valor (R$)' },
+            { key: 'dataComprovante', label: 'Data (DD/MM/AAAA)' }
+        ];
+        campos.forEach(function(f) {
+            const wrap = document.createElement('div');
+            wrap.className = 'comp-pag-field';
+            const lbl = document.createElement('label');
+            lbl.textContent = f.label;
+            const inp = document.createElement('input');
+            inp.type = 'text';
+            inp.value = item[f.key] || '';
+            inp.onchange = function() {
+                if (f.key === 'valorFormatado') {
+                    item.valorFormatado = this.value;
+                    item.valor = parseMoeda(this.value);
+                } else {
+                    item[f.key] = this.value;
+                }
+                const m = encontrarPagamentoCorrespondente(item.valor, item.placa);
+                item.aluguelMatch = m ? m.aluguel : null;
+                item.aluguelMatchIdx = m ? m.idx : -1;
+                renderizarPreviewDocComprovante();
+            };
+            wrap.appendChild(lbl);
+            wrap.appendChild(inp);
+            card.appendChild(wrap);
+        });
+
+        const wrapPlaca = document.createElement('div');
+        wrapPlaca.className = 'comp-pag-field';
+        const lblPlaca = document.createElement('label');
+        lblPlaca.textContent = 'Placa do Veículo';
+        const selPlaca = document.createElement('select');
+        const optEmpty = document.createElement('option');
+        optEmpty.value = '';
+        optEmpty.textContent = '-- Selecione --';
+        selPlaca.appendChild(optEmpty);
+        (db.veiculos || []).forEach(function(v) {
+            const o = document.createElement('option');
+            o.value = v.placa;
+            o.textContent = v.placa + ' - ' + (v.fabricante || '');
+            if (item.placa === v.placa) o.selected = true;
+            selPlaca.appendChild(o);
+        });
+        selPlaca.onchange = function() {
+            item.placa = this.value;
+            const m = encontrarPagamentoCorrespondente(item.valor, item.placa);
+            item.aluguelMatch = m ? m.aluguel : null;
+            item.aluguelMatchIdx = m ? m.idx : -1;
+            renderizarPreviewDocComprovante();
+        };
+        wrapPlaca.appendChild(lblPlaca);
+        wrapPlaca.appendChild(selPlaca);
+        card.appendChild(wrapPlaca);
+
+        container.appendChild(card);
+    });
+}
+
+async function handleDocComprovanteInputChange(e) {
+    const input = e.target || this;
+    const files = Array.from(input.files || []);
+    if (files.length === 0) return;
+    input.value = '';
+
+    const container = document.getElementById('docComprovantePreview');
+    if (container) container.innerHTML = '<p style="color:#666;padding:10px;">⏳ Processando arquivos, aguarde...</p>';
+
+    const errors = [];
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        try {
+            if (file.size > 700 * 1024) { errors.push(file.name + ': arquivo muito grande (' + Math.round(file.size / 1024) + 'KB). Limite: 700KB'); continue; }
+            const dataUrl = await fileToDataURL(file);
+            const nomeLow = (file.name || '').toLowerCase();
+            const isPDF = file.type === 'application/pdf' || nomeLow.endsWith('.pdf');
+            const isImg = (file.type && file.type.indexOf('image/') === 0) || /\.(jpe?g|png)$/.test(nomeLow);
+
+            let texto = '';
+            if (isPDF) texto = await extrairTextoPDF(file);
+            else if (isImg) texto = await extrairTextoImagem(file);
+            else { errors.push(file.name + ': tipo não suportado (use PDF, JPG, JPEG ou PNG)'); continue; }
+
+            const dados = extrairDadosComprovante(texto);
+            const match = encontrarPagamentoCorrespondente(dados.valor, '');
+            docComprovantesTemp.push({
+                nomeArquivo: file.name,
+                tipoArquivo: file.type || (isPDF ? 'application/pdf' : 'image/jpeg'),
+                dataUrl: dataUrl,
+                pagador: dados.pagador || '',
+                recebedor: dados.recebedor || '',
+                valor: dados.valor || 0,
+                valorFormatado: dados.valor ? formatarMoedaBR(dados.valor) : '',
+                dataComprovante: dados.data || '',
+                placa: match ? match.aluguel.placa : '',
+                aluguelMatch: match ? match.aluguel : null,
+                aluguelMatchIdx: match ? match.idx : -1,
+                dataUpload: new Date().toLocaleString('pt-BR')
+            });
+        } catch (err) {
+            console.error('Erro em ' + file.name, err);
+            errors.push(file.name + ': ' + (err.message || 'erro ao processar'));
+        }
+    }
+
+    renderizarPreviewDocComprovante();
+
+    if (errors.length > 0) alert('⚠️ Alguns arquivos não puderam ser processados:\n\n' + errors.join('\n'));
+}
+
+function salvarDoc() {
+    if (!docComprovantesTemp || docComprovantesTemp.length === 0) { alert('Nenhum comprovante para salvar!'); return; }
+    if (!Array.isArray(db.comprovantesDoc)) db.comprovantesDoc = [];
+    if (!db.documentosPlacas) db.documentosPlacas = {};
+
+    let salvos = 0;
+    let conciliados = 0;
+    let divergentes = 0;
+    let duplicados = 0;
+    let semPlaca = 0;
+
+    docComprovantesTemp.forEach(function(item) {
+        const placa = String(item.placa || '').toUpperCase().trim();
+        const valorNum = Number(item.valor) || 0;
+        let dataPgtoISO = '';
+        if (item.dataComprovante && item.dataComprovante.includes('/')) {
+            const parts = item.dataComprovante.split('/');
+            if (parts.length === 3) dataPgtoISO = `${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
+        if (!dataPgtoISO) dataPgtoISO = new Date().toISOString().split('T')[0];
+
+        if (!placa) semPlaca++;
+
+        const duplicado = db.comprovantesDoc.some(function(c) {
+            return (c.placa === placa) &&
+                   Math.abs((c.valor || 0) - valorNum) < 0.01 &&
+                   c.dataComprovante === (item.dataComprovante || '') &&
+                   c.nomeArquivo === (item.nomeArquivo || '');
+        });
+        if (duplicado) { duplicados++; return; }
+
+        let aprovado = false;
+        let motivo = 'Sem pagamento correspondente';
+        let aluguelParaConciliar = null;
+
+        if (placa && valorNum > 0) {
+            const match = encontrarPagamentoCorrespondente(valorNum, placa);
+            if (match) {
+                const aluguel = match.aluguel;
+                const valorMatch = Math.abs((Number(aluguel.valorNumerico) || parseMoeda(aluguel.valor) || 0) - valorNum) < 0.01;
+                const dataMatch = !item.dataComprovante || !aluguel.vencimento || converterDataBRparaISO(item.dataComprovante) === aluguel.vencimento;
+                if (valorMatch && dataMatch) {
+                    aprovado = true;
+                    motivo = 'Conciliado automaticamente';
+                    aluguelParaConciliar = aluguel;
+                } else if (!valorMatch) {
+                    motivo = 'Divergência de valor — não aprovado automaticamente';
+                    divergentes++;
+                } else {
+                    motivo = 'Divergência de data — não aprovado automaticamente';
+                    divergentes++;
+                }
+            }
+        }
+
+        const registro = {
+            id: 'doc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+            nomeArquivo: item.nomeArquivo,
+            tipoArquivo: item.tipoArquivo,
+            dataUrl: item.dataUrl,
+            pagador: item.pagador || '',
+            recebedor: item.recebedor || '',
+            valor: valorNum,
+            valorFormatado: item.valorFormatado || formatarMoedaBR(valorNum),
+            dataComprovante: item.dataComprovante || '',
+            dataPagamento: dataPgtoISO,
+            placa: placa,
+            status: aprovado ? 'conciliado' : 'pendente',
+            motivo: motivo,
+            dataUpload: item.dataUpload || new Date().toLocaleString('pt-BR')
+        };
+
+        db.comprovantesDoc.push(registro);
+
+        if (placa) {
+            if (!db.documentosPlacas[placa]) db.documentosPlacas[placa] = [];
+            const nomeDoc = 'COMPROVANTE ' + (item.dataComprovante || '') + (item.valorFormatado ? ' - ' + item.valorFormatado : '') + ' - ' + (item.nomeArquivo || 'arquivo');
+            db.documentosPlacas[placa].push({
+                nome: nomeDoc,
+                tipo: item.tipoArquivo || 'application/pdf',
+                data: item.dataUrl,
+                dataUpload: item.dataUpload || new Date().toLocaleString('pt-BR')
+            });
+        }
+
+        if (aprovado && aluguelParaConciliar) {
+            processarPagamentoAutomatico(aluguelParaConciliar, dataPgtoISO);
+            conciliados++;
+            registrarAuditoria('Comprovante', `Conciliado: ${aluguelParaConciliar.locatario} - ${placa} - ${item.valorFormatado}`);
+        }
+
+        salvos++;
+    });
+
+    docComprovantesTemp = [];
+    renderizarPreviewDocComprovante();
+    atualizarTabelaDoc();
+    atualizarGaleriaComprovantes();
+    atualizarTabelaAlugueis();
+    atualizarTabelaHistoricoAlugueis();
+    atualizarTabelaFluxoCaixa();
+    salvarDB();
+    registrarAuditoria('Cadastro', salvos + ' comprovante(s) salvos na aba Comprovante');
+
+    let msg = '✅ ' + salvos + ' comprovante(s) salvo(s)!';
+    if (conciliados > 0) msg += '\n\n🤖 ' + conciliados + ' pagamento(s) conciliado(s) automaticamente (Status: PAGO, Fluxo de Caixa e Histórico de Aluguéis atualizados).';
+    if (divergentes > 0) msg += '\n\n⚠️ ' + divergentes + ' comprovante(s) com divergência — NÃO foram aprovados automaticamente.';
+    if (duplicados > 0) msg += '\n\n🚫 ' + duplicados + ' comprovante(s) duplicado(s) — ignorado(s).';
+    if (semPlaca > 0) msg += '\n\nℹ️ ' + semPlaca + ' comprovante(s) sem placa informada (não vinculados a aluguel).';
+    alert(msg);
+}
+
+function atualizarTabelaDoc() {
+    const tbody = document.querySelector('#tabelaDoc tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    const lista = db.comprovantesDoc || [];
+    if (lista.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#999;padding:20px;">Nenhum comprovante registrado.</td></tr>';
+        return;
+    }
+    // PENDENTES primeiro, CONCILIADOS por último
+    const itens = lista.map(function(c, i) {
+        return { c, idx: i, ordem: c.status === 'conciliado' ? 1 : 0 };
+    });
+    itens.sort(function(x, y) {
+        if (x.ordem !== y.ordem) return x.ordem - y.ordem;
+        return y.idx - x.idx;
+    });
+    itens.forEach(function(entry) {
+        const c = entry.c;
+        const realIdx = entry.idx;
+        const statusBadge = c.status === 'conciliado'
+            ? '<span class="status-pago">CONCILIADO</span>'
+            : '<span class="status-pendente">PENDENTE</span>';
+        const tr = document.createElement('tr');
+        tr.innerHTML =
+            '<td>' + (c.dataComprovante || '-') + '</td>' +
+            '<td><small>' + (c.nomeArquivo || '').replace(/</g, '&lt;') + '</small></td>' +
+            '<td>' + (c.pagador || '-') + '</td>' +
+            '<td>' + (c.recebedor || '-') + '</td>' +
+            '<td><strong style="color:#28a745;">' + (c.valorFormatado || formatarMoedaBR(c.valor)) + '</strong></td>' +
+            '<td>' + formatarDataBR(c.dataPagamento) + '</td>' +
+            '<td>' + (c.placa || '-') + '</td>' +
+            '<td>' + statusBadge + '<br><small style="color:#666;">' + (c.motivo || '') + '</small></td>' +
+            '<td>' +
+                '<button class="btn-info" onclick="abrirDocComprovante(' + realIdx + ')" title="Abrir">👁️</button>' +
+                '<button class="btn-danger" onclick="excluirDocComprovante(' + realIdx + ')" title="Excluir">🗑️</button>' +
+            '</td>';
+        tbody.appendChild(tr);
+    });
+}
+
+function abrirDocComprovante(idx) {
+    const c = (db.comprovantesDoc || [])[idx];
+    if (!c || !c.dataUrl) { alert('Arquivo indisponível.'); return; }
+    if (c.tipoArquivo && c.tipoArquivo.indexOf('image/') === 0) {
+        openImageModal(c.dataUrl);
+    } else {
+        const win = window.open();
+        if (!win) { alert('Bloqueio de pop-up.'); return; }
+        const nomeSafe = (c.nomeArquivo || 'Comprovante').replace(/</g, '&lt;');
+        win.document.write('<html><head><title>' + nomeSafe + '</title></head><body style="margin:0;"><iframe src="' + c.dataUrl + '" frameborder="0" style="border:0;position:fixed;top:0;left:0;width:100%;height:100%;" allowfullscreen></iframe></body></html>');
+    }
+}
+
+function excluirDocComprovante(idx) {
+    if (!confirmarSenhaADM()) return;
+    const c = (db.comprovantesDoc || [])[idx];
+    if (!c) return;
+    if (!confirm('Excluir este comprovante?')) return;
+    db.comprovantesDoc.splice(idx, 1);
+    atualizarTabelaDoc();
+    salvarDB();
+    registrarAuditoria('Exclusão', 'Comprovante excluído: ' + c.nomeArquivo);
+}
+
 function salvarPendencia() {
     const data       = document.getElementById('pendData').value || obterDataHojeISO();
     const descricao  = document.getElementById('pendDescricao').value.trim();
@@ -5829,6 +6272,7 @@ function atualizarTabelaPendentes() {
         return;
     }
 
+    // PENDENTES primeiro, PAGAS por último
     const itens = lista.map((p, i) => ({ p, idx: i, ordem: p.status === 'Pago' ? 1 : 0 }));
     itens.sort((a, b) => a.ordem - b.ordem);
 
@@ -5987,6 +6431,7 @@ function editarPendencia(i) {
 
 function processarPendenciaPDF() { alert('Função em implementação.'); }
 
+// ===== PWA =====
 let deferredInstallPrompt = null;
 
 window.addEventListener('beforeinstallprompt', (e) => {
@@ -6081,6 +6526,7 @@ async function inicializarSistemaCompleto() {
     atualizarGaleriaSOS();
     atualizarComboPlacasDocumentos();
     atualizarGaleriaComprovantes();
+    atualizarTabelaDoc();
     atualizarTabelaPendentes();
     atualizarAbasVistoria();
     configurarInputMultiplasImagens();
@@ -6095,8 +6541,20 @@ async function inicializarSistemaCompleto() {
         compPagInput.removeEventListener('change', handleComprovantesPagInputChange);
         compPagInput.addEventListener('change', handleComprovantesPagInputChange);
     }
-    // Event listener para a aba "doc" removida
+    const docCompInput = document.getElementById('docComprovanteInput');
+    if (docCompInput) {
+        docCompInput.removeEventListener('change', handleDocComprovanteInputChange);
+        docCompInput.addEventListener('change', handleDocComprovanteInputChange);
+    }
     atualizarTabelaComprovantesPag();
+
+    // Garantir foco no campo de usuário do login ao iniciar
+    setTimeout(() => {
+        const el = document.getElementById('loginUser');
+        if (el && document.getElementById('loginContainer').style.display !== 'none') {
+            try { el.focus(); } catch(e) {}
+        }
+    }, 100);
 
     console.log('🚀 Sistema inicializado.');
 }

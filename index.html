@@ -423,7 +423,7 @@
         <button class="btn-secondary" id="btnDocVeiculo" onclick="abrirDocVeiculo()">📄 DOC VEÍCULO</button>
         <div class="table-container">
             <table id="tabelaVeiculos">
-                <thead><tr><th>Fab/Modelo</th><th>Placa</th><th>Cor</th><th>Ano</th><th>Aluguel</th><th>Ações</th></tr></thead>
+                <thead><tr><th>Fab/Modelo</th><th>Placa</th><th>Cor</th><th>Ano</th><th>R$ Fipe</th><th>Ações</th></tr></thead>
                 <tbody></tbody>
             </table>
         </div>
@@ -653,7 +653,6 @@
             </div>
         </div>
 
-        <!-- ============== NOVA SUB-ABA: LEITURA AUTOMÁTICA (antiga aba "Comprovante") ============== -->
         <div class="sub-tab-content" id="subTabLeituraAuto">
             <div class="config-section" style="border-left-color: var(--success); background: #eaf7ed;">
                 <h3>📤 Leitura Automática de Comprovante</h3>
@@ -1840,7 +1839,7 @@ function atualizarTabelaVeiculos() {
             <td>${v.placa || ''}</td>
             <td>${v.cor || ''}</td>
             <td>${(v.anoFabr || '')}${v.anoModel ? '/' + v.anoModel : ''}</td>
-            <td>${v.aluguel || '-'}</td>
+            <td>${v.fipe || '-'}</td>
             <td>
                 <button class="btn-warning" onclick="editarVeiculo(${i})">✏️</button>
                 <button class="btn-danger" onclick="excluirVeiculo(${i})">🗑️</button>

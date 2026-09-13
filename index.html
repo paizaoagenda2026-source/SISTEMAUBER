@@ -681,7 +681,7 @@
         </div>
     </div>
 
-    <div class="tab-content" id="vistoria"><h2>📸 Vistoria</h2><div id="vistoriaSubTabs" class="vistoria-sub-tabs"></div><div id="vistoriaContent" style="display:none;"><h4 id="vistoriaLocacaoInfo"></h4><div id="vistoriaFotosContainer" class="vistoria-foto-container"></div><button class="btn-primary" onclick="abrirCameraVistoria()">📷 Tirar Foto</button></div><div id="vistoriaNenhuma" style="display:none;text-align:center;padding:30px;color:#999;">Nenhuma locação ativa.</div></div>
+    <div class="tab-content" id="vistoria"><h2>📸 Vistoria</h2><div id="vistoriaSubTabs" class="vistoria-sub-tabs"></div><div id="vistoriaContent" style="display:none;"><h4 id="vistoriaLocacaoInfo"></h4><div id="vistoriaFotosContainer" class="vistoria-foto-container"></div><button class="btn-primary" data-permissao="vistoria_camera" onclick="abrirCameraVistoria()">📷 Tirar Foto</button></div><div id="vistoriaNenhuma" style="display:none;text-align:center;padding:30px;color:#999;">Nenhuma locação ativa.</div></div>
 
 </div>
 
@@ -2247,13 +2247,19 @@ async function salvarLocacao() {
     const dataFim     = document.getElementById('locDataFim').value;
     if (!locatario || !fabricante || !placa || !dataInicio) { alert('Preencha todos os campos obrigatórios!'); return; }
 
-    // Prevenir duplicidade de locação ativa (mesmo locatário + mesma placa)
+    // Prevenir que o MESMO veículo seja alugado para locatários diferentes ao mesmo tempo
     const locacaoDuplicada = db.locacoes.find((l, idx) => {
         if (locacaoEditandoIndex !== null && idx === locacaoEditandoIndex) return false;
-        return l.locatario === locatario && l.placa === placa;
+        if (!l || !l.placa) return false;
+        return normalizarPlaca(l.placa) === normalizarPlaca(placa);
     });
     if (locacaoDuplicada) {
-        alert('Já existe uma locação ativa para este locatário com este veículo!\n\nLocatário: ' + locatario + '\nVeículo/Placa: ' + placa);
+        alert(
+            '⛔ Este veículo já está alugado para outro locatário!\n\n' +
+            'Placa: ' + placa + '\n' +
+            'Locatário atual: ' + (locacaoDuplicada.locatario || '') + '\n\n' +
+            'Encerre ou exclua a locação ativa antes de alugar para outro cliente.'
+        );
         return;
     }
     
@@ -3291,6 +3297,7 @@ function confirmarSelfie() {
         const c = document.getElementById('selfiePreviewCliente');
         if (c) c.innerHTML = `<img src="${selfieDataUrl}" class="selfie-thumbnail" alt="selfie" onclick="openImageModal('${selfieDataUrl}')">`;
         fecharModalSelfie();
+        salvarCliente();
     }
 }
 
@@ -3963,6 +3970,7 @@ function renderizarFotosVistoria(locacao) {
     
     if (!locacao.vistoria) locacao.vistoria = [];
     const fotos = locacao.vistoria;
+    const podeExcluir = temPermissao('vistoria_camera');
     
     if (fotos.length === 0) {
         container.innerHTML = '<p style="color:#999; width:100%;">Nenhuma foto de vistoria registrada para este veículo.</p>';
@@ -3977,25 +3985,32 @@ function renderizarFotosVistoria(locacao) {
         img.src = foto;
         img.onclick = () => openImageModal(foto, fotos, index);
         
-        const btn = document.createElement('button');
-        btn.className = 'delete-btn';
-        btn.textContent = '×';
-        btn.onclick = (e) => {
-            e.stopPropagation();
-            if (confirm('Excluir esta foto?')) {
-                locacao.vistoria.splice(index, 1);
-                salvarDB();
-                renderizarFotosVistoria(locacao);
-            }
-        };
-        
         div.appendChild(img);
-        div.appendChild(btn);
+        
+        if (podeExcluir) {
+            const btn = document.createElement('button');
+            btn.className = 'delete-btn';
+            btn.textContent = '×';
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                if (confirm('Excluir esta foto?')) {
+                    locacao.vistoria.splice(index, 1);
+                    salvarDB();
+                    renderizarFotosVistoria(locacao);
+                }
+            };
+            div.appendChild(btn);
+        }
+        
         container.appendChild(div);
     });
 }
 
 function abrirCameraVistoria() {
+    if (!temPermissao('vistoria_camera')) {
+        alert('⛔ Você não tem permissão para tirar fotos de vistoria.\n\nApenas visualização é permitida.');
+        return;
+    }
     if (!vistoriaPlacaAtual) {
         alert('Selecione um veículo na aba de vistoria primeiro.');
         return;

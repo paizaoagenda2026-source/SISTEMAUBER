@@ -1264,7 +1264,7 @@ function preencherDataInicioLocacao() {
 }
 
 /* ============================================================
-   CONSULTA AUTOMÁTICA DA TABELA FIPE
+   CONSULTA AUTOMÁTICA DA TABELA FIPE — CORRIGIDA
    ============================================================ */
 function normalizarTextoFipe(t) {
     return String(t || '')
@@ -1274,6 +1274,42 @@ function normalizarTextoFipe(t) {
         .replace(/[^A-Z0-9 ]/g, ' ')
         .replace(/\s+/g, ' ')
         .trim();
+}
+
+// Sinônimos comuns em nomes de veículos FIPE vs nomes usados nos CRLVs
+const FIPE_SINONIMIA = {
+    'JOYE': 'JOY',
+    'JOY': 'JOY',
+    'MECANICA': 'MEC', 'MECANICO': 'MEC', 'MECANICA': 'MEC',
+    'MANUAL': 'MEC', 'MT': 'MEC', 'MEC': 'MEC',
+    'AUTOMATICO': 'AUT', 'AUTOMATICA': 'AUT', 'AUT': 'AUT', 'AT': 'AUT',
+    'HATCHBACK': 'HATCH', 'HATCH': 'HATCH',
+    'SEDAN': 'SEDAN',
+    'LT': 'LT', 'LTZ': 'LTZ', 'LS': 'LS',
+    'ACTIV': 'ACTIV', 'PRIME': 'PRIME', 'PREMIER': 'PREMIER',
+    'FLEX': 'FLEX', 'GASOLINA': 'GAS', 'DIESEL': 'DIESEL',
+    '5P': '5', '3P': '3', '4P': '4',
+    '8V': '8', '16V': '16', '12V': '12',
+    '10': '1'
+};
+
+function tokenizarModeloFipe(txt) {
+    const norm = normalizarTextoFipe(txt);
+    const partes = norm.split(' ').filter(p => p.length >= 1);
+    const tokens = [];
+    for (const parte of partes) {
+        // Divide tokens mistos como "10MT" em ["10", "MT"]
+        const sub = parte.match(/([A-Z]+|\d+(?:[\.,]\d+)?)/g) || [parte];
+        for (const s of sub) {
+            // Normaliza "1.0" -> "1" + "0" (limpa)
+            const limpo = s.replace(/[.,]/g, '');
+            if (limpo.length >= 1) {
+                const mapped = FIPE_SINONIMIA[limpo] !== undefined ? FIPE_SINONIMIA[limpo] : limpo;
+                if (mapped && !tokens.includes(mapped)) tokens.push(mapped);
+            }
+        }
+    }
+    return tokens;
 }
 
 async function buscarFipeAutomatica(silencioso) {
@@ -1333,71 +1369,107 @@ async function buscarFipeAutomatica(silencioso) {
 
         const marcaNorm = normalizarTextoFipe(marcaEncontrada.nome);
         let modeloBusca = fabNorm.replace(marcaNorm, '').trim();
-        // Limpeza: remove barra/ruído inicial
-        modeloBusca = modeloBusca.replace(/^[\/\-\s]+/, '').trim();
+        // Remove separadores iniciais ("/", "-")
+        modeloBusca = modeloBusca.replace(/^[\/\-\s]+/, '').replace(/\s+/g, ' ').trim();
 
-        let modeloEncontrado = null;
+        // Se a busca veio com o nome do fabricante colado ao modelo (ex: "CHEVROLETONIX"), não vamos tratar
+        // Extrai tokens do que o usuário digitou (normalizados)
+        const tokensAlvo = tokenizarModeloFipe(modeloBusca);
 
-        if (modeloBusca) {
-            for (const mod of modelos) {
-                if (normalizarTextoFipe(mod.nome) === modeloBusca) { modeloEncontrado = mod; break; }
-            }
+        // Se não há nenhum token de modelo (só marca), não tenta buscar
+        if (tokensAlvo.length === 0) {
+            if (!silencioso) alert('Informe o modelo do veículo (ex: ONIX HATCH Joy 1.0 Mec.).');
+            fipeInput.value = '';
+            return;
         }
-        if (!modeloEncontrado && modeloBusca) {
-            for (const mod of modelos) {
-                const modNorm = normalizarTextoFipe(mod.nome);
-                if (modNorm.includes(modeloBusca) || modeloBusca.includes(modNorm)) { modeloEncontrado = mod; break; }
-            }
-        }
-        if (!modeloEncontrado && modeloBusca) {
-            const palavras = modeloBusca.split(' ').filter(p => p.length > 1);
-            if (palavras.length > 0) {
-                for (const mod of modelos) {
-                    const modNorm = normalizarTextoFipe(mod.nome);
-                    if (palavras.every(p => modNorm.includes(p))) { modeloEncontrado = mod; break; }
+
+        // Pontuação de cada modelo da FIPE
+        function pontuarModelo(nomeModelo) {
+            const tokensMod = tokenizarModeloFipe(nomeModelo);
+            let pontos = 0;
+            let matchesExatos = 0;
+            const usados = new Set();
+            for (const tk of tokensAlvo) {
+                let achou = false;
+                for (const tm of tokensMod) {
+                    if (usados.has(tm)) continue;
+                    if (tm === tk) { pontos += 10; achou = true; usados.add(tm); break; }
                 }
+                if (!achou) {
+                    // Match parcial (prefixo significativo)
+                    for (const tm of tokensMod) {
+                        if (usados.has(tm)) continue;
+                        if (tk.length >= 3 && tm.length >= 3 && (tm.startsWith(tk) || tk.startsWith(tm))) {
+                            pontos += 5; achou = true; usados.add(tm); break;
+                        }
+                    }
+                }
+                if (achou) matchesExatos++;
             }
-        }
-        if (!modeloEncontrado && modeloBusca) {
-            const primeiraPalavra = modeloBusca.split(' ')[0];
-            if (primeiraPalavra.length >= 2) {
-                modeloEncontrado = modelos.find(m => normalizarTextoFipe(m.nome).includes(primeiraPalavra));
-            }
-        }
-        // Fallback final: primeiro modelo da marca
-        if (!modeloEncontrado && modelos.length > 0) {
-            modeloEncontrado = modelos[0];
+            // Penaliza modelos muito diferentes (muitos tokens extras)
+            const diff = tokensMod.length - tokensAlvo.length;
+            if (diff > 0) pontos -= diff * 1.5;
+            return { pontos, matches: matchesExatos, tokensAlvoLen: tokensAlvo.length };
         }
 
-        if (!modeloEncontrado) {
-            if (!silencioso) alert('Modelo não encontrado na FIPE para: ' + fabricante);
+        let melhorModelo = null;
+        let melhorInfo = { pontos: -Infinity, matches: 0, tokensAlvoLen: tokensAlvo.length };
+        for (const mod of modelos) {
+            const info = pontuarModelo(mod.nome);
+            if (info.pontos > melhorInfo.pontos) {
+                melhorInfo = info;
+                melhorModelo = mod;
+            }
+        }
+
+        // ⚠️ REGRA IMPORTANTE: se nenhum token do usuário casou com o modelo,
+        // NÃO usar fallback aleatório (isso causava valores errados!)
+        const precisaMatches = tokensAlvo.length >= 2 ? 2 : 1;
+        if (!melhorModelo || melhorInfo.matches < precisaMatches) {
+            if (!silencioso) {
+                let msg = '⚠️ Não foi possível encontrar um modelo FIPE correspondente.\n\n';
+                msg += 'Marca: ' + marcaEncontrada.nome + '\n';
+                msg += 'Modelo buscado: ' + modeloBusca + '\n\n';
+                msg += 'Digite o nome completo do veículo (ex: "CHEVROLET/ONIX HATCH Joy 1.0 8V Flex 5p Mec.") e tente novamente.';
+                alert(msg);
+            }
             fipeInput.value = '';
             return;
         }
 
         // 3) Anos
-        const respAnos = await fetch(`https://parallelum.com.br/fipe/api/v1/carros/marcas/${marcaEncontrada.codigo}/modelos/${modeloEncontrado.codigo}/anos`);
+        const respAnos = await fetch(`https://parallelum.com.br/fipe/api/v1/carros/marcas/${marcaEncontrada.codigo}/modelos/${melhorModelo.codigo}/anos`);
         const anos = await respAnos.json();
 
+        // FIPE devolve anos no formato "AAAA-AAAA" (ex: "2018-2019")
+        // Vamos priorizar match exato do par Fabr/Model
         let anoEncontrado = null;
-        const anoBusca = anoModel || anoFabr;
-        if (anoBusca) {
-            anoEncontrado = anos.find(a => (a.nome || '').includes(anoBusca));
+        if (anoFabr && anoModel) {
+            const alvo = anoFabr + '-' + anoModel;
+            anoEncontrado = anos.find(a => (a.nome || '').startsWith(alvo));
         }
-        // Se não achou no ano informado, tenta o ano de fabricação
-        if (!anoEncontrado && anoModel && anoFabr) {
-            anoEncontrado = anos.find(a => (a.nome || '').includes(anoFabr));
+        if (!anoEncontrado && anoModel) {
+            anoEncontrado = anos.find(a => {
+                const nomeAno = (a.nome || '').trim();
+                // Match pelo segundo segmento
+                const partes = nomeAno.split('-');
+                if (partes.length >= 2) return partes[1].startsWith(anoModel);
+                return nomeAno.startsWith(anoModel);
+            });
         }
-        if (!anoEncontrado) anoEncontrado = anos[0];
+        if (!anoEncontrado && anoFabr) {
+            anoEncontrado = anos.find(a => (a.nome || '').startsWith(anoFabr));
+        }
+        if (!anoEncontrado && anos.length > 0) anoEncontrado = anos[0];
 
         if (!anoEncontrado) {
-            if (!silencioso) alert('Ano não encontrado na FIPE.');
+            if (!silencioso) alert('Ano não encontrado na FIPE para o modelo selecionado.');
             fipeInput.value = '';
             return;
         }
 
         // 4) Valor
-        const respValor = await fetch(`https://parallelum.com.br/fipe/api/v1/carros/marcas/${marcaEncontrada.codigo}/modelos/${modeloEncontrado.codigo}/anos/${anoEncontrado.codigo}`);
+        const respValor = await fetch(`https://parallelum.com.br/fipe/api/v1/carros/marcas/${marcaEncontrada.codigo}/modelos/${melhorModelo.codigo}/anos/${anoEncontrado.codigo}`);
         const dataValor = await respValor.json();
 
         fipeInput.value = dataValor.Valor || '';

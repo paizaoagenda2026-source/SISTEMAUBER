@@ -169,7 +169,6 @@
         @media print { body * { visibility: hidden; } .print-area, .print-area * { visibility: visible; } .print-area { display: block; position: absolute; left: 0; top: 0; width: 100%; } }
         .vistoria-sub-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
         .vistoria-foto-container { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 15px; }
-        
         .documento-folder { background: #fff; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); overflow: hidden; }
         .documento-folder-header { background: var(--primary); color: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; }
         .documento-folder-header h4 { margin: 0; font-size: 16px; display: flex; align-items: center; gap: 10px; }
@@ -183,7 +182,6 @@
         .documento-details small { color: #888; font-size: 12px; }
         .documento-actions { display: flex; gap: 8px; }
         .documento-actions button { padding: 8px 15px; font-size: 12px; margin: 0; border-radius: 4px; }
-
         .comp-pag-card { border: 1px solid #ddd; border-radius: 8px; padding: 12px; background: #fff; width: 340px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); display: flex; flex-direction: column; gap: 8px; }
         .comp-pag-card .comp-pag-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
         .comp-pag-card .comp-pag-header strong { font-size: 12px; word-break: break-all; color: #333; flex: 1; }
@@ -193,7 +191,6 @@
         .comp-pag-card .comp-pag-field label { font-size: 11px; font-weight: 600; color: #666; }
         .comp-pag-card .comp-pag-field input { padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; text-transform: none; }
         .comp-pag-card .comp-pag-field select { padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; text-transform: none; width: 100%; background: #fff; }
-
         .doc-veiculo-info { background: #e9f2fa; border-left: 4px solid var(--info); padding: 12px 15px; border-radius: 6px; margin: 15px 0; display: none; }
         .doc-veiculo-info.ativo { display: block; }
         .doc-veiculo-info strong { color: var(--primary); }
@@ -567,7 +564,6 @@
         </div>
     </div>
 
-    <!-- ====================== ABA COMPROVANTE (NOVA IMPLEMENTAÇÃO) ====================== -->
     <div class="tab-content" id="doc">
         <h2>📁 Comprovante</h2>
 
@@ -607,7 +603,6 @@
             </div>
         </div>
     </div>
-    <!-- ====================== FIM ABA COMPROVANTE ====================== -->
 
     <div class="tab-content" id="compras"><h2>🛒 Compras</h2><div class="form-grid"><div class="form-group"><label>Data</label><input type="date" id="compData"></div><div class="form-group"><label>Produto</label><input type="text" id="compProduto"></div><div class="form-group"><label>Fornecedor</label><input type="text" id="compFornecedor"></div><div class="form-group"><label>Placa</label><input type="text" id="compPlaca"></div><div class="form-group"><label>Qtd</label><input type="number" id="compQuantidade"></div><div class="form-group"><label>Valor Unit</label><input type="text" id="compValorUnitario" class="money"></div><div class="form-group"><label>Total</label><input type="text" id="compValorTotal" class="money" readonly></div><div class="form-group"><label>Status</label><select id="compStatus"><option value="pendente">Pendente</option><option value="pago">Pago</option></select></div></div><button class="btn-primary" onclick="salvarCompra()">💾 Salvar</button><div class="table-container"><table id="tabelaCompras"><thead><tr><th>Data</th><th>Produto</th><th>Fornecedor</th><th>Placa</th><th>Valor</th><th>Status</th><th>Ações</th></tr></thead><tbody></tbody></table></div></div>
 
@@ -1265,6 +1260,11 @@ function preencherDataInicioLocacao() {
 
 /* ============================================================
    CONSULTA AUTOMÁTICA DA TABELA FIPE — CORRIGIDA
+   Correções:
+   1) Matching de modelo robusto (tokens + sinônimos brasileiros)
+   2) Filtra "Zero KM" (código/nome começando com 32000) que causava "Ano: 32000"
+   3) Match do ano por regex (extrai 4 dígitos do codigo/nome)
+   4) Sem fallback cego para anos[0]
    ============================================================ */
 function normalizarTextoFipe(t) {
     return String(t || '')
@@ -1276,11 +1276,10 @@ function normalizarTextoFipe(t) {
         .trim();
 }
 
-// Sinônimos comuns em nomes de veículos FIPE vs nomes usados nos CRLVs
 const FIPE_SINONIMIA = {
     'JOYE': 'JOY',
     'JOY': 'JOY',
-    'MECANICA': 'MEC', 'MECANICO': 'MEC', 'MECANICA': 'MEC',
+    'MECANICA': 'MEC', 'MECANICO': 'MEC',
     'MANUAL': 'MEC', 'MT': 'MEC', 'MEC': 'MEC',
     'AUTOMATICO': 'AUT', 'AUTOMATICA': 'AUT', 'AUT': 'AUT', 'AT': 'AUT',
     'HATCHBACK': 'HATCH', 'HATCH': 'HATCH',
@@ -1298,10 +1297,8 @@ function tokenizarModeloFipe(txt) {
     const partes = norm.split(' ').filter(p => p.length >= 1);
     const tokens = [];
     for (const parte of partes) {
-        // Divide tokens mistos como "10MT" em ["10", "MT"]
         const sub = parte.match(/([A-Z]+|\d+(?:[\.,]\d+)?)/g) || [parte];
         for (const s of sub) {
-            // Normaliza "1.0" -> "1" + "0" (limpa)
             const limpo = s.replace(/[.,]/g, '');
             if (limpo.length >= 1) {
                 const mapped = FIPE_SINONIMIA[limpo] !== undefined ? FIPE_SINONIMIA[limpo] : limpo;
@@ -1369,21 +1366,16 @@ async function buscarFipeAutomatica(silencioso) {
 
         const marcaNorm = normalizarTextoFipe(marcaEncontrada.nome);
         let modeloBusca = fabNorm.replace(marcaNorm, '').trim();
-        // Remove separadores iniciais ("/", "-")
         modeloBusca = modeloBusca.replace(/^[\/\-\s]+/, '').replace(/\s+/g, ' ').trim();
 
-        // Se a busca veio com o nome do fabricante colado ao modelo (ex: "CHEVROLETONIX"), não vamos tratar
-        // Extrai tokens do que o usuário digitou (normalizados)
         const tokensAlvo = tokenizarModeloFipe(modeloBusca);
 
-        // Se não há nenhum token de modelo (só marca), não tenta buscar
         if (tokensAlvo.length === 0) {
             if (!silencioso) alert('Informe o modelo do veículo (ex: ONIX HATCH Joy 1.0 Mec.).');
             fipeInput.value = '';
             return;
         }
 
-        // Pontuação de cada modelo da FIPE
         function pontuarModelo(nomeModelo) {
             const tokensMod = tokenizarModeloFipe(nomeModelo);
             let pontos = 0;
@@ -1396,7 +1388,6 @@ async function buscarFipeAutomatica(silencioso) {
                     if (tm === tk) { pontos += 10; achou = true; usados.add(tm); break; }
                 }
                 if (!achou) {
-                    // Match parcial (prefixo significativo)
                     for (const tm of tokensMod) {
                         if (usados.has(tm)) continue;
                         if (tk.length >= 3 && tm.length >= 3 && (tm.startsWith(tk) || tk.startsWith(tm))) {
@@ -1406,7 +1397,6 @@ async function buscarFipeAutomatica(silencioso) {
                 }
                 if (achou) matchesExatos++;
             }
-            // Penaliza modelos muito diferentes (muitos tokens extras)
             const diff = tokensMod.length - tokensAlvo.length;
             if (diff > 0) pontos -= diff * 1.5;
             return { pontos, matches: matchesExatos, tokensAlvoLen: tokensAlvo.length };
@@ -1422,8 +1412,6 @@ async function buscarFipeAutomatica(silencioso) {
             }
         }
 
-        // ⚠️ REGRA IMPORTANTE: se nenhum token do usuário casou com o modelo,
-        // NÃO usar fallback aleatório (isso causava valores errados!)
         const precisaMatches = tokensAlvo.length >= 2 ? 2 : 1;
         if (!melhorModelo || melhorInfo.matches < precisaMatches) {
             if (!silencioso) {
@@ -1437,33 +1425,51 @@ async function buscarFipeAutomatica(silencioso) {
             return;
         }
 
-        // 3) Anos
+        // 3) Anos — CORRIGIDO: filtra Zero KM (32000) e casa ano por regex
         const respAnos = await fetch(`https://parallelum.com.br/fipe/api/v1/carros/marcas/${marcaEncontrada.codigo}/modelos/${melhorModelo.codigo}/anos`);
-        const anos = await respAnos.json();
+        const anosBrutos = await respAnos.json();
 
-        // FIPE devolve anos no formato "AAAA-AAAA" (ex: "2018-2019")
-        // Vamos priorizar match exato do par Fabr/Model
-        let anoEncontrado = null;
-        if (anoFabr && anoModel) {
-            const alvo = anoFabr + '-' + anoModel;
-            anoEncontrado = anos.find(a => (a.nome || '').startsWith(alvo));
+        // FIX: remove entradas "Zero KM" (código/nome iniciando com 32000)
+        const anos = (anosBrutos || []).filter(a => {
+            const cod = String(a.codigo || '').trim();
+            const nome = String(a.nome || '').trim();
+            if (cod.startsWith('32000')) return false;
+            if (nome.startsWith('32000')) return false;
+            return true;
+        });
+
+        // FIX: helper para extrair o ano (4 dígitos) do codigo OU do nome
+        function extrairAnoDoItem(item) {
+            const cod = String(item.codigo || '').trim();   // ex: "2019-1"
+            const nome = String(item.nome || '').trim();    // ex: "2019 Gasolina"
+            const mCod = cod.match(/^(19\d{2}|20\d{2})/);
+            if (mCod) return mCod[1];
+            const mNome = nome.match(/\b(19\d{2}|20\d{2})\b/);
+            if (mNome) return mNome[1];
+            return '';
         }
-        if (!anoEncontrado && anoModel) {
-            anoEncontrado = anos.find(a => {
-                const nomeAno = (a.nome || '').trim();
-                // Match pelo segundo segmento
-                const partes = nomeAno.split('-');
-                if (partes.length >= 2) return partes[1].startsWith(anoModel);
-                return nomeAno.startsWith(anoModel);
-            });
+
+        // FIX: prioriza Ano MODELO (padrão FIPE), depois Ano FABR
+        let anoEncontrado = null;
+        if (anoModel) {
+            anoEncontrado = anos.find(a => extrairAnoDoItem(a) === anoModel);
         }
         if (!anoEncontrado && anoFabr) {
-            anoEncontrado = anos.find(a => (a.nome || '').startsWith(anoFabr));
+            anoEncontrado = anos.find(a => extrairAnoDoItem(a) === anoFabr);
         }
-        if (!anoEncontrado && anos.length > 0) anoEncontrado = anos[0];
 
+        // FIX: SEM fallback para anos[0] (era o que causava o "32000")
         if (!anoEncontrado) {
-            if (!silencioso) alert('Ano não encontrado na FIPE para o modelo selecionado.');
+            if (!silencioso) {
+                let msg = '⚠️ Ano não encontrado na FIPE para este modelo.\n\n';
+                if (anoFabr || anoModel) {
+                    msg += 'Ano informado: ' + (anoFabr || '?') + '/' + (anoModel || '?') + '\n\n';
+                }
+                msg += 'Anos disponíveis:\n';
+                anos.forEach(a => { msg += '• ' + (a.nome || a.codigo) + '\n'; });
+                if (anos.length === 0) msg += '(Nenhum ano disponível)\n';
+                alert(msg);
+            }
             fipeInput.value = '';
             return;
         }
@@ -1479,7 +1485,7 @@ async function buscarFipeAutomatica(silencioso) {
                 '✅ Valor FIPE encontrado!\n\n' +
                 'Marca: ' + (dataValor.Marca || '') + '\n' +
                 'Modelo: ' + (dataValor.Modelo || '') + '\n' +
-                'Ano: ' + (dataValor.AnoModelo || '') + '\n' +
+                'Ano: ' + (anoEncontrado.nome || dataValor.AnoModelo || '') + '\n' +
                 'Combustível: ' + (dataValor.Combustivel || '') + '\n' +
                 'Código FIPE: ' + (dataValor.CodigoFipe || '') + '\n' +
                 'Valor: ' + (dataValor.Valor || '')
@@ -4915,7 +4921,6 @@ async function handleDocVeiculoSelecionado(e) {
         const dados = extrairDadosCRLV(texto);
         docVeiculoAtual = { arquivo: file, dados };
         preencherCamposVeiculoComDados(dados);
-        // >>> BUSCA AUTOMÁTICA FIPE APÓS IMPORTAR O DOC VEÍCULO <<<
         agendarBuscaFipeAutomatica();
         const qtdEncontrados = Object.keys(dados).filter(k => dados[k]).length;
         const qtdEl = document.getElementById('docVeiculoQtd');

@@ -5402,7 +5402,7 @@ function excluirDocComprovante(idx) {
 }
 
 /* ============================================================
-   ABA PENDÊNCIAS — SALVAR E MARCAR COMO PAGO + FLUXO DE CAIXA
+   ABA PENDÊNCIAS — SALVAR (HISTÓRICO GERAL) / MARCAR PAGO (PRÓXIMA)
    ============================================================ */
 function salvarPendencia() {
     const data       = document.getElementById('pendData').value;
@@ -5418,7 +5418,9 @@ function salvarPendencia() {
     }
 
     if (!Array.isArray(db.pendentes)) db.pendentes = [];
+    if (!Array.isArray(db.historico)) db.historico = [];
 
+    // Salva a pendência
     db.pendentes.push({
         data,
         descricao,
@@ -5430,14 +5432,27 @@ function salvarPendencia() {
         dataPagamento: null
     });
 
+    // Salva no Histórico Geral
+    const valorHistorico = credito || debito || '';
+    db.historico.push({
+        data: data,
+        descricao: 'Pendência: ' + descricao,
+        placa: placa,
+        valor: valorHistorico,
+        fornecedor: '',
+        oficina: ''
+    });
+
+    // Limpa formulário
     ['pendData','pendDescricao','pendPlaca','pendCredito','pendDebito','pendVencimento'].forEach(id => {
         const el = document.getElementById(id); if (el) el.value = '';
     });
 
     atualizarTabelaPendentes();
+    atualizarTabelaHistorico();
     registrarAuditoria('Cadastro', `Nova pendência: ${descricao} - Placa: ${placa}`);
     salvarDB();
-    alert('✅ Pendência salva com sucesso!');
+    alert('✅ Pendência salva com sucesso!\n\n📝 Também registrada no Histórico Geral.');
 }
 
 function atualizarTabelaPendentes() {
@@ -5491,7 +5506,7 @@ function marcarPendenciaPaga(i) {
         `Placa:     ${p.placa}\n` +
         `Crédito:   ${p.credito || '-'}\n` +
         `Débito:    ${p.debito  || '-'}\n\n` +
-        `Isso lançará automaticamente no Fluxo de Caixa.`
+        `Isso lançará no Fluxo de Caixa e criará a PRÓXIMA pendência.`
     )) return;
 
     const hojeISO = new Date().toISOString().split('T')[0];
@@ -5522,6 +5537,39 @@ function marcarPendenciaPaga(i) {
     p.status = 'Pago';
     p.dataPagamento = hojeISO;
 
+    // ============================================================
+    // Cria a PRÓXIMA pendência (30 dias após o vencimento atual)
+    // ============================================================
+    let proximoVencimentoMsg = '';
+    try {
+        const baseVenc = p.vencimento || hojeISO;
+        const dtVenc = new Date(baseVenc + 'T00:00:00');
+        dtVenc.setDate(dtVenc.getDate() + 30);
+        const proximoVencimento = dtVenc.toISOString().split('T')[0];
+
+        const baseData = p.data || hojeISO;
+        const dtData = new Date(baseData + 'T00:00:00');
+        dtData.setDate(dtData.getDate() + 30);
+        const proximaData = dtData.toISOString().split('T')[0];
+
+        if (!Array.isArray(db.pendentes)) db.pendentes = [];
+        db.pendentes.push({
+            data: proximaData,
+            descricao: p.descricao,
+            placa: p.placa,
+            credito: p.credito || '',
+            debito:  p.debito  || '',
+            vencimento: proximoVencimento,
+            status: 'Pendente',
+            dataPagamento: null
+        });
+
+        proximoVencimentoMsg = '\n\n🔁 Próxima pendência criada com vencimento em ' + formatarDataBR(proximoVencimento) + '.';
+        registrarAuditoria('Renovação', `Próxima pendência gerada: ${p.descricao} - Placa: ${p.placa} | Novo vencimento: ${proximoVencimento}`);
+    } catch (err) {
+        console.error('Erro ao criar próxima pendência:', err);
+    }
+
     atualizarTabelaPendentes();
     atualizarTabelaFluxoCaixa();
     registrarAuditoria('Pagamento', `Pendência paga: ${p.descricao} - Placa: ${p.placa}`);
@@ -5530,6 +5578,7 @@ function marcarPendenciaPaga(i) {
     let msg = '✅ Pendência marcada como PAGA!';
     if (creditoNum > 0) msg += `\n\n➕ Entrada lançada no Fluxo de Caixa: ${p.credito}`;
     if (debitoNum  > 0) msg += `\n\n➖ Saída lançada no Fluxo de Caixa: ${p.debito}`;
+    msg += proximoVencimentoMsg;
     alert(msg);
 }
 

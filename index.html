@@ -242,6 +242,20 @@
             letter-spacing: 6px;
             text-shadow: 0 0 15px rgba(244,162,97,0.8);
         }
+        /* ===== IMAGEM DO CARTÃO (SUBSTITUI O EMOJI) ===== */
+        .guincho-imagem {
+            width: 100%;
+            height: 100%;
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            display: block;
+            border-radius: 12px;
+            z-index: 2;
+            position: relative;
+            animation: guinchoPulse 1s infinite alternate;
+            background: transparent;
+        }
         @keyframes guinchoBlink {
             0%   { border-color: #ff0000; box-shadow: 0 0 0 8px rgba(255,0,0,0.7), 0 0 60px 25px #ff0000, inset 0 0 60px rgba(255,0,0,0.55); }
             33%  { border-color: #0033ff; box-shadow: 0 0 0 8px rgba(0,51,255,0.7), 0 0 60px 25px #0033ff, inset 0 0 60px rgba(0,51,255,0.55); }
@@ -250,7 +264,7 @@
         }
         @keyframes guinchoPulse {
             from { transform: scale(1); }
-            to   { transform: scale(1.12); }
+            to   { transform: scale(1.05); }
         }
 
         /* ===================== OVERLAY TELA CHEIA - GUINCHO AO INICIAR ===================== */
@@ -336,7 +350,8 @@
 <div class="guincho-overlay" id="guinchoOverlay">
     <div class="guincho-card">
         <button class="guincho-close-btn" onclick="fecharGuinchoFullscreen()">✕ FECHAR</button>
-        <div class="guincho-content">
+        <img id="guinchoOverlayImg" class="guincho-imagem" alt="SOS Guincho 24 Horas" style="display:none;">
+        <div class="guincho-content" id="guinchoOverlayFallback">
             <div class="guincho-emoji">🚛</div>
             <h1 class="guincho-titulo">GUINCHO 24 HORAS</h1>
             <p class="guincho-texto">ATENDIMENTO 24 HORAS</p>
@@ -553,7 +568,8 @@
 
     <div class="tab-content" id="sos">
         <div class="guincho-card" id="guinchoCard">
-            <div class="guincho-content">
+            <img id="guinchoCardImg" class="guincho-imagem" alt="SOS Guincho 24 Horas" style="display:none;">
+            <div class="guincho-content" id="guinchoCardFallback">
                 <div class="guincho-emoji">🚛</div>
                 <h1 class="guincho-titulo">GUINCHO 24 HORAS</h1>
                 <p class="guincho-texto">ATENDIMENTO 24 HORAS</p>
@@ -1115,12 +1131,47 @@ function mostrarGuinchoFullscreen() {
         overlay.style.display = 'flex';
         overlay.classList.add('active');
     }
+    atualizarImagemGuincho();
 }
 function fecharGuinchoFullscreen() {
     const overlay = document.getElementById('guinchoOverlay');
     if (overlay) {
         overlay.classList.remove('active');
         overlay.style.display = 'none';
+    }
+}
+
+/* ===================== ATUALIZAR IMAGEM DO GUINCHO =====================
+   Pega a ÚLTIMA imagem salva em db.imagens.sos.fotos e aplica tanto no
+   cartão da aba SOS quanto no overlay em tela cheia. Se não houver imagem,
+   mantém o emoji padrão como fallback. */
+function atualizarImagemGuincho() {
+    try {
+        const fotos = (db && db.imagens && db.imagens.sos && Array.isArray(db.imagens.sos.fotos))
+            ? db.imagens.sos.fotos : [];
+        const src = fotos.length > 0 ? fotos[fotos.length - 1] : '';
+        const imgIds = ['guinchoCardImg', 'guinchoOverlayImg'];
+        const fallbackIds = ['guinchoCardFallback', 'guinchoOverlayFallback'];
+
+        imgIds.forEach(function(id) {
+            const img = document.getElementById(id);
+            if (!img) return;
+            if (src) {
+                img.src = src;
+                img.style.display = 'block';
+            } else {
+                img.style.display = 'none';
+                img.removeAttribute('src');
+            }
+        });
+
+        fallbackIds.forEach(function(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.style.display = src ? 'none' : 'block';
+        });
+    } catch (e) {
+        console.warn('Erro ao atualizar imagem do guincho:', e);
     }
 }
 
@@ -1263,8 +1314,11 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
 
         // === MOSTRAR CARTÃO GUINCHO EM TELA CHEIA PISCANTE AO INICIAR ===
         // Executado com múltiplos timeouts para garantir em mobile e desktop
+        atualizarImagemGuincho();
+        setTimeout(function() { mostrarGuinchoFullscreen(); }, 100);
         setTimeout(function() { mostrarGuinchoFullscreen(); }, 300);
         setTimeout(function() { mostrarGuinchoFullscreen(); }, 800);
+        setTimeout(function() { mostrarGuinchoFullscreen(); }, 1500);
     } else {
         document.getElementById('loginError').style.display = 'block';
         registrarAuditoria('Login', `Falha login: ${user}`);
@@ -1312,7 +1366,7 @@ document.querySelectorAll('.tab').forEach(tab => {
         if (tabId === 'pagamentos') atualizarTabelaAlugueis();
         if (tabId === 'fluxocaixa') atualizarTabelaFluxoCaixa();
         if (tabId === 'garagem') atualizarGaleriaGaragem();
-        if (tabId === 'sos') atualizarGaleriaSOS();
+        if (tabId === 'sos') { atualizarGaleriaSOS(); atualizarImagemGuincho(); }
         if (tabId === 'comprovantes') { atualizarComboPlacasDocumentos(); atualizarGaleriaComprovantes(); atualizarTabelaComprovantesPag(); }
         if (tabId === 'banco') atualizarTabelaBancos();
         if (tabId === 'doc') atualizarTabelaDoc();
@@ -4402,8 +4456,11 @@ function salvarSOS() {
     sosImagensTemp = [];
     const preview = document.getElementById('sosPreviewSelecionadas'); if (preview) preview.innerHTML = '';
     const input = document.getElementById('sosImagem'); if (input) { try { input.value = ''; } catch(e){} }
-    atualizarGaleriaSOS(); salvarDB();
+    atualizarGaleriaSOS();
+    salvarDB();
     registrarAuditoria('Cadastro', `${qtd} imagem(ns) salva(s) no SOS`);
+    // Atualiza a imagem do cartão/overlay com a última imagem enviada
+    atualizarImagemGuincho();
     alert(`✅ ${qtd} imagem(ns) salva(s)!`);
 }
 
@@ -4435,6 +4492,8 @@ function excluirFotoSOS(i) {
     db.imagens.sos.fotos.splice(i, 1);
     atualizarGaleriaSOS(); 
     salvarDB();
+    // Atualiza a imagem do cartão/overlay (volta ao fallback se não houver mais imagens)
+    atualizarImagemGuincho();
     registrarAuditoria('Exclusão', `Foto excluída do SOS (índice ${i})`);
 }
 
@@ -6614,6 +6673,8 @@ async function inicializarSistemaCompleto() {
     configurarInputMultiplasImagens();
     configurarBotaoInstalar();
     configurarBuscaFipeAutomatica();
+    // Aplica a imagem salva no cartão do guincho e no overlay (se houver)
+    atualizarImagemGuincho();
 
     if (typeof pdfjsLib !== 'undefined') {
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';

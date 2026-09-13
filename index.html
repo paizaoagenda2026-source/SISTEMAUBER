@@ -944,7 +944,7 @@ const permissoesPadrao = {
 };
 
 let selfieStream = null, selfieDataUrl = null, selfieClienteTemp = null, selfieUsuarioTemp = null, selfieDestino = 'cliente';
-let vistoriaStream = null, vistoriaDataUrl = null, vistoriaLocacaoIndex = null;
+let vistoriaStream = null, vistoriaDataUrl = null, vistoriaPlacaAtual = null;
 let usuarioEditandoIndex = null, compraEditandoIndex = null, pendenciaEditandoIndex = null;
 let veiculoEditandoIndex = null, clienteEditandoIndex = null, locacaoEditandoIndex = null;
 let bancoEditandoIndex = null;
@@ -1143,6 +1143,7 @@ document.querySelectorAll('.tab').forEach(tab => {
         if (tabId === 'banco') atualizarTabelaBancos();
         if (tabId === 'doc') atualizarTabelaDoc();
         if (tabId === 'pendente') atualizarTabelaPendentes();
+        if (tabId === 'vistoria') atualizarAbasVistoria();
     });
 });
 
@@ -1260,11 +1261,6 @@ function preencherDataInicioLocacao() {
 
 /* ============================================================
    CONSULTA AUTOMÁTICA DA TABELA FIPE — CORRIGIDA
-   Correções:
-   1) Matching de modelo robusto (tokens + sinônimos brasileiros)
-   2) Filtra "Zero KM" (código/nome começando com 32000) que causava "Ano: 32000"
-   3) Match do ano por regex (extrai 4 dígitos do codigo/nome)
-   4) Sem fallback cego para anos[0]
    ============================================================ */
 function normalizarTextoFipe(t) {
     return String(t || '')
@@ -2147,6 +2143,7 @@ async function salvarLocacao() {
         locacaoEditandoIndex = null;
         atualizarEstadoEdicaoLocacao();
         atualizarTabelaLocacoes();
+        atualizarAbasVistoria();
         salvarDB();
         alert('✅ Locação atualizada com sucesso!');
         limparCamposLocacao();
@@ -2182,6 +2179,7 @@ async function salvarLocacao() {
     }
     
     atualizarTabelaLocacoes();
+    atualizarAbasVistoria();
     registrarAuditoria('Cadastro', `Nova locação: ${locatario} - ${placa} | Caução: ${tipoPagCaucao} | 1ª parcela gerada | Total: ${formatarMoedaBR(totalParcelas)}`);
     
     let contratosGerados = 0;
@@ -2297,6 +2295,7 @@ function excluirLocacao(i) {
     if (locacaoEditandoIndex === i) { locacaoEditandoIndex = null; atualizarEstadoEdicaoLocacao(); limparCamposLocacao(); }
     else if (locacaoEditandoIndex !== null && locacaoEditandoIndex > i) locacaoEditandoIndex--;
     atualizarTabelaLocacoes();
+    atualizarAbasVistoria();
     registrarAuditoria('Exclusão', `Locação excluída índice ${i}`);
     salvarDB();
 }
@@ -2406,6 +2405,7 @@ function encerrarLocacao(i) {
     else if (locacaoEditandoIndex !== null && locacaoEditandoIndex > i) locacaoEditandoIndex--;
 
     atualizarTabelaLocacoes();
+    atualizarAbasVistoria();
     atualizarTabelaLocEncerrada();
     registrarAuditoria('Encerramento', `Locação encerrada: ${l.locatario} - ${l.placa} | Recebido: ${formatarMoedaBR(receitaTotalPeriodo)} | Extorno: ${formatarMoedaBR(valorExtorno)} | Lucro: ${formatarMoedaBR(lucro)}`);
     salvarDB();
@@ -2566,6 +2566,7 @@ function reabrirLocacao(i) {
     db.locacoesEncerradas.splice(i, 1);
 
     atualizarTabelaLocacoes();
+    atualizarAbasVistoria();
     atualizarTabelaLocEncerrada();
     atualizarTabelaAlugueis();
     atualizarTabelaHistoricoAlugueis();
@@ -3666,8 +3667,164 @@ function switchSubTab(t) {
     if (t === 'comprovantesPag') atualizarTabelaComprovantesPag();
 }
 
-function abrirCameraVistoria() { alert('Função de vistoria em implementação.'); }
-function fecharCameraVistoria() { document.getElementById('vistoriaCameraModal').classList.remove('active'); }
+/* ============================================================
+   VISTORIA — SUB-ABAS E CÂMERA
+   ============================================================ */
+function atualizarAbasVistoria() {
+    const tabsContainer = document.getElementById('vistoriaSubTabs');
+    const contentContainer = document.getElementById('vistoriaContent');
+    const nenhumaContainer = document.getElementById('vistoriaNenhuma');
+    
+    if (!tabsContainer || !contentContainer || !nenhumaContainer) return;
+
+    tabsContainer.innerHTML = '';
+    
+    if (!db.locacoes || db.locacoes.length === 0) {
+        contentContainer.style.display = 'none';
+        nenhumaContainer.style.display = 'block';
+        return;
+    }
+    
+    contentContainer.style.display = 'block';
+    nenhumaContainer.style.display = 'none';
+    
+    if (!vistoriaPlacaAtual || !db.locacoes.some(l => l.placa === vistoriaPlacaAtual)) {
+        vistoriaPlacaAtual = db.locacoes[0].placa;
+    }
+    
+    db.locacoes.forEach(l => {
+        const btn = document.createElement('button');
+        btn.className = 'sub-tab' + (l.placa === vistoriaPlacaAtual ? ' active' : '');
+        btn.textContent = `🚗 ${l.placa}`;
+        btn.onclick = () => {
+            vistoriaPlacaAtual = l.placa;
+            atualizarAbasVistoria();
+        };
+        tabsContainer.appendChild(btn);
+    });
+    
+    const locacaoAtiva = db.locacoes.find(l => l.placa === vistoriaPlacaAtual);
+    if (locacaoAtiva) {
+        document.getElementById('vistoriaLocacaoInfo').textContent = `Veículo: ${locacaoAtiva.fabricante || ''} | Locatário: ${locacaoAtiva.locatario || ''}`;
+        renderizarFotosVistoria(locacaoAtiva);
+    }
+}
+
+function renderizarFotosVistoria(locacao) {
+    const container = document.getElementById('vistoriaFotosContainer');
+    if (!container) return;
+    container.innerHTML = '';
+    
+    if (!locacao.vistoria) locacao.vistoria = [];
+    const fotos = locacao.vistoria;
+    
+    if (fotos.length === 0) {
+        container.innerHTML = '<p style="color:#999; width:100%;">Nenhuma foto de vistoria registrada para este veículo.</p>';
+        return;
+    }
+    
+    fotos.forEach((foto, index) => {
+        const div = document.createElement('div');
+        div.className = 'saved-image-item';
+        
+        const img = document.createElement('img');
+        img.src = foto;
+        img.onclick = () => openImageModal(foto, fotos, index);
+        
+        const btn = document.createElement('button');
+        btn.className = 'delete-btn';
+        btn.textContent = '×';
+        btn.onclick = (e) => {
+            e.stopPropagation();
+            if (confirm('Excluir esta foto?')) {
+                locacao.vistoria.splice(index, 1);
+                salvarDB();
+                renderizarFotosVistoria(locacao);
+            }
+        };
+        
+        div.appendChild(img);
+        div.appendChild(btn);
+        container.appendChild(div);
+    });
+}
+
+function abrirCameraVistoria() {
+    if (!vistoriaPlacaAtual) {
+        alert('Selecione um veículo na aba de vistoria primeiro.');
+        return;
+    }
+    vistoriaDataUrl = null;
+    document.getElementById('vistoriaPhotoPreview').style.display = 'none';
+    document.getElementById('vistoriaConfirmBtn').style.display = 'none';
+    document.getElementById('vistoriaCaptureBtn').style.display = 'inline-block';
+    document.getElementById('vistoriaCameraModal').classList.add('active');
+    
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
+        .then(stream => {
+            vistoriaStream = stream;
+            document.getElementById('vistoriaVideo').srcObject = stream;
+            document.getElementById('vistoriaVideo').play();
+        })
+        .catch(err => { 
+            alert('Erro ao acessar câmera: ' + err.message); 
+            fecharCameraVistoria(); 
+        });
+}
+
+function fecharCameraVistoria() {
+    if (vistoriaStream) { 
+        vistoriaStream.getTracks().forEach(t => t.stop()); 
+        vistoriaStream = null; 
+    }
+    document.getElementById('vistoriaCameraModal').classList.remove('active');
+    document.getElementById('vistoriaVideo').srcObject = null;
+    vistoriaDataUrl = null;
+}
+
+function capturarVistoria() {
+    const v = document.getElementById('vistoriaVideo');
+    const c = document.getElementById('vistoriaCanvas');
+    if (v.readyState !== v.HAVE_ENOUGH_DATA) { alert('Câmera não pronta.'); return; }
+    
+    c.width = v.videoWidth; 
+    c.height = v.videoHeight;
+    const ctx = c.getContext('2d');
+    ctx.drawImage(v, 0, 0, c.width, c.height);
+    
+    vistoriaDataUrl = c.toDataURL('image/jpeg', 0.6);
+    document.getElementById('vistoriaPhotoResult').src = vistoriaDataUrl;
+    document.getElementById('vistoriaPhotoPreview').style.display = 'block';
+    document.getElementById('vistoriaCaptureBtn').style.display = 'none';
+    document.getElementById('vistoriaConfirmBtn').style.display = 'inline-block';
+    
+    if (vistoriaStream) { 
+        vistoriaStream.getTracks().forEach(t => t.stop()); 
+        vistoriaStream = null; 
+    }
+    document.getElementById('vistoriaVideo').srcObject = null;
+}
+
+function confirmarVistoria() {
+    if (!vistoriaDataUrl) { alert('Nenhuma foto capturada!'); return; }
+    
+    const locacao = db.locacoes.find(l => l.placa === vistoriaPlacaAtual);
+    if (locacao) {
+        if (!locacao.vistoria) locacao.vistoria = [];
+        locacao.vistoria.push(vistoriaDataUrl);
+        salvarDB();
+        registrarAuditoria('Vistoria', `Nova foto de vistoria adicionada para a placa ${vistoriaPlacaAtual}`);
+        renderizarFotosVistoria(locacao);
+        alert('✅ Foto de vistoria salva com sucesso!');
+    } else {
+        alert('Erro: Locação não encontrada.');
+    }
+    
+    fecharCameraVistoria();
+}
+/* ============================================================
+   FIM VISTORIA
+   ============================================================ */
 
 function comprimirImagemDataURL(dataUrl, maxWidth, quality, callback) {
     const img = new Image();
@@ -4222,8 +4379,6 @@ function aplicarFiltroAuditoria() {}
 function limparFiltroAuditoria() {}
 function limparAuditoriaManual() { if (confirmarSenhaADM()) { if (confirm('Limpar auditoria?')) { db.auditoria = []; atualizarTabelaAuditoria(); salvarDB(); } } }
 function limparVistoriaSelecionada() {}
-function capturarVistoria() {}
-function confirmarVistoria() {}
 function previewCompImagem() {}
 function previewMecPdf() {}
 function previewCompPdf() {}
@@ -5992,6 +6147,7 @@ async function inicializarSistemaCompleto() {
     atualizarGaleriaComprovantes();
     atualizarTabelaDoc();
     atualizarTabelaPendentes();
+    atualizarAbasVistoria();
     configurarInputMultiplasImagens();
     configurarBotaoInstalar();
     configurarBuscaFipeAutomatica();

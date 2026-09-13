@@ -1260,7 +1260,7 @@ function preencherDataInicioLocacao() {
 }
 
 /* ============================================================
-   CONSULTA AUTOMÁTICA DA TABELA FIPE — CORRIGIDA
+   CONSULTA AUTOMÁTICA DA TABELA FIPE
    ============================================================ */
 function normalizarTextoFipe(t) {
     return String(t || '')
@@ -1325,7 +1325,6 @@ async function buscarFipeAutomatica(silencioso) {
     }
 
     try {
-        // 1) Marcas
         const respMarcas = await fetch('https://parallelum.com.br/fipe/api/v1/carros/marcas');
         const marcas = await respMarcas.json();
         const fabNorm = normalizarTextoFipe(fabricante);
@@ -1355,7 +1354,6 @@ async function buscarFipeAutomatica(silencioso) {
             return;
         }
 
-        // 2) Modelos
         const respModelos = await fetch(`https://parallelum.com.br/fipe/api/v1/carros/marcas/${marcaEncontrada.codigo}/modelos`);
         const dataModelos = await respModelos.json();
         const modelos = dataModelos.modelos || [];
@@ -1421,11 +1419,9 @@ async function buscarFipeAutomatica(silencioso) {
             return;
         }
 
-        // 3) Anos — CORRIGIDO: filtra Zero KM (32000) e casa ano por regex
         const respAnos = await fetch(`https://parallelum.com.br/fipe/api/v1/carros/marcas/${marcaEncontrada.codigo}/modelos/${melhorModelo.codigo}/anos`);
         const anosBrutos = await respAnos.json();
 
-        // FIX: remove entradas "Zero KM" (código/nome iniciando com 32000)
         const anos = (anosBrutos || []).filter(a => {
             const cod = String(a.codigo || '').trim();
             const nome = String(a.nome || '').trim();
@@ -1434,10 +1430,9 @@ async function buscarFipeAutomatica(silencioso) {
             return true;
         });
 
-        // FIX: helper para extrair o ano (4 dígitos) do codigo OU do nome
         function extrairAnoDoItem(item) {
-            const cod = String(item.codigo || '').trim();   // ex: "2019-1"
-            const nome = String(item.nome || '').trim();    // ex: "2019 Gasolina"
+            const cod = String(item.codigo || '').trim();
+            const nome = String(item.nome || '').trim();
             const mCod = cod.match(/^(19\d{2}|20\d{2})/);
             if (mCod) return mCod[1];
             const mNome = nome.match(/\b(19\d{2}|20\d{2})\b/);
@@ -1445,7 +1440,6 @@ async function buscarFipeAutomatica(silencioso) {
             return '';
         }
 
-        // FIX: prioriza Ano MODELO (padrão FIPE), depois Ano FABR
         let anoEncontrado = null;
         if (anoModel) {
             anoEncontrado = anos.find(a => extrairAnoDoItem(a) === anoModel);
@@ -1454,7 +1448,6 @@ async function buscarFipeAutomatica(silencioso) {
             anoEncontrado = anos.find(a => extrairAnoDoItem(a) === anoFabr);
         }
 
-        // FIX: SEM fallback para anos[0] (era o que causava o "32000")
         if (!anoEncontrado) {
             if (!silencioso) {
                 let msg = '⚠️ Ano não encontrado na FIPE para este modelo.\n\n';
@@ -1470,7 +1463,6 @@ async function buscarFipeAutomatica(silencioso) {
             return;
         }
 
-        // 4) Valor
         const respValor = await fetch(`https://parallelum.com.br/fipe/api/v1/carros/marcas/${marcaEncontrada.codigo}/modelos/${melhorModelo.codigo}/anos/${anoEncontrado.codigo}`);
         const dataValor = await respValor.json();
 
@@ -1519,9 +1511,6 @@ function configurarBuscaFipeAutomatica() {
         el.addEventListener('blur', agendarBuscaFipeAutomatica);
     });
 }
-/* ============================================================
-   FIM — CONSULTA AUTOMÁTICA DA TABELA FIPE
-   ============================================================ */
 
 async function salvarVeiculo() {
     const fabricante = document.getElementById('veicFabricante').value.trim();
@@ -1655,17 +1644,110 @@ function editarVeiculo(i) {
 
 function excluirVeiculo(i) {
     if (!confirmarSenhaADM()) return;
-    if (!confirm('Excluir permanentemente este veículo?')) return;
+    const v = db.veiculos[i];
+    if (!v) { alert('Veículo não encontrado.'); return; }
+    const placaNorm = normalizarPlaca(v.placa);
+    if (!placaNorm) { alert('Placa do veículo inválida! Não é possível excluir.'); return; }
+    if (!confirm(`Excluir permanentemente o veículo "${v.fabricante || ''}" (${v.placa || ''})?\n\n⚠️ ATENÇÃO — Também serão excluídos automaticamente:\n• Locações ativas e encerradas deste veículo\n• Pagamentos (aluguéis) vinculados\n• Histórico Geral e Histórico de Aluguéis\n• Manutenções, serviços de mecânica e compras\n• Pendências, comprovantes de pagamento e documentos anexados\n\nDeseja continuar?`)) return;
+
+    const relatorio = [];
+
+    // Locações ativas
+    let antes = db.locacoes.length;
+    db.locacoes = db.locacoes.filter(l => !l || normalizarPlaca(l.placa) !== placaNorm);
+    if (antes - db.locacoes.length > 0) relatorio.push(`• ${antes - db.locacoes.length} locação(ões) ativa(s)`);
+
+    // Locações encerradas
+    antes = db.locacoesEncerradas.length;
+    db.locacoesEncerradas = db.locacoesEncerradas.filter(l => !l || normalizarPlaca(l.placa) !== placaNorm);
+    if (antes - db.locacoesEncerradas.length > 0) relatorio.push(`• ${antes - db.locacoesEncerradas.length} locação(ões) encerrada(s)`);
+
+    // Aluguéis (pagamentos)
+    antes = db.alugueis.length;
+    db.alugueis = db.alugueis.filter(a => !a || normalizarPlaca(a.placa) !== placaNorm);
+    if (antes - db.alugueis.length > 0) relatorio.push(`• ${antes - db.alugueis.length} pagamento(s)`);
+
+    // Histórico geral
+    antes = db.historico.length;
+    db.historico = db.historico.filter(h => !h || normalizarPlaca(h.placa) !== placaNorm);
+    if (antes - db.historico.length > 0) relatorio.push(`• ${antes - db.historico.length} registro(s) do histórico geral`);
+
+    // Histórico de aluguéis
+    antes = db.historicoAlugueis.length;
+    db.historicoAlugueis = db.historicoAlugueis.filter(h => !h || normalizarPlaca(h.placa) !== placaNorm);
+    if (antes - db.historicoAlugueis.length > 0) relatorio.push(`• ${antes - db.historicoAlugueis.length} registro(s) do histórico de aluguéis`);
+
+    // Manutenção
+    antes = db.manutencao.length;
+    db.manutencao = db.manutencao.filter(m => !m || normalizarPlaca(m.placa) !== placaNorm);
+    if (antes - db.manutencao.length > 0) relatorio.push(`• ${antes - db.manutencao.length} manutenção(ões)`);
+
+    // Mecânico
+    antes = db.mecanico.length;
+    db.mecanico = db.mecanico.filter(m => !m || normalizarPlaca(m.placa) !== placaNorm);
+    if (antes - db.mecanico.length > 0) relatorio.push(`• ${antes - db.mecanico.length} serviço(s) de mecânica`);
+
+    // Compras
+    antes = db.compras.length;
+    db.compras = db.compras.filter(c => !c || normalizarPlaca(c.placa) !== placaNorm);
+    if (antes - db.compras.length > 0) relatorio.push(`• ${antes - db.compras.length} compra(s)`);
+
+    // Pendentes
+    antes = db.pendentes.length;
+    db.pendentes = db.pendentes.filter(p => !p || normalizarPlaca(p.placa) !== placaNorm);
+    if (antes - db.pendentes.length > 0) relatorio.push(`• ${antes - db.pendentes.length} pendência(s)`);
+
+    // Comprovantes de pagamento
+    antes = db.comprovantesPagamento.length;
+    db.comprovantesPagamento = db.comprovantesPagamento.filter(c => !c || normalizarPlaca(c.placa) !== placaNorm);
+    if (antes - db.comprovantesPagamento.length > 0) relatorio.push(`• ${antes - db.comprovantesPagamento.length} comprovante(s) de pagamento`);
+
+    // Comprovantes Doc
+    antes = db.comprovantesDoc.length;
+    db.comprovantesDoc = db.comprovantesDoc.filter(c => !c || normalizarPlaca(c.placa) !== placaNorm);
+    if (antes - db.comprovantesDoc.length > 0) relatorio.push(`• ${antes - db.comprovantesDoc.length} comprovante(s) DOC`);
+
+    // Documentos vinculados à placa (IndexedDB + objetos)
+    if (db.documentosPlacas) {
+        const chave = Object.keys(db.documentosPlacas).find(k => normalizarPlaca(k) === placaNorm);
+        if (chave) {
+            const qtd = (db.documentosPlacas[chave] || []).length;
+            (db.documentosPlacas[chave] || []).forEach(doc => {
+                if (doc && doc.storageId) {
+                    try { idbExcluir(doc.storageId).catch(e => console.warn('IDB excluir:', e)); } catch(e) {}
+                }
+            });
+            delete db.documentosPlacas[chave];
+            if (qtd > 0) relatorio.push(`• ${qtd} documento(s) da placa`);
+        }
+    }
+
+    // Remove o veículo
     db.veiculos.splice(i, 1);
     if (veiculoEditandoIndex === i) { veiculoEditandoIndex = null; atualizarEstadoEdicaoVeiculo(); limparCamposVeiculo(); }
     else if (veiculoEditandoIndex !== null && veiculoEditandoIndex > i) veiculoEditandoIndex--;
+
     atualizarTabelaVeiculos();
     atualizarCombosLocacao();
     atualizarPlacasManutencao();
     atualizarPlacasMecanico();
     atualizarComboPlacasDocumentos();
-    registrarAuditoria('Exclusão', `Veículo excluído índice ${i}`);
+    atualizarTabelaLocacoes();
+    atualizarTabelaLocEncerrada();
+    atualizarTabelaAlugueis();
+    atualizarTabelaHistorico();
+    atualizarTabelaHistoricoAlugueis();
+    atualizarTabelaManutencao();
+    atualizarTabelaMecanico();
+    atualizarTabelaPendentes();
+    atualizarTabelaComprovantesPag();
+    atualizarTabelaDoc();
+    atualizarGaleriaComprovantes();
+    atualizarTabelaFluxoCaixa();
+
+    registrarAuditoria('Exclusão', `Veículo excluído: ${v.fabricante || ''} - ${v.placa || ''}${relatorio.length ? ' | ' + relatorio.join('; ') : ''}`);
     salvarDB();
+    alert('✅ Veículo excluído com sucesso!' + (relatorio.length ? '\n\n📋 Itens removidos automaticamente:\n' + relatorio.join('\n') : ''));
 }
 
 function debugVeiculos() {
@@ -1801,13 +1883,64 @@ function editarCliente(i) {
 
 function excluirCliente(i) {
     if (!confirmarSenhaADM()) return;
-    if (!confirm('Excluir este cliente?')) return;
+    const c = db.clientes[i];
+    if (!c) { alert('Cliente não encontrado.'); return; }
+    if (!confirm(`Excluir o cliente "${c.nome}"?\n\n⚠️ ATENÇÃO — Também serão excluídos automaticamente:\n• Usuário(s) vinculado(s)\n• Locações ativas e encerradas\n• Pagamentos (aluguéis) pendentes e pagos\n• Histórico de Aluguéis\n\nDeseja continuar?`)) return;
+
+    const nomeUpper = String(c.nome || '').toUpperCase().trim();
+    const primeiroNome = nomeUpper.split(/\s+/)[0];
+    const relatorio = [];
+
+    // Remove usuário criado automaticamente (MOTORISTA com primeiro nome igual)
+    if (primeiroNome && primeiroNome !== 'SERGIO') {
+        const antesU = db.usuarios.length;
+        db.usuarios = db.usuarios.filter(u => {
+            if (!u) return true;
+            const uNome = String(u.nome || '').toUpperCase().trim();
+            if (uNome === primeiroNome && u.tipo === 'MOTORISTA') return false;
+            return true;
+        });
+        const removidosU = antesU - db.usuarios.length;
+        if (removidosU > 0) relatorio.push(`• ${removidosU} usuário(s) vinculado(s)`);
+    }
+
+    // Locações ativas
+    let antes = db.locacoes.length;
+    db.locacoes = db.locacoes.filter(l => !l || String(l.locatario || '').toUpperCase().trim() !== nomeUpper);
+    if (antes - db.locacoes.length > 0) relatorio.push(`• ${antes - db.locacoes.length} locação(ões) ativa(s)`);
+
+    // Locações encerradas
+    antes = db.locacoesEncerradas.length;
+    db.locacoesEncerradas = db.locacoesEncerradas.filter(l => !l || String(l.locatario || '').toUpperCase().trim() !== nomeUpper);
+    if (antes - db.locacoesEncerradas.length > 0) relatorio.push(`• ${antes - db.locacoesEncerradas.length} locação(ões) encerrada(s)`);
+
+    // Aluguéis (pagamentos)
+    antes = db.alugueis.length;
+    db.alugueis = db.alugueis.filter(a => !a || String(a.locatario || '').toUpperCase().trim() !== nomeUpper);
+    if (antes - db.alugueis.length > 0) relatorio.push(`• ${antes - db.alugueis.length} pagamento(s)`);
+
+    // Histórico de aluguéis
+    antes = db.historicoAlugueis.length;
+    db.historicoAlugueis = db.historicoAlugueis.filter(h => !h || String(h.locatario || '').toUpperCase().trim() !== nomeUpper);
+    if (antes - db.historicoAlugueis.length > 0) relatorio.push(`• ${antes - db.historicoAlugueis.length} registro(s) do histórico de aluguéis`);
+
+    // Remove o cliente
     db.clientes.splice(i, 1);
     if (clienteEditandoIndex === i) { clienteEditandoIndex = null; atualizarEstadoEdicaoCliente(); limparCamposCliente(); limparSelfieCliente(); }
     else if (clienteEditandoIndex !== null && clienteEditandoIndex > i) clienteEditandoIndex--;
+
     atualizarTabelaClientes();
+    atualizarTabelaUsuario();
     atualizarCombosLocacao();
+    atualizarTabelaLocacoes();
+    atualizarTabelaLocEncerrada();
+    atualizarTabelaAlugueis();
+    atualizarTabelaHistoricoAlugueis();
+    atualizarAbasVistoria();
+
+    registrarAuditoria('Exclusão', `Cliente excluído: ${c.nome}${relatorio.length ? ' | ' + relatorio.join('; ') : ''}`);
     salvarDB();
+    alert('✅ Cliente excluído com sucesso!' + (relatorio.length ? '\n\n📋 Itens removidos automaticamente:\n' + relatorio.join('\n') : ''));
 }
 
 function criarUsuarioDoCliente(cliente) {
@@ -2290,14 +2423,49 @@ function editarLocacao(i) {
 
 function excluirLocacao(i) {
     if (!confirmarSenhaADM()) return;
-    if (!confirm('Excluir esta locação?')) return;
+    const l = db.locacoes[i];
+    if (!l) { alert('Locação não encontrada.'); return; }
+    if (!confirm(`Excluir a locação de "${l.locatario}" - ${l.placa}?\n\n⚠️ ATENÇÃO — Também serão excluídos automaticamente:\n• Pagamentos (aluguéis) vinculados\n• Histórico de Aluguéis vinculado\n\nDeseja continuar?`)) return;
+
+    const nomeUpper = String(l.locatario || '').toUpperCase().trim();
+    const placaNorm = normalizarPlaca(l.placa);
+    const relatorio = [];
+
+    // Aluguéis vinculados (mesmo locatário + mesma placa)
+    let antes = db.alugueis.length;
+    db.alugueis = db.alugueis.filter(a => {
+        if (!a) return true;
+        const mesmoLoc = String(a.locatario || '').toUpperCase().trim() === nomeUpper;
+        const mesmaPlaca = normalizarPlaca(a.placa) === placaNorm;
+        if (mesmoLoc && mesmaPlaca) return false;
+        return true;
+    });
+    if (antes - db.alugueis.length > 0) relatorio.push(`• ${antes - db.alugueis.length} pagamento(s)`);
+
+    // Histórico de aluguéis vinculado
+    antes = db.historicoAlugueis.length;
+    db.historicoAlugueis = db.historicoAlugueis.filter(h => {
+        if (!h) return true;
+        const mesmoLoc = String(h.locatario || '').toUpperCase().trim() === nomeUpper;
+        const mesmaPlaca = normalizarPlaca(h.placa) === placaNorm;
+        if (mesmoLoc && mesmaPlaca) return false;
+        return true;
+    });
+    if (antes - db.historicoAlugueis.length > 0) relatorio.push(`• ${antes - db.historicoAlugueis.length} registro(s) do histórico de aluguéis`);
+
+    // Remove a locação
     db.locacoes.splice(i, 1);
     if (locacaoEditandoIndex === i) { locacaoEditandoIndex = null; atualizarEstadoEdicaoLocacao(); limparCamposLocacao(); }
     else if (locacaoEditandoIndex !== null && locacaoEditandoIndex > i) locacaoEditandoIndex--;
+
     atualizarTabelaLocacoes();
     atualizarAbasVistoria();
-    registrarAuditoria('Exclusão', `Locação excluída índice ${i}`);
+    atualizarTabelaAlugueis();
+    atualizarTabelaHistoricoAlugueis();
+
+    registrarAuditoria('Exclusão', `Locação excluída: ${l.locatario} - ${l.placa}${relatorio.length ? ' | ' + relatorio.join('; ') : ''}`);
     salvarDB();
+    alert('✅ Locação excluída com sucesso!' + (relatorio.length ? '\n\n📋 Itens removidos automaticamente:\n' + relatorio.join('\n') : ''));
 }
 
 function encerrarLocacao(i) {
@@ -2592,10 +2760,43 @@ function reabrirLocacao(i) {
 
 function excluirLocacaoEncerrada(i) {
     if (!confirmarSenhaADM()) return;
-    if (!confirm('Excluir permanentemente esta locação encerrada?')) return;
+    const l = db.locacoesEncerradas[i];
+    if (!l) { alert('Locação encerrada não encontrada.'); return; }
+    if (!confirm(`Excluir permanentemente a locação encerrada de "${l.locatario}" - ${l.placa}?\n\n⚠️ ATENÇÃO — Também serão excluídos automaticamente:\n• Pagamentos (aluguéis) remanescentes\n• Histórico de Aluguéis vinculado\n\nDeseja continuar?`)) return;
+
+    const nomeUpper = String(l.locatario || '').toUpperCase().trim();
+    const placaNorm = normalizarPlaca(l.placa);
+    const relatorio = [];
+
+    // Aluguéis remanescentes vinculados
+    let antes = db.alugueis.length;
+    db.alugueis = db.alugueis.filter(a => {
+        if (!a) return true;
+        const mesmoLoc = String(a.locatario || '').toUpperCase().trim() === nomeUpper;
+        const mesmaPlaca = normalizarPlaca(a.placa) === placaNorm;
+        if (mesmoLoc && mesmaPlaca) return false;
+        return true;
+    });
+    if (antes - db.alugueis.length > 0) relatorio.push(`• ${antes - db.alugueis.length} pagamento(s)`);
+
+    // Histórico de aluguéis vinculado
+    antes = db.historicoAlugueis.length;
+    db.historicoAlugueis = db.historicoAlugueis.filter(h => {
+        if (!h) return true;
+        const mesmoLoc = String(h.locatario || '').toUpperCase().trim() === nomeUpper;
+        const mesmaPlaca = normalizarPlaca(h.placa) === placaNorm;
+        if (mesmoLoc && mesmaPlaca) return false;
+        return true;
+    });
+    if (antes - db.historicoAlugueis.length > 0) relatorio.push(`• ${antes - db.historicoAlugueis.length} registro(s) do histórico de aluguéis`);
+
     db.locacoesEncerradas.splice(i, 1);
     atualizarTabelaLocEncerrada();
+    atualizarTabelaAlugueis();
+    atualizarTabelaHistoricoAlugueis();
     salvarDB();
+    registrarAuditoria('Exclusão', `Locação encerrada excluída: ${l.locatario} - ${l.placa}${relatorio.length ? ' | ' + relatorio.join('; ') : ''}`);
+    alert('✅ Locação encerrada excluída!' + (relatorio.length ? '\n\n📋 Itens removidos automaticamente:\n' + relatorio.join('\n') : ''));
 }
 
 function atualizarPlacasManutencao() {
@@ -2894,11 +3095,34 @@ function atualizarTabelaHistorico() {
 
 function excluirHistorico(index) {
     if (!confirmarSenhaADM()) return;
+    const h = db.historico[index];
+    if (!h) { alert('Registro não encontrado.'); return; }
     if (!confirm('Excluir este registro do histórico geral?')) return;
+
+    const placaNorm = normalizarPlaca(h.placa);
+    const relatorio = [];
+
+    // Remove registros vinculados: histórico de aluguéis com mesma placa e mesmo valor/data
+    if (placaNorm) {
+        const valorNum = parseMoeda(h.valor);
+        let antes = db.historicoAlugueis.length;
+        db.historicoAlugueis = db.historicoAlugueis.filter(ha => {
+            if (!ha) return true;
+            if (normalizarPlaca(ha.placa) !== placaNorm) return true;
+            const valorHA = Number(ha.valorNumerico) || parseMoeda(ha.valor);
+            const mesmaData = (ha.dataPagamento || ha.data) === h.data;
+            if (mesmaData && Math.abs(valorHA - valorNum) < 0.01) return false;
+            return true;
+        });
+        if (antes - db.historicoAlugueis.length > 0) relatorio.push(`• ${antes - db.historicoAlugueis.length} registro(s) do histórico de aluguéis`);
+    }
+
     db.historico.splice(index, 1);
     atualizarTabelaHistorico();
+    atualizarTabelaHistoricoAlugueis();
     salvarDB();
-    registrarAuditoria('Exclusão', 'Registro do histórico geral excluído');
+    registrarAuditoria('Exclusão', 'Registro do histórico geral excluído' + (relatorio.length ? ' | ' + relatorio.join('; ') : ''));
+    alert('✅ Registro excluído!' + (relatorio.length ? '\n\n📋 Itens removidos automaticamente:\n' + relatorio.join('\n') : ''));
 }
 
 function atualizarTabelaHistoricoAlugueis() {
@@ -3300,9 +3524,6 @@ function imprimirContratoLocacao() { _ctPrint(gerarHTMLContratoLocacao()); }
 function imprimirContratoTermo() { _ctPrint(gerarHTMLTermoResponsabilidade()); }
 function imprimirContratoNota() { _ctPrint(gerarHTMLNotaPromissoria()); }
 
-/* ============================================================
-   AUTO-PREENCHIMENTO DE CONTRATOS E GERAÇÃO DE PDFs
-   ============================================================ */
 function _setContratoVal(id, valor) {
     const el = document.getElementById(id);
     if (el && valor !== undefined && valor !== null && valor !== '') el.value = valor;
@@ -3667,9 +3888,6 @@ function switchSubTab(t) {
     if (t === 'comprovantesPag') atualizarTabelaComprovantesPag();
 }
 
-/* ============================================================
-   VISTORIA — SUB-ABAS E CÂMERA
-   ============================================================ */
 function atualizarAbasVistoria() {
     const tabsContainer = document.getElementById('vistoriaSubTabs');
     const contentContainer = document.getElementById('vistoriaContent');
@@ -3822,9 +4040,6 @@ function confirmarVistoria() {
     
     fecharCameraVistoria();
 }
-/* ============================================================
-   FIM VISTORIA
-   ============================================================ */
 
 function comprimirImagemDataURL(dataUrl, maxWidth, quality, callback) {
     const img = new Image();
@@ -4150,10 +4365,37 @@ function marcarPagamentoPago(i) {
 
 function excluirPagamento(i) {
     if (!confirmarSenhaADM()) return;
-    if (!confirm('Excluir este pagamento?')) return;
+    const a = db.alugueis[i];
+    if (!a) { alert('Pagamento não encontrado.'); return; }
+    if (!confirm(`Excluir o pagamento de "${a.locatario}" - ${a.placa} (${a.valor})?\n\n⚠️ ATENÇÃO — Também será removido o lançamento correspondente do Histórico de Aluguéis.\n\nDeseja continuar?`)) return;
+
+    const nomeUpper = String(a.locatario || '').toUpperCase().trim();
+    const placaNorm = normalizarPlaca(a.placa);
+    const valorNum = Number(a.valorNumerico) || parseMoeda(a.valor) || 0;
+    const dataRefPgto = a.dataPagamento || a.data || '';
+    const parcelaRef = String(a.parcela || '');
+    const relatorio = [];
+
+    // Remove registro correspondente do histórico de aluguéis
+    let antes = db.historicoAlugueis.length;
+    db.historicoAlugueis = db.historicoAlugueis.filter(h => {
+        if (!h) return true;
+        if (String(h.locatario || '').toUpperCase().trim() !== nomeUpper) return true;
+        if (normalizarPlaca(h.placa) !== placaNorm) return true;
+        const valorH = Number(h.valorNumerico) || parseMoeda(h.valor) || 0;
+        const mesmaData = (h.dataPagamento || h.data) === dataRefPgto;
+        const mesmaParcela = String(h.parcela || '') === parcelaRef;
+        if (mesmaData && mesmaParcela && Math.abs(valorH - valorNum) < 0.01) return false;
+        return true;
+    });
+    if (antes - db.historicoAlugueis.length > 0) relatorio.push(`• ${antes - db.historicoAlugueis.length} registro(s) do histórico de aluguéis`);
+
     db.alugueis.splice(i, 1);
     atualizarTabelaAlugueis();
+    atualizarTabelaHistoricoAlugueis();
     salvarDB();
+    registrarAuditoria('Exclusão', `Pagamento excluído: ${a.locatario} - ${a.placa}${relatorio.length ? ' | ' + relatorio.join('; ') : ''}`);
+    alert('✅ Pagamento excluído com sucesso!' + (relatorio.length ? '\n\n📋 Itens removidos automaticamente:\n' + relatorio.join('\n') : ''));
 }
 
 function atualizarResumoFinanceiro() {}
@@ -4983,9 +5225,6 @@ function excluirComprovanteSalvo(idx) {
     alert('✅ Comprovante excluído.');
 }
 
-/* ============================================================
-   DOC VEÍCULO — IMPORTAÇÃO DE CRLV (PDF / OCR + IndexedDB)
-   ============================================================ */
 function abrirIDB() {
     if (idbHandle) return Promise.resolve(idbHandle);
     return new Promise((resolve, reject) => {
@@ -5462,9 +5701,6 @@ async function excluirDocVeiculo(id) {
     });
 })();
 
-/* ============================================================
-   COMPROVANTE (ABA "DOC") — LEITURA, VALIDAÇÃO E CONCILIAÇÃO
-   ============================================================ */
 function converterDataBRparaISO(dataBR) {
     if (!dataBR || !dataBR.includes('/')) return '';
     const parts = dataBR.split('/');
@@ -5827,9 +6063,6 @@ function excluirDocComprovante(idx) {
     registrarAuditoria('Exclusão', 'Comprovante excluído: ' + c.nomeArquivo);
 }
 
-/* ============================================================
-   ABA PENDÊNCIAS — SALVAR (HISTÓRICO GERAL) / MARCAR PAGO (PRÓXIMA)
-   ============================================================ */
 function salvarPendencia() {
     const data       = document.getElementById('pendData').value;
     const descricao  = document.getElementById('pendDescricao').value.trim();
@@ -5846,7 +6079,6 @@ function salvarPendencia() {
     if (!Array.isArray(db.pendentes)) db.pendentes = [];
     if (!Array.isArray(db.historico)) db.historico = [];
 
-    // Salva a pendência
     db.pendentes.push({
         data,
         descricao,
@@ -5858,7 +6090,6 @@ function salvarPendencia() {
         dataPagamento: null
     });
 
-    // Salva no Histórico Geral
     const valorHistorico = credito || debito || '';
     db.historico.push({
         data: data,
@@ -5869,7 +6100,6 @@ function salvarPendencia() {
         oficina: ''
     });
 
-    // Limpa formulário
     ['pendData','pendDescricao','pendPlaca','pendCredito','pendDebito','pendVencimento'].forEach(id => {
         const el = document.getElementById(id); if (el) el.value = '';
     });
@@ -5963,9 +6193,6 @@ function marcarPendenciaPaga(i) {
     p.status = 'Pago';
     p.dataPagamento = hojeISO;
 
-    // ============================================================
-    // Cria a PRÓXIMA pendência (30 dias após o vencimento atual)
-    // ============================================================
     let proximoVencimentoMsg = '';
     try {
         const baseVenc = p.vencimento || hojeISO;

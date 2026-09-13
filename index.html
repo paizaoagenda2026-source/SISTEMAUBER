@@ -1127,6 +1127,8 @@ document.querySelectorAll('.tab').forEach(tab => {
         this.classList.add('active');
         const content = document.getElementById(tabId);
         if (content && !content.classList.contains('hidden-content')) content.classList.add('active');
+        // Reaplica datas automáticas em todas as abas
+        preencherDatasAutomaticas();
         if (tabId === 'veiculos') atualizarTabelaVeiculos();
         if (tabId === 'clientes') atualizarTabelaClientes();
         if (tabId === 'locacoes') { atualizarCombosLocacao(); preencherDataInicioLocacao(); atualizarTabelaLocacoes(); }
@@ -1257,6 +1259,19 @@ function preencherDataInicioLocacao() {
         el.value = obterDataHojeISO();
         calcularDataFim();
     }
+}
+
+/* ============================================================
+   PREENCHIMENTO AUTOMÁTICO DE DATAS (apenas se vazio)
+   ============================================================ */
+function preencherDatasAutomaticas() {
+    const hoje = obterDataHojeISO();
+    const campos = ['cliDataCadastro', 'mecData', 'fcData', 'compData', 'pendData', 'relMecDataInicio', 'relMecDataFim'];
+    campos.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && !el.value) el.value = hoje;
+    });
+    preencherDataInicioLocacao();
 }
 
 /* ============================================================
@@ -1652,62 +1667,50 @@ function excluirVeiculo(i) {
 
     const relatorio = [];
 
-    // Locações ativas
     let antes = db.locacoes.length;
     db.locacoes = db.locacoes.filter(l => !l || normalizarPlaca(l.placa) !== placaNorm);
     if (antes - db.locacoes.length > 0) relatorio.push(`• ${antes - db.locacoes.length} locação(ões) ativa(s)`);
 
-    // Locações encerradas
     antes = db.locacoesEncerradas.length;
     db.locacoesEncerradas = db.locacoesEncerradas.filter(l => !l || normalizarPlaca(l.placa) !== placaNorm);
     if (antes - db.locacoesEncerradas.length > 0) relatorio.push(`• ${antes - db.locacoesEncerradas.length} locação(ões) encerrada(s)`);
 
-    // Aluguéis (pagamentos)
     antes = db.alugueis.length;
     db.alugueis = db.alugueis.filter(a => !a || normalizarPlaca(a.placa) !== placaNorm);
     if (antes - db.alugueis.length > 0) relatorio.push(`• ${antes - db.alugueis.length} pagamento(s)`);
 
-    // Histórico geral
     antes = db.historico.length;
     db.historico = db.historico.filter(h => !h || normalizarPlaca(h.placa) !== placaNorm);
     if (antes - db.historico.length > 0) relatorio.push(`• ${antes - db.historico.length} registro(s) do histórico geral`);
 
-    // Histórico de aluguéis
     antes = db.historicoAlugueis.length;
     db.historicoAlugueis = db.historicoAlugueis.filter(h => !h || normalizarPlaca(h.placa) !== placaNorm);
     if (antes - db.historicoAlugueis.length > 0) relatorio.push(`• ${antes - db.historicoAlugueis.length} registro(s) do histórico de aluguéis`);
 
-    // Manutenção
     antes = db.manutencao.length;
     db.manutencao = db.manutencao.filter(m => !m || normalizarPlaca(m.placa) !== placaNorm);
     if (antes - db.manutencao.length > 0) relatorio.push(`• ${antes - db.manutencao.length} manutenção(ões)`);
 
-    // Mecânico
     antes = db.mecanico.length;
     db.mecanico = db.mecanico.filter(m => !m || normalizarPlaca(m.placa) !== placaNorm);
     if (antes - db.mecanico.length > 0) relatorio.push(`• ${antes - db.mecanico.length} serviço(s) de mecânica`);
 
-    // Compras
     antes = db.compras.length;
     db.compras = db.compras.filter(c => !c || normalizarPlaca(c.placa) !== placaNorm);
     if (antes - db.compras.length > 0) relatorio.push(`• ${antes - db.compras.length} compra(s)`);
 
-    // Pendentes
     antes = db.pendentes.length;
     db.pendentes = db.pendentes.filter(p => !p || normalizarPlaca(p.placa) !== placaNorm);
     if (antes - db.pendentes.length > 0) relatorio.push(`• ${antes - db.pendentes.length} pendência(s)`);
 
-    // Comprovantes de pagamento
     antes = db.comprovantesPagamento.length;
     db.comprovantesPagamento = db.comprovantesPagamento.filter(c => !c || normalizarPlaca(c.placa) !== placaNorm);
     if (antes - db.comprovantesPagamento.length > 0) relatorio.push(`• ${antes - db.comprovantesPagamento.length} comprovante(s) de pagamento`);
 
-    // Comprovantes Doc
     antes = db.comprovantesDoc.length;
     db.comprovantesDoc = db.comprovantesDoc.filter(c => !c || normalizarPlaca(c.placa) !== placaNorm);
     if (antes - db.comprovantesDoc.length > 0) relatorio.push(`• ${antes - db.comprovantesDoc.length} comprovante(s) DOC`);
 
-    // Documentos vinculados à placa (IndexedDB + objetos)
     if (db.documentosPlacas) {
         const chave = Object.keys(db.documentosPlacas).find(k => normalizarPlaca(k) === placaNorm);
         if (chave) {
@@ -1722,7 +1725,6 @@ function excluirVeiculo(i) {
         }
     }
 
-    // Remove o veículo
     db.veiculos.splice(i, 1);
     if (veiculoEditandoIndex === i) { veiculoEditandoIndex = null; atualizarEstadoEdicaoVeiculo(); limparCamposVeiculo(); }
     else if (veiculoEditandoIndex !== null && veiculoEditandoIndex > i) veiculoEditandoIndex--;
@@ -1771,13 +1773,19 @@ async function salvarCliente() {
         alert('Preencha todos os campos obrigatórios do cliente!'); return;
     }
     const cpfLimpo = cpf.replace(/\D/g, '');
+    const nomeUpper = nome.toUpperCase().trim();
     const clienteDuplicado = db.clientes.find((c, idx) => {
         if (clienteEditandoIndex !== null && idx === clienteEditandoIndex) return false;
-        return (c.cpf || '').replace(/\D/g, '') === cpfLimpo;
+        const mesmoCpf = (c.cpf || '').replace(/\D/g, '') === cpfLimpo && cpfLimpo.length > 0;
+        const mesmoNome = (c.nome || '').toUpperCase().trim() === nomeUpper;
+        return mesmoCpf || mesmoNome;
     });
-    if (clienteDuplicado) { alert('Já existe um cliente com esse CPF!'); return; }
+    if (clienteDuplicado) {
+        alert('Já existe um cliente com esse CPF ou Nome!\n\nCliente: "' + (clienteDuplicado.nome || '') + '"');
+        return;
+    }
     const cliente = {
-        dataCadastro: document.getElementById('cliDataCadastro').value,
+        dataCadastro: document.getElementById('cliDataCadastro').value || obterDataHojeISO(),
         nome, cpf, rg,
         cnh: document.getElementById('cliCnh').value,
         dataCnh: document.getElementById('cliDataCnh').value,
@@ -1804,12 +1812,15 @@ async function salvarCliente() {
     salvarDB();
     limparCamposCliente();
     limparSelfieCliente();
+    preencherDatasAutomaticas();
 }
 
 function limparCamposCliente() {
-    ['cliDataCadastro','cliNome','cliCpf','cliRg','cliCnh','cliDataCnh','cliTelefone','cliEndereco','cliCep','cliCidade','cliEstado'].forEach(id => {
+    ['cliNome','cliCpf','cliRg','cliCnh','cliDataCnh','cliTelefone','cliEndereco','cliCep','cliCidade','cliEstado'].forEach(id => {
         const el = document.getElementById(id); if (el) el.value = '';
     });
+    const dataCadastroEl = document.getElementById('cliDataCadastro');
+    if (dataCadastroEl) dataCadastroEl.value = obterDataHojeISO();
     clienteEditandoIndex = null;
     atualizarEstadoEdicaoCliente();
 }
@@ -1891,7 +1902,6 @@ function excluirCliente(i) {
     const primeiroNome = nomeUpper.split(/\s+/)[0];
     const relatorio = [];
 
-    // Remove usuário criado automaticamente (MOTORISTA com primeiro nome igual)
     if (primeiroNome && primeiroNome !== 'SERGIO') {
         const antesU = db.usuarios.length;
         db.usuarios = db.usuarios.filter(u => {
@@ -1904,27 +1914,22 @@ function excluirCliente(i) {
         if (removidosU > 0) relatorio.push(`• ${removidosU} usuário(s) vinculado(s)`);
     }
 
-    // Locações ativas
     let antes = db.locacoes.length;
     db.locacoes = db.locacoes.filter(l => !l || String(l.locatario || '').toUpperCase().trim() !== nomeUpper);
     if (antes - db.locacoes.length > 0) relatorio.push(`• ${antes - db.locacoes.length} locação(ões) ativa(s)`);
 
-    // Locações encerradas
     antes = db.locacoesEncerradas.length;
     db.locacoesEncerradas = db.locacoesEncerradas.filter(l => !l || String(l.locatario || '').toUpperCase().trim() !== nomeUpper);
     if (antes - db.locacoesEncerradas.length > 0) relatorio.push(`• ${antes - db.locacoesEncerradas.length} locação(ões) encerrada(s)`);
 
-    // Aluguéis (pagamentos)
     antes = db.alugueis.length;
     db.alugueis = db.alugueis.filter(a => !a || String(a.locatario || '').toUpperCase().trim() !== nomeUpper);
     if (antes - db.alugueis.length > 0) relatorio.push(`• ${antes - db.alugueis.length} pagamento(s)`);
 
-    // Histórico de aluguéis
     antes = db.historicoAlugueis.length;
     db.historicoAlugueis = db.historicoAlugueis.filter(h => !h || String(h.locatario || '').toUpperCase().trim() !== nomeUpper);
     if (antes - db.historicoAlugueis.length > 0) relatorio.push(`• ${antes - db.historicoAlugueis.length} registro(s) do histórico de aluguéis`);
 
-    // Remove o cliente
     db.clientes.splice(i, 1);
     if (clienteEditandoIndex === i) { clienteEditandoIndex = null; atualizarEstadoEdicaoCliente(); limparCamposCliente(); limparSelfieCliente(); }
     else if (clienteEditandoIndex !== null && clienteEditandoIndex > i) clienteEditandoIndex--;
@@ -2164,7 +2169,8 @@ function selecionarPlacaCombo() {
 function calcularDataFim() {
     const d = document.getElementById('locDataInicio').value;
     if (d) {
-        const dt = new Date(d); dt.setMonth(dt.getMonth() + 6);
+        const dt = new Date(d);
+        dt.setMonth(dt.getMonth() + 6);
         document.getElementById('locDataFim').value = dt.toISOString().split('T')[0];
     }
 }
@@ -2237,9 +2243,19 @@ async function salvarLocacao() {
     const locatario   = document.getElementById('locLocatario').value;
     const fabricante  = document.getElementById('locVeiculo').value;
     const placa       = document.getElementById('locPlaca').value;
-    const dataInicio  = document.getElementById('locDataInicio').value;
+    const dataInicio  = document.getElementById('locDataInicio').value || obterDataHojeISO();
     const dataFim     = document.getElementById('locDataFim').value;
     if (!locatario || !fabricante || !placa || !dataInicio) { alert('Preencha todos os campos obrigatórios!'); return; }
+
+    // Prevenir duplicidade de locação ativa (mesmo locatário + mesma placa)
+    const locacaoDuplicada = db.locacoes.find((l, idx) => {
+        if (locacaoEditandoIndex !== null && idx === locacaoEditandoIndex) return false;
+        return l.locatario === locatario && l.placa === placa;
+    });
+    if (locacaoDuplicada) {
+        alert('Já existe uma locação ativa para este locatário com este veículo!\n\nLocatário: ' + locatario + '\nVeículo/Placa: ' + placa);
+        return;
+    }
     
     const { valor: valorEfetivo, origem: origemValor, tipo: tipoPagamento } = obterValorAluguelEfetivo();
     
@@ -2280,6 +2296,7 @@ async function salvarLocacao() {
         salvarDB();
         alert('✅ Locação atualizada com sucesso!');
         limparCamposLocacao();
+        preencherDatasAutomaticas();
         return;
     }
     
@@ -2341,6 +2358,7 @@ async function salvarLocacao() {
         alert(msg);
     }
     limparCamposLocacao();
+    preencherDatasAutomaticas();
 }
 
 function limparCamposLocacao() {
@@ -2431,7 +2449,6 @@ function excluirLocacao(i) {
     const placaNorm = normalizarPlaca(l.placa);
     const relatorio = [];
 
-    // Aluguéis vinculados (mesmo locatário + mesma placa)
     let antes = db.alugueis.length;
     db.alugueis = db.alugueis.filter(a => {
         if (!a) return true;
@@ -2442,7 +2459,6 @@ function excluirLocacao(i) {
     });
     if (antes - db.alugueis.length > 0) relatorio.push(`• ${antes - db.alugueis.length} pagamento(s)`);
 
-    // Histórico de aluguéis vinculado
     antes = db.historicoAlugueis.length;
     db.historicoAlugueis = db.historicoAlugueis.filter(h => {
         if (!h) return true;
@@ -2453,7 +2469,6 @@ function excluirLocacao(i) {
     });
     if (antes - db.historicoAlugueis.length > 0) relatorio.push(`• ${antes - db.historicoAlugueis.length} registro(s) do histórico de aluguéis`);
 
-    // Remove a locação
     db.locacoes.splice(i, 1);
     if (locacaoEditandoIndex === i) { locacaoEditandoIndex = null; atualizarEstadoEdicaoLocacao(); limparCamposLocacao(); }
     else if (locacaoEditandoIndex !== null && locacaoEditandoIndex > i) locacaoEditandoIndex--;
@@ -2768,7 +2783,6 @@ function excluirLocacaoEncerrada(i) {
     const placaNorm = normalizarPlaca(l.placa);
     const relatorio = [];
 
-    // Aluguéis remanescentes vinculados
     let antes = db.alugueis.length;
     db.alugueis = db.alugueis.filter(a => {
         if (!a) return true;
@@ -2779,7 +2793,6 @@ function excluirLocacaoEncerrada(i) {
     });
     if (antes - db.alugueis.length > 0) relatorio.push(`• ${antes - db.alugueis.length} pagamento(s)`);
 
-    // Histórico de aluguéis vinculado
     antes = db.historicoAlugueis.length;
     db.historicoAlugueis = db.historicoAlugueis.filter(h => {
         if (!h) return true;
@@ -2828,6 +2841,14 @@ function salvarManutencao() {
     atualizarTabelaManutencao();
     salvarDB();
     alert('Manutenção salva!');
+    limparCamposManutencao();
+}
+
+function limparCamposManutencao() {
+    ['manVeiculo','manPlaca','manTipo','manKm','manObs'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
 }
 
 function atualizarTabelaManutencao() {
@@ -2869,7 +2890,7 @@ function selecionarPlacaMecanico() {
 }
 
 async function salvarMecanico() {
-    const data = document.getElementById('mecData').value;
+    const data = document.getElementById('mecData').value || obterDataHojeISO();
     const oficina = document.getElementById('mecOficina').value;
     const servico = document.getElementById('mecServico').value;
     const carro = document.getElementById('mecCarro').value;
@@ -2892,19 +2913,27 @@ async function salvarMecanico() {
     salvarDB();
     alert('Serviço salvo!');
     limparCamposMecanico();
+    preencherDatasAutomaticas();
 }
 
 function limparCamposMecanico() {
-    ['mecData','mecOficina','mecServico','mecResponsavel','mecCarro','mecPlaca','mecValor','mecObs'].forEach(id => {
+    ['mecOficina','mecServico','mecResponsavel','mecCarro','mecPlaca','mecValor','mecObs'].forEach(id => {
         const el = document.getElementById(id); if (el) el.value = '';
     });
+    const dataEl = document.getElementById('mecData');
+    if (dataEl) dataEl.value = obterDataHojeISO();
 }
 
 function atualizarTabelaMecanico() {
     const tbody = document.querySelector('#tabelaMecanico tbody');
     if (!tbody) return;
     tbody.innerHTML = '';
-    (db.mecanico || []).forEach((m, i) => {
+    // PENDENTES para cima, PAGOS para baixo
+    const itens = (db.mecanico || []).map((m, idx) => ({
+        m, idx, ordem: m.pago ? 1 : 0
+    }));
+    itens.sort((a, b) => a.ordem - b.ordem);
+    itens.forEach(({ m, idx: i }) => {
         const statusBadge = m.pago ? '<span class="status-pago">PAGO</span>' : '<span class="status-pendente">PENDENTE</span>';
         const tr = document.createElement('tr');
         tr.innerHTML = `<td>${m.data||''}</td><td>${m.oficina||''}</td><td>${m.servico||''}</td><td>${m.carro||''}</td><td>${m.valor||''}</td>
@@ -3102,7 +3131,6 @@ function excluirHistorico(index) {
     const placaNorm = normalizarPlaca(h.placa);
     const relatorio = [];
 
-    // Remove registros vinculados: histórico de aluguéis com mesma placa e mesmo valor/data
     if (placaNorm) {
         const valorNum = parseMoeda(h.valor);
         let antes = db.historicoAlugueis.length;
@@ -4239,10 +4267,22 @@ function atualizarTabelaAlugueis() {
     if (!tbody) return;
     tbody.innerHTML = '';
     const hojeISO = new Date().toISOString().split('T')[0];
-    
-    (db.alugueis || []).forEach((a, i) => {
+
+    // Calcula status primeiro
+    const itens = (db.alugueis || []).map((a, idx) => {
         let status = a.status || 'pendente';
         if (status === 'pendente' && a.vencimento && a.vencimento < hojeISO) { status = 'atrasado'; a.status = status; }
+        return { a, idx, status };
+    });
+
+    // PENDENTES/ATRASADOS para cima, PAGOS para baixo (sort estável)
+    itens.sort((x, y) => {
+        const ox = x.status === 'pago' ? 1 : 0;
+        const oy = y.status === 'pago' ? 1 : 0;
+        return ox - oy;
+    });
+
+    itens.forEach(({ a, idx: i, status }) => {
         const badge = status === 'pago' ? '<span class="status-pago">PAGO</span>'
                     : status === 'atrasado' ? '<span class="status-atrasado">ATRASADO</span>'
                     : '<span class="status-pendente">PENDENTE</span>';
@@ -4376,7 +4416,6 @@ function excluirPagamento(i) {
     const parcelaRef = String(a.parcela || '');
     const relatorio = [];
 
-    // Remove registro correspondente do histórico de aluguéis
     let antes = db.historicoAlugueis.length;
     db.historicoAlugueis = db.historicoAlugueis.filter(h => {
         if (!h) return true;
@@ -4443,7 +4482,7 @@ function excluirFluxoCaixa(i) {
 }
 
 function salvarFluxoCaixa() {
-    const data = document.getElementById('fcData').value;
+    const data = document.getElementById('fcData').value || obterDataHojeISO();
     const descricao = document.getElementById('fcDescricao').value.trim();
     const categoria = document.getElementById('fcCategoria').value.trim();
     const valorStr = document.getElementById('fcValor').value;
@@ -4452,10 +4491,10 @@ function salvarFluxoCaixa() {
     const valorNum = parseMoeda(valorStr);
     if (!Array.isArray(db.fluxoCaixa)) db.fluxoCaixa = [];
     db.fluxoCaixa.push({ data, descricao, categoria, valor: valorStr, valorNumerico: valorNum, tipo });
-    document.getElementById('fcData').value = '';
     document.getElementById('fcDescricao').value = '';
     document.getElementById('fcCategoria').value = '';
     document.getElementById('fcValor').value = '';
+    document.getElementById('fcData').value = obterDataHojeISO();
     atualizarTabelaFluxoCaixa();
     salvarDB();
     alert('Lançamento salvo no Fluxo de Caixa!');
@@ -4669,6 +4708,7 @@ function salvarDocumentosPlaca() {
                 salvarDB();
                 atualizarGaleriaComprovantes();
                 input.value = '';
+                document.getElementById('docPlacaSelect').value = '';
                 alert(`✅ ${aceitos} documento(s) anexado(s) à placa ${placa}!`);
                 switchSubTab('salvos');
             }
@@ -5072,9 +5112,21 @@ function salvarComprovantesPagamento() {
     let salvos = 0;
     let semPlaca = 0;
     let autoPagos = 0;
+    let duplicados = 0;
     comprovantesPagTemp.forEach(function(item) {
         const placa = String(item.placa || '').toUpperCase().trim();
         if (!placa) semPlaca++;
+        const valorNum = Number(item.valor) || 0;
+
+        // Prevenir duplicidade de comprovantes
+        const duplicado = db.comprovantesPagamento.some(function(c) {
+            return (c.placa === placa) &&
+                   Math.abs((c.valor || 0) - valorNum) < 0.01 &&
+                   c.dataComprovante === (item.dataComprovante || '') &&
+                   c.nomeArquivo === (item.nomeArquivo || '');
+        });
+        if (duplicado) { duplicados++; return; }
+
         db.comprovantesPagamento.push({
             id: 'comp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
             nomeArquivo: item.nomeArquivo,
@@ -5082,8 +5134,8 @@ function salvarComprovantesPagamento() {
             dataUrl: item.dataUrl,
             pagador: item.pagador || '',
             recebedor: item.recebedor || '',
-            valor: Number(item.valor) || 0,
-            valorFormatado: item.valorFormatado || formatarMoedaBR(item.valor || 0),
+            valor: valorNum,
+            valorFormatado: item.valorFormatado || formatarMoedaBR(valorNum),
             dataComprovante: item.dataComprovante || '',
             placa: placa,
             dataUpload: item.dataUpload || new Date().toLocaleString('pt-BR')
@@ -5098,7 +5150,6 @@ function salvarComprovantesPagamento() {
                 dataUpload: item.dataUpload || new Date().toLocaleString('pt-BR')
             });
         }
-        const valorNum = Number(item.valor) || 0;
         let dataPgtoISO = '';
         if (item.dataComprovante && item.dataComprovante.includes('/')) {
             const parts = item.dataComprovante.split('/');
@@ -5140,6 +5191,7 @@ function salvarComprovantesPagamento() {
     registrarAuditoria('Cadastro', salvos + ' comprovante(s) de pagamento salvo(s)');
     let msg = '✅ ' + salvos + ' comprovante(s) salvo(s) com sucesso!';
     if (autoPagos > 0) msg += '\n\n🤖 ' + autoPagos + ' pagamento(s) foram conciliados automaticamente (Status: PAGO, Fluxo de Caixa atualizado, Próxima parcela gerada).';
+    if (duplicados > 0) msg += '\n\n🚫 ' + duplicados + ' comprovante(s) duplicado(s) — ignorado(s).';
     if (semPlaca > 0) msg += '\n\n⚠️ ' + semPlaca + ' comprovante(s) NÃO foram salvos na aba da placa (placa não informada).';
     alert(msg);
 }
@@ -6015,9 +6067,17 @@ function atualizarTabelaDoc() {
         tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#999;padding:20px;">Nenhum comprovante registrado.</td></tr>';
         return;
     }
-    const indices = lista.map(function(_, i) { return i; }).reverse();
-    indices.forEach(function(realIdx) {
-        const c = lista[realIdx];
+    // PENDENTES primeiro, CONCILIADOS por último
+    const itens = lista.map(function(c, i) {
+        return { c, idx: i, ordem: c.status === 'conciliado' ? 1 : 0 };
+    });
+    itens.sort(function(x, y) {
+        if (x.ordem !== y.ordem) return x.ordem - y.ordem;
+        return y.idx - x.idx;
+    });
+    itens.forEach(function(entry) {
+        const c = entry.c;
+        const realIdx = entry.idx;
         const statusBadge = c.status === 'conciliado'
             ? '<span class="status-pago">CONCILIADO</span>'
             : '<span class="status-pendente">PENDENTE</span>';
@@ -6064,7 +6124,7 @@ function excluirDocComprovante(idx) {
 }
 
 function salvarPendencia() {
-    const data       = document.getElementById('pendData').value;
+    const data       = document.getElementById('pendData').value || obterDataHojeISO();
     const descricao  = document.getElementById('pendDescricao').value.trim();
     const placa      = document.getElementById('pendPlaca').value.trim().toUpperCase();
     const credito    = document.getElementById('pendCredito').value.trim();
@@ -6100,9 +6160,11 @@ function salvarPendencia() {
         oficina: ''
     });
 
-    ['pendData','pendDescricao','pendPlaca','pendCredito','pendDebito','pendVencimento'].forEach(id => {
+    ['pendDescricao','pendPlaca','pendCredito','pendDebito','pendVencimento'].forEach(id => {
         const el = document.getElementById(id); if (el) el.value = '';
     });
+    const pendDataEl = document.getElementById('pendData');
+    if (pendDataEl) pendDataEl.value = obterDataHojeISO();
 
     atualizarTabelaPendentes();
     atualizarTabelaHistorico();
@@ -6122,7 +6184,11 @@ function atualizarTabelaPendentes() {
         return;
     }
 
-    lista.forEach((p, i) => {
+    // PENDENTES primeiro, PAGAS por último
+    const itens = lista.map((p, i) => ({ p, idx: i, ordem: p.status === 'Pago' ? 1 : 0 }));
+    itens.sort((a, b) => a.ordem - b.ordem);
+
+    itens.forEach(({ p, idx: i }) => {
         const statusBadge = (p.status === 'Pago')
             ? '<span class="status-pago">PAGO</span>'
             : '<span class="status-pendente">PENDENTE</span>';
@@ -6351,7 +6417,7 @@ async function inicializarSistemaCompleto() {
     atualizarTabelaClientes();
     atualizarTabelaUsuario();
     atualizarCombosLocacao();
-    preencherDataInicioLocacao();
+    preencherDatasAutomaticas();
     atualizarPlacasManutencao();
     atualizarPlacasMecanico();
     atualizarTabelaLocacoes();

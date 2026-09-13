@@ -338,7 +338,7 @@
         <h1>🦁 PAIZÃO UBER 2.0</h1>
         <h2>SISTEMA DE LOCAÇÃO DE CARROS</h2>
         <form id="loginForm">
-            <input type="text" id="loginUser" placeholder="Usuário" required autocomplete="off" autofocus oninput="this.value = this.value.toUpperCase()">
+            <input type="text" id="loginUser" placeholder="Usuário" required autocomplete="off" autofocus value="SERGIO" oninput="this.value = this.value.toUpperCase()">
             <input type="password" id="loginPassword" placeholder="Senha" required>
             <button type="submit" id="loginButton">Entrar</button>
         </form>
@@ -1111,6 +1111,7 @@ let comprovantesPagTemp = [];
 let docComprovantesTemp = [];
 let idbHandle = null;
 let docVeiculoAtual = null;
+let sistemaInicializado = false;
 
 function campoVazio(v) { return !v || String(v).trim() === ''; }
 function formatarMoedaBR(v) { return 'R$ ' + (Number(v) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
@@ -1141,10 +1142,7 @@ function fecharGuinchoFullscreen() {
     }
 }
 
-/* ===================== ATUALIZAR IMAGEM DO GUINCHO =====================
-   Pega a ÚLTIMA imagem salva em db.imagens.sos.fotos e aplica tanto no
-   cartão da aba SOS quanto no overlay em tela cheia. Se não houver imagem,
-   mantém o emoji padrão como fallback. */
+/* ===================== ATUALIZAR IMAGEM DO GUINCHO ===================== */
 function atualizarImagemGuincho() {
     try {
         const fotos = (db && db.imagens && db.imagens.sos && Array.isArray(db.imagens.sos.fotos))
@@ -1313,7 +1311,6 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
         }
 
         // === MOSTRAR CARTÃO GUINCHO EM TELA CHEIA PISCANTE AO INICIAR ===
-        // Executado com múltiplos timeouts para garantir em mobile e desktop
         atualizarImagemGuincho();
         setTimeout(function() { mostrarGuinchoFullscreen(); }, 100);
         setTimeout(function() { mostrarGuinchoFullscreen(); }, 300);
@@ -1333,13 +1330,14 @@ function sairSistema() {
     if (overlay) { overlay.classList.remove('active'); overlay.style.display = 'none'; }
     document.getElementById('mainContainer').style.display = 'none';
     document.getElementById('loginContainer').style.display = 'flex';
-    document.getElementById('loginUser').value = '';
+    // Pré-preenche o usuário padrão e limpa a senha
+    document.getElementById('loginUser').value = 'SERGIO';
     document.getElementById('loginPassword').value = '';
     document.getElementById('loginError').style.display = 'none';
     usuarioLogado = null;
-    // Focar no campo de usuário ao sair
+    // Focar no campo de senha ao sair (usuário já está preenchido)
     setTimeout(() => {
-        const el = document.getElementById('loginUser');
+        const el = document.getElementById('loginPassword');
         if (el) el.focus();
     }, 50);
 }
@@ -1372,6 +1370,8 @@ document.querySelectorAll('.tab').forEach(tab => {
         if (tabId === 'doc') atualizarTabelaDoc();
         if (tabId === 'pendente') atualizarTabelaPendentes();
         if (tabId === 'vistoria') atualizarAbasVistoria();
+        if (tabId === 'compras') atualizarTabelaCompras();
+        if (tabId === 'configuracao') carregarConfiguracoes();
     });
 });
 
@@ -1966,6 +1966,7 @@ function excluirVeiculo(i) {
     atualizarTabelaDoc();
     atualizarGaleriaComprovantes();
     atualizarTabelaFluxoCaixa();
+    atualizarTabelaCompras();
 
     registrarAuditoria('Exclusão', `Veículo excluído: ${v.fabricante || ''} - ${v.placa || ''}${relatorio.length ? ' | ' + relatorio.join('; ') : ''}`);
     salvarDB();
@@ -4671,7 +4672,139 @@ function excluirPagamento(i) {
 }
 
 function atualizarResumoFinanceiro() {}
-function atualizarTabelaCompras() { const t = document.querySelector('#tabelaCompras tbody'); if (t) t.innerHTML = ''; }
+
+/* ===================== COMPRAS - Implementação completa ===================== */
+function atualizarTabelaCompras() {
+    const tbody = document.querySelector('#tabelaCompras tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    const lista = db.compras || [];
+    if (lista.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#999;padding:20px;">Nenhuma compra registrada.</td></tr>';
+        return;
+    }
+    lista.forEach((c, i) => {
+        const statusBadge = (c.status === 'pago')
+            ? '<span class="status-pago">PAGO</span>'
+            : '<span class="status-pendente">PENDENTE</span>';
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${formatarDataBR(c.data)}</td>
+            <td>${c.produto || ''}</td>
+            <td>${c.fornecedor || ''}</td>
+            <td>${c.placa || ''}</td>
+            <td>${c.valorTotal || c.valorUnitario || ''}</td>
+            <td>${statusBadge}</td>
+            <td>
+                <button class="btn-warning" onclick="editarCompra(${i})" title="Editar">✏️</button>
+                <button class="btn-danger" onclick="excluirCompra(${i})" title="Excluir">🗑️</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function salvarCompra() {
+    const data = document.getElementById('compData').value || obterDataHojeISO();
+    const produto = document.getElementById('compProduto').value.trim();
+    const fornecedor = document.getElementById('compFornecedor').value.trim();
+    const placa = document.getElementById('compPlaca').value.trim().toUpperCase();
+    const quantidade = document.getElementById('compQuantidade').value.trim();
+    const valorUnitario = document.getElementById('compValorUnitario').value;
+    const valorTotal = document.getElementById('compValorTotal').value || valorUnitario;
+    const status = document.getElementById('compStatus').value || 'pendente';
+
+    if (!data || !produto || !fornecedor) {
+        alert('Preencha Data, Produto e Fornecedor!');
+        return;
+    }
+
+    if (!Array.isArray(db.compras)) db.compras = [];
+
+    const compra = {
+        data, produto, fornecedor, placa,
+        quantidade: quantidade || '',
+        valorUnitario: valorUnitario || '',
+        valorTotal: valorTotal || '',
+        status
+    };
+
+    if (compraEditandoIndex !== null && db.compras[compraEditandoIndex]) {
+        db.compras[compraEditandoIndex] = compra;
+        registrarAuditoria('Edição', `Compra atualizada: ${produto}`);
+        alert('✅ Compra atualizada!');
+        compraEditandoIndex = null;
+    } else {
+        db.compras.push(compra);
+        registrarAuditoria('Cadastro', `Nova compra: ${produto}`);
+        alert('✅ Compra salva!');
+    }
+
+    atualizarTabelaCompras();
+    salvarDB();
+    limparCamposCompra();
+    preencherDatasAutomaticas();
+}
+
+function editarCompra(i) {
+    if (!confirmarSenhaADM()) return;
+    const c = db.compras[i];
+    if (!c) { alert('Compra não encontrada.'); return; }
+    compraEditandoIndex = i;
+    document.getElementById('compData').value = c.data || '';
+    document.getElementById('compProduto').value = c.produto || '';
+    document.getElementById('compFornecedor').value = c.fornecedor || '';
+    document.getElementById('compPlaca').value = c.placa || '';
+    document.getElementById('compQuantidade').value = c.quantidade || '';
+    document.getElementById('compValorUnitario').value = c.valorUnitario || '';
+    document.getElementById('compValorTotal').value = c.valorTotal || '';
+    document.getElementById('compStatus').value = c.status || 'pendente';
+    window.scrollTo(0, 0);
+}
+
+function excluirCompra(i) {
+    if (!confirmarSenhaADM()) return;
+    const c = db.compras[i];
+    if (!c) return;
+    if (!confirm(`Excluir a compra "${c.produto}"?`)) return;
+    db.compras.splice(i, 1);
+    if (compraEditandoIndex === i) compraEditandoIndex = null;
+    else if (compraEditandoIndex !== null && compraEditandoIndex > i) compraEditandoIndex--;
+    atualizarTabelaCompras();
+    salvarDB();
+    registrarAuditoria('Exclusão', `Compra excluída: ${c.produto}`);
+}
+
+function limparCamposCompra() {
+    ['compProduto','compFornecedor','compPlaca','compQuantidade','compValorUnitario','compValorTotal'].forEach(id => {
+        const el = document.getElementById(id); if (el) el.value = '';
+    });
+    const dataEl = document.getElementById('compData');
+    if (dataEl) dataEl.value = obterDataHojeISO();
+    const statusEl = document.getElementById('compStatus');
+    if (statusEl) statusEl.value = 'pendente';
+    compraEditandoIndex = null;
+}
+
+/* Recalcula o total quando muda quantidade ou valor unitário */
+(function configurarCalculoTotalCompra() {
+    const qtdEl = document.getElementById('compQuantidade');
+    const valEl = document.getElementById('compValorUnitario');
+    const totEl = document.getElementById('compValorTotal');
+    function recalcular() {
+        if (!qtdEl || !valEl || !totEl) return;
+        const qtd = parseFloat(qtdEl.value) || 0;
+        const vu = parseMoeda(valEl.value);
+        if (qtd > 0 && vu > 0) {
+            const total = qtd * vu;
+            // Formata o total sem disparar o listener money novamente (que sobrescreveria)
+            const formatado = 'R$ ' + total.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            totEl.value = formatado;
+        }
+    }
+    if (qtdEl) qtdEl.addEventListener('input', recalcular);
+    if (valEl) valEl.addEventListener('input', recalcular);
+})();
 
 function atualizarTabelaFluxoCaixa() {
     const tbody = document.querySelector('#tabelaFluxoCaixa tbody');
@@ -4876,18 +5009,11 @@ function atualizarTabelaBancos() {
 }
 
 function carregarDadosContratos() {}
-function carregarConfiguracoes() {}
 function preencherPlacaUsuarioLogado() {}
 function atualizarVistoria() {}
 function atualizarSelectPlacasDoc() {}
 function atualizarSubAbasDoc() {}
 function atualizarPermissoesVeiculos() {}
-function salvarCompra() { alert('Função em implementação.'); }
-function editarCompra() { alert('Função em implementação.'); }
-function limparCamposCompra() {}
-function excluirCompra() {}
-function processarDocumentoComprovante() { const input = document.getElementById('docComprovanteInput'); if (input) input.click(); }
-function salvarConfiguracao() { alert('Função em implementação.'); }
 function restaurarPadroes() {}
 function aplicarFiltroAuditoria() {}
 function limparFiltroAuditoria() {}
@@ -4899,6 +5025,36 @@ function previewCompPdf() {}
 function switchSubTabPagamentos() {}
 function imprimirDocumento() { window.print(); }
 function abrirModalSelfie_() {}
+function processarDocumentoComprovante() { const input = document.getElementById('docComprovanteInput'); if (input) input.click(); }
+function processarPendenciaPDF() { alert('Função em implementação.'); }
+
+/* ===================== CONFIGURAÇÕES - Implementação completa ===================== */
+function carregarConfiguracoes() {
+    if (!db.config) db.config = { empresa: 'LOBÃO', cnpj: '', telefone: '', email: '', endereco: '' };
+    const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+    set('configEmpresa', db.config.empresa || 'LOBÃO');
+    set('configCnpj', db.config.cnpj || '');
+    set('configTelefone', db.config.telefone || '');
+    set('configEmail', db.config.email || '');
+    set('configEndereco', db.config.endereco || '');
+}
+
+function salvarConfiguracao() {
+    if (!db.config) db.config = {};
+    const empresaEl = document.getElementById('configEmpresa');
+    const cnpjEl = document.getElementById('configCnpj');
+    const telEl = document.getElementById('configTelefone');
+    const emailEl = document.getElementById('configEmail');
+    const endEl = document.getElementById('configEndereco');
+    db.config.empresa = empresaEl ? empresaEl.value.trim() : 'LOBÃO';
+    db.config.cnpj = cnpjEl ? cnpjEl.value.trim() : '';
+    db.config.telefone = telEl ? telEl.value.trim() : '';
+    db.config.email = emailEl ? emailEl.value.trim() : '';
+    db.config.endereco = endEl ? endEl.value.trim() : '';
+    salvarDB();
+    registrarAuditoria('Configuração', 'Configurações gerais atualizadas');
+    alert('✅ Configurações salvas!');
+}
 
 function atualizarComboPlacasDocumentos() {
     const sel = document.getElementById('docPlacaSelect');
@@ -6571,8 +6727,6 @@ function editarPendencia(i) {
     alert('✅ Pendência atualizada!');
 }
 
-function processarPendenciaPDF() { alert('Função em implementação.'); }
-
 let deferredInstallPrompt = null;
 
 window.addEventListener('beforeinstallprompt', (e) => {
@@ -6628,6 +6782,9 @@ if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
 }
 
 async function inicializarSistemaCompleto() {
+    if (sistemaInicializado) return;
+    sistemaInicializado = true;
+
     try { await carregarDB(); }
     catch(e) {
         console.error('Falha DB:', e);
@@ -6659,6 +6816,7 @@ async function inicializarSistemaCompleto() {
     atualizarTabelaAlugueis();
     atualizarTabelaFluxoCaixa();
     atualizarTabelaBancos();
+    atualizarTabelaCompras();
     atualizarEstadoEdicaoVeiculo();
     atualizarEstadoEdicaoCliente();
     atualizarEstadoEdicaoLocacao();
@@ -6670,6 +6828,7 @@ async function inicializarSistemaCompleto() {
     atualizarTabelaDoc();
     atualizarTabelaPendentes();
     atualizarAbasVistoria();
+    carregarConfiguracoes();
     configurarInputMultiplasImagens();
     configurarBotaoInstalar();
     configurarBuscaFipeAutomatica();
@@ -6691,8 +6850,12 @@ async function inicializarSistemaCompleto() {
     }
     atualizarTabelaComprovantesPag();
 
+    // Garantir que o login tenha o usuário padrão pré-preenchido
+    const loginUserEl = document.getElementById('loginUser');
+    if (loginUserEl && !loginUserEl.value) loginUserEl.value = 'SERGIO';
+
     setTimeout(() => {
-        const el = document.getElementById('loginUser');
+        const el = document.getElementById('loginPassword');
         if (el && document.getElementById('loginContainer').style.display !== 'none') {
             try { el.focus(); } catch(e) {}
         }
@@ -6701,8 +6864,9 @@ async function inicializarSistemaCompleto() {
     console.log('🚀 Sistema inicializado.');
 }
 
-document.addEventListener('DOMContentLoaded', inicializarSistemaCompleto);
-if (document.readyState === 'complete' || document.readyState === 'interactive') {
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', inicializarSistemaCompleto);
+} else {
     inicializarSistemaCompleto();
 }
 </script>

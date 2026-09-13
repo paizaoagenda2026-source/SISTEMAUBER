@@ -259,7 +259,12 @@
             <div class="form-group"><label>Ano Modelo</label><input type="text" id="veicAnoModel" class="campo-enter"></div>
             <div class="form-group"><label>Código Renavan</label><input type="text" id="veicRenavan" class="campo-enter"></div>
             <div class="form-group"><label>Chassi</label><input type="text" id="veicChassi" class="campo-enter"></div>
-            <div class="form-group"><label>R$ Fipe</label><input type="text" id="veicFipe" class="money campo-enter"></div>
+            <div class="form-group"><label>R$ Fipe</label>
+                <div style="display:flex;gap:8px;align-items:stretch;">
+                    <input type="text" id="veicFipe" class="money campo-enter" style="flex:1;">
+                    <button type="button" class="btn-buscar" id="btnBuscarFipe" onclick="buscarFipeAutomatica()" style="padding:10px 14px;margin:0;font-size:13px;white-space:nowrap;">🔍 FIPE</button>
+                </div>
+            </div>
             <div class="form-group"><label>Nome</label><input type="text" id="veicProprietario" class="campo-enter"></div>
             <div class="form-group"><label>CPF Propr</label><input type="text" id="veicCpfPropr" class="campo-enter"></div>
         </div>
@@ -1257,6 +1262,192 @@ function preencherDataInicioLocacao() {
         calcularDataFim();
     }
 }
+
+/* ============================================================
+   CONSULTA AUTOMÁTICA DA TABELA FIPE
+   ============================================================ */
+function normalizarTextoFipe(t) {
+    return String(t || '')
+        .toUpperCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^A-Z0-9 ]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+async function buscarFipeAutomatica(silencioso) {
+    silencioso = !!silencioso;
+    const fabricante = document.getElementById('veicFabricante').value.trim();
+    const anoFabr = document.getElementById('veicAnoFabr').value.trim();
+    const anoModel = document.getElementById('veicAnoModel').value.trim();
+    const fipeInput = document.getElementById('veicFipe');
+    const btn = document.getElementById('btnBuscarFipe');
+
+    if (!fabricante) {
+        if (!silencioso) alert('Informe o Fabricante/Modelo antes de buscar a FIPE.');
+        return;
+    }
+
+    if (!silencioso) {
+        fipeInput.value = 'Consultando FIPE...';
+        fipeInput.disabled = true;
+        if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
+    }
+
+    try {
+        // 1) Marcas
+        const respMarcas = await fetch('https://parallelum.com.br/fipe/api/v1/carros/marcas');
+        const marcas = await respMarcas.json();
+        const fabNorm = normalizarTextoFipe(fabricante);
+
+        let marcaEncontrada = null;
+        const marcasOrdenadas = [...marcas].sort((a, b) => (b.nome || '').length - (a.nome || '').length);
+        for (const m of marcasOrdenadas) {
+            const nomeNorm = normalizarTextoFipe(m.nome);
+            if (!nomeNorm) continue;
+            if (fabNorm === nomeNorm ||
+                fabNorm.startsWith(nomeNorm + ' ') ||
+                fabNorm.includes(' ' + nomeNorm + ' ') ||
+                fabNorm.endsWith(' ' + nomeNorm)) {
+                marcaEncontrada = m;
+                break;
+            }
+        }
+        if (!marcaEncontrada) {
+            const primeiraPalavra = fabNorm.split(' ')[0];
+            marcaEncontrada = marcas.find(m => normalizarTextoFipe(m.nome) === primeiraPalavra)
+                || marcas.find(m => normalizarTextoFipe(m.nome).startsWith(primeiraPalavra));
+        }
+
+        if (!marcaEncontrada) {
+            if (!silencioso) alert('Marca não encontrada na FIPE: ' + fabricante);
+            fipeInput.value = '';
+            return;
+        }
+
+        // 2) Modelos
+        const respModelos = await fetch(`https://parallelum.com.br/fipe/api/v1/carros/marcas/${marcaEncontrada.codigo}/modelos`);
+        const dataModelos = await respModelos.json();
+        const modelos = dataModelos.modelos || [];
+
+        const marcaNorm = normalizarTextoFipe(marcaEncontrada.nome);
+        let modeloBusca = fabNorm.replace(marcaNorm, '').trim();
+        // Limpeza: remove barra/ruído inicial
+        modeloBusca = modeloBusca.replace(/^[\/\-\s]+/, '').trim();
+
+        let modeloEncontrado = null;
+
+        if (modeloBusca) {
+            for (const mod of modelos) {
+                if (normalizarTextoFipe(mod.nome) === modeloBusca) { modeloEncontrado = mod; break; }
+            }
+        }
+        if (!modeloEncontrado && modeloBusca) {
+            for (const mod of modelos) {
+                const modNorm = normalizarTextoFipe(mod.nome);
+                if (modNorm.includes(modeloBusca) || modeloBusca.includes(modNorm)) { modeloEncontrado = mod; break; }
+            }
+        }
+        if (!modeloEncontrado && modeloBusca) {
+            const palavras = modeloBusca.split(' ').filter(p => p.length > 1);
+            if (palavras.length > 0) {
+                for (const mod of modelos) {
+                    const modNorm = normalizarTextoFipe(mod.nome);
+                    if (palavras.every(p => modNorm.includes(p))) { modeloEncontrado = mod; break; }
+                }
+            }
+        }
+        if (!modeloEncontrado && modeloBusca) {
+            const primeiraPalavra = modeloBusca.split(' ')[0];
+            if (primeiraPalavra.length >= 2) {
+                modeloEncontrado = modelos.find(m => normalizarTextoFipe(m.nome).includes(primeiraPalavra));
+            }
+        }
+        // Fallback final: primeiro modelo da marca
+        if (!modeloEncontrado && modelos.length > 0) {
+            modeloEncontrado = modelos[0];
+        }
+
+        if (!modeloEncontrado) {
+            if (!silencioso) alert('Modelo não encontrado na FIPE para: ' + fabricante);
+            fipeInput.value = '';
+            return;
+        }
+
+        // 3) Anos
+        const respAnos = await fetch(`https://parallelum.com.br/fipe/api/v1/carros/marcas/${marcaEncontrada.codigo}/modelos/${modeloEncontrado.codigo}/anos`);
+        const anos = await respAnos.json();
+
+        let anoEncontrado = null;
+        const anoBusca = anoModel || anoFabr;
+        if (anoBusca) {
+            anoEncontrado = anos.find(a => (a.nome || '').includes(anoBusca));
+        }
+        // Se não achou no ano informado, tenta o ano de fabricação
+        if (!anoEncontrado && anoModel && anoFabr) {
+            anoEncontrado = anos.find(a => (a.nome || '').includes(anoFabr));
+        }
+        if (!anoEncontrado) anoEncontrado = anos[0];
+
+        if (!anoEncontrado) {
+            if (!silencioso) alert('Ano não encontrado na FIPE.');
+            fipeInput.value = '';
+            return;
+        }
+
+        // 4) Valor
+        const respValor = await fetch(`https://parallelum.com.br/fipe/api/v1/carros/marcas/${marcaEncontrada.codigo}/modelos/${modeloEncontrado.codigo}/anos/${anoEncontrado.codigo}`);
+        const dataValor = await respValor.json();
+
+        fipeInput.value = dataValor.Valor || '';
+
+        if (!silencioso) {
+            alert(
+                '✅ Valor FIPE encontrado!\n\n' +
+                'Marca: ' + (dataValor.Marca || '') + '\n' +
+                'Modelo: ' + (dataValor.Modelo || '') + '\n' +
+                'Ano: ' + (dataValor.AnoModelo || '') + '\n' +
+                'Combustível: ' + (dataValor.Combustivel || '') + '\n' +
+                'Código FIPE: ' + (dataValor.CodigoFipe || '') + '\n' +
+                'Valor: ' + (dataValor.Valor || '')
+            );
+        }
+    } catch (err) {
+        console.error('Erro FIPE:', err);
+        if (!silencioso) alert('Erro ao consultar a FIPE. Verifique sua conexão com a internet.');
+        fipeInput.value = '';
+    } finally {
+        fipeInput.disabled = false;
+        if (btn) { btn.disabled = false; btn.textContent = '🔍 FIPE'; }
+    }
+}
+
+let _fipeDebounceId = null;
+function agendarBuscaFipeAutomatica() {
+    if (_fipeDebounceId) clearTimeout(_fipeDebounceId);
+    _fipeDebounceId = setTimeout(() => {
+        const fab = document.getElementById('veicFabricante').value.trim();
+        const ano = document.getElementById('veicAnoModel').value.trim() || document.getElementById('veicAnoFabr').value.trim();
+        const fipeAtual = document.getElementById('veicFipe').value.trim();
+        if (fab && ano && !fipeAtual) {
+            buscarFipeAutomatica(true);
+        }
+    }, 900);
+}
+
+function configurarBuscaFipeAutomatica() {
+    const fabEl = document.getElementById('veicFabricante');
+    const anoModelEl = document.getElementById('veicAnoModel');
+    const anoFabrEl = document.getElementById('veicAnoFabr');
+    [fabEl, anoModelEl, anoFabrEl].forEach(el => {
+        if (!el) return;
+        el.addEventListener('blur', agendarBuscaFipeAutomatica);
+    });
+}
+/* ============================================================
+   FIM — CONSULTA AUTOMÁTICA DA TABELA FIPE
+   ============================================================ */
 
 async function salvarVeiculo() {
     const fabricante = document.getElementById('veicFabricante').value.trim();
@@ -4652,6 +4843,8 @@ async function handleDocVeiculoSelecionado(e) {
         const dados = extrairDadosCRLV(texto);
         docVeiculoAtual = { arquivo: file, dados };
         preencherCamposVeiculoComDados(dados);
+        // >>> BUSCA AUTOMÁTICA FIPE APÓS IMPORTAR O DOC VEÍCULO <<<
+        agendarBuscaFipeAutomatica();
         const qtdEncontrados = Object.keys(dados).filter(k => dados[k]).length;
         const qtdEl = document.getElementById('docVeiculoQtd');
         if (qtdEl) qtdEl.textContent = qtdEncontrados + ' campo(s)';
@@ -4662,6 +4855,7 @@ async function handleDocVeiculoSelecionado(e) {
         msg += '🕒 Data/hora: ' + new Date().toLocaleString('pt-BR') + '\n';
         msg += '📊 Campos encontrados: ' + qtdEncontrados;
         if (!dados.placa) msg += '\n\n⚠️ Não foi possível identificar a placa no documento. Informe a placa manualmente antes de salvar.';
+        msg += '\n\n💡 O valor FIPE será buscado automaticamente assim que os dados estiverem preenchidos.';
         alert(msg);
     } catch (err) {
         console.error('Erro ao ler PDF:', err);
@@ -5723,6 +5917,7 @@ async function inicializarSistemaCompleto() {
     atualizarTabelaPendentes();
     configurarInputMultiplasImagens();
     configurarBotaoInstalar();
+    configurarBuscaFipeAutomatica();
 
     if (typeof pdfjsLib !== 'undefined') {
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';

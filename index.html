@@ -554,7 +554,7 @@
         <h2>🏠 Garagem</h2>
         <div class="subfolder">
             <div class="subfolder-header"><h4>📁 Selecionar Fotos (múltiplas)</h4></div>
-            <input type="file" id="garagemImagem" accept="image/*" multiple style="display:none;">
+            <input type="file" id="garagemImagem" accept="image/*,.jpg,.jpeg,.png,.gif,.bmp,.webp,.tif,.tiff,.svg,.heic,.heif,.avif,.ico,.jfif" multiple style="display:none;">
             <div class="saved-images" id="garagemPreviewSelecionadas"></div>
         </div>
         <button class="btn-buscar" onclick="document.getElementById('garagemImagem').click()">📂 Buscar</button>
@@ -578,7 +578,7 @@
         <h2>🆘 SOS</h2>
         <div class="subfolder">
             <div class="subfolder-header"><h4>📁 Selecionar Imagens (múltiplas)</h4></div>
-            <input type="file" id="sosImagem" accept="image/*" multiple style="display:none;">
+            <input type="file" id="sosImagem" accept="image/*,.jpg,.jpeg,.png,.gif,.bmp,.webp,.tif,.tiff,.svg,.heic,.heif,.avif,.ico,.jfif" multiple style="display:none;">
             <div class="saved-images" id="sosPreviewSelecionadas"></div>
         </div>
         <button class="btn-buscar" onclick="document.getElementById('sosImagem').click()">📂 Buscar</button>
@@ -1090,6 +1090,7 @@ async function salvarDB() {
 
 /* ============================================================
    NOVO SISTEMA DE IMAGENS (IndexedDB + Firestore com referências)
+   + thumbnails embutidos como fallback (à prova de limpeza de dados)
    ============================================================ */
 
 function gerarIdImagem() {
@@ -1109,23 +1110,32 @@ function dataUrlParaBlobLocal(dataUrl) {
     return new Blob([u8], { type: mime });
 }
 
-// Retorna URL para exibir a imagem (aceita string antiga OU objeto {id})
+// Retorna URL para exibir a imagem (aceita string antiga OU objeto {id, thumb}).
+// Cascata: IndexedDB blob → thumb dataURL → dataUrl antigo.
 async function obterUrlImagem(registro) {
     if (!registro) return '';
     if (typeof registro === 'string') return registro; // formato antigo (data URL)
+
     const id = registro.id;
-    if (!id) return '';
-    if (_imageUrlCache.has(id)) return _imageUrlCache.get(id);
-    try {
-        const reg = await idbObter(id);
-        if (reg && reg.blob) {
-            const url = URL.createObjectURL(reg.blob);
-            _imageUrlCache.set(id, url);
-            return url;
+    if (id) {
+        if (_imageUrlCache.has(id)) return _imageUrlCache.get(id);
+        try {
+            const reg = await idbObter(id);
+            if (reg && reg.blob) {
+                const url = URL.createObjectURL(reg.blob);
+                _imageUrlCache.set(id, url);
+                return url;
+            }
+        } catch (e) {
+            console.warn('Erro ao obter imagem do IndexedDB:', e);
         }
-    } catch (e) {
-        console.warn('Erro ao obter imagem do IndexedDB:', e);
     }
+
+    // Fallback 1: thumbnail embutido no próprio registro (sempre visível, mesmo se o IDB sumir)
+    if (registro.thumb) return registro.thumb;
+    // Fallback 2: dataUrl bruto (compatibilidade com registros antigos)
+    if (registro.dataUrl) return registro.dataUrl;
+
     return '';
 }
 
@@ -1149,10 +1159,14 @@ function comprimirArquivoParaBlob(file, maxWidth, quality) {
             img.onload = function() {
                 try {
                     let w = img.width, h = img.height;
+                    if (!w || !h) throw new Error('Dimensões inválidas');
                     if (w > maxWidth) { h = Math.round(h * (maxWidth / w)); w = maxWidth; }
                     const canvas = document.createElement('canvas');
                     canvas.width = w; canvas.height = h;
                     const ctx = canvas.getContext('2d');
+                    // Fundo branco (garante compatibilidade com PNG transparente, SVG, etc.)
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, w, h);
                     ctx.drawImage(img, 0, 0, w, h);
                     canvas.toBlob(function(blob) {
                         if (blob) resolve(blob);
@@ -1160,7 +1174,7 @@ function comprimirArquivoParaBlob(file, maxWidth, quality) {
                     }, 'image/jpeg', quality);
                 } catch (err) { reject(err); }
             };
-            img.onerror = function() { reject(new Error('Erro ao carregar imagem')); };
+            img.onerror = function() { reject(new Error('Erro ao carregar imagem (formato pode não ser suportado pelo navegador)')); };
             img.src = e.target.result;
         };
         reader.onerror = function() { reject(new Error('Erro ao ler arquivo')); };
@@ -1168,12 +1182,76 @@ function comprimirArquivoParaBlob(file, maxWidth, quality) {
     });
 }
 
+// Gera um thumbnail pequeno (JPEG base64) para ser guardado junto da referência no Firestore
+function gerarThumbnailBlob(blob, maxDim, quality) {
+    maxDim = maxDim || 140;
+    quality = quality || 0.55;
+    return new Promise((resolve) => {
+        try {
+            const url = URL.createObjectURL(blob);
+            const img = new Image();
+            img.onload = function() {
+                try {
+                    let w = img.width, h = img.height;
+                    if (!w || !h) { URL.revokeObjectURL(url); resolve(null); return; }
+                    const scale = Math.min(maxDim / w, maxDim / h, 1);
+                    w = Math.max(1, Math.round(w * scale));
+                    h = Math.max(1, Math.round(h * scale));
+                    const canvas = document.createElement('canvas');
+                    canvas.width = w; canvas.height = h;
+                    const ctx = canvas.getContext('2d');
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, w, h);
+                    ctx.drawImage(img, 0, 0, w, h);
+                    URL.revokeObjectURL(url);
+                    canvas.toBlob(function(b) { resolve(b || null); }, 'image/jpeg', quality);
+                } catch (e) { URL.revokeObjectURL(url); resolve(null); }
+            };
+            img.onerror = function() { URL.revokeObjectURL(url); resolve(null); };
+            img.src = url;
+        } catch (e) { resolve(null); }
+    });
+}
+
+function blobParaDataURL(blob) {
+    return new Promise((resolve) => {
+        try {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = () => resolve(null);
+            reader.readAsDataURL(blob);
+        } catch (e) { resolve(null); }
+    });
+}
+
+// Verifica se o arquivo é uma imagem, por MIME type OU por extensão
+// (resolve casos em que o navegador não informa o MIME type, ex: HEIC, arquivos renomeados)
+function ehArquivoImagem(f) {
+    if (!f) return false;
+    if (f.type && String(f.type).toLowerCase().startsWith('image/')) return true;
+    const nome = (f.name || '').toLowerCase();
+    if (/\.(jpe?g|jfif|pjpeg|png|apng|gif|bmp|webp|tiff?|svg|heic|heif|avif|ico|cur)$/i.test(nome)) return true;
+    return false;
+}
+
 async function processarArquivosImagem(files, maxWidth, quality) {
-    const lista = Array.from(files || []).filter(f => f && f.type && f.type.startsWith('image/'));
+    const lista = Array.from(files || []).filter(ehArquivoImagem);
     const resultados = [];
     for (const file of lista) {
         try {
-            const blob = await comprimirArquivoParaBlob(file, maxWidth, quality);
+            let blob;
+            try {
+                blob = await comprimirArquivoParaBlob(file, maxWidth, quality);
+            } catch (compressErr) {
+                // Fallback: se a compressão falhar (ex: HEIC sem suporte no Chrome),
+                // salva o arquivo original como blob para não perder a imagem.
+                console.warn('Compressão falhou, usando o arquivo original:', file.name, compressErr);
+                if (file.size > 3 * 1024 * 1024) {
+                    console.warn('Arquivo muito grande e não comprimível, ignorando:', file.name);
+                    continue;
+                }
+                blob = file;
+            }
             const previewUrl = URL.createObjectURL(blob);
             resultados.push({ blob, previewUrl, nome: file.name });
         } catch (err) {
@@ -1205,7 +1283,15 @@ async function migrarImagensAntigas() {
                         categoria: categoria,
                         origem: 'migracao'
                     });
-                    cat.fotos[i] = { id, nome: 'migrada_' + categoria + '_' + i + '.jpg', dataUpload: hoje };
+                    // Gera thumbnail também na migração
+                    let thumb = null;
+                    try {
+                        const thumbBlob = await gerarThumbnailBlob(blob, 140, 0.55);
+                        if (thumbBlob) thumb = await blobParaDataURL(thumbBlob);
+                    } catch(e) {}
+                    const ref = { id, nome: 'migrada_' + categoria + '_' + i + '.jpg', dataUpload: hoje };
+                    if (thumb) ref.thumb = thumb;
+                    cat.fotos[i] = ref;
                     precisaSalvar = true;
                 } catch (err) {
                     console.warn('Erro ao migrar imagem antiga (' + categoria + '):', err);
@@ -4476,6 +4562,8 @@ function comprimirImagemDataURL(dataUrl, maxWidth, quality, callback) {
             const canvas = document.createElement('canvas');
             canvas.width = w; canvas.height = h;
             const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, w, h);
             ctx.drawImage(img, 0, 0, w, h);
             callback(canvas.toDataURL('image/jpeg', quality));
         } catch (e) { callback(dataUrl); }
@@ -4550,6 +4638,9 @@ function configurarInputMultiplasImagens() {
                 const novos = await processarArquivosImagem(files, 900, 0.65);
                 garagemImagensTemp = garagemImagensTemp.concat(novos);
                 renderizarPreviewGaragem();
+                if (novos.length === 0) {
+                    alert('⚠️ Nenhum arquivo de imagem válido foi selecionado.\n\nFormatos aceitos: JPG, JPEG, PNG, GIF, BMP, WEBP, TIFF, SVG, HEIC, HEIF, AVIF, ICO.');
+                }
             } catch (err) {
                 console.error('Erro ao processar imagens da Garagem:', err);
                 alert('Erro ao processar uma ou mais imagens.');
@@ -4567,6 +4658,9 @@ function configurarInputMultiplasImagens() {
                 const novos = await processarArquivosImagem(files, 900, 0.65);
                 sosImagensTemp = sosImagensTemp.concat(novos);
                 renderizarPreviewSOS();
+                if (novos.length === 0) {
+                    alert('⚠️ Nenhum arquivo de imagem válido foi selecionado.\n\nFormatos aceitos: JPG, JPEG, PNG, GIF, BMP, WEBP, TIFF, SVG, HEIC, HEIF, AVIF, ICO.');
+                }
             } catch (err) {
                 console.error('Erro ao processar imagens do SOS:', err);
                 alert('Erro ao processar uma ou mais imagens.');
@@ -4619,7 +4713,7 @@ async function salvarGaragem() {
     for (const item of garagemImagensTemp) {
         try {
             if (typeof item === 'string') {
-                // compatibilidade
+                // compatibilidade com formato antigo
                 db.imagens.garagem.fotos.push(item);
                 salvas++;
                 continue;
@@ -4627,15 +4721,23 @@ async function salvarGaragem() {
             const id = gerarIdImagem();
             await idbSalvar(id, item.blob, { 
                 nomeArquivo: item.nome || 'foto.jpg',
-                tipo: 'image/jpeg',
+                tipo: item.blob.type || 'image/jpeg',
                 dataUpload: hoje,
                 categoria: 'garagem'
             });
-            db.imagens.garagem.fotos.push({ 
+            // Gera thumbnail de segurança (dataURL) para não perder a imagem se o IDB for limpo
+            let thumb = null;
+            try {
+                const thumbBlob = await gerarThumbnailBlob(item.blob, 140, 0.55);
+                if (thumbBlob) thumb = await blobParaDataURL(thumbBlob);
+            } catch (e) { console.warn('Falha ao gerar thumb:', e); }
+            const ref = { 
                 id, 
                 nome: item.nome || 'foto.jpg', 
                 dataUpload: hoje 
-            });
+            };
+            if (thumb) ref.thumb = thumb;
+            db.imagens.garagem.fotos.push(ref);
             salvas++;
         } catch (err) {
             console.error('Erro ao salvar imagem na Garagem:', err);
@@ -4679,22 +4781,28 @@ async function atualizarGaleriaGaragem() {
         return;
     }
 
-    // Carrega todas as URLs (paralelo) e renderiza
     const urls = await Promise.all(fotos.map(f => obterUrlImagem(f)));
 
     fotos.forEach((foto, i) => {
         const src = urls[i];
-        if (!src) return;
         const div = document.createElement('div'); 
         div.className = 'saved-image-item';
-        const img = document.createElement('img'); 
-        img.src = src; 
-        img.alt = 'foto';
-        img.addEventListener('click', (ev) => { 
-            ev.stopPropagation(); 
-            openImageModal(src, urls, i); 
-        });
-        div.appendChild(img);
+        if (src) {
+            const img = document.createElement('img'); 
+            img.src = src; 
+            img.alt = 'foto';
+            img.addEventListener('click', (ev) => { 
+                ev.stopPropagation(); 
+                openImageModal(src, urls, i); 
+            });
+            div.appendChild(img);
+        } else {
+            // Placeholder para quando nenhuma URL estiver disponível
+            const placeholder = document.createElement('div');
+            placeholder.style.cssText = 'display:flex;align-items:center;justify-content:center;height:200px;background:#f0f0f0;color:#999;font-size:12px;text-align:center;padding:10px;width:200px;';
+            placeholder.textContent = 'Imagem indisponível';
+            div.appendChild(placeholder);
+        }
         const btn = document.createElement('button'); 
         btn.className = 'delete-btn'; 
         btn.textContent = '×';
@@ -4749,15 +4857,23 @@ async function salvarSOS() {
             const id = gerarIdImagem();
             await idbSalvar(id, item.blob, { 
                 nomeArquivo: item.nome || 'foto.jpg',
-                tipo: 'image/jpeg',
+                tipo: item.blob.type || 'image/jpeg',
                 dataUpload: hoje,
                 categoria: 'sos'
             });
-            db.imagens.sos.fotos.push({ 
+            // Gera thumbnail de segurança (dataURL) para não perder a imagem se o IDB for limpo
+            let thumb = null;
+            try {
+                const thumbBlob = await gerarThumbnailBlob(item.blob, 140, 0.55);
+                if (thumbBlob) thumb = await blobParaDataURL(thumbBlob);
+            } catch (e) { console.warn('Falha ao gerar thumb:', e); }
+            const ref = { 
                 id, 
                 nome: item.nome || 'foto.jpg', 
                 dataUpload: hoje 
-            });
+            };
+            if (thumb) ref.thumb = thumb;
+            db.imagens.sos.fotos.push(ref);
             salvas++;
         } catch (err) {
             console.error('Erro ao salvar imagem no SOS:', err);
@@ -4805,17 +4921,23 @@ async function atualizarGaleriaSOS() {
 
     fotos.forEach((foto, i) => {
         const src = urls[i];
-        if (!src) return;
         const div = document.createElement('div'); 
         div.className = 'saved-image-item';
-        const img = document.createElement('img'); 
-        img.src = src; 
-        img.alt = 'foto';
-        img.addEventListener('click', (ev) => { 
-            ev.stopPropagation(); 
-            openImageModal(src, urls, i); 
-        });
-        div.appendChild(img);
+        if (src) {
+            const img = document.createElement('img'); 
+            img.src = src; 
+            img.alt = 'foto';
+            img.addEventListener('click', (ev) => { 
+                ev.stopPropagation(); 
+                openImageModal(src, urls, i); 
+            });
+            div.appendChild(img);
+        } else {
+            const placeholder = document.createElement('div');
+            placeholder.style.cssText = 'display:flex;align-items:center;justify-content:center;height:200px;background:#f0f0f0;color:#999;font-size:12px;text-align:center;padding:10px;width:200px;';
+            placeholder.textContent = 'Imagem indisponível';
+            div.appendChild(placeholder);
+        }
         const btn = document.createElement('button'); 
         btn.className = 'delete-btn'; 
         btn.textContent = '×';

@@ -997,6 +997,27 @@ async function carregarDB() {
         if (docSnap.exists) {
             db = docSnap.data();
             console.log('📥 DB carregado do Firestore');
+
+            // RECUPERAÇÃO: se localStorage tiver mais imagens SOS/Garagem do que o Firestore,
+            // provavelmente os uploads anteriores falharam (doc >1MB) e as imagens ficaram só lá.
+            try {
+                const stored = localStorage.getItem(DB_STORAGE_KEY);
+                if (stored) {
+                    const localDb = JSON.parse(stored);
+                    if (localDb && localDb.imagens) {
+                        ['sos', 'garagem'].forEach(cat => {
+                            const fsFotos = (db.imagens && db.imagens[cat] && Array.isArray(db.imagens[cat].fotos)) ? db.imagens[cat].fotos : [];
+                            const localFotos = (localDb.imagens[cat] && Array.isArray(localDb.imagens[cat].fotos)) ? localDb.imagens[cat].fotos : [];
+                            if (localFotos.length > fsFotos.length) {
+                                if (!db.imagens) db.imagens = {};
+                                if (!db.imagens[cat]) db.imagens[cat] = { fotos: [] };
+                                db.imagens[cat].fotos = localFotos;
+                                console.log(`📥 Recuperadas ${localFotos.length} foto(s) de "${cat}" do localStorage`);
+                            }
+                        });
+                    }
+                }
+            } catch (e) { console.warn('Erro ao comparar localStorage:', e); }
         } else {
             db = criarDBPadrao();
             console.log('📥 DB novo criado (Firestore vazio)');
@@ -1058,9 +1079,156 @@ async function carregarDB() {
 
 async function salvarDB() {
     if (!db) return;
-    try { localStorage.setItem(DB_STORAGE_KEY, JSON.stringify(db)); } catch (e) {}
-    try { await dbFirestore.collection('lobao_db').doc('principal').set(db); } catch (error) { console.error('Erro Firestore:', error); }
+    try { localStorage.setItem(DB_STORAGE_KEY, JSON.stringify(db)); }
+    catch (e) { console.warn('localStorage não aceitou os dados (talvez cheio):', e); }
+    try {
+        await dbFirestore.collection('lobao_db').doc('principal').set(db);
+    } catch (error) {
+        console.error('Erro Firestore (possível limite de 1MB/doc):', error);
+    }
 }
+
+/* ============================================================
+   NOVO SISTEMA DE IMAGENS (IndexedDB + Firestore com referências)
+   ============================================================ */
+
+function gerarIdImagem() {
+    return 'img_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
+}
+
+// Cache de URLs (blob → objectURL) para evitar recomputar
+const _imageUrlCache = new Map();
+
+function dataUrlParaBlobLocal(dataUrl) {
+    const partes = dataUrl.split(',');
+    const mime = (partes[0].match(/:(.*?);/) || [, 'image/jpeg'])[1];
+    const bin = atob(partes[1]);
+    const len = bin.length;
+    const u8 = new Uint8Array(len);
+    for (let i = 0; i < len; i++) u8[i] = bin.charCodeAt(i);
+    return new Blob([u8], { type: mime });
+}
+
+// Retorna URL para exibir a imagem (aceita string antiga OU objeto {id})
+async function obterUrlImagem(registro) {
+    if (!registro) return '';
+    if (typeof registro === 'string') return registro; // formato antigo (data URL)
+    const id = registro.id;
+    if (!id) return '';
+    if (_imageUrlCache.has(id)) return _imageUrlCache.get(id);
+    try {
+        const reg = await idbObter(id);
+        if (reg && reg.blob) {
+            const url = URL.createObjectURL(reg.blob);
+            _imageUrlCache.set(id, url);
+            return url;
+        }
+    } catch (e) {
+        console.warn('Erro ao obter imagem do IndexedDB:', e);
+    }
+    return '';
+}
+
+function liberarUrlImagem(registro) {
+    if (!registro || typeof registro === 'string') return;
+    const id = registro.id;
+    if (!id) return;
+    const url = _imageUrlCache.get(id);
+    if (url) {
+        try { URL.revokeObjectURL(url); } catch(e) {}
+        _imageUrlCache.delete(id);
+    }
+}
+
+// Comprime arquivo → Blob (JPEG) sem manter Base64 em memória
+function comprimirArquivoParaBlob(file, maxWidth, quality) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                try {
+                    let w = img.width, h = img.height;
+                    if (w > maxWidth) { h = Math.round(h * (maxWidth / w)); w = maxWidth; }
+                    const canvas = document.createElement('canvas');
+                    canvas.width = w; canvas.height = h;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, w, h);
+                    canvas.toBlob(function(blob) {
+                        if (blob) resolve(blob);
+                        else reject(new Error('Falha ao gerar blob'));
+                    }, 'image/jpeg', quality);
+                } catch (err) { reject(err); }
+            };
+            img.onerror = function() { reject(new Error('Erro ao carregar imagem')); };
+            img.src = e.target.result;
+        };
+        reader.onerror = function() { reject(new Error('Erro ao ler arquivo')); };
+        reader.readAsDataURL(file);
+    });
+}
+
+async function processarArquivosImagem(files, maxWidth, quality) {
+    const lista = Array.from(files || []).filter(f => f && f.type && f.type.startsWith('image/'));
+    const resultados = [];
+    for (const file of lista) {
+        try {
+            const blob = await comprimirArquivoParaBlob(file, maxWidth, quality);
+            const previewUrl = URL.createObjectURL(blob);
+            resultados.push({ blob, previewUrl, nome: file.name });
+        } catch (err) {
+            console.error('Erro ao processar imagem:', file.name, err);
+        }
+    }
+    return resultados;
+}
+
+// MIGRAÇÃO: converte imagens antigas (data URL string) para IndexedDB e substitui por {id}
+async function migrarImagensAntigas() {
+    if (!db || !db.imagens) return;
+    let precisaSalvar = false;
+    const hoje = new Date().toLocaleString('pt-BR');
+
+    for (const categoria of ['sos', 'garagem']) {
+        const cat = db.imagens[categoria];
+        if (!cat || !Array.isArray(cat.fotos)) continue;
+        for (let i = 0; i < cat.fotos.length; i++) {
+            const foto = cat.fotos[i];
+            if (typeof foto === 'string' && foto.length > 100) {
+                try {
+                    const blob = dataUrlParaBlobLocal(foto);
+                    const id = gerarIdImagem();
+                    await idbSalvar(id, blob, {
+                        nomeArquivo: 'migrada_' + categoria + '_' + i + '.jpg',
+                        tipo: 'image/jpeg',
+                        dataUpload: hoje,
+                        categoria: categoria,
+                        origem: 'migracao'
+                    });
+                    cat.fotos[i] = { id, nome: 'migrada_' + categoria + '_' + i + '.jpg', dataUpload: hoje };
+                    precisaSalvar = true;
+                } catch (err) {
+                    console.warn('Erro ao migrar imagem antiga (' + categoria + '):', err);
+                }
+            }
+        }
+    }
+
+    if (precisaSalvar) {
+        console.log('📦 Migrando imagens antigas para IndexedDB...');
+        try {
+            await dbFirestore.collection('lobao_db').doc('principal').set(db);
+            try { localStorage.setItem(DB_STORAGE_KEY, JSON.stringify(db)); } catch(e) {}
+            console.log('✅ Migração concluída. Firestore agora está leve.');
+        } catch (err) {
+            console.error('Erro ao salvar após migração:', err);
+        }
+    }
+}
+
+/* ============================================================
+   FIM DO NOVO SISTEMA DE IMAGENS
+   ============================================================ */
 
 const todasAbas = [
     { id: 'veiculos' }, { id: 'clientes' }, { id: 'locacoes' }, { id: 'locEncerrada' },
@@ -1141,11 +1309,14 @@ function fecharGuinchoFullscreen() {
 }
 
 /* ===================== ATUALIZAR IMAGEM DO GUINCHO ===================== */
-function atualizarImagemGuincho() {
+async function atualizarImagemGuincho() {
     try {
         const fotos = (db && db.imagens && db.imagens.sos && Array.isArray(db.imagens.sos.fotos))
             ? db.imagens.sos.fotos : [];
-        const src = fotos.length > 0 ? fotos[fotos.length - 1] : '';
+        const ultima = fotos.length > 0 ? fotos[fotos.length - 1] : null;
+        let src = '';
+        if (ultima) src = await obterUrlImagem(ultima);
+
         const imgIds = ['guinchoCardImg', 'guinchoOverlayImg'];
         const fallbackIds = ['guinchoCardFallback', 'guinchoOverlayFallback'];
 
@@ -1971,7 +2142,9 @@ function debugVeiculos() {
     alert(
         'USUÁRIOS:\n' + (db.usuarios || []).map(u => `• ${u.nome} (${u.tipo})`).join('\n') + '\n\n' +
         'Total de veículos: ' + (db.veiculos || []).length + '\n' +
-        'Total de docs de veículo: ' + (db.docsVeiculos || []).length
+        'Total de docs de veículo: ' + (db.docsVeiculos || []).length + '\n' +
+        'Fotos SOS: ' + ((db.imagens && db.imagens.sos && db.imagens.sos.fotos) ? db.imagens.sos.fotos.length : 0) + '\n' +
+        'Fotos Garagem: ' + ((db.imagens && db.imagens.garagem && db.imagens.garagem.fotos) ? db.imagens.garagem.fotos.length : 0)
     );
 }
 
@@ -4333,23 +4506,33 @@ function lerEComprimirArquivos(files, maxWidth, quality, onDone) {
     });
 }
 
-function renderizarPreviewSelecionadas(containerId, dataUrls, onRemove) {
+// Preview para os itens selecionados: aceita tanto {blob, previewUrl, nome} quanto string (compat)
+function renderizarPreviewSelecionadas(containerId, itens, onRemove) {
     const container = document.getElementById(containerId);
     if (!container) return;
     container.innerHTML = '';
-    if (!dataUrls || dataUrls.length === 0) return;
-    dataUrls.forEach((src, idx) => {
+    if (!itens || itens.length === 0) return;
+    itens.forEach((item, idx) => {
+        const srcPreview = (item && typeof item === 'object' && item.previewUrl) ? item.previewUrl : item;
+        if (!srcPreview) return;
         const div = document.createElement('div');
         div.className = 'saved-image-item';
         div.style.borderColor = 'var(--accent)';
         div.style.borderStyle = 'dashed';
         const img = document.createElement('img');
-        img.src = src; img.alt = 'preview';
-        img.addEventListener('click', (ev) => { ev.stopPropagation(); openImageModal(src, dataUrls, idx); });
+        img.src = srcPreview; img.alt = 'preview';
+        img.addEventListener('click', (ev) => { 
+            ev.stopPropagation(); 
+            const urls = itens.map(it => (it && typeof it === 'object' && it.previewUrl) ? it.previewUrl : it);
+            openImageModal(srcPreview, urls, idx);
+        });
         div.appendChild(img);
         const btn = document.createElement('button');
         btn.className = 'delete-btn'; btn.textContent = '×';
-        btn.addEventListener('click', (ev) => { ev.stopPropagation(); if (typeof onRemove === 'function') onRemove(idx); });
+        btn.addEventListener('click', (ev) => { 
+            ev.stopPropagation(); 
+            if (typeof onRemove === 'function') onRemove(idx);
+        });
         div.appendChild(btn);
         container.appendChild(div);
     });
@@ -4359,133 +4542,306 @@ function configurarInputMultiplasImagens() {
     const inputGaragem = document.getElementById('garagemImagem');
     const inputSOS = document.getElementById('sosImagem');
     if (inputGaragem) {
-        inputGaragem.addEventListener('change', function() {
+        inputGaragem.addEventListener('change', async function() {
             const files = this.files;
             if (!files || files.length === 0) return;
             const inputAtual = this;
-            lerEComprimirArquivos(files, 900, 0.65, function(dataUrls) {
-                garagemImagensTemp = dataUrls;
+            try {
+                const novos = await processarArquivosImagem(files, 900, 0.65);
+                garagemImagensTemp = garagemImagensTemp.concat(novos);
                 renderizarPreviewGaragem();
+            } catch (err) {
+                console.error('Erro ao processar imagens da Garagem:', err);
+                alert('Erro ao processar uma ou mais imagens.');
+            } finally {
                 try { inputAtual.value = ''; } catch(e){}
-            });
+            }
         });
     }
     if (inputSOS) {
-        inputSOS.addEventListener('change', function() {
+        inputSOS.addEventListener('change', async function() {
             const files = this.files;
             if (!files || files.length === 0) return;
             const inputAtual = this;
-            lerEComprimirArquivos(files, 900, 0.65, function(dataUrls) {
-                sosImagensTemp = dataUrls;
+            try {
+                const novos = await processarArquivosImagem(files, 900, 0.65);
+                sosImagensTemp = sosImagensTemp.concat(novos);
                 renderizarPreviewSOS();
+            } catch (err) {
+                console.error('Erro ao processar imagens do SOS:', err);
+                alert('Erro ao processar uma ou mais imagens.');
+            } finally {
                 try { inputAtual.value = ''; } catch(e){}
-            });
+            }
         });
     }
 }
 
 function renderizarPreviewGaragem() {
-    const remover = function(idx) { garagemImagensTemp.splice(idx, 1); renderizarPreviewGaragem(); };
+    const remover = function(idx) {
+        const item = garagemImagensTemp[idx];
+        if (item && typeof item === 'object' && item.previewUrl) {
+            try { URL.revokeObjectURL(item.previewUrl); } catch(e) {}
+        }
+        garagemImagensTemp.splice(idx, 1); 
+        renderizarPreviewGaragem(); 
+    };
     renderizarPreviewSelecionadas('garagemPreviewSelecionadas', garagemImagensTemp, remover);
 }
 
 function renderizarPreviewSOS() {
-    const remover = function(idx) { sosImagensTemp.splice(idx, 1); renderizarPreviewSOS(); };
+    const remover = function(idx) {
+        const item = sosImagensTemp[idx];
+        if (item && typeof item === 'object' && item.previewUrl) {
+            try { URL.revokeObjectURL(item.previewUrl); } catch(e) {}
+        }
+        sosImagensTemp.splice(idx, 1); 
+        renderizarPreviewSOS(); 
+    };
     renderizarPreviewSelecionadas('sosPreviewSelecionadas', sosImagensTemp, remover);
 }
 
-function salvarGaragem() {
-    if (!Array.isArray(garagemImagensTemp) || garagemImagensTemp.length === 0) { alert('Nenhuma imagem selecionada!'); return; }
+async function salvarGaragem() {
+    if (!Array.isArray(garagemImagensTemp) || garagemImagensTemp.length === 0) { 
+        alert('Nenhuma imagem selecionada!'); return; 
+    }
     if (!db.imagens) db.imagens = { garagem:{fotos:[]}, sos:{fotos:[]}, comprovantes:{fotos:[]} };
     if (!db.imagens.garagem) db.imagens.garagem = { fotos: [] };
     if (!Array.isArray(db.imagens.garagem.fotos)) db.imagens.garagem.fotos = [];
-    const qtd = garagemImagensTemp.length;
-    garagemImagensTemp.forEach(src => db.imagens.garagem.fotos.push(src));
+
+    const btn = document.querySelector('#garagem button.btn-primary');
+    if (btn) btn.disabled = true;
+
+    const hoje = new Date().toLocaleString('pt-BR');
+    let salvas = 0;
+    let erros = 0;
+
+    for (const item of garagemImagensTemp) {
+        try {
+            if (typeof item === 'string') {
+                // compatibilidade
+                db.imagens.garagem.fotos.push(item);
+                salvas++;
+                continue;
+            }
+            const id = gerarIdImagem();
+            await idbSalvar(id, item.blob, { 
+                nomeArquivo: item.nome || 'foto.jpg',
+                tipo: 'image/jpeg',
+                dataUpload: hoje,
+                categoria: 'garagem'
+            });
+            db.imagens.garagem.fotos.push({ 
+                id, 
+                nome: item.nome || 'foto.jpg', 
+                dataUpload: hoje 
+            });
+            salvas++;
+        } catch (err) {
+            console.error('Erro ao salvar imagem na Garagem:', err);
+            erros++;
+        }
+    }
+
+    // Limpar previews
+    garagemImagensTemp.forEach(item => {
+        if (item && typeof item === 'object' && item.previewUrl) {
+            try { URL.revokeObjectURL(item.previewUrl); } catch(e) {}
+        }
+    });
     garagemImagensTemp = [];
-    const preview = document.getElementById('garagemPreviewSelecionadas'); if (preview) preview.innerHTML = '';
-    const input = document.getElementById('garagemImagem'); if (input) { try { input.value = ''; } catch(e){} }
-    atualizarGaleriaGaragem();
-    salvarDB();
-    registrarAuditoria('Cadastro', `${qtd} imagem(ns) salva(s) na Garagem`);
-    alert(`✅ ${qtd} imagem(ns) salva(s)!`);
+    const preview = document.getElementById('garagemPreviewSelecionadas'); 
+    if (preview) preview.innerHTML = '';
+    const input = document.getElementById('garagemImagem'); 
+    if (input) { try { input.value = ''; } catch(e){} }
+
+    await salvarDB();
+    await atualizarGaleriaGaragem();
+
+    if (btn) btn.disabled = false;
+    registrarAuditoria('Cadastro', `${salvas} imagem(ns) salva(s) na Garagem`);
+    if (erros > 0) {
+        alert(`✅ ${salvas} imagem(ns) salva(s)!\n⚠️ ${erros} imagem(ns) falharam.`);
+    } else {
+        alert(`✅ ${salvas} imagem(ns) salva(s)!`);
+    }
 }
 
-function atualizarGaleriaGaragem() {
+async function atualizarGaleriaGaragem() {
     const container = document.getElementById('garagemSavedImages');
     if (!container) return;
     container.innerHTML = '';
     const fotos = (db.imagens && db.imagens.garagem && Array.isArray(db.imagens.garagem.fotos)) ? db.imagens.garagem.fotos : [];
     if (fotos.length === 0) {
-        const p = document.createElement('p'); p.style.color = '#999'; p.textContent = 'Nenhuma imagem salva.';
-        container.appendChild(p); return;
+        const p = document.createElement('p'); 
+        p.style.color = '#999'; p.textContent = 'Nenhuma imagem salva.';
+        container.appendChild(p); 
+        return;
     }
-    fotos.forEach((src, i) => {
-        const div = document.createElement('div'); div.className = 'saved-image-item';
-        const img = document.createElement('img'); img.src = src; img.alt = 'foto';
-        img.addEventListener('click', (ev) => { ev.stopPropagation(); openImageModal(src, fotos, i); });
+
+    // Carrega todas as URLs (paralelo) e renderiza
+    const urls = await Promise.all(fotos.map(f => obterUrlImagem(f)));
+
+    fotos.forEach((foto, i) => {
+        const src = urls[i];
+        if (!src) return;
+        const div = document.createElement('div'); 
+        div.className = 'saved-image-item';
+        const img = document.createElement('img'); 
+        img.src = src; 
+        img.alt = 'foto';
+        img.addEventListener('click', (ev) => { 
+            ev.stopPropagation(); 
+            openImageModal(src, urls, i); 
+        });
         div.appendChild(img);
-        const btn = document.createElement('button'); btn.className = 'delete-btn'; btn.textContent = '×';
-        btn.addEventListener('click', (ev) => { ev.stopPropagation(); excluirFotoGaragem(i); });
+        const btn = document.createElement('button'); 
+        btn.className = 'delete-btn'; 
+        btn.textContent = '×';
+        btn.addEventListener('click', (ev) => { 
+            ev.stopPropagation(); 
+            excluirFotoGaragem(i); 
+        });
         div.appendChild(btn);
         container.appendChild(div);
     });
 }
 
-function excluirFotoGaragem(i) {
+async function excluirFotoGaragem(i) {
     if (!confirmarSenhaADM()) return;
     if (!confirm('Excluir esta imagem da Garagem?')) return;
     if (!db.imagens || !db.imagens.garagem || !Array.isArray(db.imagens.garagem.fotos)) return;
+
+    const foto = db.imagens.garagem.fotos[i];
+    if (foto && typeof foto === 'object' && foto.id) {
+        try { await idbExcluir(foto.id); } catch(e) { console.warn('Erro ao excluir imagem IDB:', e); }
+        liberarUrlImagem(foto);
+    }
+
     db.imagens.garagem.fotos.splice(i, 1);
-    atualizarGaleriaGaragem(); 
-    salvarDB();
+    await atualizarGaleriaGaragem(); 
+    await salvarDB();
     registrarAuditoria('Exclusão', `Foto excluída da Garagem (índice ${i})`);
 }
 
-function salvarSOS() {
-    if (!Array.isArray(sosImagensTemp) || sosImagensTemp.length === 0) { alert('Nenhuma imagem selecionada!'); return; }
+async function salvarSOS() {
+    if (!Array.isArray(sosImagensTemp) || sosImagensTemp.length === 0) { 
+        alert('Nenhuma imagem selecionada!'); return; 
+    }
     if (!db.imagens) db.imagens = { garagem:{fotos:[]}, sos:{fotos:[]}, comprovantes:{fotos:[]} };
     if (!db.imagens.sos) db.imagens.sos = { fotos: [] };
     if (!Array.isArray(db.imagens.sos.fotos)) db.imagens.sos.fotos = [];
-    const qtd = sosImagensTemp.length;
-    sosImagensTemp.forEach(src => db.imagens.sos.fotos.push(src));
+
+    const btn = document.querySelector('#sos button.btn-primary');
+    if (btn) btn.disabled = true;
+
+    const hoje = new Date().toLocaleString('pt-BR');
+    let salvas = 0;
+    let erros = 0;
+
+    for (const item of sosImagensTemp) {
+        try {
+            if (typeof item === 'string') {
+                db.imagens.sos.fotos.push(item);
+                salvas++;
+                continue;
+            }
+            const id = gerarIdImagem();
+            await idbSalvar(id, item.blob, { 
+                nomeArquivo: item.nome || 'foto.jpg',
+                tipo: 'image/jpeg',
+                dataUpload: hoje,
+                categoria: 'sos'
+            });
+            db.imagens.sos.fotos.push({ 
+                id, 
+                nome: item.nome || 'foto.jpg', 
+                dataUpload: hoje 
+            });
+            salvas++;
+        } catch (err) {
+            console.error('Erro ao salvar imagem no SOS:', err);
+            erros++;
+        }
+    }
+
+    sosImagensTemp.forEach(item => {
+        if (item && typeof item === 'object' && item.previewUrl) {
+            try { URL.revokeObjectURL(item.previewUrl); } catch(e) {}
+        }
+    });
     sosImagensTemp = [];
-    const preview = document.getElementById('sosPreviewSelecionadas'); if (preview) preview.innerHTML = '';
-    const input = document.getElementById('sosImagem'); if (input) { try { input.value = ''; } catch(e){} }
-    atualizarGaleriaSOS();
-    salvarDB();
-    registrarAuditoria('Cadastro', `${qtd} imagem(ns) salva(s) no SOS`);
+    const preview = document.getElementById('sosPreviewSelecionadas'); 
+    if (preview) preview.innerHTML = '';
+    const input = document.getElementById('sosImagem'); 
+    if (input) { try { input.value = ''; } catch(e){} }
+
+    await salvarDB();
+    await atualizarGaleriaSOS();
     atualizarImagemGuincho();
-    alert(`✅ ${qtd} imagem(ns) salva(s)!`);
+
+    if (btn) btn.disabled = false;
+    registrarAuditoria('Cadastro', `${salvas} imagem(ns) salva(s) no SOS`);
+    if (erros > 0) {
+        alert(`✅ ${salvas} imagem(ns) salva(s)!\n⚠️ ${erros} imagem(ns) falharam.`);
+    } else {
+        alert(`✅ ${salvas} imagem(ns) salva(s)!`);
+    }
 }
 
-function atualizarGaleriaSOS() {
+async function atualizarGaleriaSOS() {
     const container = document.getElementById('sosSavedImages');
     if (!container) return;
     container.innerHTML = '';
     const fotos = (db.imagens && db.imagens.sos && Array.isArray(db.imagens.sos.fotos)) ? db.imagens.sos.fotos : [];
     if (fotos.length === 0) {
-        const p = document.createElement('p'); p.style.color = '#999'; p.textContent = 'Nenhuma imagem salva.';
-        container.appendChild(p); return;
+        const p = document.createElement('p'); 
+        p.style.color = '#999'; p.textContent = 'Nenhuma imagem salva.';
+        container.appendChild(p); 
+        return;
     }
-    fotos.forEach((src, i) => {
-        const div = document.createElement('div'); div.className = 'saved-image-item';
-        const img = document.createElement('img'); img.src = src; img.alt = 'foto';
-        img.addEventListener('click', (ev) => { ev.stopPropagation(); openImageModal(src, fotos, i); });
+
+    const urls = await Promise.all(fotos.map(f => obterUrlImagem(f)));
+
+    fotos.forEach((foto, i) => {
+        const src = urls[i];
+        if (!src) return;
+        const div = document.createElement('div'); 
+        div.className = 'saved-image-item';
+        const img = document.createElement('img'); 
+        img.src = src; 
+        img.alt = 'foto';
+        img.addEventListener('click', (ev) => { 
+            ev.stopPropagation(); 
+            openImageModal(src, urls, i); 
+        });
         div.appendChild(img);
-        const btn = document.createElement('button'); btn.className = 'delete-btn'; btn.textContent = '×';
-        btn.addEventListener('click', (ev) => { ev.stopPropagation(); excluirFotoSOS(i); });
+        const btn = document.createElement('button'); 
+        btn.className = 'delete-btn'; 
+        btn.textContent = '×';
+        btn.addEventListener('click', (ev) => { 
+            ev.stopPropagation(); 
+            excluirFotoSOS(i); 
+        });
         div.appendChild(btn);
         container.appendChild(div);
     });
 }
 
-function excluirFotoSOS(i) {
+async function excluirFotoSOS(i) {
     if (!confirmarSenhaADM()) return;
     if (!confirm('Excluir esta imagem do SOS?')) return;
     if (!db.imagens || !db.imagens.sos || !Array.isArray(db.imagens.sos.fotos)) return;
+
+    const foto = db.imagens.sos.fotos[i];
+    if (foto && typeof foto === 'object' && foto.id) {
+        try { await idbExcluir(foto.id); } catch(e) { console.warn('Erro ao excluir imagem IDB:', e); }
+        liberarUrlImagem(foto);
+    }
+
     db.imagens.sos.fotos.splice(i, 1);
-    atualizarGaleriaSOS(); 
-    salvarDB();
+    await atualizarGaleriaSOS(); 
+    await salvarDB();
     atualizarImagemGuincho();
     registrarAuditoria('Exclusão', `Foto excluída do SOS (índice ${i})`);
 }
@@ -4730,7 +5086,6 @@ function salvarCompra() {
         db.compras.push(compra);
         registrarAuditoria('Cadastro', `Nova compra: ${produto}`);
 
-        // ============== LANÇAR NO FLUXO DE CAIXA (SAÍDA) ==============
         const valorNum = parseMoeda(valorTotal || valorUnitario);
         if (valorNum > 0) {
             if (!Array.isArray(db.fluxoCaixa)) db.fluxoCaixa = [];
@@ -4744,7 +5099,6 @@ function salvarCompra() {
             });
         }
 
-        // ============== LANÇAR NO HISTÓRICO GERAL ==============
         if (!Array.isArray(db.historico)) db.historico = [];
         db.historico.push({
             data: data,
@@ -4806,7 +5160,6 @@ function limparCamposCompra() {
     compraEditandoIndex = null;
 }
 
-/* Recalcula o total quando muda quantidade ou valor unitário */
 (function configurarCalculoTotalCompra() {
     const qtdEl = document.getElementById('compQuantidade');
     const valEl = document.getElementById('compValorUnitario');
@@ -6817,6 +7170,10 @@ async function inicializarSistemaCompleto() {
             permissoes: JSON.parse(JSON.stringify(permissoesPadrao.ADM)), selfie: null
         });
     }
+
+    // MIGRAÇÃO: converte imagens antigas (data URLs no Firestore/localStorage) para IndexedDB
+    try { await migrarImagensAntigas(); } catch(e) { console.warn('Erro na migração:', e); }
+
     gerarPermissoesUI();
     atualizarTabelaVeiculos();
     atualizarTabelaClientes();

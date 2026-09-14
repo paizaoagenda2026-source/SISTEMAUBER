@@ -4684,11 +4684,14 @@ function marcarPagamentoPago(i) {
     if (!confirm(`Confirmar pagamento de ${a.valor} referente a ${a.locatario}?`)) return;
     const hojeISO = new Date().toISOString().split('T')[0];
     processarPagamentoAutomatico(a, hojeISO);
+    // Remove o lançamento pago da aba Sub Pagamentos
+    const idx = db.alugueis.indexOf(a);
+    if (idx !== -1) db.alugueis.splice(idx, 1);
     atualizarTabelaAlugueis();
     atualizarTabelaHistoricoAlugueis();
     atualizarTabelaFluxoCaixa();
     salvarDB();
-    alert('✅ Pagamento registrado, enviado para o Fluxo de Caixa e próxima parcela gerada!');
+    alert('✅ Pagamento registrado!\n\n📥 Lançado no Fluxo de Caixa\n📜 Registrado no Histórico de Aluguéis\n🔁 Próxima parcela gerada\n🗑️ Lançamento removido da aba Sub Pagamentos');
 }
 
 function excluirPagamento(i) {

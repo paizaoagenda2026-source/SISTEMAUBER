@@ -99,15 +99,15 @@
         .image-preview-card { width: 150px; height: 100px; border: 1px solid #ddd; border-radius: 4px; overflow: hidden; background: #fafafa; position: relative; display: inline-block; }
         .image-preview-card img { width: 100%; height: 100%; object-fit: cover; display: none; }
         .image-preview-card .no-image { display: flex; align-items: center; justify-content: center; height: 100%; color: #666; font-size: 10px; text-align: center; padding: 2px; }
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; display: none; justify-content: center; align-items: center; cursor: pointer; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; display: none; justify-content: center; align-items: center; cursor: pointer; }
         .modal-overlay.active { display: flex; }
-        .modal-content { max-width: 90%; max-height: 90%; position: relative; }
-        .modal-content img { max-width: 100%; max-height: 90vh; object-fit: contain; border-radius: 8px; display: block; }
-        .modal-close { position: absolute; top: -40px; right: -40px; background: white; color: #333; border: none; border-radius: 50%; width: 35px; height: 35px; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-        .modal-nav-btn { position: fixed; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.85); color: #333; border: none; border-radius: 50%; width: 55px; height: 55px; font-size: 36px; font-weight: bold; cursor: pointer; display: none; align-items: center; justify-content: center; z-index: 10001; transition: background 0.2s, transform 0.2s; user-select: none; line-height: 1; padding-bottom: 6px; font-family: Arial, sans-serif; }
+        .modal-content { width: 100%; height: 100%; max-width: 100vw; max-height: 100vh; position: relative; display: flex; align-items: center; justify-content: center; }
+        .modal-content img { width: 100%; height: 100%; max-width: 100vw; max-height: 100vh; object-fit: contain; display: block; }
+        .modal-close { position: fixed; top: 15px; right: 15px; background: rgba(255,255,255,0.95); color: #333; border: none; border-radius: 50%; width: 44px; height: 44px; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; z-index: 10002; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+        .modal-nav-btn { position: fixed; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.9); color: #333; border: none; border-radius: 50%; width: 55px; height: 55px; font-size: 36px; font-weight: bold; cursor: pointer; display: none; align-items: center; justify-content: center; z-index: 10001; transition: background 0.2s, transform 0.2s; user-select: none; line-height: 1; padding-bottom: 6px; font-family: Arial, sans-serif; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
         .modal-nav-btn:hover { background: #fff; transform: translateY(-50%) scale(1.1); }
-        .modal-nav-prev { left: 20px; }
-        .modal-nav-next { right: 20px; }
+        .modal-nav-prev { left: 15px; }
+        .modal-nav-next { right: 15px; }
         .modal-counter { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); color: white; font-size: 15px; font-weight: bold; background: rgba(0,0,0,0.65); padding: 6px 16px; border-radius: 20px; display: none; white-space: nowrap; z-index: 10001; }
         .config-section { margin-bottom: 30px; padding: 20px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid var(--primary); }
         .config-section h3 { color: var(--primary); margin-bottom: 15px; }
@@ -255,6 +255,8 @@
             position: relative;
             animation: guinchoPulse 1s infinite alternate;
             background: transparent;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
         }
         @keyframes guinchoBlink {
             0%   { border-color: #ff0000; box-shadow: 0 0 0 8px rgba(255,0,0,0.7), 0 0 60px 25px #ff0000, inset 0 0 60px rgba(255,0,0,0.55); }
@@ -998,8 +1000,6 @@ async function carregarDB() {
             db = docSnap.data();
             console.log('📥 DB carregado do Firestore');
 
-            // RECUPERAÇÃO: se localStorage tiver mais imagens SOS/Garagem do que o Firestore,
-            // provavelmente os uploads anteriores falharam (doc >1MB) e as imagens ficaram só lá.
             try {
                 const stored = localStorage.getItem(DB_STORAGE_KEY);
                 if (stored) {
@@ -1089,16 +1089,15 @@ async function salvarDB() {
 }
 
 /* ============================================================
-   NOVO SISTEMA DE IMAGENS (IndexedDB + Firestore com referências)
-   + thumbnails embutidos como fallback (à prova de limpeza de dados)
+   SISTEMA DE IMAGENS — Thumbnail para grade, Full para modal/guincho
    ============================================================ */
 
 function gerarIdImagem() {
     return 'img_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
 }
 
-// Cache de URLs (blob → objectURL) para evitar recomputar
 const _imageUrlCache = new Map();
+const _imageFullUrlCache = new Map();
 
 function dataUrlParaBlobLocal(dataUrl) {
     const partes = dataUrl.split(',');
@@ -1110,12 +1109,12 @@ function dataUrlParaBlobLocal(dataUrl) {
     return new Blob([u8], { type: mime });
 }
 
-// Retorna URL para exibir a imagem (aceita string antiga OU objeto {id, thumb}).
-// Cascata: IndexedDB blob → thumb dataURL → dataUrl antigo.
+// Para a GRADE — prioriza thumbnail (rápido, sempre funciona em mobile)
 async function obterUrlImagem(registro) {
     if (!registro) return '';
-    if (typeof registro === 'string') return registro; // formato antigo (data URL)
-
+    if (typeof registro === 'string') return registro;
+    if (registro.thumb) return registro.thumb;
+    if (registro.dataUrl) return registro.dataUrl;
     const id = registro.id;
     if (id) {
         if (_imageUrlCache.has(id)) return _imageUrlCache.get(id);
@@ -1126,16 +1125,30 @@ async function obterUrlImagem(registro) {
                 _imageUrlCache.set(id, url);
                 return url;
             }
-        } catch (e) {
-            console.warn('Erro ao obter imagem do IndexedDB:', e);
-        }
+        } catch (e) { console.warn('Erro ao obter imagem do IndexedDB:', e); }
     }
+    return '';
+}
 
-    // Fallback 1: thumbnail embutido no próprio registro (sempre visível, mesmo se o IDB sumir)
+// Para o MODAL/ampliação e GUINCHO — prioriza alta resolução do IndexedDB
+async function obterUrlImagemFull(registro) {
+    if (!registro) return '';
+    if (typeof registro === 'string') return registro;
+    const id = registro.id;
+    if (id) {
+        if (_imageFullUrlCache.has(id)) return _imageFullUrlCache.get(id);
+        try {
+            const reg = await idbObter(id);
+            if (reg && reg.blob) {
+                const url = URL.createObjectURL(reg.blob);
+                _imageFullUrlCache.set(id, url);
+                return url;
+            }
+        } catch (e) { console.warn('Erro ao obter imagem em alta resolução:', e); }
+    }
+    // Fallback: thumb ou dataUrl
     if (registro.thumb) return registro.thumb;
-    // Fallback 2: dataUrl bruto (compatibilidade com registros antigos)
     if (registro.dataUrl) return registro.dataUrl;
-
     return '';
 }
 
@@ -1144,13 +1157,11 @@ function liberarUrlImagem(registro) {
     const id = registro.id;
     if (!id) return;
     const url = _imageUrlCache.get(id);
-    if (url) {
-        try { URL.revokeObjectURL(url); } catch(e) {}
-        _imageUrlCache.delete(id);
-    }
+    if (url) { try { URL.revokeObjectURL(url); } catch(e) {} _imageUrlCache.delete(id); }
+    const urlFull = _imageFullUrlCache.get(id);
+    if (urlFull) { try { URL.revokeObjectURL(urlFull); } catch(e) {} _imageFullUrlCache.delete(id); }
 }
 
-// Comprime arquivo → Blob (JPEG) sem manter Base64 em memória
 function comprimirArquivoParaBlob(file, maxWidth, quality) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -1164,7 +1175,6 @@ function comprimirArquivoParaBlob(file, maxWidth, quality) {
                     const canvas = document.createElement('canvas');
                     canvas.width = w; canvas.height = h;
                     const ctx = canvas.getContext('2d');
-                    // Fundo branco (garante compatibilidade com PNG transparente, SVG, etc.)
                     ctx.fillStyle = '#ffffff';
                     ctx.fillRect(0, 0, w, h);
                     ctx.drawImage(img, 0, 0, w, h);
@@ -1174,7 +1184,7 @@ function comprimirArquivoParaBlob(file, maxWidth, quality) {
                     }, 'image/jpeg', quality);
                 } catch (err) { reject(err); }
             };
-            img.onerror = function() { reject(new Error('Erro ao carregar imagem (formato pode não ser suportado pelo navegador)')); };
+            img.onerror = function() { reject(new Error('Erro ao carregar imagem')); };
             img.src = e.target.result;
         };
         reader.onerror = function() { reject(new Error('Erro ao ler arquivo')); };
@@ -1182,10 +1192,10 @@ function comprimirArquivoParaBlob(file, maxWidth, quality) {
     });
 }
 
-// Gera um thumbnail pequeno (JPEG base64) para ser guardado junto da referência no Firestore
+// Thumbnail melhorado (400px, qualidade 0.8) para melhor nitidez quando ampliado em mobile
 function gerarThumbnailBlob(blob, maxDim, quality) {
-    maxDim = maxDim || 140;
-    quality = quality || 0.55;
+    maxDim = maxDim || 400;
+    quality = quality || 0.8;
     return new Promise((resolve) => {
         try {
             const url = URL.createObjectURL(blob);
@@ -1224,8 +1234,6 @@ function blobParaDataURL(blob) {
     });
 }
 
-// Verifica se o arquivo é uma imagem, por MIME type OU por extensão
-// (resolve casos em que o navegador não informa o MIME type, ex: HEIC, arquivos renomeados)
 function ehArquivoImagem(f) {
     if (!f) return false;
     if (f.type && String(f.type).toLowerCase().startsWith('image/')) return true;
@@ -1243,13 +1251,8 @@ async function processarArquivosImagem(files, maxWidth, quality) {
             try {
                 blob = await comprimirArquivoParaBlob(file, maxWidth, quality);
             } catch (compressErr) {
-                // Fallback: se a compressão falhar (ex: HEIC sem suporte no Chrome),
-                // salva o arquivo original como blob para não perder a imagem.
-                console.warn('Compressão falhou, usando o arquivo original:', file.name, compressErr);
-                if (file.size > 3 * 1024 * 1024) {
-                    console.warn('Arquivo muito grande e não comprimível, ignorando:', file.name);
-                    continue;
-                }
+                console.warn('Compressão falhou, usando arquivo original:', file.name, compressErr);
+                if (file.size > 3 * 1024 * 1024) continue;
                 blob = file;
             }
             const previewUrl = URL.createObjectURL(blob);
@@ -1261,7 +1264,6 @@ async function processarArquivosImagem(files, maxWidth, quality) {
     return resultados;
 }
 
-// MIGRAÇÃO: converte imagens antigas (data URL string) para IndexedDB e substitui por {id}
 async function migrarImagensAntigas() {
     if (!db || !db.imagens) return;
     let precisaSalvar = false;
@@ -1278,43 +1280,31 @@ async function migrarImagensAntigas() {
                     const id = gerarIdImagem();
                     await idbSalvar(id, blob, {
                         nomeArquivo: 'migrada_' + categoria + '_' + i + '.jpg',
-                        tipo: 'image/jpeg',
-                        dataUpload: hoje,
-                        categoria: categoria,
-                        origem: 'migracao'
+                        tipo: 'image/jpeg', dataUpload: hoje, categoria: categoria, origem: 'migracao'
                     });
-                    // Gera thumbnail também na migração
                     let thumb = null;
                     try {
-                        const thumbBlob = await gerarThumbnailBlob(blob, 140, 0.55);
+                        const thumbBlob = await gerarThumbnailBlob(blob, 400, 0.8);
                         if (thumbBlob) thumb = await blobParaDataURL(thumbBlob);
                     } catch(e) {}
                     const ref = { id, nome: 'migrada_' + categoria + '_' + i + '.jpg', dataUpload: hoje };
                     if (thumb) ref.thumb = thumb;
                     cat.fotos[i] = ref;
                     precisaSalvar = true;
-                } catch (err) {
-                    console.warn('Erro ao migrar imagem antiga (' + categoria + '):', err);
-                }
+                } catch (err) { console.warn('Erro ao migrar imagem antiga:', err); }
             }
         }
     }
 
     if (precisaSalvar) {
-        console.log('📦 Migrando imagens antigas para IndexedDB...');
         try {
             await dbFirestore.collection('lobao_db').doc('principal').set(db);
             try { localStorage.setItem(DB_STORAGE_KEY, JSON.stringify(db)); } catch(e) {}
-            console.log('✅ Migração concluída. Firestore agora está leve.');
-        } catch (err) {
-            console.error('Erro ao salvar após migração:', err);
-        }
+        } catch (err) { console.error('Erro ao salvar após migração:', err); }
     }
 }
 
-/* ============================================================
-   FIM DO NOVO SISTEMA DE IMAGENS
-   ============================================================ */
+/* ============================================================ */
 
 const todasAbas = [
     { id: 'veiculos' }, { id: 'clientes' }, { id: 'locacoes' }, { id: 'locEncerrada' },
@@ -1377,31 +1367,24 @@ function temPermissao(perm) {
     return !!(usuarioLogado.permissoes && usuarioLogado.permissoes.botoes && usuarioLogado.permissoes.botoes[perm]);
 }
 
-/* ===================== FUNÇÕES DO OVERLAY GUINCHO TELA CHEIA ===================== */
 function mostrarGuinchoFullscreen() {
     const overlay = document.getElementById('guinchoOverlay');
-    if (overlay) {
-        overlay.style.display = 'flex';
-        overlay.classList.add('active');
-    }
+    if (overlay) { overlay.style.display = 'flex'; overlay.classList.add('active'); }
     atualizarImagemGuincho();
 }
 function fecharGuinchoFullscreen() {
     const overlay = document.getElementById('guinchoOverlay');
-    if (overlay) {
-        overlay.classList.remove('active');
-        overlay.style.display = 'none';
-    }
+    if (overlay) { overlay.classList.remove('active'); overlay.style.display = 'none'; }
 }
 
-/* ===================== ATUALIZAR IMAGEM DO GUINCHO ===================== */
+/* ===================== ATUALIZAR IMAGEM DO GUINCHO (ALTA RESOLUÇÃO) ===================== */
 async function atualizarImagemGuincho() {
     try {
         const fotos = (db && db.imagens && db.imagens.sos && Array.isArray(db.imagens.sos.fotos))
             ? db.imagens.sos.fotos : [];
         const ultima = fotos.length > 0 ? fotos[fotos.length - 1] : null;
         let src = '';
-        if (ultima) src = await obterUrlImagem(ultima);
+        if (ultima) src = await obterUrlImagemFull(ultima);
 
         const imgIds = ['guinchoCardImg', 'guinchoOverlayImg'];
         const fallbackIds = ['guinchoCardFallback', 'guinchoOverlayFallback'];
@@ -1480,10 +1463,8 @@ function calcularCaucaoPagoNoPeriodo(locacao, dataInicio, dataFimEfetiva) {
             if (origem.includes('CAU') && !origem.includes('ENTRADA') && !origem.includes('SALDO')) {
                 totalCaucaoRecebido += valorPorParcela;
                 detalhes.push({
-                    parcela: p.parcela || '',
-                    valorCaucao: valorPorParcela,
-                    dataPagamento: p.dataPagamento || p.data,
-                    descricao: p.origem
+                    parcela: p.parcela || '', valorCaucao: valorPorParcela,
+                    dataPagamento: p.dataPagamento || p.data, descricao: p.origem
                 });
             }
         });
@@ -1498,18 +1479,14 @@ function calcularCaucaoPagoNoPeriodo(locacao, dataInicio, dataFimEfetiva) {
             if (origem.includes('ENTRADA') && origem.includes('CAU')) {
                 totalCaucaoRecebido += entrada;
                 detalhes.push({
-                    parcela: p.parcela || '',
-                    valorCaucao: entrada,
-                    dataPagamento: p.dataPagamento || p.data,
-                    descricao: p.origem
+                    parcela: p.parcela || '', valorCaucao: entrada,
+                    dataPagamento: p.dataPagamento || p.data, descricao: p.origem
                 });
             } else if (origem.includes('SALDO') && origem.includes('CAU')) {
                 totalCaucaoRecebido += valorSaldoPorParcela;
                 detalhes.push({
-                    parcela: p.parcela || '',
-                    valorCaucao: valorSaldoPorParcela,
-                    dataPagamento: p.dataPagamento || p.data,
-                    descricao: p.origem
+                    parcela: p.parcela || '', valorCaucao: valorSaldoPorParcela,
+                    dataPagamento: p.dataPagamento || p.data, descricao: p.origem
                 });
             }
         });
@@ -1517,17 +1494,11 @@ function calcularCaucaoPagoNoPeriodo(locacao, dataInicio, dataFimEfetiva) {
 
     if (totalCaucaoRecebido > caucaoTotal) totalCaucaoRecebido = caucaoTotal;
 
-    return {
-        total: totalCaucaoRecebido,
-        detalhes: detalhes,
-        quantidadeParcelas: detalhes.length
-    };
+    return { total: totalCaucaoRecebido, detalhes: detalhes, quantidadeParcelas: detalhes.length };
 }
 
 function confirmarSenhaADM() {
-    if (usuarioLogado && usuarioLogado.tipo === 'ADM') {
-        return true;
-    }
+    if (usuarioLogado && usuarioLogado.tipo === 'ADM') return true;
     const senha = prompt('🔐 Digite a senha do ADM para continuar:');
     if (senha === null) return false;
     if (String(senha).trim() === '') { alert('❌ Senha vazia! Operação cancelada.'); return false; }
@@ -1559,13 +1530,9 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
         registrarAuditoria('Login', `Login: ${user}`);
         try { if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen(); } catch(e){}
 
-        // === Abrir automaticamente a aba SOS ===
         const tabSOS = document.querySelector('.tab[data-tab="sos"]');
-        if (tabSOS && !tabSOS.classList.contains('hidden-tab')) {
-            tabSOS.click();
-        }
+        if (tabSOS && !tabSOS.classList.contains('hidden-tab')) tabSOS.click();
 
-        // === MOSTRAR CARTÃO GUINCHO EM TELA CHEIA PISCANTE AO INICIAR ===
         atualizarImagemGuincho();
         setTimeout(function() { mostrarGuinchoFullscreen(); }, 100);
         setTimeout(function() { mostrarGuinchoFullscreen(); }, 300);
@@ -1588,10 +1555,7 @@ function sairSistema() {
     document.getElementById('loginPassword').value = '';
     document.getElementById('loginError').style.display = 'none';
     usuarioLogado = null;
-    setTimeout(() => {
-        const el = document.getElementById('loginPassword');
-        if (el) el.focus();
-    }, 50);
+    setTimeout(() => { const el = document.getElementById('loginPassword'); if (el) el.focus(); }, 50);
 }
 
 document.querySelectorAll('.tab').forEach(tab => {
@@ -1731,10 +1695,7 @@ function obterDataHojeISO() {
 function preencherDataInicioLocacao() {
     const el = document.getElementById('locDataInicio');
     if (!el) return;
-    if (!el.value) {
-        el.value = obterDataHojeISO();
-        calcularDataFim();
-    }
+    if (!el.value) { el.value = obterDataHojeISO(); calcularDataFim(); }
 }
 
 function preencherDatasAutomaticas() {
@@ -1748,29 +1709,14 @@ function preencherDatasAutomaticas() {
 }
 
 function normalizarTextoFipe(t) {
-    return String(t || '')
-        .toUpperCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^A-Z0-9 ]/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim();
+    return String(t || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
 const FIPE_SINONIMIA = {
-    'JOYE': 'JOY',
-    'JOY': 'JOY',
-    'MECANICA': 'MEC', 'MECANICO': 'MEC',
-    'MANUAL': 'MEC', 'MT': 'MEC', 'MEC': 'MEC',
-    'AUTOMATICO': 'AUT', 'AUTOMATICA': 'AUT', 'AUT': 'AUT', 'AT': 'AUT',
-    'HATCHBACK': 'HATCH', 'HATCH': 'HATCH',
-    'SEDAN': 'SEDAN',
-    'LT': 'LT', 'LTZ': 'LTZ', 'LS': 'LS',
-    'ACTIV': 'ACTIV', 'PRIME': 'PRIME', 'PREMIER': 'PREMIER',
-    'FLEX': 'FLEX', 'GASOLINA': 'GAS', 'DIESEL': 'DIESEL',
-    '5P': '5', '3P': '3', '4P': '4',
-    '8V': '8', '16V': '16', '12V': '12',
-    '10': '1'
+    'JOYE': 'JOY','JOY': 'JOY','MECANICA': 'MEC','MECANICO': 'MEC','MANUAL': 'MEC','MT': 'MEC','MEC': 'MEC',
+    'AUTOMATICO': 'AUT','AUTOMATICA': 'AUT','AUT': 'AUT','AT': 'AUT','HATCHBACK': 'HATCH','HATCH': 'HATCH','SEDAN': 'SEDAN',
+    'LT': 'LT','LTZ': 'LTZ','LS': 'LS','ACTIV': 'ACTIV','PRIME': 'PRIME','PREMIER': 'PREMIER',
+    'FLEX': 'FLEX','GASOLINA': 'GAS','DIESEL': 'DIESEL','5P': '5','3P': '3','4P': '4','8V': '8','16V': '16','12V': '12','10': '1'
 };
 
 function tokenizarModeloFipe(txt) {
@@ -1798,10 +1744,7 @@ async function buscarFipeAutomatica(silencioso) {
     const fipeInput = document.getElementById('veicFipe');
     const btn = document.getElementById('btnBuscarFipe');
 
-    if (!fabricante) {
-        if (!silencioso) alert('Informe o Fabricante/Modelo antes de buscar a FIPE.');
-        return;
-    }
+    if (!fabricante) { if (!silencioso) alert('Informe o Fabricante/Modelo antes de buscar a FIPE.'); return; }
 
     if (!silencioso) {
         fipeInput.value = 'Consultando FIPE...';
@@ -1819,12 +1762,8 @@ async function buscarFipeAutomatica(silencioso) {
         for (const m of marcasOrdenadas) {
             const nomeNorm = normalizarTextoFipe(m.nome);
             if (!nomeNorm) continue;
-            if (fabNorm === nomeNorm ||
-                fabNorm.startsWith(nomeNorm + ' ') ||
-                fabNorm.includes(' ' + nomeNorm + ' ') ||
-                fabNorm.endsWith(' ' + nomeNorm)) {
-                marcaEncontrada = m;
-                break;
+            if (fabNorm === nomeNorm || fabNorm.startsWith(nomeNorm + ' ') || fabNorm.includes(' ' + nomeNorm + ' ') || fabNorm.endsWith(' ' + nomeNorm)) {
+                marcaEncontrada = m; break;
             }
         }
         if (!marcaEncontrada) {
@@ -1835,8 +1774,7 @@ async function buscarFipeAutomatica(silencioso) {
 
         if (!marcaEncontrada) {
             if (!silencioso) alert('Marca não encontrada na FIPE: ' + fabricante);
-            fipeInput.value = '';
-            return;
+            fipeInput.value = ''; return;
         }
 
         const respModelos = await fetch(`https://parallelum.com.br/fipe/api/v1/carros/marcas/${marcaEncontrada.codigo}/modelos`);
@@ -1851,14 +1789,12 @@ async function buscarFipeAutomatica(silencioso) {
 
         if (tokensAlvo.length === 0) {
             if (!silencioso) alert('Informe o modelo do veículo (ex: ONIX HATCH Joy 1.0 Mec.).');
-            fipeInput.value = '';
-            return;
+            fipeInput.value = ''; return;
         }
 
         function pontuarModelo(nomeModelo) {
             const tokensMod = tokenizarModeloFipe(nomeModelo);
-            let pontos = 0;
-            let matchesExatos = 0;
+            let pontos = 0, matchesExatos = 0;
             const usados = new Set();
             for (const tk of tokensAlvo) {
                 let achou = false;
@@ -1885,10 +1821,7 @@ async function buscarFipeAutomatica(silencioso) {
         let melhorInfo = { pontos: -Infinity, matches: 0, tokensAlvoLen: tokensAlvo.length };
         for (const mod of modelos) {
             const info = pontuarModelo(mod.nome);
-            if (info.pontos > melhorInfo.pontos) {
-                melhorInfo = info;
-                melhorModelo = mod;
-            }
+            if (info.pontos > melhorInfo.pontos) { melhorInfo = info; melhorModelo = mod; }
         }
 
         const precisaMatches = tokensAlvo.length >= 2 ? 2 : 1;
@@ -1900,8 +1833,7 @@ async function buscarFipeAutomatica(silencioso) {
                 msg += 'Digite o nome completo do veículo (ex: "CHEVROLET/ONIX HATCH Joy 1.0 8V Flex 5p Mec.") e tente novamente.';
                 alert(msg);
             }
-            fipeInput.value = '';
-            return;
+            fipeInput.value = ''; return;
         }
 
         const respAnos = await fetch(`https://parallelum.com.br/fipe/api/v1/carros/marcas/${marcaEncontrada.codigo}/modelos/${melhorModelo.codigo}/anos`);
@@ -1926,26 +1858,19 @@ async function buscarFipeAutomatica(silencioso) {
         }
 
         let anoEncontrado = null;
-        if (anoModel) {
-            anoEncontrado = anos.find(a => extrairAnoDoItem(a) === anoModel);
-        }
-        if (!anoEncontrado && anoFabr) {
-            anoEncontrado = anos.find(a => extrairAnoDoItem(a) === anoFabr);
-        }
+        if (anoModel) anoEncontrado = anos.find(a => extrairAnoDoItem(a) === anoModel);
+        if (!anoEncontrado && anoFabr) anoEncontrado = anos.find(a => extrairAnoDoItem(a) === anoFabr);
 
         if (!anoEncontrado) {
             if (!silencioso) {
                 let msg = '⚠️ Ano não encontrado na FIPE para este modelo.\n\n';
-                if (anoFabr || anoModel) {
-                    msg += 'Ano informado: ' + (anoFabr || '?') + '/' + (anoModel || '?') + '\n\n';
-                }
+                if (anoFabr || anoModel) msg += 'Ano informado: ' + (anoFabr || '?') + '/' + (anoModel || '?') + '\n\n';
                 msg += 'Anos disponíveis:\n';
                 anos.forEach(a => { msg += '• ' + (a.nome || a.codigo) + '\n'; });
                 if (anos.length === 0) msg += '(Nenhum ano disponível)\n';
                 alert(msg);
             }
-            fipeInput.value = '';
-            return;
+            fipeInput.value = ''; return;
         }
 
         const respValor = await fetch(`https://parallelum.com.br/fipe/api/v1/carros/marcas/${marcaEncontrada.codigo}/modelos/${melhorModelo.codigo}/anos/${anoEncontrado.codigo}`);
@@ -1954,15 +1879,7 @@ async function buscarFipeAutomatica(silencioso) {
         fipeInput.value = dataValor.Valor || '';
 
         if (!silencioso) {
-            alert(
-                '✅ Valor FIPE encontrado!\n\n' +
-                'Marca: ' + (dataValor.Marca || '') + '\n' +
-                'Modelo: ' + (dataValor.Modelo || '') + '\n' +
-                'Ano: ' + (anoEncontrado.nome || dataValor.AnoModelo || '') + '\n' +
-                'Combustível: ' + (dataValor.Combustivel || '') + '\n' +
-                'Código FIPE: ' + (dataValor.CodigoFipe || '') + '\n' +
-                'Valor: ' + (dataValor.Valor || '')
-            );
+            alert('✅ Valor FIPE encontrado!\n\nMarca: ' + (dataValor.Marca || '') + '\nModelo: ' + (dataValor.Modelo || '') + '\nAno: ' + (anoEncontrado.nome || dataValor.AnoModelo || '') + '\nCombustível: ' + (dataValor.Combustivel || '') + '\nCódigo FIPE: ' + (dataValor.CodigoFipe || '') + '\nValor: ' + (dataValor.Valor || ''));
         }
     } catch (err) {
         console.error('Erro FIPE:', err);
@@ -1981,9 +1898,7 @@ function agendarBuscaFipeAutomatica() {
         const fab = document.getElementById('veicFabricante').value.trim();
         const ano = document.getElementById('veicAnoModel').value.trim() || document.getElementById('veicAnoFabr').value.trim();
         const fipeAtual = document.getElementById('veicFipe').value.trim();
-        if (fab && ano && !fipeAtual) {
-            buscarFipeAutomatica(true);
-        }
+        if (fab && ano && !fipeAtual) buscarFipeAutomatica(true);
     }, 900);
 }
 
@@ -1991,10 +1906,7 @@ function configurarBuscaFipeAutomatica() {
     const fabEl = document.getElementById('veicFabricante');
     const anoModelEl = document.getElementById('veicAnoModel');
     const anoFabrEl = document.getElementById('veicAnoFabr');
-    [fabEl, anoModelEl, anoFabrEl].forEach(el => {
-        if (!el) return;
-        el.addEventListener('blur', agendarBuscaFipeAutomatica);
-    });
+    [fabEl, anoModelEl, anoFabrEl].forEach(el => { if (!el) return; el.addEventListener('blur', agendarBuscaFipeAutomatica); });
 }
 
 async function salvarVeiculo() {
@@ -2006,8 +1918,7 @@ async function salvarVeiculo() {
     const proprietario = document.getElementById('veicProprietario').value.trim();
     const cpfPropr = document.getElementById('veicCpfPropr').value.trim();
     
-    if (campoVazio(fabricante) || campoVazio(cor) || campoVazio(placa) || campoVazio(anoFabr) ||
-        campoVazio(anoModel) || campoVazio(proprietario) || campoVazio(cpfPropr)) {
+    if (campoVazio(fabricante) || campoVazio(cor) || campoVazio(placa) || campoVazio(anoFabr) || campoVazio(anoModel) || campoVazio(proprietario) || campoVazio(cpfPropr)) {
         alert('Preencha todos os campos obrigatórios do veículo!'); return;
     }
     const placaNorm = normalizarPlaca(placa);
@@ -2019,10 +1930,7 @@ async function salvarVeiculo() {
         const p = normalizarPlaca(v.placa);
         return p !== '' && p === placaNorm;
     });
-    if (veiculoDuplicado) {
-        alert('Já existe um veículo com essa placa!\n\nPlaca: "' + veiculoDuplicado.placa + '"');
-        return;
-    }
+    if (veiculoDuplicado) { alert('Já existe um veículo com essa placa!\n\nPlaca: "' + veiculoDuplicado.placa + '"'); return; }
     const veiculo = {
         fabricante, cor, placa,
         cambio: document.getElementById('veicCambio').value.trim(),
@@ -2056,12 +1964,8 @@ async function salvarVeiculo() {
             docVeiculoAtual = null;
             const infoBox = document.getElementById('docVeiculoInfo');
             if (infoBox) infoBox.classList.remove('ativo');
-        } catch (err) {
-            console.error('Erro ao vincular PDF:', err);
-            alert('⚠️ O veículo foi salvo, mas houve erro ao salvar o PDF. Tente novamente.');
-        }
+        } catch (err) { console.error('Erro ao vincular PDF:', err); alert('⚠️ O veículo foi salvo, mas houve erro ao salvar o PDF. Tente novamente.'); }
     }
-
     limparCamposVeiculo();
 }
 
@@ -2186,9 +2090,7 @@ function excluirVeiculo(i) {
         if (chave) {
             const qtd = (db.documentosPlacas[chave] || []).length;
             (db.documentosPlacas[chave] || []).forEach(doc => {
-                if (doc && doc.storageId) {
-                    try { idbExcluir(doc.storageId).catch(e => console.warn('IDB excluir:', e)); } catch(e) {}
-                }
+                if (doc && doc.storageId) { try { idbExcluir(doc.storageId).catch(e => console.warn('IDB excluir:', e)); } catch(e) {} }
             });
             delete db.documentosPlacas[chave];
             if (qtd > 0) relatorio.push(`• ${qtd} documento(s) da placa`);
@@ -2242,9 +2144,7 @@ async function salvarCliente() {
     const endereco = document.getElementById('cliEndereco').value.trim();
     const cidade = document.getElementById('cliCidade').value.trim();
     const estado = document.getElementById('cliEstado').value.trim();
-    if (!nome || !cpf || !rg || !telefone || !endereco || !cidade || !estado) {
-        alert('Preencha todos os campos obrigatórios do cliente!'); return;
-    }
+    if (!nome || !cpf || !rg || !telefone || !endereco || !cidade || !estado) { alert('Preencha todos os campos obrigatórios do cliente!'); return; }
     const cpfLimpo = cpf.replace(/\D/g, '');
     const nomeUpper = nome.toUpperCase().trim();
     const clienteDuplicado = db.clientes.find((c, idx) => {
@@ -2253,10 +2153,7 @@ async function salvarCliente() {
         const mesmoNome = (c.nome || '').toUpperCase().trim() === nomeUpper;
         return mesmoCpf || mesmoNome;
     });
-    if (clienteDuplicado) {
-        alert('Já existe um cliente com esse CPF ou Nome!\n\nCliente: "' + (clienteDuplicado.nome || '') + '"');
-        return;
-    }
+    if (clienteDuplicado) { alert('Já existe um cliente com esse CPF ou Nome!\n\nCliente: "' + (clienteDuplicado.nome || '') + '"'); return; }
     const cliente = {
         dataCadastro: document.getElementById('cliDataCadastro').value || obterDataHojeISO(),
         nome, cpf, rg,
@@ -2355,11 +2252,7 @@ function editarCliente(i) {
     document.getElementById('cliEstado').value = c.estado || '';
     selfieClienteTemp = c.selfie || null;
     const prevSelfie = document.getElementById('selfiePreviewCliente');
-    if (prevSelfie) {
-        prevSelfie.innerHTML = c.selfie
-            ? `<img src="${c.selfie}" class="selfie-thumbnail" alt="selfie" onclick="openImageModal('${c.selfie}')">`
-            : '';
-    }
+    if (prevSelfie) prevSelfie.innerHTML = c.selfie ? `<img src="${c.selfie}" class="selfie-thumbnail" alt="selfie" onclick="openImageModal('${c.selfie}')">` : '';
     atualizarEstadoEdicaoCliente();
     window.scrollTo(0, 0);
     document.getElementById('cliNome').focus();
@@ -2579,29 +2472,17 @@ function atualizarCombosLocacao() {
     const sCli = document.getElementById('locLocatario');
     if (sCli) {
         sCli.innerHTML = '<option value="">Selecione</option>';
-        (db.clientes || []).forEach(c => {
-            const o = document.createElement('option');
-            o.value = c.nome; o.textContent = c.nome;
-            sCli.appendChild(o);
-        });
+        (db.clientes || []).forEach(c => { const o = document.createElement('option'); o.value = c.nome; o.textContent = c.nome; sCli.appendChild(o); });
     }
     const sVei = document.getElementById('locVeiculo');
     if (sVei) {
         sVei.innerHTML = '<option value="">Selecione</option>';
-        (db.veiculos || []).forEach(v => {
-            const o = document.createElement('option');
-            o.value = v.fabricante; o.textContent = v.fabricante;
-            sVei.appendChild(o);
-        });
+        (db.veiculos || []).forEach(v => { const o = document.createElement('option'); o.value = v.fabricante; o.textContent = v.fabricante; sVei.appendChild(o); });
     }
     const sPl = document.getElementById('locPlaca');
     if (sPl) {
         sPl.innerHTML = '<option value="">Selecione</option>';
-        (db.veiculos || []).forEach(v => {
-            const o = document.createElement('option');
-            o.value = v.placa; o.textContent = v.placa;
-            sPl.appendChild(o);
-        });
+        (db.veiculos || []).forEach(v => { const o = document.createElement('option'); o.value = v.placa; o.textContent = v.placa; sPl.appendChild(o); });
     }
 }
 
@@ -2684,12 +2565,7 @@ function gerarParcelasPagamento(opts) {
     if (tipoPagCaucao === 'parcelado') {
         const parcelaCaucao = caucao / numDivisoes;
         for (let i = 0; i < numDivisoes; i++) {
-            parcelas.push({ 
-                valor: valorAluguel + parcelaCaucao, 
-                vencimento: calcVencimento(i), 
-                parcela: i + 1, 
-                descricao: `Aluguel + Caução ${i + 1}/${numDivisoes}` 
-            });
+            parcelas.push({ valor: valorAluguel + parcelaCaucao, vencimento: calcVencimento(i), parcela: i + 1, descricao: `Aluguel + Caução ${i + 1}/${numDivisoes}` });
         }
         return parcelas;
     }
@@ -2700,12 +2576,7 @@ function gerarParcelasPagamento(opts) {
         const parcelaSaldo = numSaldo > 0 ? (saldo / numSaldo) : 0;
         parcelas.push({ valor: valorAluguel + entrada, vencimento: calcVencimento(0), parcela: 1, descricao: 'Aluguel + Entrada Caução' });
         for (let i = 1; i <= numSaldo; i++) {
-            parcelas.push({ 
-                valor: valorAluguel + parcelaSaldo, 
-                vencimento: calcVencimento(i), 
-                parcela: i + 1, 
-                descricao: `Aluguel + Saldo Caução ${i}/${numSaldo}` 
-            });
+            parcelas.push({ valor: valorAluguel + parcelaSaldo, vencimento: calcVencimento(i), parcela: i + 1, descricao: `Aluguel + Saldo Caução ${i}/${numSaldo}` });
         }
         return parcelas;
     }
@@ -2726,12 +2597,7 @@ async function salvarLocacao() {
         return normalizarPlaca(l.placa) === normalizarPlaca(placa);
     });
     if (locacaoDuplicada) {
-        alert(
-            '⛔ Este veículo já está alugado para outro locatário!\n\n' +
-            'Placa: ' + placa + '\n' +
-            'Locatário atual: ' + (locacaoDuplicada.locatario || '') + '\n\n' +
-            'Encerre ou exclua a locação ativa antes de alugar para outro cliente.'
-        );
+        alert('⛔ Este veículo já está alugado para outro locatário!\n\nPlaca: ' + placa + '\nLocatário atual: ' + (locacaoDuplicada.locatario || '') + '\n\nEncerre ou exclua a locação ativa antes de alugar para outro cliente.');
         return;
     }
     
@@ -2751,20 +2617,16 @@ async function salvarLocacao() {
         aluguelMensal: aluguelMensalStr || '',
         origemValorAluguel: origemValor,
         tipoPagamento: tipoPagamento,
-        caucao:      caucaoStr,
-        caucaoPago:  caucaoPagoStr,
-        pagCaucao:   tipoPagCaucao,
+        caucao: caucaoStr,
+        caucaoPago: caucaoPagoStr,
+        pagCaucao: tipoPagCaucao,
         vistoria: []
     };
     
     if (locacaoEditandoIndex !== null && db.locacoes[locacaoEditandoIndex]) {
         locacaoObj.vistoria = db.locacoes[locacaoEditandoIndex].vistoria || [];
         locacaoObj.valorTotalParcelas = db.locacoes[locacaoEditandoIndex].valorTotalParcelas || null;
-        
-        db.alugueis = (db.alugueis || []).filter(al => 
-            !(al.locatario === locatario && al.placa === placa && al.status !== 'pago')
-        );
-
+        db.alugueis = (db.alugueis || []).filter(al => !(al.locatario === locatario && al.placa === placa && al.status !== 'pago'));
         db.locacoes[locacaoEditandoIndex] = locacaoObj;
         registrarAuditoria('Edição', `Locação atualizada: ${locatario} - ${placa}`);
         locacaoEditandoIndex = null;
@@ -2811,11 +2673,8 @@ async function salvarLocacao() {
     registrarAuditoria('Cadastro', `Nova locação: ${locatario} - ${placa} | Caução: ${tipoPagCaucao} | 1ª parcela gerada | Total: ${formatarMoedaBR(totalParcelas)}`);
     
     let contratosGerados = 0;
-    try {
-        contratosGerados = await gerarESalvarContratosAutomaticos(locacaoObj);
-    } catch (err) {
-        console.error('Erro ao gerar contratos automáticos:', err);
-    }
+    try { contratosGerados = await gerarESalvarContratosAutomaticos(locacaoObj); }
+    catch (err) { console.error('Erro ao gerar contratos automáticos:', err); }
     
     salvarDB();
     
@@ -2824,15 +2683,11 @@ async function salvarLocacao() {
         resumo += 'Forma de pagamento da caução: ' + tipoPagCaucao.toUpperCase() + '\n';
         resumo += 'Total de parcelas previstas: ' + parcelas.length + '\n';
         resumo += 'Valor total: ' + formatarMoedaBR(totalParcelas);
-        if (contratosGerados > 0) {
-            resumo += '\n\n📄 ' + contratosGerados + ' contrato(s) gerado(s) em PDF e salvos na aba Documentos (placa ' + placa + ').';
-        }
+        if (contratosGerados > 0) resumo += '\n\n📄 ' + contratosGerados + ' contrato(s) gerado(s) em PDF e salvos na aba Documentos (placa ' + placa + ').';
         alert(resumo);
     } else {
         let msg = '✅ Locação salva!';
-        if (contratosGerados > 0) {
-            msg += '\n\n📄 ' + contratosGerados + ' contrato(s) gerado(s) em PDF e salvos na aba Documentos (placa ' + placa + ').';
-        }
+        if (contratosGerados > 0) msg += '\n\n📄 ' + contratosGerados + ' contrato(s) gerado(s) em PDF e salvos na aba Documentos (placa ' + placa + ').';
         alert(msg);
     }
     limparCamposLocacao();
@@ -2840,9 +2695,7 @@ async function salvarLocacao() {
 }
 
 function limparCamposLocacao() {
-    ['locLocatario','locVeiculo','locDataInicio','locDataFim',
-     'locCor','locPlaca','locAnoFabr','locAnoModel','locCaucao','locValorAluguel',
-     'locAluguelMensal','locProprietario','locCpfPropr','locCaucaoPago'].forEach(id => {
+    ['locLocatario','locVeiculo','locDataInicio','locDataFim','locCor','locPlaca','locAnoFabr','locAnoModel','locCaucao','locValorAluguel','locAluguelMensal','locProprietario','locCpfPropr','locCaucaoPago'].forEach(id => {
         const el = document.getElementById(id); if (el) el.value = '';
     });
     const selPag = document.getElementById('locPagCaucao'); if (selPag) selPag.selectedIndex = 0;
@@ -2870,9 +2723,7 @@ function atualizarTabelaLocacoes() {
     (db.locacoes || []).forEach((l, i) => {
         const tipoLabel = (l.tipoPagamento || 'mensal').toUpperCase();
         const caucaoLabel = l.pagCaucao ? l.pagCaucao.toUpperCase() : 'À VISTA';
-        const totalTxt = l.valorTotalParcelas
-            ? `<br><small style="color:#e63946;font-weight:bold;">Total: ${formatarMoedaBR(l.valorTotalParcelas)}</small>`
-            : '';
+        const totalTxt = l.valorTotalParcelas ? `<br><small style="color:#e63946;font-weight:bold;">Total: ${formatarMoedaBR(l.valorTotalParcelas)}</small>` : '';
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${l.locatario || ''}</td>
@@ -2986,9 +2837,7 @@ function encerrarLocacao(i) {
         return true;
     });
 
-    const receitaTotalPeriodo = pagamentosNoPeriodo.reduce((s, a) => {
-        return s + (Number(a.valorNumerico) || parseMoeda(a.valor) || 0);
-    }, 0);
+    const receitaTotalPeriodo = pagamentosNoPeriodo.reduce((s, a) => s + (Number(a.valorNumerico) || parseMoeda(a.valor) || 0), 0);
 
     const calcCaucao = calcularCaucaoPagoNoPeriodo(l, dataInicio, dataFimEfetiva);
     const caucaoPagoNoPeriodo = calcCaucao.total;
@@ -3041,10 +2890,8 @@ function encerrarLocacao(i) {
         detalheCaucaoPeriodo: calcCaucao.detalhes,
         qtdPagamentosPeriodo: pagamentosNoPeriodo.length,
         detalhePagamentosPeriodo: pagamentosNoPeriodo.map(p => ({
-            data: p.dataPagamento || p.data,
-            valor: p.valor,
-            parcela: p.parcela || '',
-            origem: p.origem || 'Aluguel'
+            data: p.dataPagamento || p.data, valor: p.valor,
+            parcela: p.parcela || '', origem: p.origem || 'Aluguel'
         })),
         tipoPagamento: (l.tipoPagamento || 'mensal'),
         despesasVeiculoNumerica: despesasVeiculo,
@@ -3079,15 +2926,10 @@ function encerrarLocacao(i) {
     msgAlerta += `💰 RECEITA (alugueis pagos no período): ${formatarMoedaBR(receitaTotalPeriodo)} (${pagamentosNoPeriodo.length} pagamento(s))\n`;
     msgAlerta += `🏦 CAUÇÃO PAGO NO PERÍODO: ${formatarMoedaBR(caucaoPagoNoPeriodo)} (${calcCaucao.quantidadeParcelas} parcela(s))\n`;
     msgAlerta += `📉 Despesas do veículo: ${formatarMoedaBR(despesasVeiculo)}\n`;
-    if (valorExtorno > 0) {
-        msgAlerta += `↩️ Extorno do caução (ABATIDO no lucro): -${formatarMoedaBR(valorExtorno)}\n`;
-    }
+    if (valorExtorno > 0) msgAlerta += `↩️ Extorno do caução (ABATIDO no lucro): -${formatarMoedaBR(valorExtorno)}\n`;
     msgAlerta += `📈 Lucro final: ${formatarMoedaBR(lucro)}\n`;
-    if (caucaoExtornada) {
-        msgAlerta += `\n↩️ CAUÇÃO EXTORNADA: ${formatarMoedaBR(caucaoPagoNoPeriodo)}`;
-    } else if (caucaoPagoNoPeriodo > 0) {
-        msgAlerta += `\nℹ️ Caução NÃO extornado (opção do usuário).`;
-    }
+    if (caucaoExtornada) msgAlerta += `\n↩️ CAUÇÃO EXTORNADA: ${formatarMoedaBR(caucaoPagoNoPeriodo)}`;
+    else if (caucaoPagoNoPeriodo > 0) msgAlerta += `\nℹ️ Caução NÃO extornado (opção do usuário).`;
     alert(msgAlerta);
 }
 
@@ -3171,9 +3013,7 @@ function reabrirLocacao(i) {
             return true;
         });
         const removidosFC = antesFC - db.fluxoCaixa.length;
-        if (removidosFC > 0) {
-            reversoes.push(`🗑️ ${removidosFC} lançamento(s) de extorno de caução removido(s) do Fluxo de Caixa`);
-        }
+        if (removidosFC > 0) reversoes.push(`🗑️ ${removidosFC} lançamento(s) de extorno de caução removido(s) do Fluxo de Caixa`);
     }
 
     if (Array.isArray(db.historicoAlugueis)) {
@@ -3188,9 +3028,7 @@ function reabrirLocacao(i) {
             return true;
         });
         const removidosHA = antesHA - db.historicoAlugueis.length;
-        if (removidosHA > 0) {
-            reversoes.push(`🗑️ ${removidosHA} registro(s) removido(s) do Histórico de Aluguéis`);
-        }
+        if (removidosHA > 0) reversoes.push(`🗑️ ${removidosHA} registro(s) removido(s) do Histórico de Aluguéis`);
     }
 
     if (Array.isArray(db.alugueis)) {
@@ -3205,22 +3043,11 @@ function reabrirLocacao(i) {
             return true;
         });
         const removidosAL = antesAL - db.alugueis.length;
-        if (removidosAL > 0) {
-            reversoes.push(`🗑️ ${removidosAL} parcela(s) removida(s) do Sub Pagamentos`);
-        }
+        if (removidosAL > 0) reversoes.push(`🗑️ ${removidosAL} parcela(s) removida(s) do Sub Pagamentos`);
     }
 
     const copia = Object.assign({}, l);
-    [
-        'dataEncerramento','dataFimEfetiva','caucaoExtornada',
-        'caucaoPagoPeriodoNumerico','caucaoPagoPeriodoFormatado',
-        'qtdParcelasCaucaoPeriodo','detalheCaucaoPeriodo',
-        'qtdPagamentosPeriodo','detalhePagamentosPeriodo',
-        'receitaNumerica','despesasNumerica','lucroNumerico',
-        'valorGerado','despesas','lucro',
-        'extornoNumerico','extornoFormatado',
-        'despesasVeiculoNumerica','despesasVeiculoFormatado'
-    ].forEach(k => delete copia[k]);
+    ['dataEncerramento','dataFimEfetiva','caucaoExtornada','caucaoPagoPeriodoNumerico','caucaoPagoPeriodoFormatado','qtdParcelasCaucaoPeriodo','detalheCaucaoPeriodo','qtdPagamentosPeriodo','detalhePagamentosPeriodo','receitaNumerica','despesasNumerica','lucroNumerico','valorGerado','despesas','lucro','extornoNumerico','extornoFormatado','despesasVeiculoNumerica','despesasVeiculoFormatado'].forEach(k => delete copia[k]);
 
     if (!Array.isArray(db.locacoes)) db.locacoes = [];
     db.locacoes.push(copia);
@@ -3233,21 +3060,12 @@ function reabrirLocacao(i) {
     atualizarTabelaHistoricoAlugueis();
     atualizarTabelaFluxoCaixa();
 
-    registrarAuditoria(
-        'Reabertura',
-        `Locação reaberta: ${l.locatario} - ${l.placa}` +
-        (reversoes.length ? ' | ' + reversoes.join('; ') : ' | Nenhuma ação precisou ser revertida')
-    );
+    registrarAuditoria('Reabertura', `Locação reaberta: ${l.locatario} - ${l.placa}` + (reversoes.length ? ' | ' + reversoes.join('; ') : ' | Nenhuma ação precisou ser revertida'));
     salvarDB();
 
-    let msg = `✅ Locação reaberta com sucesso!\n\n`;
-    msg += `Locatário: ${l.locatario}\n`;
-    msg += `Veículo: ${l.fabricante || ''} - ${l.placa}\n`;
-    if (reversoes.length > 0) {
-        msg += `\n🔄 Ações revertidas:\n• ` + reversoes.join('\n• ');
-    } else {
-        msg += `\nℹ️ Nenhuma ação precisou ser revertida.`;
-    }
+    let msg = `✅ Locação reaberta com sucesso!\n\nLocatário: ${l.locatario}\nVeículo: ${l.fabricante || ''} - ${l.placa}\n`;
+    if (reversoes.length > 0) msg += `\n🔄 Ações revertidas:\n• ` + reversoes.join('\n• ');
+    else msg += `\nℹ️ Nenhuma ação precisou ser revertida.`;
     alert(msg);
 }
 
@@ -3294,11 +3112,7 @@ function atualizarPlacasManutencao() {
     const s = document.getElementById('manPlaca');
     if (!s) return;
     s.innerHTML = '<option value="">Selecione</option>';
-    (db.veiculos || []).forEach(v => {
-        const o = document.createElement('option');
-        o.value = v.placa; o.textContent = `${v.placa} - ${v.fabricante}`;
-        s.appendChild(o);
-    });
+    (db.veiculos || []).forEach(v => { const o = document.createElement('option'); o.value = v.placa; o.textContent = `${v.placa} - ${v.fabricante}`; s.appendChild(o); });
 }
 
 function selecionarPlacaManutencao() {
@@ -3323,10 +3137,7 @@ function salvarManutencao() {
 }
 
 function limparCamposManutencao() {
-    ['manVeiculo','manPlaca','manTipo','manKm','manObs'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.value = '';
-    });
+    ['manVeiculo','manPlaca','manTipo','manKm','manObs'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
 }
 
 function atualizarTabelaManutencao() {
@@ -3354,11 +3165,7 @@ function atualizarPlacasMecanico() {
     const s = document.getElementById('mecPlaca');
     if (!s) return;
     s.innerHTML = '<option value="">Selecione</option>';
-    (db.veiculos || []).forEach(v => {
-        const o = document.createElement('option');
-        o.value = v.placa; o.textContent = `${v.placa} - ${v.fabricante}`;
-        s.appendChild(o);
-    });
+    (db.veiculos || []).forEach(v => { const o = document.createElement('option'); o.value = v.placa; o.textContent = `${v.placa} - ${v.fabricante}`; s.appendChild(o); });
 }
 
 function selecionarPlacaMecanico() {
@@ -3382,10 +3189,7 @@ async function salvarMecanico() {
         obs: document.getElementById('mecObs').value,
         pago: false
     });
-    db.historico.push({
-        data, descricao: servico, placa, valor,
-        fornecedor: document.getElementById('mecResponsavel').value, oficina
-    });
+    db.historico.push({ data, descricao: servico, placa, valor, fornecedor: document.getElementById('mecResponsavel').value, oficina });
     atualizarTabelaMecanico();
     atualizarTabelaHistorico();
     salvarDB();
@@ -3395,9 +3199,7 @@ async function salvarMecanico() {
 }
 
 function limparCamposMecanico() {
-    ['mecOficina','mecServico','mecResponsavel','mecCarro','mecPlaca','mecValor','mecObs'].forEach(id => {
-        const el = document.getElementById(id); if (el) el.value = '';
-    });
+    ['mecOficina','mecServico','mecResponsavel','mecCarro','mecPlaca','mecValor','mecObs'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
     const dataEl = document.getElementById('mecData');
     if (dataEl) dataEl.value = obterDataHojeISO();
 }
@@ -3406,9 +3208,7 @@ function atualizarTabelaMecanico() {
     const tbody = document.querySelector('#tabelaMecanico tbody');
     if (!tbody) return;
     tbody.innerHTML = '';
-    const itens = (db.mecanico || []).map((m, idx) => ({
-        m, idx, ordem: m.pago ? 1 : 0
-    }));
+    const itens = (db.mecanico || []).map((m, idx) => ({ m, idx, ordem: m.pago ? 1 : 0 }));
     itens.sort((a, b) => a.ordem - b.ordem);
     itens.forEach(({ m, idx: i }) => {
         const statusBadge = m.pago ? '<span class="status-pago">PAGO</span>' : '<span class="status-pendente">PENDENTE</span>';
@@ -3434,10 +3234,7 @@ function gerarRelatorioMecanico() {
     const dtFim = document.getElementById('relMecDataFim').value;
     const oficinaFiltro = document.getElementById('relMecOficina').value.trim().toUpperCase();
 
-    if (!dtInicio && !dtFim && !oficinaFiltro) {
-        alert('Preencha pelo menos um filtro para gerar o relatório.');
-        return;
-    }
+    if (!dtInicio && !dtFim && !oficinaFiltro) { alert('Preencha pelo menos um filtro para gerar o relatório.'); return; }
 
     relatorioMecanicoTemp = (db.mecanico || []).filter(m => {
         if (m.pago) return false;
@@ -3460,19 +3257,12 @@ function gerarRelatorioMecanico() {
             const val = parseMoeda(m.valor);
             total += val;
             const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${formatarDataBR(m.data)}</td>
-                <td>${m.oficina}</td>
-                <td>${m.servico}</td>
-                <td>${m.valor}</td>
-                <td><span class="status-pendente">PENDENTE</span></td>
-            `;
+            tr.innerHTML = `<td>${formatarDataBR(m.data)}</td><td>${m.oficina}</td><td>${m.servico}</td><td>${m.valor}</td><td><span class="status-pendente">PENDENTE</span></td>`;
             tbody.appendChild(tr);
         });
         document.getElementById('totalRelatorioMecanico').textContent = formatarMoedaBR(total);
         document.getElementById('btnPagarRelatorio').style.display = 'inline-block';
     }
-
     document.getElementById('relatorioMecanicoResultado').style.display = 'block';
 }
 
@@ -3503,9 +3293,7 @@ function pagarRelatorioMecanico() {
 
     registrarAuditoria('Pagamento', `Pagamento de oficina(s) realizado: ${oficinas} | Total: ${formatarMoedaBR(total)}`);
     salvarDB();
-
     gerarPDFReciboMecanico(relatorioMecanicoTemp, total, oficinas);
-
     document.getElementById('relatorioMecanicoResultado').style.display = 'none';
     relatorioMecanicoTemp = [];
     atualizarTabelaMecanico();
@@ -3522,7 +3310,6 @@ function gerarPDFReciboMecanico(lista, total, oficinas) {
                 <p style="margin: 5px 0; color: #555; font-size: 14px;">Data do Pagamento: ${new Date().toLocaleDateString('pt-BR')}</p>
                 <p style="margin: 5px 0; color: #555; font-size: 14px; font-weight: bold;">Oficina(s): ${oficinas}</p>
             </div>
-            
             <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 14px;">
                 <thead>
                     <tr style="background: #1a3c6e; color: white;">
@@ -3534,18 +3321,9 @@ function gerarPDFReciboMecanico(lista, total, oficinas) {
                 </thead>
                 <tbody>
     `;
-    
     lista.forEach(m => {
-        html += `
-            <tr>
-                <td style="border: 1px solid #ddd; padding: 10px;">${formatarDataBR(m.data)}</td>
-                <td style="border: 1px solid #ddd; padding: 10px;">${m.oficina}</td>
-                <td style="border: 1px solid #ddd; padding: 10px;">${m.servico}</td>
-                <td style="border: 1px solid #ddd; padding: 10px; text-align: right;">${m.valor}</td>
-            </tr>
-        `;
+        html += `<tr><td style="border: 1px solid #ddd; padding: 10px;">${formatarDataBR(m.data)}</td><td style="border: 1px solid #ddd; padding: 10px;">${m.oficina}</td><td style="border: 1px solid #ddd; padding: 10px;">${m.servico}</td><td style="border: 1px solid #ddd; padding: 10px; text-align: right;">${m.valor}</td></tr>`;
     });
-    
     html += `
                 </tbody>
                 <tfoot>
@@ -3555,17 +3333,10 @@ function gerarPDFReciboMecanico(lista, total, oficinas) {
                     </tr>
                 </tfoot>
             </table>
-            
-            <div style="margin-top: 60px; text-align: center;">
-                <p style="border-top: 1px solid #333; width: 300px; margin: 0 auto; padding-top: 10px; font-size: 14px;">Assinatura do Responsável</p>
-            </div>
-            
-            <div style="margin-top: 40px; text-align: center; color: #888; font-size: 12px;">
-                <p>Documento gerado automaticamente pelo sistema PAIZÃO UBER 2.0</p>
-            </div>
+            <div style="margin-top: 60px; text-align: center;"><p style="border-top: 1px solid #333; width: 300px; margin: 0 auto; padding-top: 10px; font-size: 14px;">Assinatura do Responsável</p></div>
+            <div style="margin-top: 40px; text-align: center; color: #888; font-size: 12px;"><p>Documento gerado automaticamente pelo sistema PAIZÃO UBER 2.0</p></div>
         </div>
     `;
-    
     document.getElementById('printArea').innerHTML = html;
     window.print();
 }
@@ -3591,9 +3362,7 @@ function atualizarTabelaHistorico() {
             <td>${h.valor||''}</td>
             <td>${h.fornecedor||''}</td>
             <td>${h.oficina||''}</td>
-            <td>
-                <button class="btn-danger" onclick="excluirHistorico(${realIndex})" title="Excluir">🗑️</button>
-            </td>
+            <td><button class="btn-danger" onclick="excluirHistorico(${realIndex})" title="Excluir">🗑️</button></td>
         `;
         tbody.appendChild(tr);
     });
@@ -3660,9 +3429,7 @@ function atualizarTabelaHistoricoAlugueis() {
             <td><strong style="color:#28a745;">${h.valor || ''}</strong></td>
             <td>${formatarDataBR(h.vencimento)}</td>
             <td>${tipoLabel}</td>
-            <td>
-                <button class="btn-danger" onclick="excluirHistoricoAluguel(${realIndex})" title="Excluir">🗑️</button>
-            </td>
+            <td><button class="btn-danger" onclick="excluirHistoricoAluguel(${realIndex})" title="Excluir">🗑️</button></td>
         `;
         tbody.appendChild(tr);
     });
@@ -3680,11 +3447,7 @@ function excluirHistoricoAluguel(index) {
 function registrarAuditoria(acao, descricao) {
     if (!db) return;
     if (!Array.isArray(db.auditoria)) db.auditoria = [];
-    db.auditoria.push({
-        data: new Date().toLocaleString('pt-BR'),
-        usuario: usuarioLogado ? usuarioLogado.nome : 'SISTEMA',
-        acao, descricao
-    });
+    db.auditoria.push({ data: new Date().toLocaleString('pt-BR'), usuario: usuarioLogado ? usuarioLogado.nome : 'SISTEMA', acao, descricao });
     if (db.auditoria.length > 1000) db.auditoria.shift();
     try { atualizarTabelaAuditoria(); } catch(e) {}
 }
@@ -3858,9 +3621,7 @@ function abrirModalContratos() {
     switchContratoTab('locacao');
 }
 
-function fecharModalContratos() {
-    document.getElementById('contratoModal').classList.remove('active');
-}
+function fecharModalContratos() { document.getElementById('contratoModal').classList.remove('active'); }
 
 function switchContratoTab(tab) {
     const btns = document.querySelectorAll('#contratoModal [data-contrato-tab]');
@@ -4120,50 +3881,28 @@ function gerarPDFContratoLocacaoBlob() {
     const JsPDF = _getJsPDF();
     const doc = new JsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
     const v = id => _ctVal('ctLoc_' + id);
-
     const pageW = 210, pageH = 297;
     const margin = 15;
     const maxW = pageW - (margin * 2);
     let y = margin;
 
-    function ensurePage(needed) {
-        if (y + (needed || 5) > pageH - margin) {
-            doc.addPage();
-            y = margin;
-        }
-    }
+    function ensurePage(needed) { if (y + (needed || 5) > pageH - margin) { doc.addPage(); y = margin; } }
     function addTitle(text) {
-        doc.setFont('times', 'bold');
-        doc.setFontSize(12);
+        doc.setFont('times', 'bold'); doc.setFontSize(12);
         const lines = doc.splitTextToSize(text, maxW);
-        lines.forEach(line => {
-            ensurePage(6);
-            doc.text(line, pageW / 2, y, { align: 'center' });
-            y += 5.5;
-        });
+        lines.forEach(line => { ensurePage(6); doc.text(line, pageW / 2, y, { align: 'center' }); y += 5.5; });
         y += 3;
     }
     function addClauseTitle(text) {
-        ensurePage(8);
-        y += 2;
-        doc.setFont('times', 'bold');
-        doc.setFontSize(10);
+        ensurePage(8); y += 2;
+        doc.setFont('times', 'bold'); doc.setFontSize(10);
         const lines = doc.splitTextToSize(text, maxW);
-        lines.forEach(line => {
-            ensurePage(6);
-            doc.text(line, margin, y);
-            y += 5;
-        });
+        lines.forEach(line => { ensurePage(6); doc.text(line, margin, y); y += 5; });
     }
     function addParagraph(text) {
-        doc.setFont('times', 'normal');
-        doc.setFontSize(10);
+        doc.setFont('times', 'normal'); doc.setFontSize(10);
         const lines = doc.splitTextToSize(text, maxW);
-        lines.forEach(line => {
-            ensurePage(5);
-            doc.text(line, margin, y);
-            y += 4.5;
-        });
+        lines.forEach(line => { ensurePage(5); doc.text(line, margin, y); y += 4.5; });
         y += 1.5;
     }
 
@@ -4240,7 +3979,6 @@ function gerarPDFContratoLocacaoBlob() {
     doc.text('_____________________________________', margin + 90, y); y += 4;
     doc.text('Testemunha 1', margin, y);
     doc.text('Testemunha 2', margin + 90, y);
-
     return doc.output('blob');
 }
 
@@ -4344,10 +4082,7 @@ async function gerarESalvarContratosAutomaticos(locacao) {
         pdfContrato = gerarPDFContratoLocacaoBlob();
         pdfTermo = gerarPDFTermoResponsabilidadeBlob();
         pdfNota = gerarPDFNotaPromissoriaBlob();
-    } catch (err) {
-        console.error('Erro ao gerar PDFs dos contratos (jsPDF):', err);
-        return 0;
-    }
+    } catch (err) { console.error('Erro ao gerar PDFs dos contratos (jsPDF):', err); return 0; }
     if (!db.documentosPlacas) db.documentosPlacas = {};
     if (!db.documentosPlacas[locacao.placa]) db.documentosPlacas[locacao.placa] = [];
     const dataHoje = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
@@ -4364,9 +4099,7 @@ async function gerarESalvarContratosAutomaticos(locacao) {
             await idbSalvar(id, d.blob, { nomeArquivo: d.nome, placa: locacao.placa, tipo: 'application/pdf' });
             db.documentosPlacas[locacao.placa].push({ nome: d.nome, tipo: 'application/pdf', storageId: id, dataUpload: agora });
             salvos++;
-        } catch (err) {
-            console.error('Erro ao salvar PDF no IndexedDB:', err);
-        }
+        } catch (err) { console.error('Erro ao salvar PDF no IndexedDB:', err); }
     }
     registrarAuditoria('Contrato', salvos + ' contrato(s) gerado(s) em PDF para locação de ' + (locacao.locatario || '') + ' - ' + locacao.placa);
     try { atualizarGaleriaComprovantes(); } catch(e) {}
@@ -4378,10 +4111,7 @@ function switchSubTab(t) {
     document.querySelectorAll('#comprovantes .sub-tab-content').forEach(x => x.classList.remove('active'));
     const map = { novo: 'subTabNovo', salvos: 'subTabSalvos', comprovantesPag: 'subTabComprovantesPag', leituraAuto: 'subTabLeituraAuto' };
     const targetId = map[t];
-    if (targetId) {
-        const el = document.getElementById(targetId);
-        if (el) el.classList.add('active');
-    }
+    if (targetId) { const el = document.getElementById(targetId); if (el) el.classList.add('active'); }
     document.querySelectorAll('#comprovantes .sub-tab').forEach(b => {
         const oc = b.getAttribute('onclick') || '';
         if (oc.indexOf("'" + t + "'") >= 0) b.classList.add('active');
@@ -4396,35 +4126,29 @@ function atualizarAbasVistoria() {
     const tabsContainer = document.getElementById('vistoriaSubTabs');
     const contentContainer = document.getElementById('vistoriaContent');
     const nenhumaContainer = document.getElementById('vistoriaNenhuma');
-    
     if (!tabsContainer || !contentContainer || !nenhumaContainer) return;
 
     tabsContainer.innerHTML = '';
-    
     if (!db.locacoes || db.locacoes.length === 0) {
         contentContainer.style.display = 'none';
         nenhumaContainer.style.display = 'block';
         return;
     }
-    
     contentContainer.style.display = 'block';
     nenhumaContainer.style.display = 'none';
-    
+
     if (!vistoriaPlacaAtual || !db.locacoes.some(l => l.placa === vistoriaPlacaAtual)) {
         vistoriaPlacaAtual = db.locacoes[0].placa;
     }
-    
+
     db.locacoes.forEach(l => {
         const btn = document.createElement('button');
         btn.className = 'sub-tab' + (l.placa === vistoriaPlacaAtual ? ' active' : '');
         btn.textContent = `🚗 ${l.placa}`;
-        btn.onclick = () => {
-            vistoriaPlacaAtual = l.placa;
-            atualizarAbasVistoria();
-        };
+        btn.onclick = () => { vistoriaPlacaAtual = l.placa; atualizarAbasVistoria(); };
         tabsContainer.appendChild(btn);
     });
-    
+
     const locacaoAtiva = db.locacoes.find(l => l.placa === vistoriaPlacaAtual);
     if (locacaoAtiva) {
         document.getElementById('vistoriaLocacaoInfo').textContent = `Veículo: ${locacaoAtiva.fabricante || ''} | Locatário: ${locacaoAtiva.locatario || ''}`;
@@ -4436,77 +4160,46 @@ function renderizarFotosVistoria(locacao) {
     const container = document.getElementById('vistoriaFotosContainer');
     if (!container) return;
     container.innerHTML = '';
-    
     if (!locacao.vistoria) locacao.vistoria = [];
     const fotos = locacao.vistoria;
     const podeExcluir = temPermissao('vistoria_camera');
-    
-    if (fotos.length === 0) {
-        container.innerHTML = '<p style="color:#999; width:100%;">Nenhuma foto de vistoria registrada para este veículo.</p>';
-        return;
-    }
-    
+    if (fotos.length === 0) { container.innerHTML = '<p style="color:#999; width:100%;">Nenhuma foto de vistoria registrada para este veículo.</p>'; return; }
     fotos.forEach((foto, index) => {
         const div = document.createElement('div');
         div.className = 'saved-image-item';
-        
         const img = document.createElement('img');
         img.src = foto;
         img.onclick = () => openImageModal(foto, fotos, index);
-        
         div.appendChild(img);
-        
         if (podeExcluir) {
             const btn = document.createElement('button');
             btn.className = 'delete-btn';
             btn.textContent = '×';
             btn.onclick = (e) => {
                 e.stopPropagation();
-                if (confirm('Excluir esta foto?')) {
-                    locacao.vistoria.splice(index, 1);
-                    salvarDB();
-                    renderizarFotosVistoria(locacao);
-                }
+                if (confirm('Excluir esta foto?')) { locacao.vistoria.splice(index, 1); salvarDB(); renderizarFotosVistoria(locacao); }
             };
             div.appendChild(btn);
         }
-        
         container.appendChild(div);
     });
 }
 
 function abrirCameraVistoria() {
-    if (!temPermissao('vistoria_camera')) {
-        alert('⛔ Você não tem permissão para tirar fotos de vistoria.\n\nApenas visualização é permitida.');
-        return;
-    }
-    if (!vistoriaPlacaAtual) {
-        alert('Selecione um veículo na aba de vistoria primeiro.');
-        return;
-    }
+    if (!temPermissao('vistoria_camera')) { alert('⛔ Você não tem permissão para tirar fotos de vistoria.\n\nApenas visualização é permitida.'); return; }
+    if (!vistoriaPlacaAtual) { alert('Selecione um veículo na aba de vistoria primeiro.'); return; }
     vistoriaDataUrl = null;
     document.getElementById('vistoriaPhotoPreview').style.display = 'none';
     document.getElementById('vistoriaConfirmBtn').style.display = 'none';
     document.getElementById('vistoriaCaptureBtn').style.display = 'inline-block';
     document.getElementById('vistoriaCameraModal').classList.add('active');
-    
     navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
-        .then(stream => {
-            vistoriaStream = stream;
-            document.getElementById('vistoriaVideo').srcObject = stream;
-            document.getElementById('vistoriaVideo').play();
-        })
-        .catch(err => { 
-            alert('Erro ao acessar câmera: ' + err.message); 
-            fecharCameraVistoria(); 
-        });
+        .then(stream => { vistoriaStream = stream; document.getElementById('vistoriaVideo').srcObject = stream; document.getElementById('vistoriaVideo').play(); })
+        .catch(err => { alert('Erro ao acessar câmera: ' + err.message); fecharCameraVistoria(); });
 }
 
 function fecharCameraVistoria() {
-    if (vistoriaStream) { 
-        vistoriaStream.getTracks().forEach(t => t.stop()); 
-        vistoriaStream = null; 
-    }
+    if (vistoriaStream) { vistoriaStream.getTracks().forEach(t => t.stop()); vistoriaStream = null; }
     document.getElementById('vistoriaCameraModal').classList.remove('active');
     document.getElementById('vistoriaVideo').srcObject = null;
     vistoriaDataUrl = null;
@@ -4516,28 +4209,20 @@ function capturarVistoria() {
     const v = document.getElementById('vistoriaVideo');
     const c = document.getElementById('vistoriaCanvas');
     if (v.readyState !== v.HAVE_ENOUGH_DATA) { alert('Câmera não pronta.'); return; }
-    
-    c.width = v.videoWidth; 
-    c.height = v.videoHeight;
+    c.width = v.videoWidth; c.height = v.videoHeight;
     const ctx = c.getContext('2d');
     ctx.drawImage(v, 0, 0, c.width, c.height);
-    
     vistoriaDataUrl = c.toDataURL('image/jpeg', 0.6);
     document.getElementById('vistoriaPhotoResult').src = vistoriaDataUrl;
     document.getElementById('vistoriaPhotoPreview').style.display = 'block';
     document.getElementById('vistoriaCaptureBtn').style.display = 'none';
     document.getElementById('vistoriaConfirmBtn').style.display = 'inline-block';
-    
-    if (vistoriaStream) { 
-        vistoriaStream.getTracks().forEach(t => t.stop()); 
-        vistoriaStream = null; 
-    }
+    if (vistoriaStream) { vistoriaStream.getTracks().forEach(t => t.stop()); vistoriaStream = null; }
     document.getElementById('vistoriaVideo').srcObject = null;
 }
 
 function confirmarVistoria() {
     if (!vistoriaDataUrl) { alert('Nenhuma foto capturada!'); return; }
-    
     const locacao = db.locacoes.find(l => l.placa === vistoriaPlacaAtual);
     if (locacao) {
         if (!locacao.vistoria) locacao.vistoria = [];
@@ -4546,10 +4231,7 @@ function confirmarVistoria() {
         registrarAuditoria('Vistoria', `Nova foto de vistoria adicionada para a placa ${vistoriaPlacaAtual}`);
         renderizarFotosVistoria(locacao);
         alert('✅ Foto de vistoria salva com sucesso!');
-    } else {
-        alert('Erro: Locação não encontrada.');
-    }
-    
+    } else { alert('Erro: Locação não encontrada.'); }
     fecharCameraVistoria();
 }
 
@@ -4577,24 +4259,18 @@ function lerEComprimirArquivos(files, maxWidth, quality, onDone) {
     if (lista.length === 0) { onDone([]); return; }
     const resultados = new Array(lista.length);
     let concluidas = 0, finalizado = false;
-    function checar() {
-        if (finalizado) return;
-        if (concluidas === lista.length) { finalizado = true; onDone(resultados.filter(x => !!x)); }
-    }
+    function checar() { if (finalizado) return; if (concluidas === lista.length) { finalizado = true; onDone(resultados.filter(x => !!x)); } }
     lista.forEach((file, idx) => {
         if (!file || !file.type || !file.type.startsWith('image/')) { concluidas++; checar(); return; }
         const reader = new FileReader();
         reader.onload = function(e) {
-            comprimirImagemDataURL(e.target.result, maxWidth, quality, function(c) {
-                resultados[idx] = c; concluidas++; checar();
-            });
+            comprimirImagemDataURL(e.target.result, maxWidth, quality, function(c) { resultados[idx] = c; concluidas++; checar(); });
         };
         reader.onerror = function() { concluidas++; checar(); };
         reader.readAsDataURL(file);
     });
 }
 
-// Preview para os itens selecionados: aceita tanto {blob, previewUrl, nome} quanto string (compat)
 function renderizarPreviewSelecionadas(containerId, itens, onRemove) {
     const container = document.getElementById(containerId);
     if (!container) return;
@@ -4609,18 +4285,15 @@ function renderizarPreviewSelecionadas(containerId, itens, onRemove) {
         div.style.borderStyle = 'dashed';
         const img = document.createElement('img');
         img.src = srcPreview; img.alt = 'preview';
-        img.addEventListener('click', (ev) => { 
-            ev.stopPropagation(); 
+        img.addEventListener('click', (ev) => {
+            ev.stopPropagation();
             const urls = itens.map(it => (it && typeof it === 'object' && it.previewUrl) ? it.previewUrl : it);
             openImageModal(srcPreview, urls, idx);
         });
         div.appendChild(img);
         const btn = document.createElement('button');
         btn.className = 'delete-btn'; btn.textContent = '×';
-        btn.addEventListener('click', (ev) => { 
-            ev.stopPropagation(); 
-            if (typeof onRemove === 'function') onRemove(idx);
-        });
+        btn.addEventListener('click', (ev) => { ev.stopPropagation(); if (typeof onRemove === 'function') onRemove(idx); });
         div.appendChild(btn);
         container.appendChild(div);
     });
@@ -4635,18 +4308,12 @@ function configurarInputMultiplasImagens() {
             if (!files || files.length === 0) return;
             const inputAtual = this;
             try {
-                const novos = await processarArquivosImagem(files, 900, 0.65);
+                const novos = await processarArquivosImagem(files, 1200, 0.75);
                 garagemImagensTemp = garagemImagensTemp.concat(novos);
                 renderizarPreviewGaragem();
-                if (novos.length === 0) {
-                    alert('⚠️ Nenhum arquivo de imagem válido foi selecionado.\n\nFormatos aceitos: JPG, JPEG, PNG, GIF, BMP, WEBP, TIFF, SVG, HEIC, HEIF, AVIF, ICO.');
-                }
-            } catch (err) {
-                console.error('Erro ao processar imagens da Garagem:', err);
-                alert('Erro ao processar uma ou mais imagens.');
-            } finally {
-                try { inputAtual.value = ''; } catch(e){}
-            }
+                if (novos.length === 0) alert('⚠️ Nenhum arquivo de imagem válido foi selecionado.\n\nFormatos aceitos: JPG, JPEG, PNG, GIF, BMP, WEBP, TIFF, SVG, HEIC, HEIF, AVIF, ICO.');
+            } catch (err) { console.error('Erro ao processar imagens da Garagem:', err); alert('Erro ao processar uma ou mais imagens.'); }
+            finally { try { inputAtual.value = ''; } catch(e){} }
         });
     }
     if (inputSOS) {
@@ -4655,18 +4322,12 @@ function configurarInputMultiplasImagens() {
             if (!files || files.length === 0) return;
             const inputAtual = this;
             try {
-                const novos = await processarArquivosImagem(files, 900, 0.65);
+                const novos = await processarArquivosImagem(files, 1200, 0.75);
                 sosImagensTemp = sosImagensTemp.concat(novos);
                 renderizarPreviewSOS();
-                if (novos.length === 0) {
-                    alert('⚠️ Nenhum arquivo de imagem válido foi selecionado.\n\nFormatos aceitos: JPG, JPEG, PNG, GIF, BMP, WEBP, TIFF, SVG, HEIC, HEIF, AVIF, ICO.');
-                }
-            } catch (err) {
-                console.error('Erro ao processar imagens do SOS:', err);
-                alert('Erro ao processar uma ou mais imagens.');
-            } finally {
-                try { inputAtual.value = ''; } catch(e){}
-            }
+                if (novos.length === 0) alert('⚠️ Nenhum arquivo de imagem válido foi selecionado.\n\nFormatos aceitos: JPG, JPEG, PNG, GIF, BMP, WEBP, TIFF, SVG, HEIC, HEIF, AVIF, ICO.');
+            } catch (err) { console.error('Erro ao processar imagens do SOS:', err); alert('Erro ao processar uma ou mais imagens.'); }
+            finally { try { inputAtual.value = ''; } catch(e){} }
         });
     }
 }
@@ -4674,11 +4335,9 @@ function configurarInputMultiplasImagens() {
 function renderizarPreviewGaragem() {
     const remover = function(idx) {
         const item = garagemImagensTemp[idx];
-        if (item && typeof item === 'object' && item.previewUrl) {
-            try { URL.revokeObjectURL(item.previewUrl); } catch(e) {}
-        }
-        garagemImagensTemp.splice(idx, 1); 
-        renderizarPreviewGaragem(); 
+        if (item && typeof item === 'object' && item.previewUrl) { try { URL.revokeObjectURL(item.previewUrl); } catch(e) {} }
+        garagemImagensTemp.splice(idx, 1);
+        renderizarPreviewGaragem();
     };
     renderizarPreviewSelecionadas('garagemPreviewSelecionadas', garagemImagensTemp, remover);
 }
@@ -4686,19 +4345,15 @@ function renderizarPreviewGaragem() {
 function renderizarPreviewSOS() {
     const remover = function(idx) {
         const item = sosImagensTemp[idx];
-        if (item && typeof item === 'object' && item.previewUrl) {
-            try { URL.revokeObjectURL(item.previewUrl); } catch(e) {}
-        }
-        sosImagensTemp.splice(idx, 1); 
-        renderizarPreviewSOS(); 
+        if (item && typeof item === 'object' && item.previewUrl) { try { URL.revokeObjectURL(item.previewUrl); } catch(e) {} }
+        sosImagensTemp.splice(idx, 1);
+        renderizarPreviewSOS();
     };
     renderizarPreviewSelecionadas('sosPreviewSelecionadas', sosImagensTemp, remover);
 }
 
 async function salvarGaragem() {
-    if (!Array.isArray(garagemImagensTemp) || garagemImagensTemp.length === 0) { 
-        alert('Nenhuma imagem selecionada!'); return; 
-    }
+    if (!Array.isArray(garagemImagensTemp) || garagemImagensTemp.length === 0) { alert('Nenhuma imagem selecionada!'); return; }
     if (!db.imagens) db.imagens = { garagem:{fotos:[]}, sos:{fotos:[]}, comprovantes:{fotos:[]} };
     if (!db.imagens.garagem) db.imagens.garagem = { fotos: [] };
     if (!Array.isArray(db.imagens.garagem.fotos)) db.imagens.garagem.fotos = [];
@@ -4707,66 +4362,38 @@ async function salvarGaragem() {
     if (btn) btn.disabled = true;
 
     const hoje = new Date().toLocaleString('pt-BR');
-    let salvas = 0;
-    let erros = 0;
+    let salvas = 0, erros = 0;
 
     for (const item of garagemImagensTemp) {
         try {
-            if (typeof item === 'string') {
-                // compatibilidade com formato antigo
-                db.imagens.garagem.fotos.push(item);
-                salvas++;
-                continue;
-            }
+            if (typeof item === 'string') { db.imagens.garagem.fotos.push(item); salvas++; continue; }
             const id = gerarIdImagem();
-            await idbSalvar(id, item.blob, { 
-                nomeArquivo: item.nome || 'foto.jpg',
-                tipo: item.blob.type || 'image/jpeg',
-                dataUpload: hoje,
-                categoria: 'garagem'
-            });
-            // Gera thumbnail de segurança (dataURL) para não perder a imagem se o IDB for limpo
+            await idbSalvar(id, item.blob, { nomeArquivo: item.nome || 'foto.jpg', tipo: item.blob.type || 'image/jpeg', dataUpload: hoje, categoria: 'garagem' });
             let thumb = null;
             try {
-                const thumbBlob = await gerarThumbnailBlob(item.blob, 140, 0.55);
+                const thumbBlob = await gerarThumbnailBlob(item.blob, 400, 0.8);
                 if (thumbBlob) thumb = await blobParaDataURL(thumbBlob);
             } catch (e) { console.warn('Falha ao gerar thumb:', e); }
-            const ref = { 
-                id, 
-                nome: item.nome || 'foto.jpg', 
-                dataUpload: hoje 
-            };
+            const ref = { id, nome: item.nome || 'foto.jpg', dataUpload: hoje };
             if (thumb) ref.thumb = thumb;
             db.imagens.garagem.fotos.push(ref);
             salvas++;
-        } catch (err) {
-            console.error('Erro ao salvar imagem na Garagem:', err);
-            erros++;
-        }
+        } catch (err) { console.error('Erro ao salvar imagem na Garagem:', err); erros++; }
     }
 
-    // Limpar previews
     garagemImagensTemp.forEach(item => {
-        if (item && typeof item === 'object' && item.previewUrl) {
-            try { URL.revokeObjectURL(item.previewUrl); } catch(e) {}
-        }
+        if (item && typeof item === 'object' && item.previewUrl) { try { URL.revokeObjectURL(item.previewUrl); } catch(e) {} }
     });
     garagemImagensTemp = [];
-    const preview = document.getElementById('garagemPreviewSelecionadas'); 
-    if (preview) preview.innerHTML = '';
-    const input = document.getElementById('garagemImagem'); 
-    if (input) { try { input.value = ''; } catch(e){} }
+    const preview = document.getElementById('garagemPreviewSelecionadas'); if (preview) preview.innerHTML = '';
+    const input = document.getElementById('garagemImagem'); if (input) { try { input.value = ''; } catch(e){} }
 
     await salvarDB();
     await atualizarGaleriaGaragem();
-
     if (btn) btn.disabled = false;
     registrarAuditoria('Cadastro', `${salvas} imagem(ns) salva(s) na Garagem`);
-    if (erros > 0) {
-        alert(`✅ ${salvas} imagem(ns) salva(s)!\n⚠️ ${erros} imagem(ns) falharam.`);
-    } else {
-        alert(`✅ ${salvas} imagem(ns) salva(s)!`);
-    }
+    if (erros > 0) alert(`✅ ${salvas} imagem(ns) salva(s)!\n⚠️ ${erros} imagem(ns) falharam.`);
+    else alert(`✅ ${salvas} imagem(ns) salva(s)!`);
 }
 
 async function atualizarGaleriaGaragem() {
@@ -4775,41 +4402,41 @@ async function atualizarGaleriaGaragem() {
     container.innerHTML = '';
     const fotos = (db.imagens && db.imagens.garagem && Array.isArray(db.imagens.garagem.fotos)) ? db.imagens.garagem.fotos : [];
     if (fotos.length === 0) {
-        const p = document.createElement('p'); 
+        const p = document.createElement('p');
         p.style.color = '#999'; p.textContent = 'Nenhuma imagem salva.';
-        container.appendChild(p); 
+        container.appendChild(p);
         return;
     }
 
-    const urls = await Promise.all(fotos.map(f => obterUrlImagem(f)));
+    // GRADE usa thumbnail (rápido); ao CLICAR carrega a imagem em alta resolução
+    const thumbs = await Promise.all(fotos.map(f => obterUrlImagem(f)));
 
     fotos.forEach((foto, i) => {
-        const src = urls[i];
-        const div = document.createElement('div'); 
+        const src = thumbs[i];
+        const div = document.createElement('div');
         div.className = 'saved-image-item';
         if (src) {
-            const img = document.createElement('img'); 
-            img.src = src; 
-            img.alt = 'foto';
-            img.addEventListener('click', (ev) => { 
-                ev.stopPropagation(); 
-                openImageModal(src, urls, i); 
+            const img = document.createElement('img');
+            img.src = src; img.alt = 'foto';
+            img.onerror = function() {
+                if (foto && typeof foto === 'object' && foto.thumb && this.src !== foto.thumb) { this.onerror = null; this.src = foto.thumb; }
+            };
+            img.addEventListener('click', async (ev) => {
+                ev.stopPropagation();
+                // Carrega TODAS as imagens em alta resolução para o modal
+                const fullUrls = await Promise.all(fotos.map(f => obterUrlImagemFull(f)));
+                openImageModal(fullUrls[i], fullUrls, i);
             });
             div.appendChild(img);
         } else {
-            // Placeholder para quando nenhuma URL estiver disponível
             const placeholder = document.createElement('div');
             placeholder.style.cssText = 'display:flex;align-items:center;justify-content:center;height:200px;background:#f0f0f0;color:#999;font-size:12px;text-align:center;padding:10px;width:200px;';
             placeholder.textContent = 'Imagem indisponível';
             div.appendChild(placeholder);
         }
-        const btn = document.createElement('button'); 
-        btn.className = 'delete-btn'; 
-        btn.textContent = '×';
-        btn.addEventListener('click', (ev) => { 
-            ev.stopPropagation(); 
-            excluirFotoGaragem(i); 
-        });
+        const btn = document.createElement('button');
+        btn.className = 'delete-btn'; btn.textContent = '×';
+        btn.addEventListener('click', (ev) => { ev.stopPropagation(); excluirFotoGaragem(i); });
         div.appendChild(btn);
         container.appendChild(div);
     });
@@ -4819,23 +4446,19 @@ async function excluirFotoGaragem(i) {
     if (!confirmarSenhaADM()) return;
     if (!confirm('Excluir esta imagem da Garagem?')) return;
     if (!db.imagens || !db.imagens.garagem || !Array.isArray(db.imagens.garagem.fotos)) return;
-
     const foto = db.imagens.garagem.fotos[i];
     if (foto && typeof foto === 'object' && foto.id) {
         try { await idbExcluir(foto.id); } catch(e) { console.warn('Erro ao excluir imagem IDB:', e); }
         liberarUrlImagem(foto);
     }
-
     db.imagens.garagem.fotos.splice(i, 1);
-    await atualizarGaleriaGaragem(); 
+    await atualizarGaleriaGaragem();
     await salvarDB();
     registrarAuditoria('Exclusão', `Foto excluída da Garagem (índice ${i})`);
 }
 
 async function salvarSOS() {
-    if (!Array.isArray(sosImagensTemp) || sosImagensTemp.length === 0) { 
-        alert('Nenhuma imagem selecionada!'); return; 
-    }
+    if (!Array.isArray(sosImagensTemp) || sosImagensTemp.length === 0) { alert('Nenhuma imagem selecionada!'); return; }
     if (!db.imagens) db.imagens = { garagem:{fotos:[]}, sos:{fotos:[]}, comprovantes:{fotos:[]} };
     if (!db.imagens.sos) db.imagens.sos = { fotos: [] };
     if (!Array.isArray(db.imagens.sos.fotos)) db.imagens.sos.fotos = [];
@@ -4844,65 +4467,39 @@ async function salvarSOS() {
     if (btn) btn.disabled = true;
 
     const hoje = new Date().toLocaleString('pt-BR');
-    let salvas = 0;
-    let erros = 0;
+    let salvas = 0, erros = 0;
 
     for (const item of sosImagensTemp) {
         try {
-            if (typeof item === 'string') {
-                db.imagens.sos.fotos.push(item);
-                salvas++;
-                continue;
-            }
+            if (typeof item === 'string') { db.imagens.sos.fotos.push(item); salvas++; continue; }
             const id = gerarIdImagem();
-            await idbSalvar(id, item.blob, { 
-                nomeArquivo: item.nome || 'foto.jpg',
-                tipo: item.blob.type || 'image/jpeg',
-                dataUpload: hoje,
-                categoria: 'sos'
-            });
-            // Gera thumbnail de segurança (dataURL) para não perder a imagem se o IDB for limpo
+            await idbSalvar(id, item.blob, { nomeArquivo: item.nome || 'foto.jpg', tipo: item.blob.type || 'image/jpeg', dataUpload: hoje, categoria: 'sos' });
             let thumb = null;
             try {
-                const thumbBlob = await gerarThumbnailBlob(item.blob, 140, 0.55);
+                const thumbBlob = await gerarThumbnailBlob(item.blob, 400, 0.8);
                 if (thumbBlob) thumb = await blobParaDataURL(thumbBlob);
             } catch (e) { console.warn('Falha ao gerar thumb:', e); }
-            const ref = { 
-                id, 
-                nome: item.nome || 'foto.jpg', 
-                dataUpload: hoje 
-            };
+            const ref = { id, nome: item.nome || 'foto.jpg', dataUpload: hoje };
             if (thumb) ref.thumb = thumb;
             db.imagens.sos.fotos.push(ref);
             salvas++;
-        } catch (err) {
-            console.error('Erro ao salvar imagem no SOS:', err);
-            erros++;
-        }
+        } catch (err) { console.error('Erro ao salvar imagem no SOS:', err); erros++; }
     }
 
     sosImagensTemp.forEach(item => {
-        if (item && typeof item === 'object' && item.previewUrl) {
-            try { URL.revokeObjectURL(item.previewUrl); } catch(e) {}
-        }
+        if (item && typeof item === 'object' && item.previewUrl) { try { URL.revokeObjectURL(item.previewUrl); } catch(e) {} }
     });
     sosImagensTemp = [];
-    const preview = document.getElementById('sosPreviewSelecionadas'); 
-    if (preview) preview.innerHTML = '';
-    const input = document.getElementById('sosImagem'); 
-    if (input) { try { input.value = ''; } catch(e){} }
+    const preview = document.getElementById('sosPreviewSelecionadas'); if (preview) preview.innerHTML = '';
+    const input = document.getElementById('sosImagem'); if (input) { try { input.value = ''; } catch(e){} }
 
     await salvarDB();
     await atualizarGaleriaSOS();
     atualizarImagemGuincho();
-
     if (btn) btn.disabled = false;
     registrarAuditoria('Cadastro', `${salvas} imagem(ns) salva(s) no SOS`);
-    if (erros > 0) {
-        alert(`✅ ${salvas} imagem(ns) salva(s)!\n⚠️ ${erros} imagem(ns) falharam.`);
-    } else {
-        alert(`✅ ${salvas} imagem(ns) salva(s)!`);
-    }
+    if (erros > 0) alert(`✅ ${salvas} imagem(ns) salva(s)!\n⚠️ ${erros} imagem(ns) falharam.`);
+    else alert(`✅ ${salvas} imagem(ns) salva(s)!`);
 }
 
 async function atualizarGaleriaSOS() {
@@ -4911,25 +4508,30 @@ async function atualizarGaleriaSOS() {
     container.innerHTML = '';
     const fotos = (db.imagens && db.imagens.sos && Array.isArray(db.imagens.sos.fotos)) ? db.imagens.sos.fotos : [];
     if (fotos.length === 0) {
-        const p = document.createElement('p'); 
+        const p = document.createElement('p');
         p.style.color = '#999'; p.textContent = 'Nenhuma imagem salva.';
-        container.appendChild(p); 
+        container.appendChild(p);
         return;
     }
 
-    const urls = await Promise.all(fotos.map(f => obterUrlImagem(f)));
+    // GRADE usa thumbnail (rápido); ao CLICAR carrega a imagem em alta resolução
+    const thumbs = await Promise.all(fotos.map(f => obterUrlImagem(f)));
 
     fotos.forEach((foto, i) => {
-        const src = urls[i];
-        const div = document.createElement('div'); 
+        const src = thumbs[i];
+        const div = document.createElement('div');
         div.className = 'saved-image-item';
         if (src) {
-            const img = document.createElement('img'); 
-            img.src = src; 
-            img.alt = 'foto';
-            img.addEventListener('click', (ev) => { 
-                ev.stopPropagation(); 
-                openImageModal(src, urls, i); 
+            const img = document.createElement('img');
+            img.src = src; img.alt = 'foto';
+            img.onerror = function() {
+                if (foto && typeof foto === 'object' && foto.thumb && this.src !== foto.thumb) { this.onerror = null; this.src = foto.thumb; }
+            };
+            img.addEventListener('click', async (ev) => {
+                ev.stopPropagation();
+                // Carrega TODAS as imagens em alta resolução para o modal
+                const fullUrls = await Promise.all(fotos.map(f => obterUrlImagemFull(f)));
+                openImageModal(fullUrls[i], fullUrls, i);
             });
             div.appendChild(img);
         } else {
@@ -4938,13 +4540,9 @@ async function atualizarGaleriaSOS() {
             placeholder.textContent = 'Imagem indisponível';
             div.appendChild(placeholder);
         }
-        const btn = document.createElement('button'); 
-        btn.className = 'delete-btn'; 
-        btn.textContent = '×';
-        btn.addEventListener('click', (ev) => { 
-            ev.stopPropagation(); 
-            excluirFotoSOS(i); 
-        });
+        const btn = document.createElement('button');
+        btn.className = 'delete-btn'; btn.textContent = '×';
+        btn.addEventListener('click', (ev) => { ev.stopPropagation(); excluirFotoSOS(i); });
         div.appendChild(btn);
         container.appendChild(div);
     });
@@ -4954,15 +4552,13 @@ async function excluirFotoSOS(i) {
     if (!confirmarSenhaADM()) return;
     if (!confirm('Excluir esta imagem do SOS?')) return;
     if (!db.imagens || !db.imagens.sos || !Array.isArray(db.imagens.sos.fotos)) return;
-
     const foto = db.imagens.sos.fotos[i];
     if (foto && typeof foto === 'object' && foto.id) {
         try { await idbExcluir(foto.id); } catch(e) { console.warn('Erro ao excluir imagem IDB:', e); }
         liberarUrlImagem(foto);
     }
-
     db.imagens.sos.fotos.splice(i, 1);
-    await atualizarGaleriaSOS(); 
+    await atualizarGaleriaSOS();
     await salvarDB();
     atualizarImagemGuincho();
     registrarAuditoria('Exclusão', `Foto excluída do SOS (índice ${i})`);
@@ -4973,29 +4569,20 @@ function atualizarTabelaAlugueis() {
     if (!tbody) return;
     tbody.innerHTML = '';
     const hojeISO = new Date().toISOString().split('T')[0];
-
     const itens = (db.alugueis || []).map((a, idx) => {
         let status = a.status || 'pendente';
         if (status === 'pendente' && a.vencimento && a.vencimento < hojeISO) { status = 'atrasado'; a.status = status; }
         return { a, idx, status };
     });
-
-    itens.sort((x, y) => {
-        const ox = x.status === 'pago' ? 1 : 0;
-        const oy = y.status === 'pago' ? 1 : 0;
-        return ox - oy;
-    });
-
+    itens.sort((x, y) => { const ox = x.status === 'pago' ? 1 : 0; const oy = y.status === 'pago' ? 1 : 0; return ox - oy; });
     itens.forEach(({ a, idx: i, status }) => {
         const badge = status === 'pago' ? '<span class="status-pago">PAGO</span>'
                     : status === 'atrasado' ? '<span class="status-atrasado">ATRASADO</span>'
                     : '<span class="status-pendente">PENDENTE</span>';
-        
         const tipoLabel = (a.tipoPagamento || 'mensal').toUpperCase();
         const caucaoLabel = a.pagCaucao ? a.pagCaucao.toUpperCase() : 'À VISTA';
         const totalTxt = a.totalParcelas ? `<br><small style="color:#e63946;font-weight:bold;">Total: ${a.totalParcelas}</small>` : '';
         const origemTxt = a.origem ? `<br><small style="color:#666;">${a.origem}</small>` : '';
-
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${a.locatario || ''}</td>
@@ -5017,7 +4604,6 @@ function atualizarTabelaAlugueis() {
 function processarPagamentoAutomatico(aluguelObj, dataPagamentoISO) {
     aluguelObj.status = 'pago';
     aluguelObj.dataPagamento = dataPagamentoISO;
-
     if (!Array.isArray(db.fluxoCaixa)) db.fluxoCaixa = [];
     if (!Array.isArray(db.historicoAlugueis)) db.historicoAlugueis = [];
 
@@ -5049,14 +4635,12 @@ function processarPagamentoAutomatico(aluguelObj, dataPagamentoISO) {
         const d = new Date(baseVenc + 'T00:00:00');
         d.setDate(d.getDate() + intervalDias);
         const proximoVenc = d.toISOString().split('T')[0];
-
         const jaExiste = (db.alugueis || []).some(x => x.locatario === aluguelObj.locatario && x.placa === aluguelObj.placa && x.vencimento === proximoVenc && x.status !== 'pago');
 
         if (!jaExiste) {
             const valorBase = parseMoeda(locAtiva.valorAluguel) || parseMoeda(locAtiva.aluguelMensal);
             let valorProx = valorBase;
             let descricaoProx = 'Aluguel';
-
             const parcelasExistentes = (db.alugueis || []).filter(x => x.locatario === aluguelObj.locatario && x.placa === aluguelObj.placa).length;
             const pagCaucao = locAtiva.pagCaucao || 'avista';
             const caucaoTotal = parseMoeda(locAtiva.caucao);
@@ -5143,20 +4727,14 @@ function excluirPagamento(i) {
 
 function atualizarResumoFinanceiro() {}
 
-/* ===================== COMPRAS - Implementação completa ===================== */
 function atualizarTabelaCompras() {
     const tbody = document.querySelector('#tabelaCompras tbody');
     if (!tbody) return;
     tbody.innerHTML = '';
     const lista = db.compras || [];
-    if (lista.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#999;padding:20px;">Nenhuma compra registrada.</td></tr>';
-        return;
-    }
+    if (lista.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#999;padding:20px;">Nenhuma compra registrada.</td></tr>'; return; }
     lista.forEach((c, i) => {
-        const statusBadge = (c.status === 'pago')
-            ? '<span class="status-pago">PAGO</span>'
-            : '<span class="status-pendente">PENDENTE</span>';
+        const statusBadge = (c.status === 'pago') ? '<span class="status-pago">PAGO</span>' : '<span class="status-pendente">PENDENTE</span>';
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${formatarDataBR(c.data)}</td>
@@ -5184,20 +4762,10 @@ function salvarCompra() {
     const valorTotal = document.getElementById('compValorTotal').value || valorUnitario;
     const status = document.getElementById('compStatus').value || 'pendente';
 
-    if (!data || !produto || !fornecedor) {
-        alert('Preencha Data, Produto e Fornecedor!');
-        return;
-    }
-
+    if (!data || !produto || !fornecedor) { alert('Preencha Data, Produto e Fornecedor!'); return; }
     if (!Array.isArray(db.compras)) db.compras = [];
 
-    const compra = {
-        data, produto, fornecedor, placa,
-        quantidade: quantidade || '',
-        valorUnitario: valorUnitario || '',
-        valorTotal: valorTotal || '',
-        status
-    };
+    const compra = { data, produto, fornecedor, placa, quantidade: quantidade || '', valorUnitario: valorUnitario || '', valorTotal: valorTotal || '', status };
 
     if (compraEditandoIndex !== null && db.compras[compraEditandoIndex]) {
         db.compras[compraEditandoIndex] = compra;
@@ -5207,33 +4775,15 @@ function salvarCompra() {
     } else {
         db.compras.push(compra);
         registrarAuditoria('Cadastro', `Nova compra: ${produto}`);
-
         const valorNum = parseMoeda(valorTotal || valorUnitario);
         if (valorNum > 0) {
             if (!Array.isArray(db.fluxoCaixa)) db.fluxoCaixa = [];
-            db.fluxoCaixa.push({
-                data: data,
-                descricao: `Compra: ${produto} - ${fornecedor}`,
-                categoria: 'Compras',
-                valor: valorTotal || valorUnitario,
-                valorNumerico: valorNum,
-                tipo: 'saida'
-            });
+            db.fluxoCaixa.push({ data: data, descricao: `Compra: ${produto} - ${fornecedor}`, categoria: 'Compras', valor: valorTotal || valorUnitario, valorNumerico: valorNum, tipo: 'saida' });
         }
-
         if (!Array.isArray(db.historico)) db.historico = [];
-        db.historico.push({
-            data: data,
-            descricao: `Compra: ${produto}${quantidade ? ' (Qtd: ' + quantidade + ')' : ''}`,
-            placa: placa,
-            valor: valorTotal || valorUnitario,
-            fornecedor: fornecedor,
-            oficina: ''
-        });
-
+        db.historico.push({ data: data, descricao: `Compra: ${produto}${quantidade ? ' (Qtd: ' + quantidade + ')' : ''}`, placa: placa, valor: valorTotal || valorUnitario, fornecedor: fornecedor, oficina: '' });
         alert('✅ Compra salva!\n\n💰 Lançada no Fluxo de Caixa (saída)\n📝 Registrada no Histórico Geral');
     }
-
     atualizarTabelaCompras();
     atualizarTabelaFluxoCaixa();
     atualizarTabelaHistorico();
@@ -5275,10 +4825,8 @@ function limparCamposCompra() {
     ['compProduto','compFornecedor','compPlaca','compQuantidade','compValorUnitario','compValorTotal'].forEach(id => {
         const el = document.getElementById(id); if (el) el.value = '';
     });
-    const dataEl = document.getElementById('compData');
-    if (dataEl) dataEl.value = obterDataHojeISO();
-    const statusEl = document.getElementById('compStatus');
-    if (statusEl) statusEl.value = 'pendente';
+    const dataEl = document.getElementById('compData'); if (dataEl) dataEl.value = obterDataHojeISO();
+    const statusEl = document.getElementById('compStatus'); if (statusEl) statusEl.value = 'pendente';
     compraEditandoIndex = null;
 }
 
@@ -5305,14 +4853,11 @@ function atualizarTabelaFluxoCaixa() {
     if (!tbody) return;
     tbody.innerHTML = '';
     const lista = db.fluxoCaixa || [];
-    let totalEntradas = 0;
-    let totalSaidas = 0;
-    
+    let totalEntradas = 0, totalSaidas = 0;
     lista.slice().reverse().forEach((f, index) => {
         const valorNum = Number(f.valorNumerico) || parseMoeda(f.valor) || 0;
         if (f.tipo === 'entrada') totalEntradas += valorNum;
         else totalSaidas += valorNum;
-        
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${formatarDataBR(f.data)}</td>
@@ -5320,13 +4865,10 @@ function atualizarTabelaFluxoCaixa() {
             <td>${f.categoria || ''}</td>
             <td>${f.valor || formatarMoedaBR(valorNum)}</td>
             <td>${(f.tipo || '').toUpperCase()}</td>
-            <td>
-                <button class="btn-danger" onclick="excluirFluxoCaixa(${lista.length - 1 - index})" title="Excluir">🗑️</button>
-            </td>
+            <td><button class="btn-danger" onclick="excluirFluxoCaixa(${lista.length - 1 - index})" title="Excluir">🗑️</button></td>
         `;
         tbody.appendChild(tr);
     });
-    
     const saldo = totalEntradas - totalSaidas;
     const elEntradas = document.getElementById('totalEntradas'); if (elEntradas) elEntradas.textContent = formatarMoedaBR(totalEntradas);
     const elSaidas = document.getElementById('totalSaidas'); if (elSaidas) elSaidas.textContent = formatarMoedaBR(totalSaidas);
@@ -5361,10 +4903,7 @@ function salvarFluxoCaixa() {
 }
 
 function limparCamposBanco() {
-    ['bancoNome','bancoAgencia','bancoConta','bancoPix','bancoTitular'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.value = '';
-    });
+    ['bancoNome','bancoAgencia','bancoConta','bancoPix','bancoTitular'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
     bancoEditandoIndex = null;
     atualizarEstadoEdicaoBanco();
 }
@@ -5387,10 +4926,7 @@ function salvarBanco() {
     const conta = document.getElementById('bancoConta').value.trim();
     const pix = document.getElementById('bancoPix').value.trim();
     const titular = document.getElementById('bancoTitular').value.trim();
-    if (!nome || !agencia || !conta || !pix || !titular) {
-        alert('Preencha todos os campos do banco!');
-        return;
-    }
+    if (!nome || !agencia || !conta || !pix || !titular) { alert('Preencha todos os campos do banco!'); return; }
     if (!Array.isArray(db.bancos)) db.bancos = [];
     const banco = { nome, agencia, conta, pix, titular };
     if (bancoEditandoIndex !== null && db.bancos[bancoEditandoIndex]) {
@@ -5446,31 +4982,22 @@ function copiarPix(i) {
     function sucessoCopiar() { alert('✅ PIX copiado!\n\n' + pixTexto); }
     function falhaCopiar() { alert('❌ Não foi possível copiar automaticamente.\n\nPIX: ' + pixTexto); }
     if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(pixTexto).then(sucessoCopiar).catch(function() {
-            copiarPixFallback(pixTexto, sucessoCopiar, falhaCopiar);
-        });
-    } else {
-        copiarPixFallback(pixTexto, sucessoCopiar, falhaCopiar);
-    }
+        navigator.clipboard.writeText(pixTexto).then(sucessoCopiar).catch(function() { copiarPixFallback(pixTexto, sucessoCopiar, falhaCopiar); });
+    } else { copiarPixFallback(pixTexto, sucessoCopiar, falhaCopiar); }
 }
 
 function copiarPixFallback(texto, onSucesso, onFalha) {
     try {
         const ta = document.createElement('textarea');
         ta.value = texto;
-        ta.style.position = 'fixed';
-        ta.style.top = '-1000px';
-        ta.style.left = '-1000px';
+        ta.style.position = 'fixed'; ta.style.top = '-1000px'; ta.style.left = '-1000px';
         ta.setAttribute('readonly', '');
         document.body.appendChild(ta);
-        ta.select();
-        ta.setSelectionRange(0, ta.value.length);
+        ta.select(); ta.setSelectionRange(0, ta.value.length);
         const ok = document.execCommand('copy');
         document.body.removeChild(ta);
         if (ok) onSucesso(); else onFalha();
-    } catch (e) {
-        if (typeof onFalha === 'function') onFalha();
-    }
+    } catch (e) { if (typeof onFalha === 'function') onFalha(); }
 }
 
 function atualizarTabelaBancos() {
@@ -5522,7 +5049,6 @@ function abrirModalSelfie_() {}
 function processarDocumentoComprovante() { const input = document.getElementById('docComprovanteInput'); if (input) input.click(); }
 function processarPendenciaPDF() { alert('Função em implementação.'); }
 
-/* ===================== CONFIGURAÇÕES - Implementação completa ===================== */
 function carregarConfiguracoes() {
     if (!db.config) db.config = { empresa: 'LOBÃO', cnpj: '', telefone: '', email: '', endereco: '' };
     const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
@@ -5570,22 +5096,13 @@ function salvarDocumentosPlaca() {
     if (!db.documentosPlacas) db.documentosPlacas = {};
     if (!db.documentosPlacas[placa]) db.documentosPlacas[placa] = [];
     const files = Array.from(input.files);
-    let processados = 0;
-    let aceitos = 0;
+    let processados = 0, aceitos = 0;
     files.forEach(file => {
-        if (file.size > 700 * 1024) {
-            alert(`O arquivo "${file.name}" é muito grande (${(file.size / 1024).toFixed(0)}KB). O limite é 700KB para garantir o funcionamento do banco de dados.`);
-            return;
-        }
+        if (file.size > 700 * 1024) { alert(`O arquivo "${file.name}" é muito grande (${(file.size / 1024).toFixed(0)}KB). O limite é 700KB para garantir o funcionamento do banco de dados.`); return; }
         aceitos++;
         const reader = new FileReader();
         reader.onload = function(e) {
-            db.documentosPlacas[placa].push({
-                nome: file.name,
-                tipo: file.type,
-                data: e.target.result,
-                dataUpload: new Date().toLocaleString('pt-BR')
-            });
+            db.documentosPlacas[placa].push({ nome: file.name, tipo: file.type, data: e.target.result, dataUpload: new Date().toLocaleString('pt-BR') });
             processados++;
             if (processados === aceitos) {
                 salvarDB();
@@ -5680,9 +5197,7 @@ function excluirDocumentoPlaca(placa, idx) {
     const doc = db.documentosPlacas[placa][idx];
     if (!doc) return;
     if (!confirm(`Excluir o documento "${doc.nome}"?`)) return;
-    if (doc.storageId) {
-        try { idbExcluir(doc.storageId).catch(e => console.warn('IDB excluir:', e)); } catch(e) {}
-    }
+    if (doc.storageId) { try { idbExcluir(doc.storageId).catch(e => console.warn('IDB excluir:', e)); } catch(e) {} }
     db.documentosPlacas[placa].splice(idx, 1);
     if (db.documentosPlacas[placa].length === 0) delete db.documentosPlacas[placa];
     salvarDB();
@@ -5711,14 +5226,12 @@ async function extrairTextoPDF(file) {
     for (let p = 1; p <= pdf.numPages; p++) {
         const page = await pdf.getPage(p);
         const content = await page.getTextContent();
-        let lastY = null;
-        let lineBuffer = '';
+        let lastY = null, lineBuffer = '';
         for (const item of content.items) {
             if (!item.str) continue;
             const y = item.transform ? item.transform[5] : null;
             if (lastY !== null && y !== null && Math.abs(y - lastY) > 2) {
-                textoTotal += lineBuffer + '\n';
-                lineBuffer = item.str;
+                textoTotal += lineBuffer + '\n'; lineBuffer = item.str;
             } else {
                 if (lineBuffer && !lineBuffer.endsWith(' ') && !item.str.startsWith(' ')) lineBuffer += ' ';
                 lineBuffer += item.str;
@@ -5742,12 +5255,9 @@ function extrairDadosComprovante(textoOriginal) {
     const tU = t.toUpperCase();
     let valor = 0;
     const valorPatterns = [
-        /VALOR\s+PAGO\s+R\$\s*([\d.,]+)/,
-        /VALOR\s+R\$\s*([\d.,]+)/,
-        /VALOR\s*:\s*R\$\s*([\d.,]+)/,
-        /VALOR\s*:\s*([\d.,]+)/,
-        /R\$\s*([\d]{1,3}(?:\.\d{3})*,\d{2})/,
-        /R\$\s*(\d+\.\d{2})/
+        /VALOR\s+PAGO\s+R\$\s*([\d.,]+)/, /VALOR\s+R\$\s*([\d.,]+)/,
+        /VALOR\s*:\s*R\$\s*([\d.,]+)/, /VALOR\s*:\s*([\d.,]+)/,
+        /R\$\s*([\d]{1,3}(?:\.\d{3})*,\d{2})/, /R\$\s*(\d+\.\d{2})/
     ];
     for (const p of valorPatterns) {
         const m = tU.match(p);
@@ -5765,10 +5275,7 @@ function extrairDadosComprovante(textoOriginal) {
         /DATA\s+DA\s+OPERA[ÇC][ÃA]O\s*:?\s*(\d{2}\/\d{2}\/\d{4})/,
         /DATA\s*:?\s*(\d{2}\/\d{2}\/\d{4})/
     ];
-    for (const p of dataPatterns) {
-        const m = tU.match(p);
-        if (m) { data = m[1]; break; }
-    }
+    for (const p of dataPatterns) { const m = tU.match(p); if (m) { data = m[1]; break; } }
     if (!data) { const m = tU.match(/(\d{2}\/\d{2}\/\d{4})/); if (m) data = m[1]; }
     if (!data) {
         const meses = { JAN:'01', FEV:'02', MAR:'03', ABR:'04', MAI:'05', JUN:'06', JUL:'07', AGO:'08', SET:'09', OUT:'10', NOV:'11', DEZ:'12' };
@@ -5842,10 +5349,7 @@ function renderizarPreviewComprovantesPag() {
     if (!container) return;
     container.innerHTML = '';
     const btn = document.getElementById('btnSalvarComprovantesPag');
-    if (comprovantesPagTemp.length === 0) {
-        if (btn) { btn.disabled = true; btn.style.opacity = '0.5'; }
-        return;
-    }
+    if (comprovantesPagTemp.length === 0) { if (btn) { btn.disabled = true; btn.style.opacity = '0.5'; } return; }
     if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
     const placasUsuario = obterPlacasDoUsuarioLogado();
     comprovantesPagTemp.forEach(function(item, idx) {
@@ -5900,21 +5404,11 @@ function renderizarPreviewComprovantesPag() {
         optEmpty.value = '';
         optEmpty.textContent = placasUsuario.length > 0 ? '-- Selecione a placa --' : '-- Nenhuma locação ativa --';
         selPlaca.appendChild(optEmpty);
-        placasUsuario.forEach(function(p) {
-            const o = document.createElement('option');
-            o.value = p; o.textContent = p;
-            if (item.placa === p) o.selected = true;
-            selPlaca.appendChild(o);
-        });
+        placasUsuario.forEach(function(p) { const o = document.createElement('option'); o.value = p; o.textContent = p; if (item.placa === p) o.selected = true; selPlaca.appendChild(o); });
         if (placasUsuario.length === 0) {
             const todasPlacas = (db.veiculos || []).map(function(v) { return v.placa; }).filter(Boolean);
             todasPlacas.forEach(function(p) {
-                if (!placasUsuario.includes(p)) {
-                    const o = document.createElement('option');
-                    o.value = p; o.textContent = p;
-                    if (item.placa === p) o.selected = true;
-                    selPlaca.appendChild(o);
-                }
+                if (!placasUsuario.includes(p)) { const o = document.createElement('option'); o.value = p; o.textContent = p; if (item.placa === p) o.selected = true; selPlaca.appendChild(o); }
             });
         }
         selPlaca.onchange = function() { atualizarCampoComprovante(idx, 'placa', this.value); };
@@ -5927,14 +5421,9 @@ function renderizarPreviewComprovantesPag() {
 
 function atualizarCampoComprovante(idx, campo, valor) {
     if (!comprovantesPagTemp[idx]) return;
-    if (campo === 'valorFormatado') {
-        comprovantesPagTemp[idx].valorFormatado = valor;
-        comprovantesPagTemp[idx].valor = parseMoeda(valor);
-    } else if (campo === 'placa') {
-        comprovantesPagTemp[idx].placa = String(valor || '').toUpperCase().trim();
-    } else {
-        comprovantesPagTemp[idx][campo] = valor;
-    }
+    if (campo === 'valorFormatado') { comprovantesPagTemp[idx].valorFormatado = valor; comprovantesPagTemp[idx].valor = parseMoeda(valor); }
+    else if (campo === 'placa') { comprovantesPagTemp[idx].placa = String(valor || '').toUpperCase().trim(); }
+    else { comprovantesPagTemp[idx][campo] = valor; }
 }
 
 function removerComprovanteTemp(idx) {
@@ -5970,19 +5459,12 @@ async function handleComprovantesPagInputChange(e) {
             comprovantesPagTemp.push({
                 nomeArquivo: file.name,
                 tipoArquivo: file.type || (isPDF ? 'application/pdf' : 'image/jpeg'),
-                dataUrl: dataUrl,
-                pagador: dados.pagador || '',
-                recebedor: dados.recebedor || '',
-                valor: dados.valor || 0,
-                valorFormatado: dados.valor ? formatarMoedaBR(dados.valor) : '',
-                dataComprovante: dados.data || '',
-                placa: placaAuto,
+                dataUrl: dataUrl, pagador: dados.pagador || '', recebedor: dados.recebedor || '',
+                valor: dados.valor || 0, valorFormatado: dados.valor ? formatarMoedaBR(dados.valor) : '',
+                dataComprovante: dados.data || '', placa: placaAuto,
                 dataUpload: new Date().toLocaleString('pt-BR')
             });
-        } catch (err) {
-            console.error('Erro em ' + file.name, err);
-            errors.push(file.name + ': ' + (err.message || 'erro ao processar'));
-        }
+        } catch (err) { console.error('Erro em ' + file.name, err); errors.push(file.name + ': ' + (err.message || 'erro ao processar')); }
     }
     renderizarPreviewComprovantesPag();
     if (errors.length > 0) alert('⚠️ Alguns arquivos não puderam ser processados:\n\n' + errors.join('\n'));
@@ -5992,45 +5474,27 @@ function salvarComprovantesPagamento() {
     if (!comprovantesPagTemp || comprovantesPagTemp.length === 0) { alert('Nenhum comprovante para salvar!'); return; }
     if (!Array.isArray(db.comprovantesPagamento)) db.comprovantesPagamento = [];
     if (!db.documentosPlacas) db.documentosPlacas = {};
-    let salvos = 0;
-    let semPlaca = 0;
-    let autoPagos = 0;
-    let duplicados = 0;
+    let salvos = 0, semPlaca = 0, autoPagos = 0, duplicados = 0;
     comprovantesPagTemp.forEach(function(item) {
         const placa = String(item.placa || '').toUpperCase().trim();
         if (!placa) semPlaca++;
         const valorNum = Number(item.valor) || 0;
-
         const duplicado = db.comprovantesPagamento.some(function(c) {
-            return (c.placa === placa) &&
-                   Math.abs((c.valor || 0) - valorNum) < 0.01 &&
-                   c.dataComprovante === (item.dataComprovante || '') &&
-                   c.nomeArquivo === (item.nomeArquivo || '');
+            return (c.placa === placa) && Math.abs((c.valor || 0) - valorNum) < 0.01 && c.dataComprovante === (item.dataComprovante || '') && c.nomeArquivo === (item.nomeArquivo || '');
         });
         if (duplicado) { duplicados++; return; }
-
         db.comprovantesPagamento.push({
             id: 'comp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
-            nomeArquivo: item.nomeArquivo,
-            tipoArquivo: item.tipoArquivo,
-            dataUrl: item.dataUrl,
-            pagador: item.pagador || '',
-            recebedor: item.recebedor || '',
-            valor: valorNum,
-            valorFormatado: item.valorFormatado || formatarMoedaBR(valorNum),
-            dataComprovante: item.dataComprovante || '',
-            placa: placa,
+            nomeArquivo: item.nomeArquivo, tipoArquivo: item.tipoArquivo, dataUrl: item.dataUrl,
+            pagador: item.pagador || '', recebedor: item.recebedor || '',
+            valor: valorNum, valorFormatado: item.valorFormatado || formatarMoedaBR(valorNum),
+            dataComprovante: item.dataComprovante || '', placa: placa,
             dataUpload: item.dataUpload || new Date().toLocaleString('pt-BR')
         });
         if (placa) {
             if (!db.documentosPlacas[placa]) db.documentosPlacas[placa] = [];
             const nomeDoc = 'COMPROVANTE PAGTO ' + (item.dataComprovante ? item.dataComprovante : '') + (item.valorFormatado ? ' - ' + item.valorFormatado : '') + ' - ' + (item.nomeArquivo || 'arquivo');
-            db.documentosPlacas[placa].push({
-                nome: nomeDoc,
-                tipo: item.tipoArquivo || 'application/pdf',
-                data: item.dataUrl,
-                dataUpload: item.dataUpload || new Date().toLocaleString('pt-BR')
-            });
+            db.documentosPlacas[placa].push({ nome: nomeDoc, tipo: item.tipoArquivo || 'application/pdf', data: item.dataUrl, dataUpload: item.dataUpload || new Date().toLocaleString('pt-BR') });
         }
         let dataPgtoISO = '';
         if (item.dataComprovante && item.dataComprovante.includes('/')) {
@@ -6083,10 +5547,7 @@ function atualizarTabelaComprovantesPag() {
     if (!tbody) return;
     tbody.innerHTML = '';
     const lista = db.comprovantesPagamento || [];
-    if (lista.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#999;padding:20px;">Nenhum comprovante salvo.</td></tr>';
-        return;
-    }
+    if (lista.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#999;padding:20px;">Nenhum comprovante salvo.</td></tr>'; return; }
     const indices = lista.map(function(_, i) { return i; }).reverse();
     indices.forEach(function(realIdx) {
         const c = lista[realIdx];
@@ -6125,22 +5586,14 @@ function editarComprovanteSalvo(idx) {
     if (!confirmarSenhaADM()) return;
     const c = (db.comprovantesPagamento || [])[idx];
     if (!c) return;
-    const pagador = prompt('Pagador:', c.pagador || '');
-    if (pagador === null) return;
-    const recebedor = prompt('Recebedor:', c.recebedor || '');
-    if (recebedor === null) return;
-    const valorStr = prompt('Valor (ex: R$ 1.000,00):', c.valorFormatado || '');
-    if (valorStr === null) return;
-    const data = prompt('Data (DD/MM/AAAA):', c.dataComprovante || '');
-    if (data === null) return;
-    const placa = prompt('Placa do Carro:', c.placa || '');
-    if (placa === null) return;
-    c.pagador = pagador;
-    c.recebedor = recebedor;
-    c.valorFormatado = valorStr;
-    c.valor = parseMoeda(valorStr);
-    c.dataComprovante = data;
-    c.placa = String(placa || '').toUpperCase().trim();
+    const pagador = prompt('Pagador:', c.pagador || ''); if (pagador === null) return;
+    const recebedor = prompt('Recebedor:', c.recebedor || ''); if (recebedor === null) return;
+    const valorStr = prompt('Valor (ex: R$ 1.000,00):', c.valorFormatado || ''); if (valorStr === null) return;
+    const data = prompt('Data (DD/MM/AAAA):', c.dataComprovante || ''); if (data === null) return;
+    const placa = prompt('Placa do Carro:', c.placa || ''); if (placa === null) return;
+    c.pagador = pagador; c.recebedor = recebedor;
+    c.valorFormatado = valorStr; c.valor = parseMoeda(valorStr);
+    c.dataComprovante = data; c.placa = String(placa || '').toUpperCase().trim();
     atualizarTabelaComprovantesPag();
     salvarDB();
     registrarAuditoria('Edição', 'Comprovante editado: ' + c.nomeArquivo);
@@ -6280,8 +5733,7 @@ async function extrairTextoPDFviaOCR(file) {
         const page = await pdf.getPage(p);
         const viewport = page.getViewport({ scale: 2.0 });
         const canvas = document.createElement('canvas');
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
+        canvas.width = viewport.width; canvas.height = viewport.height;
         const ctx = canvas.getContext('2d');
         await page.render({ canvasContext: ctx, viewport }).promise;
         const dataUrl = canvas.toDataURL('image/png');
@@ -6304,12 +5756,11 @@ function extrairDadosCRLV(textoOriginal) {
         const up = String(linha).toUpperCase().trim();
         if (!up) return true;
         if (up.length > 60) return false;
-        let count = 0; let fortes = 0;
+        let count = 0, fortes = 0;
         for (const p of PALAVRAS_ROTULO) if (new RegExp('\\b' + p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b').test(up)) count++;
         for (const p of ROTULOS_FORTES) if (new RegExp('\\b' + p + '\\b').test(up)) fortes++;
         return fortes >= 1 || count >= 2;
     }
-    function limpar(v) { if (!v) return ''; return String(v).trim().replace(/^[\s:;\/\-|]+/, '').replace(/[\s:;\/\-|]+$/, '').trim(); }
     const placasCands = [...tU.matchAll(/\b([A-Z]{3}[0-9][A-Z0-9][0-9]{2})\b/g)];
     if (placasCands.length === 0) {
         const old = [...tU.matchAll(/\b([A-Z]{3}[0-9]{4})\b/g)];
@@ -6321,16 +5772,14 @@ function extrairDadosCRLV(textoOriginal) {
         if (/SEGURAN[ÇC]A|C[ÓO]DIGO|CHASSI|CLA\b/.test(antes)) continue;
         const linhaAtual = linhas.find(l => l.toUpperCase().includes(mm[1]));
         if (linhaAtual && /ANTERIOR|UF\s+CHASSI/.test(linhaAtual.toUpperCase())) continue;
-        dados.placa = mm[1];
-        break;
+        dados.placa = mm[1]; break;
     }
     const chassisCands = [...tU.matchAll(/\b([A-HJ-NPR-Z0-9]{17})\b/g)];
     for (const mm of chassisCands) {
         const pos = mm.index;
         const antes = tU.substring(Math.max(0, pos - 40), pos);
         if (/SEGURAN[ÇC]A|SEG\.|CLA\b/.test(antes)) continue;
-        dados.chassi = mm[1];
-        break;
+        dados.chassi = mm[1]; break;
     }
     let renavamEncontrado = null;
     let mR = tU.match(/RENAVAM\s*:?\s*(\d{11})/);
@@ -6382,10 +5831,8 @@ function extrairDadosCRLV(textoOriginal) {
                 const posMod = up.search(/ANO\s*\/?\s*MOD/);
                 if (posFab < posMod) { dados.anoFabr = anos[0]; dados.anoModel = anos[1]; }
                 else { dados.anoModel = anos[0]; dados.anoFabr = anos[1]; }
-            } else if (temFab) {
-                dados.anoFabr = anos[0];
-                if (anos[1]) dados.anoModel = anos[1];
-            } else if (temMod) dados.anoModel = anos[0];
+            } else if (temFab) { dados.anoFabr = anos[0]; if (anos[1]) dados.anoModel = anos[1]; }
+            else if (temMod) dados.anoModel = anos[0];
             if (dados.anoFabr || dados.anoModel) break;
         }
     }
@@ -6461,10 +5908,8 @@ function preencherCamposVeiculoComDados(dados) {
     const map = { placa: 'veicPlaca', renavam: 'veicRenavan', chassi: 'veicChassi', fabricante: 'veicFabricante', anoFabr: 'veicAnoFabr', anoModel: 'veicAnoModel', cor: 'veicCor', proprietario: 'veicProprietario', cpfCnpj: 'veicCpfPropr' };
     const conflitos = [];
     Object.keys(map).forEach(key => {
-        const novo = dados[key];
-        if (!novo) return;
-        const el = document.getElementById(map[key]);
-        if (!el) return;
+        const novo = dados[key]; if (!novo) return;
+        const el = document.getElementById(map[key]); if (!el) return;
         const atual = String(el.value || '').trim();
         if (atual && atual.toUpperCase() !== String(novo).toUpperCase()) {
             const label = el.parentElement && el.parentElement.querySelector('label');
@@ -6479,10 +5924,8 @@ function preencherCamposVeiculoComDados(dados) {
         substituir = confirm(msg);
     }
     Object.keys(map).forEach(key => {
-        const novo = dados[key];
-        if (!novo) return;
-        const el = document.getElementById(map[key]);
-        if (!el) return;
+        const novo = dados[key]; if (!novo) return;
+        const el = document.getElementById(map[key]); if (!el) return;
         const atual = String(el.value || '').trim();
         if (!atual) el.value = novo;
         else if (substituir) el.value = novo;
@@ -6499,30 +5942,14 @@ function cancelarDocVeiculo() {
 async function vincularPDFaPlaca(arquivo, placa, dadosExtraidos) {
     if (!arquivo || !placa) return;
     const id = 'pdf_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
-    
-    try {
-        await idbSalvar(id, arquivo, { nomeArquivo: arquivo.name, placa, tipo: arquivo.type || 'application/pdf' });
-    } catch (err) {
-        console.error('Erro ao salvar PDF no IndexedDB:', err);
-        throw err;
-    }
-    
+    try { await idbSalvar(id, arquivo, { nomeArquivo: arquivo.name, placa, tipo: arquivo.type || 'application/pdf' }); }
+    catch (err) { console.error('Erro ao salvar PDF no IndexedDB:', err); throw err; }
     if (!db.documentosPlacas) db.documentosPlacas = {};
     if (!db.documentosPlacas[placa]) db.documentosPlacas[placa] = [];
-    
-    db.documentosPlacas[placa].push({
-        nome: arquivo.name,
-        tipo: arquivo.type || 'application/pdf',
-        storageId: id,
-        dataUpload: new Date().toLocaleString('pt-BR')
-    });
-    
+    db.documentosPlacas[placa].push({ nome: arquivo.name, tipo: arquivo.type || 'application/pdf', storageId: id, dataUpload: new Date().toLocaleString('pt-BR') });
     registrarAuditoria('Documento Salvo', 'PDF vinculado à placa ' + placa + ': ' + arquivo.name);
     salvarDB();
-    
-    if (typeof atualizarGaleriaComprovantes === 'function') {
-        atualizarGaleriaComprovantes();
-    }
+    if (typeof atualizarGaleriaComprovantes === 'function') atualizarGaleriaComprovantes();
 }
 
 function atualizarListaDocVeiculo() {
@@ -6530,10 +5957,7 @@ function atualizarListaDocVeiculo() {
     if (!container) return;
     container.innerHTML = '';
     const lista = Array.isArray(db.docsVeiculos) ? db.docsVeiculos : [];
-    if (lista.length === 0) {
-        container.innerHTML = '<p style="color:#999;text-align:center;padding:20px;">Nenhum documento importado. Use o botão <strong>📄 DOC VEÍCULO</strong> na aba Veículos.</p>';
-        return;
-    }
+    if (lista.length === 0) { container.innerHTML = '<p style="color:#999;text-align:center;padding:20px;">Nenhum documento importado. Use o botão <strong>📄 DOC VEÍCULO</strong> na aba Veículos.</p>'; return; }
     const agrupado = {};
     lista.forEach(d => {
         const p = (d.placa || 'SEM PLACA').toUpperCase();
@@ -6563,22 +5987,16 @@ function atualizarListaDocVeiculo() {
             const actions = document.createElement('div');
             actions.className = 'documento-actions';
             const bAbrir = document.createElement('button');
-            bAbrir.className = 'btn-info';
-            bAbrir.textContent = '👁️ Abrir PDF';
+            bAbrir.className = 'btn-info'; bAbrir.textContent = '👁️ Abrir PDF';
             bAbrir.onclick = () => abrirPDFDocVeiculo(doc.id);
             const bBaixar = document.createElement('button');
-            bBaixar.className = 'btn-success';
-            bBaixar.textContent = '⬇️ Baixar';
+            bBaixar.className = 'btn-success'; bBaixar.textContent = '⬇️ Baixar';
             bBaixar.onclick = () => baixarPDFDocVeiculo(doc.id, doc.nomeArquivo);
             const bExcluir = document.createElement('button');
-            bExcluir.className = 'btn-danger';
-            bExcluir.textContent = '🗑️ Excluir';
+            bExcluir.className = 'btn-danger'; bExcluir.textContent = '🗑️ Excluir';
             bExcluir.onclick = () => excluirDocVeiculo(doc.id);
-            actions.appendChild(bAbrir);
-            actions.appendChild(bBaixar);
-            actions.appendChild(bExcluir);
-            item.appendChild(info);
-            item.appendChild(actions);
+            actions.appendChild(bAbrir); actions.appendChild(bBaixar); actions.appendChild(bExcluir);
+            item.appendChild(info); item.appendChild(actions);
             list.appendChild(item);
         });
         folder.appendChild(list);
@@ -6603,11 +6021,8 @@ async function baixarPDFDocVeiculo(id, nomeArquivo) {
         if (!reg || !reg.blob) { alert('Arquivo não encontrado.'); return; }
         const url = URL.createObjectURL(reg.blob);
         const a = document.createElement('a');
-        a.href = url;
-        a.download = nomeArquivo || 'documento.pdf';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+        a.href = url; a.download = nomeArquivo || 'documento.pdf';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
         setTimeout(() => URL.revokeObjectURL(url), 60000);
     } catch (err) { console.error(err); alert('Erro ao baixar o PDF.'); }
 }
@@ -6665,16 +6080,12 @@ function renderizarPreviewDocComprovante() {
     if (!container) return;
     container.innerHTML = '';
     const btn = document.getElementById('btnSalvarDocComprovante');
-    if (docComprovantesTemp.length === 0) {
-        if (btn) { btn.disabled = true; btn.style.opacity = '0.5'; }
-        return;
-    }
+    if (docComprovantesTemp.length === 0) { if (btn) { btn.disabled = true; btn.style.opacity = '0.5'; } return; }
     if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
 
     docComprovantesTemp.forEach(function(item, idx) {
         const card = document.createElement('div');
         card.className = 'comp-pag-card';
-
         const header = document.createElement('div');
         header.className = 'comp-pag-header';
         header.innerHTML = '<strong>' + (item.nomeArquivo || '').replace(/</g, '&lt;') + '</strong>';
@@ -6692,13 +6103,9 @@ function renderizarPreviewDocComprovante() {
         if (aluguelMatch) {
             const valorMatch = Math.abs((Number(aluguelMatch.valorNumerico) || parseMoeda(aluguelMatch.valor) || 0) - (item.valor || 0)) < 0.01;
             const dataMatch = !item.dataComprovante || !aluguelMatch.vencimento || converterDataBRparaISO(item.dataComprovante) === aluguelMatch.vencimento;
-            if (valorMatch && dataMatch) {
-                statusDiv.innerHTML = '<span class="status-pago" style="font-size:11px;">✅ PAGAMENTO CORRESPONDENTE ENCONTRADO</span>';
-            } else if (!valorMatch) {
-                statusDiv.innerHTML = '<span class="status-atrasado" style="font-size:11px;">⚠️ DIVERGÊNCIA DE VALOR — não será aprovado</span>';
-            } else {
-                statusDiv.innerHTML = '<span class="status-atrasado" style="font-size:11px;">⚠️ DIVERGÊNCIA DE DATA — não será aprovado</span>';
-            }
+            if (valorMatch && dataMatch) statusDiv.innerHTML = '<span class="status-pago" style="font-size:11px;">✅ PAGAMENTO CORRESPONDENTE ENCONTRADO</span>';
+            else if (!valorMatch) statusDiv.innerHTML = '<span class="status-atrasado" style="font-size:11px;">⚠️ DIVERGÊNCIA DE VALOR — não será aprovado</span>';
+            else statusDiv.innerHTML = '<span class="status-atrasado" style="font-size:11px;">⚠️ DIVERGÊNCIA DE DATA — não será aprovado</span>';
         } else {
             statusDiv.innerHTML = '<span class="status-pendente" style="font-size:11px;">🔍 Nenhum pagamento correspondente</span>';
         }
@@ -6730,19 +6137,14 @@ function renderizarPreviewDocComprovante() {
             inp.type = 'text';
             inp.value = item[f.key] || '';
             inp.onchange = function() {
-                if (f.key === 'valorFormatado') {
-                    item.valorFormatado = this.value;
-                    item.valor = parseMoeda(this.value);
-                } else {
-                    item[f.key] = this.value;
-                }
+                if (f.key === 'valorFormatado') { item.valorFormatado = this.value; item.valor = parseMoeda(this.value); }
+                else { item[f.key] = this.value; }
                 const m = encontrarPagamentoCorrespondente(item.valor, item.placa);
                 item.aluguelMatch = m ? m.aluguel : null;
                 item.aluguelMatchIdx = m ? m.idx : -1;
                 renderizarPreviewDocComprovante();
             };
-            wrap.appendChild(lbl);
-            wrap.appendChild(inp);
+            wrap.appendChild(lbl); wrap.appendChild(inp);
             card.appendChild(wrap);
         });
 
@@ -6769,10 +6171,8 @@ function renderizarPreviewDocComprovante() {
             item.aluguelMatchIdx = m ? m.idx : -1;
             renderizarPreviewDocComprovante();
         };
-        wrapPlaca.appendChild(lblPlaca);
-        wrapPlaca.appendChild(selPlaca);
+        wrapPlaca.appendChild(lblPlaca); wrapPlaca.appendChild(selPlaca);
         card.appendChild(wrapPlaca);
-
         container.appendChild(card);
     });
 }
@@ -6782,10 +6182,8 @@ async function handleDocComprovanteInputChange(e) {
     const files = Array.from(input.files || []);
     if (files.length === 0) return;
     input.value = '';
-
     const container = document.getElementById('docComprovantePreview');
     if (container) container.innerHTML = '<p style="color:#666;padding:10px;">⏳ Processando arquivos, aguarde...</p>';
-
     const errors = [];
     for (let i = 0; i < files.length; i++) {
         const file = files[i];
@@ -6795,36 +6193,26 @@ async function handleDocComprovanteInputChange(e) {
             const nomeLow = (file.name || '').toLowerCase();
             const isPDF = file.type === 'application/pdf' || nomeLow.endsWith('.pdf');
             const isImg = (file.type && file.type.indexOf('image/') === 0) || /\.(jpe?g|png)$/.test(nomeLow);
-
             let texto = '';
             if (isPDF) texto = await extrairTextoPDF(file);
             else if (isImg) texto = await extrairTextoImagem(file);
             else { errors.push(file.name + ': tipo não suportado (use PDF, JPG, JPEG ou PNG)'); continue; }
-
             const dados = extrairDadosComprovante(texto);
             const match = encontrarPagamentoCorrespondente(dados.valor, '');
             docComprovantesTemp.push({
                 nomeArquivo: file.name,
                 tipoArquivo: file.type || (isPDF ? 'application/pdf' : 'image/jpeg'),
-                dataUrl: dataUrl,
-                pagador: dados.pagador || '',
-                recebedor: dados.recebedor || '',
-                valor: dados.valor || 0,
-                valorFormatado: dados.valor ? formatarMoedaBR(dados.valor) : '',
+                dataUrl: dataUrl, pagador: dados.pagador || '', recebedor: dados.recebedor || '',
+                valor: dados.valor || 0, valorFormatado: dados.valor ? formatarMoedaBR(dados.valor) : '',
                 dataComprovante: dados.data || '',
                 placa: match ? match.aluguel.placa : '',
                 aluguelMatch: match ? match.aluguel : null,
                 aluguelMatchIdx: match ? match.idx : -1,
                 dataUpload: new Date().toLocaleString('pt-BR')
             });
-        } catch (err) {
-            console.error('Erro em ' + file.name, err);
-            errors.push(file.name + ': ' + (err.message || 'erro ao processar'));
-        }
+        } catch (err) { console.error('Erro em ' + file.name, err); errors.push(file.name + ': ' + (err.message || 'erro ao processar')); }
     }
-
     renderizarPreviewDocComprovante();
-
     if (errors.length > 0) alert('⚠️ Alguns arquivos não puderam ser processados:\n\n' + errors.join('\n'));
 }
 
@@ -6832,12 +6220,7 @@ function salvarDoc() {
     if (!docComprovantesTemp || docComprovantesTemp.length === 0) { alert('Nenhum comprovante para salvar!'); return; }
     if (!Array.isArray(db.comprovantesDoc)) db.comprovantesDoc = [];
     if (!db.documentosPlacas) db.documentosPlacas = {};
-
-    let salvos = 0;
-    let conciliados = 0;
-    let divergentes = 0;
-    let duplicados = 0;
-    let semPlaca = 0;
+    let salvos = 0, conciliados = 0, divergentes = 0, duplicados = 0, semPlaca = 0;
 
     docComprovantesTemp.forEach(function(item) {
         const placa = String(item.placa || '').toUpperCase().trim();
@@ -6848,14 +6231,9 @@ function salvarDoc() {
             if (parts.length === 3) dataPgtoISO = `${parts[2]}-${parts[1]}-${parts[0]}`;
         }
         if (!dataPgtoISO) dataPgtoISO = new Date().toISOString().split('T')[0];
-
         if (!placa) semPlaca++;
-
         const duplicado = db.comprovantesDoc.some(function(c) {
-            return (c.placa === placa) &&
-                   Math.abs((c.valor || 0) - valorNum) < 0.01 &&
-                   c.dataComprovante === (item.dataComprovante || '') &&
-                   c.nomeArquivo === (item.nomeArquivo || '');
+            return (c.placa === placa) && Math.abs((c.valor || 0) - valorNum) < 0.01 && c.dataComprovante === (item.dataComprovante || '') && c.nomeArquivo === (item.nomeArquivo || '');
         });
         if (duplicado) { duplicados++; return; }
 
@@ -6869,48 +6247,27 @@ function salvarDoc() {
                 const aluguel = match.aluguel;
                 const valorMatch = Math.abs((Number(aluguel.valorNumerico) || parseMoeda(aluguel.valor) || 0) - valorNum) < 0.01;
                 const dataMatch = !item.dataComprovante || !aluguel.vencimento || converterDataBRparaISO(item.dataComprovante) === aluguel.vencimento;
-                if (valorMatch && dataMatch) {
-                    aprovado = true;
-                    motivo = 'Conciliado automaticamente';
-                    aluguelParaConciliar = aluguel;
-                } else if (!valorMatch) {
-                    motivo = 'Divergência de valor — não aprovado automaticamente';
-                    divergentes++;
-                } else {
-                    motivo = 'Divergência de data — não aprovado automaticamente';
-                    divergentes++;
-                }
+                if (valorMatch && dataMatch) { aprovado = true; motivo = 'Conciliado automaticamente'; aluguelParaConciliar = aluguel; }
+                else if (!valorMatch) { motivo = 'Divergência de valor — não aprovado automaticamente'; divergentes++; }
+                else { motivo = 'Divergência de data — não aprovado automaticamente'; divergentes++; }
             }
         }
 
         const registro = {
             id: 'doc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
-            nomeArquivo: item.nomeArquivo,
-            tipoArquivo: item.tipoArquivo,
-            dataUrl: item.dataUrl,
-            pagador: item.pagador || '',
-            recebedor: item.recebedor || '',
-            valor: valorNum,
-            valorFormatado: item.valorFormatado || formatarMoedaBR(valorNum),
-            dataComprovante: item.dataComprovante || '',
-            dataPagamento: dataPgtoISO,
-            placa: placa,
-            status: aprovado ? 'conciliado' : 'pendente',
-            motivo: motivo,
+            nomeArquivo: item.nomeArquivo, tipoArquivo: item.tipoArquivo, dataUrl: item.dataUrl,
+            pagador: item.pagador || '', recebedor: item.recebedor || '',
+            valor: valorNum, valorFormatado: item.valorFormatado || formatarMoedaBR(valorNum),
+            dataComprovante: item.dataComprovante || '', dataPagamento: dataPgtoISO,
+            placa: placa, status: aprovado ? 'conciliado' : 'pendente', motivo: motivo,
             dataUpload: item.dataUpload || new Date().toLocaleString('pt-BR')
         };
-
         db.comprovantesDoc.push(registro);
 
         if (placa) {
             if (!db.documentosPlacas[placa]) db.documentosPlacas[placa] = [];
             const nomeDoc = 'COMPROVANTE ' + (item.dataComprovante || '') + (item.valorFormatado ? ' - ' + item.valorFormatado : '') + ' - ' + (item.nomeArquivo || 'arquivo');
-            db.documentosPlacas[placa].push({
-                nome: nomeDoc,
-                tipo: item.tipoArquivo || 'application/pdf',
-                data: item.dataUrl,
-                dataUpload: item.dataUpload || new Date().toLocaleString('pt-BR')
-            });
+            db.documentosPlacas[placa].push({ nome: nomeDoc, tipo: item.tipoArquivo || 'application/pdf', data: item.dataUrl, dataUpload: item.dataUpload || new Date().toLocaleString('pt-BR') });
         }
 
         if (aprovado && aluguelParaConciliar) {
@@ -6918,7 +6275,6 @@ function salvarDoc() {
             conciliados++;
             registrarAuditoria('Comprovante', `Conciliado: ${aluguelParaConciliar.locatario} - ${placa} - ${item.valorFormatado}`);
         }
-
         salvos++;
     });
 
@@ -6945,23 +6301,13 @@ function atualizarTabelaDoc() {
     if (!tbody) return;
     tbody.innerHTML = '';
     const lista = db.comprovantesDoc || [];
-    if (lista.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#999;padding:20px;">Nenhum comprovante registrado.</td></tr>';
-        return;
-    }
-    const itens = lista.map(function(c, i) {
-        return { c, idx: i, ordem: c.status === 'conciliado' ? 1 : 0 };
-    });
-    itens.sort(function(x, y) {
-        if (x.ordem !== y.ordem) return x.ordem - y.ordem;
-        return y.idx - x.idx;
-    });
+    if (lista.length === 0) { tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#999;padding:20px;">Nenhum comprovante registrado.</td></tr>'; return; }
+    const itens = lista.map(function(c, i) { return { c, idx: i, ordem: c.status === 'conciliado' ? 1 : 0 }; });
+    itens.sort(function(x, y) { if (x.ordem !== y.ordem) return x.ordem - y.ordem; return y.idx - x.idx; });
     itens.forEach(function(entry) {
         const c = entry.c;
         const realIdx = entry.idx;
-        const statusBadge = c.status === 'conciliado'
-            ? '<span class="status-pago">CONCILIADO</span>'
-            : '<span class="status-pendente">PENDENTE</span>';
+        const statusBadge = c.status === 'conciliado' ? '<span class="status-pago">CONCILIADO</span>' : '<span class="status-pendente">PENDENTE</span>';
         const tr = document.createElement('tr');
         tr.innerHTML =
             '<td>' + (c.dataComprovante || '-') + '</td>' +
@@ -7005,47 +6351,23 @@ function excluirDocComprovante(idx) {
 }
 
 function salvarPendencia() {
-    const data       = document.getElementById('pendData').value || obterDataHojeISO();
-    const descricao  = document.getElementById('pendDescricao').value.trim();
-    const placa      = document.getElementById('pendPlaca').value.trim().toUpperCase();
-    const credito    = document.getElementById('pendCredito').value.trim();
-    const debito     = document.getElementById('pendDebito').value.trim();
+    const data = document.getElementById('pendData').value || obterDataHojeISO();
+    const descricao = document.getElementById('pendDescricao').value.trim();
+    const placa = document.getElementById('pendPlaca').value.trim().toUpperCase();
+    const credito = document.getElementById('pendCredito').value.trim();
+    const debito = document.getElementById('pendDebito').value.trim();
     const vencimento = document.getElementById('pendVencimento').value;
 
-    if (!data || !descricao || !placa || !vencimento || (!credito && !debito)) {
-        alert('Preencha todos os campos obrigatórios!\n\n(Informe Crédito e/ou Débito)');
-        return;
-    }
-
+    if (!data || !descricao || !placa || !vencimento || (!credito && !debito)) { alert('Preencha todos os campos obrigatórios!\n\n(Informe Crédito e/ou Débito)'); return; }
     if (!Array.isArray(db.pendentes)) db.pendentes = [];
     if (!Array.isArray(db.historico)) db.historico = [];
 
-    db.pendentes.push({
-        data,
-        descricao,
-        placa,
-        credito: credito || '',
-        debito:  debito  || '',
-        vencimento,
-        status: 'Pendente',
-        dataPagamento: null
-    });
-
+    db.pendentes.push({ data, descricao, placa, credito: credito || '', debito: debito || '', vencimento, status: 'Pendente', dataPagamento: null });
     const valorHistorico = credito || debito || '';
-    db.historico.push({
-        data: data,
-        descricao: 'Pendência: ' + descricao,
-        placa: placa,
-        valor: valorHistorico,
-        fornecedor: '',
-        oficina: ''
-    });
+    db.historico.push({ data: data, descricao: 'Pendência: ' + descricao, placa: placa, valor: valorHistorico, fornecedor: '', oficina: '' });
 
-    ['pendDescricao','pendPlaca','pendCredito','pendDebito','pendVencimento'].forEach(id => {
-        const el = document.getElementById(id); if (el) el.value = '';
-    });
-    const pendDataEl = document.getElementById('pendData');
-    if (pendDataEl) pendDataEl.value = obterDataHojeISO();
+    ['pendDescricao','pendPlaca','pendCredito','pendDebito','pendVencimento'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    const pendDataEl = document.getElementById('pendData'); if (pendDataEl) pendDataEl.value = obterDataHojeISO();
 
     atualizarTabelaPendentes();
     atualizarTabelaHistorico();
@@ -7059,26 +6381,14 @@ function atualizarTabelaPendentes() {
     if (!tbody) return;
     tbody.innerHTML = '';
     const lista = db.pendentes || [];
-
-    if (lista.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#999;padding:20px;">Nenhuma pendência registrada.</td></tr>';
-        return;
-    }
-
+    if (lista.length === 0) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#999;padding:20px;">Nenhuma pendência registrada.</td></tr>'; return; }
     const itens = lista.map((p, i) => ({ p, idx: i, ordem: p.status === 'Pago' ? 1 : 0 }));
     itens.sort((a, b) => a.ordem - b.ordem);
-
     itens.forEach(({ p, idx: i }) => {
-        const statusBadge = (p.status === 'Pago')
-            ? '<span class="status-pago">PAGO</span>'
-            : '<span class="status-pendente">PENDENTE</span>';
-
+        const statusBadge = (p.status === 'Pago') ? '<span class="status-pago">PAGO</span>' : '<span class="status-pendente">PENDENTE</span>';
         const botoes = [];
-        if (p.status !== 'Pago') {
-            botoes.push(`<button class="btn-success" onclick="marcarPendenciaPaga(${i})" title="Marcar como Pago" style="padding:8px 12px;font-size:13px;">💰 Pago</button>`);
-        }
+        if (p.status !== 'Pago') botoes.push(`<button class="btn-success" onclick="marcarPendenciaPaga(${i})" title="Marcar como Pago" style="padding:8px 12px;font-size:13px;">💰 Pago</button>`);
         botoes.push(`<button class="btn-danger" onclick="excluirPendencia(${i})" title="Excluir" style="padding:8px 12px;font-size:13px;">🗑️</button>`);
-
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${formatarDataBR(p.data)}</td>
@@ -7098,43 +6408,14 @@ function marcarPendenciaPaga(i) {
     const p = db.pendentes[i];
     if (!p) { alert('Pendência não encontrada.'); return; }
     if (p.status === 'Pago') { alert('Esta pendência já está paga!'); return; }
-
     const creditoNum = parseMoeda(p.credito);
-    const debitoNum  = parseMoeda(p.debito);
-
-    if (!confirm(
-        `Confirmar PAGAMENTO desta pendência?\n\n` +
-        `Descrição: ${p.descricao}\n` +
-        `Placa:     ${p.placa}\n` +
-        `Crédito:   ${p.credito || '-'}\n` +
-        `Débito:    ${p.debito  || '-'}\n\n` +
-        `Isso lançará no Fluxo de Caixa e criará a PRÓXIMA pendência.`
-    )) return;
+    const debitoNum = parseMoeda(p.debito);
+    if (!confirm(`Confirmar PAGAMENTO desta pendência?\n\nDescrição: ${p.descricao}\nPlaca:     ${p.placa}\nCrédito:   ${p.credito || '-'}\nDébito:    ${p.debito  || '-'}\n\nIsso lançará no Fluxo de Caixa e criará a PRÓXIMA pendência.`)) return;
 
     const hojeISO = new Date().toISOString().split('T')[0];
     if (!Array.isArray(db.fluxoCaixa)) db.fluxoCaixa = [];
-
-    if (creditoNum > 0) {
-        db.fluxoCaixa.push({
-            data: hojeISO,
-            descricao: `Pendência Paga - ${p.descricao} - ${p.placa}`,
-            categoria: 'Pendência',
-            valor: p.credito,
-            valorNumerico: creditoNum,
-            tipo: 'entrada'
-        });
-    }
-
-    if (debitoNum > 0) {
-        db.fluxoCaixa.push({
-            data: hojeISO,
-            descricao: `Pendência Paga - ${p.descricao} - ${p.placa}`,
-            categoria: 'Pendência',
-            valor: p.debito,
-            valorNumerico: debitoNum,
-            tipo: 'saida'
-        });
-    }
+    if (creditoNum > 0) db.fluxoCaixa.push({ data: hojeISO, descricao: `Pendência Paga - ${p.descricao} - ${p.placa}`, categoria: 'Pendência', valor: p.credito, valorNumerico: creditoNum, tipo: 'entrada' });
+    if (debitoNum > 0) db.fluxoCaixa.push({ data: hojeISO, descricao: `Pendência Paga - ${p.descricao} - ${p.placa}`, categoria: 'Pendência', valor: p.debito, valorNumerico: debitoNum, tipo: 'saida' });
 
     p.status = 'Pago';
     p.dataPagamento = hojeISO;
@@ -7145,29 +6426,15 @@ function marcarPendenciaPaga(i) {
         const dtVenc = new Date(baseVenc + 'T00:00:00');
         dtVenc.setDate(dtVenc.getDate() + 30);
         const proximoVencimento = dtVenc.toISOString().split('T')[0];
-
         const baseData = p.data || hojeISO;
         const dtData = new Date(baseData + 'T00:00:00');
         dtData.setDate(dtData.getDate() + 30);
         const proximaData = dtData.toISOString().split('T')[0];
-
         if (!Array.isArray(db.pendentes)) db.pendentes = [];
-        db.pendentes.push({
-            data: proximaData,
-            descricao: p.descricao,
-            placa: p.placa,
-            credito: p.credito || '',
-            debito:  p.debito  || '',
-            vencimento: proximoVencimento,
-            status: 'Pendente',
-            dataPagamento: null
-        });
-
+        db.pendentes.push({ data: proximaData, descricao: p.descricao, placa: p.placa, credito: p.credito || '', debito: p.debito || '', vencimento: proximoVencimento, status: 'Pendente', dataPagamento: null });
         proximoVencimentoMsg = '\n\n🔁 Próxima pendência criada com vencimento em ' + formatarDataBR(proximoVencimento) + '.';
         registrarAuditoria('Renovação', `Próxima pendência gerada: ${p.descricao} - Placa: ${p.placa} | Novo vencimento: ${proximoVencimento}`);
-    } catch (err) {
-        console.error('Erro ao criar próxima pendência:', err);
-    }
+    } catch (err) { console.error('Erro ao criar próxima pendência:', err); }
 
     atualizarTabelaPendentes();
     atualizarTabelaFluxoCaixa();
@@ -7176,7 +6443,7 @@ function marcarPendenciaPaga(i) {
 
     let msg = '✅ Pendência marcada como PAGA!';
     if (creditoNum > 0) msg += `\n\n➕ Entrada lançada no Fluxo de Caixa: ${p.credito}`;
-    if (debitoNum  > 0) msg += `\n\n➖ Saída lançada no Fluxo de Caixa: ${p.debito}`;
+    if (debitoNum > 0) msg += `\n\n➖ Saída lançada no Fluxo de Caixa: ${p.debito}`;
     msg += proximoVencimentoMsg;
     alert(msg);
 }
@@ -7197,24 +6464,16 @@ function editarPendencia(i) {
     const p = db.pendentes[i];
     if (!p) return;
     if (p.status === 'Pago') { alert('Não é possível editar uma pendência já paga.'); return; }
-
-    const novaDesc = prompt('Descrição:', p.descricao || '');
-    if (novaDesc === null) return;
-    const novaPlaca = prompt('Placa:', p.placa || '');
-    if (novaPlaca === null) return;
-    const novoCred = prompt('Crédito (ex: R$ 100,00):', p.credito || '');
-    if (novoCred === null) return;
-    const novoDeb = prompt('Débito (ex: R$ 100,00):', p.debito || '');
-    if (novoDeb === null) return;
-    const novoVenc = prompt('Vencimento (AAAA-MM-DD):', p.vencimento || '');
-    if (novoVenc === null) return;
-
-    p.descricao  = novaDesc.trim();
-    p.placa      = novaPlaca.trim().toUpperCase();
-    p.credito    = novoCred.trim();
-    p.debito     = novoDeb.trim();
+    const novaDesc = prompt('Descrição:', p.descricao || ''); if (novaDesc === null) return;
+    const novaPlaca = prompt('Placa:', p.placa || ''); if (novaPlaca === null) return;
+    const novoCred = prompt('Crédito (ex: R$ 100,00):', p.credito || ''); if (novoCred === null) return;
+    const novoDeb = prompt('Débito (ex: R$ 100,00):', p.debito || ''); if (novoDeb === null) return;
+    const novoVenc = prompt('Vencimento (AAAA-MM-DD):', p.vencimento || ''); if (novoVenc === null) return;
+    p.descricao = novaDesc.trim();
+    p.placa = novaPlaca.trim().toUpperCase();
+    p.credito = novoCred.trim();
+    p.debito = novoDeb.trim();
     p.vencimento = novoVenc.trim();
-
     atualizarTabelaPendentes();
     registrarAuditoria('Edição', `Pendência editada: ${p.descricao}`);
     salvarDB();
@@ -7228,22 +6487,18 @@ window.addEventListener('beforeinstallprompt', (e) => {
     deferredInstallPrompt = e;
     const btn = document.getElementById('installBtn');
     if (btn) btn.style.display = 'inline-block';
-    console.log('📲 App pode ser instalado.');
 });
 
 window.addEventListener('appinstalled', () => {
     deferredInstallPrompt = null;
     const btn = document.getElementById('installBtn');
     if (btn) btn.style.display = 'none';
-    console.log('✅ App instalado!');
 });
 
 function configurarBotaoInstalar() {
     const btn = document.getElementById('installBtn');
     if (!btn) return;
-    const rodandoComoApp = window.matchMedia('(display-mode: standalone)').matches
-        || window.matchMedia('(display-mode: fullscreen)').matches
-        || window.navigator.standalone === true;
+    const rodandoComoApp = window.matchMedia('(display-mode: standalone)').matches || window.matchMedia('(display-mode: fullscreen)').matches || window.navigator.standalone === true;
     if (rodandoComoApp) { btn.style.display = 'none'; return; }
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     if (isIOS) btn.style.display = 'inline-block';
@@ -7251,19 +6506,11 @@ function configurarBotaoInstalar() {
     btn.addEventListener('click', async () => {
         if (deferredInstallPrompt) {
             deferredInstallPrompt.prompt();
-            try {
-                const choice = await deferredInstallPrompt.userChoice;
-                if (choice && choice.outcome === 'accepted') btn.style.display = 'none';
-            } catch (err) {}
+            try { const choice = await deferredInstallPrompt.userChoice; if (choice && choice.outcome === 'accepted') btn.style.display = 'none'; } catch (err) {}
             deferredInstallPrompt = null;
             return;
         }
-        alert(
-            '📲 COMO INSTALAR O PAIZÃO UBER 2.0\n\n' +
-            '• ANDROID (Chrome):\n  Menu ⋮ → "Instalar aplicativo"\n\n' +
-            '• iPHONE / iPAD (Safari):\n  Compartilhar (□↑) → "Adicionar à Tela de Início"\n\n' +
-            '• COMPUTADOR (Chrome/Edge):\n  Ícone de instalar na barra de endereço'
-        );
+        alert('📲 COMO INSTALAR O PAIZÃO UBER 2.0\n\n• ANDROID (Chrome):\n  Menu ⋮ → "Instalar aplicativo"\n\n• iPHONE / iPAD (Safari):\n  Compartilhar (□↑) → "Adicionar à Tela de Início"\n\n• COMPUTADOR (Chrome/Edge):\n  Ícone de instalar na barra de endereço');
     });
 }
 
@@ -7280,20 +6527,13 @@ async function inicializarSistemaCompleto() {
     sistemaInicializado = true;
 
     try { await carregarDB(); }
-    catch(e) {
-        console.error('Falha DB:', e);
-        if (!db) { db = criarDBPadrao(); dbCarregado = true; }
-    }
+    catch(e) { console.error('Falha DB:', e); if (!db) { db = criarDBPadrao(); dbCarregado = true; } }
     if (!db) db = criarDBPadrao();
     if (!Array.isArray(db.usuarios)) db.usuarios = [];
     if (!db.usuarios.some(u => u && u.nome === 'SERGIO')) {
-        db.usuarios.push({
-            nome: 'SERGIO', senha: '080888', tipo: 'ADM',
-            permissoes: JSON.parse(JSON.stringify(permissoesPadrao.ADM)), selfie: null
-        });
+        db.usuarios.push({ nome: 'SERGIO', senha: '080888', tipo: 'ADM', permissoes: JSON.parse(JSON.stringify(permissoesPadrao.ADM)), selfie: null });
     }
 
-    // MIGRAÇÃO: converte imagens antigas (data URLs no Firestore/localStorage) para IndexedDB
     try { await migrarImagensAntigas(); } catch(e) { console.warn('Erro na migração:', e); }
 
     gerarPermissoesUI();
@@ -7352,9 +6592,7 @@ async function inicializarSistemaCompleto() {
 
     setTimeout(() => {
         const el = document.getElementById('loginPassword');
-        if (el && document.getElementById('loginContainer').style.display !== 'none') {
-            try { el.focus(); } catch(e) {}
-        }
+        if (el && document.getElementById('loginContainer').style.display !== 'none') { try { el.focus(); } catch(e) {} }
     }, 100);
 
     console.log('🚀 Sistema inicializado.');

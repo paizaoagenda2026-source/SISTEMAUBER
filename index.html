@@ -41,6 +41,18 @@
         }
         .login-container { display: flex; justify-content: center; align-items: center; height: 100vh; background: url('lobao.jpg') no-repeat center center fixed; background-size: cover; }
         .login-box { background: rgba(255, 255, 255, 0.92); padding: 40px; border-radius: var(--radius); box-shadow: 0 15px 30px rgba(0,0,0,0.3); width: 400px; text-align: center; }
+        /* ===== LOGO DO LOGIN (substitui o emoji do leão) ===== */
+        .login-logo {
+            width: 130px;
+            height: 130px;
+            object-fit: cover;
+            border-radius: 50%;
+            display: block;
+            margin: 0 auto 15px auto;
+            border: 4px solid var(--primary);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+            background: #fff;
+        }
         .login-box h1 { color: var(--primary); margin-bottom: 10px; font-size: 28px; }
         .login-box h2 { color: var(--secondary); margin-bottom: 30px; font-size: 20px; }
         .login-box input { width: 100%; padding: 12px; margin-bottom: 15px; border: 2px solid #ddd; border-radius: var(--radius); font-size: 16px; transition: border-color 0.3s; text-transform: uppercase; }
@@ -337,7 +349,8 @@
 
 <div class="login-container" id="loginContainer">
     <div class="login-box">
-        <h1>🦁 PAIZÃO UBER 2.0</h1>
+        <img src="lobao.jpg" alt="Logo PAIZÃO UBER" class="login-logo">
+        <h1>PAIZÃO UBER 2.0</h1>
         <h2>SISTEMA DE LOCAÇÃO DE CARROS</h2>
         <form id="loginForm">
             <input type="text" id="loginUser" placeholder="Usuário" required autocomplete="off" autofocus value="SERGIO" oninput="this.value = this.value.toUpperCase()">
@@ -1318,14 +1331,6 @@ const todasPermissoes = ['veiculos_salvar','veiculos_rastreador','veiculos_multa
 
 /* ============================================================
    PERMISSÕES POR TIPO DE USUÁRIO
-   - ADM: acesso total
-   - MOTORISTA: abas banco, garagem, sos, manutencao, vistoria,
-                comprovantes + botões banco_copiar, comprovantes_buscar,
-                comprovantes_salvar (dados filtrados por placa do locado)
-   - OFICINA: abas veiculos, mecanico, garagem, sos, compras,
-              vistoria, manutencao + botões manutencao_salvar,
-              mecanico_salvar
-   - VISITANTE: todas as abas visíveis, sem nenhum botão permissão
    ============================================================ */
 const permissoesPadrao = {
     ADM: { abas: Object.fromEntries(todasAbas.map(a => [a.id, true])), botoes: Object.fromEntries(todasPermissoes.map(b => [b, true])), veiculos: {} },
@@ -1396,13 +1401,6 @@ function temPermissao(perm) {
     return !!(usuarioLogado.permissoes && usuarioLogado.permissoes.botoes && usuarioLogado.permissoes.botoes[perm]);
 }
 
-/* ============================================================
-   FILTRO POR PLACA — MOTORISTA só vê dados dos veículos
-   que estão locados para ele (locação ativa com seu nome).
-   Retorna:
-     - null  = sem restrição (ADM / VISITANTE / OFICINA / sem login)
-     - array = lista de placas normalizadas permitidas (MOTORISTA)
-   ============================================================ */
 function getPlacasPermitidasParaFiltro() {
     if (!usuarioLogado) return null;
     if (usuarioLogado.tipo !== 'MOTORISTA') return null;
@@ -1431,7 +1429,6 @@ function fecharGuinchoFullscreen() {
     if (overlay) { overlay.classList.remove('active'); overlay.style.display = 'none'; }
 }
 
-/* ===================== ATUALIZAR IMAGEM DO GUINCHO (ALTA RESOLUÇÃO) ===================== */
 async function atualizarImagemGuincho() {
     try {
         const fotos = (db && db.imagens && db.imagens.sos && Array.isArray(db.imagens.sos.fotos))
@@ -4190,7 +4187,6 @@ function atualizarAbasVistoria() {
 
     tabsContainer.innerHTML = '';
 
-    // Filtro por placa (MOTORISTA só vê suas placas)
     const placasFiltro = getPlacasPermitidasParaFiltro();
     const locacoesVisiveis = (db.locacoes || []).filter(l => {
         if (!l || !l.placa) return false;
@@ -5194,7 +5190,6 @@ function atualizarGaleriaComprovantes() {
         container.innerHTML = '<p style="color:#999;text-align:center;padding:20px;">Nenhum documento anexado ainda.</p>';
         return;
     }
-    // Filtro por placa (MOTORISTA vê apenas documentos das suas placas)
     const placasFiltro = getPlacasPermitidasParaFiltro();
     let placasOrdenadas = Object.keys(db.documentosPlacas).sort();
     if (placasFiltro !== null) {
@@ -5242,7 +5237,6 @@ function atualizarGaleriaComprovantes() {
                 let urlParaAbrir = null;
                 let revogarUrl = false;
 
-                // 1) Tentar IndexedDB (armazenamento local de PDFs/imagens)
                 if (doc.storageId) {
                     try {
                         const reg = await idbObter(doc.storageId);
@@ -5253,7 +5247,6 @@ function atualizarGaleriaComprovantes() {
                     } catch (e) { console.warn('Erro ao buscar no IndexedDB:', e); }
                 }
 
-                // 2) Fallback: dataURL salvo diretamente em doc.data
                 if (!urlParaAbrir && doc.data) {
                     urlParaAbrir = doc.data;
                 }
@@ -5643,7 +5636,6 @@ function atualizarTabelaComprovantesPag() {
     if (!tbody) return;
     tbody.innerHTML = '';
     const lista = db.comprovantesPagamento || [];
-    // Filtro por placa (MOTORISTA vê apenas comprovantes das suas placas)
     const placasFiltro = getPlacasPermitidasParaFiltro();
     const indices = lista.map(function(_, i) { return i; }).filter(function(i) {
         if (placasFiltro === null) return true;

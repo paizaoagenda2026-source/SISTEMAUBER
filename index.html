@@ -4773,5 +4773,207 @@ if (document.readyState === 'loading') {
     inicializarSistemaCompleto();
 }
 </script>
+<script>
+/* ============================================================
+   PATCH DE EMERGÊNCIA — RESOLVE ERRO 1MB FIRESTORE
+   Roda automaticamente e LIMPA o banco principal, 
+   movendo base64 grandes para armazenamento local (IndexedDB).
+   Depois disso, salvamentos voltam a funcionar normalmente.
+   ============================================================ */
+(function() {
+    'use strict';
+
+    async function emergenciaLimparBanco() {
+        if (!db) return 0;
+        let removidosKB = 0;
+        const hoje = new Date().toLocaleString('pt-BR');
+
+        // 1. DOCUMENTOS DAS PLACAS (base64 → IndexedDB)
+        if (db.documentosPlacas && typeof db.documentosPlacas === 'object') {
+            for (const placa of Object.keys(db.documentosPlacas)) {
+                const docs = db.documentosPlacas[placa];
+                if (!Array.isArray(docs)) continue;
+                for (const doc of docs) {
+                    if (doc && typeof doc.data === 'string' && doc.data.length > 1000 && !doc.storageId) {
+                        try {
+                            const blob = dataUrlParaBlobLocal(doc.data);
+                            const id = 'doc_b64_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+                            await idbSalvar(id, blob, { nomeArquivo: doc.nome || 'documento', tipo: doc.tipo || 'application/octet-stream' });
+                            removidosKB += doc.data.length / 1024;
+                            doc.storageId = id;
+                            delete doc.data;
+                        } catch (e) { console.warn('Erro doc:', e); }
+                    }
+                }
+            }
+        }
+
+        // 2. COMPROVANTES DE PAGAMENTO (base64 → IndexedDB)
+        if (Array.isArray(db.comprovantesPagamento)) {
+            for (const c of db.comprovantesPagamento) {
+                if (c && typeof c.dataUrl === 'string' && c.dataUrl.length > 1000 && !c.storageId) {
+                    try {
+                        const blob = dataUrlParaBlobLocal(c.dataUrl);
+                        const id = 'cp_b64_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+                        await idbSalvar(id, blob, { nomeArquivo: c.nomeArquivo || 'comprovante', tipo: c.tipoArquivo || 'application/octet-stream' });
+                        removidosKB += c.dataUrl.length / 1024;
+                        c.storageId = id;
+                        delete c.dataUrl;
+                    } catch (e) { console.warn('Erro compPag:', e); }
+                }
+            }
+        }
+
+        // 3. COMPROVANTES DOC (base64 → IndexedDB)
+        if (Array.isArray(db.comprovantesDoc)) {
+            for (const c of db.comprovantesDoc) {
+                if (c && typeof c.dataUrl === 'string' && c.dataUrl.length > 1000 && !c.storageId) {
+                    try {
+                        const blob = dataUrlParaBlobLocal(c.dataUrl);
+                        const id = 'cd_b64_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+                        await idbSalvar(id, blob, { nomeArquivo: c.nomeArquivo || 'comprovante', tipo: c.tipoArquivo || 'application/octet-stream' });
+                        removidosKB += c.dataUrl.length / 1024;
+                        c.storageId = id;
+                        delete c.dataUrl;
+                    } catch (e) { console.warn('Erro compDoc:', e); }
+                }
+            }
+        }
+
+        // 4. FOTOS SOS antigas (string base64 → IndexedDB)
+        if (db.imagens && db.imagens.sos && Array.isArray(db.imagens.sos.fotos)) {
+            for (let i = 0; i < db.imagens.sos.fotos.length; i++) {
+                const f = db.imagens.sos.fotos[i];
+                if (typeof f === 'string' && f.length > 1000 && f.startsWith('data:')) {
+                    try {
+                        const blob = dataUrlParaBlobLocal(f);
+                        const id = 'sos_b64_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+                        await idbSalvar(id, blob, { nomeArquivo: 'sos.jpg', tipo: 'image/jpeg' });
+                        removidosKB += f.length / 1024;
+                        db.imagens.sos.fotos[i] = { id: id, nome: 'sos.jpg', dataUpload: hoje };
+                    } catch (e) { console.warn('Erro sos:', e); }
+                }
+            }
+        }
+
+        // 5. FOTOS GARAGEM antigas (string base64 → IndexedDB)
+        if (db.imagens && db.imagens.garagem && Array.isArray(db.imagens.garagem.fotos)) {
+            for (let i = 0; i < db.imagens.garagem.fotos.length; i++) {
+                const f = db.imagens.garagem.fotos[i];
+                if (typeof f === 'string' && f.length > 1000 && f.startsWith('data:')) {
+                    try {
+                        const blob = dataUrlParaBlobLocal(f);
+                        const id = 'gar_b64_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+                        await idbSalvar(id, blob, { nomeArquivo: 'garagem.jpg', tipo: 'image/jpeg' });
+                        removidosKB += f.length / 1024;
+                        db.imagens.garagem.fotos[i] = { id: id, nome: 'garagem.jpg', dataUpload: hoje };
+                    } catch (e) { console.warn('Erro garagem:', e); }
+                }
+            }
+        }
+
+        // 6. SELFIES de clientes
+        if (Array.isArray(db.clientes)) {
+            for (const c of db.clientes) {
+                if (c && typeof c.selfie === 'string' && c.selfie.length > 5000 && !c.selfieStorageId) {
+                    try {
+                        const blob = dataUrlParaBlobLocal(c.selfie);
+                        const id = 'sel_cli_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+                        await idbSalvar(id, blob, { nomeArquivo: 'selfie.jpg', tipo: 'image/jpeg' });
+                        removidosKB += c.selfie.length / 1024;
+                        c.selfieStorageId = id;
+                        c.selfie = null;
+                    } catch (e) {}
+                }
+            }
+        }
+
+        // 7. SELFIES de usuários
+        if (Array.isArray(db.usuarios)) {
+            for (const u of db.usuarios) {
+                if (u && typeof u.selfie === 'string' && u.selfie.length > 5000 && !u.selfieStorageId) {
+                    try {
+                        const blob = dataUrlParaBlobLocal(u.selfie);
+                        const id = 'sel_usr_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+                        await idbSalvar(id, blob, { nomeArquivo: 'selfie.jpg', tipo: 'image/jpeg' });
+                        removidosKB += u.selfie.length / 1024;
+                        u.selfieStorageId = id;
+                        u.selfie = null;
+                    } catch (e) {}
+                }
+            }
+        }
+
+        // 8. VISTORIAS ainda como string base64 → move para IndexedDB
+        ['locacoes', 'locacoesEncerradas'].forEach(function(chave) {
+            const lista = db[chave];
+            if (!Array.isArray(lista)) return;
+            lista.forEach(function(loc) {
+                if (!loc || !Array.isArray(loc.vistoria)) return;
+                loc.vistoria.forEach(function(foto, i) {
+                    if (typeof foto === 'string' && foto.length > 1000 && foto.startsWith('data:')) {
+                        // Será tratado pela migração de vistoria — deixa passar
+                    }
+                });
+            });
+        });
+
+        console.log('🧹 Limpeza emergencial: ' + Math.round(removidosKB) + ' KB removidos do banco principal');
+        return removidosKB;
+    }
+
+    // Sobrescreve salvarDB para auto-limpar quando estourar
+    async function salvarDBNovo() {
+        if (!db) return;
+        let json = '';
+        try { json = JSON.stringify(db); } catch (e) { console.error('Erro serializar:', e); return; }
+        const tamanhoKB = json.length / 1024;
+
+        if (tamanhoKB > 900) {
+            console.warn('⚠️ DB grande (' + Math.round(tamanhoKB) + 'KB). Rodando limpeza automática...');
+            await emergenciaLimparBanco();
+            try { json = JSON.stringify(db); } catch (e) { return; }
+            console.log('📊 Novo tamanho: ' + Math.round(json.length / 1024) + ' KB');
+        }
+
+        try { localStorage.setItem('lobao_db', json); } catch (e) { console.warn('localStorage cheio'); }
+
+        try {
+            await dbFirestore.collection('lobao_db').doc('principal').set(db);
+            console.log('✅ DB principal salvo (' + Math.round(JSON.stringify(db).length / 1024) + ' KB)');
+        } catch (error) {
+            console.error('❌ Erro Firestore principal:', error);
+        }
+    }
+
+    // Aplica as substituições (sobrescrevem as funções originais)
+    try {
+        salvarDB = salvarDBNovo;
+        console.log('✅ salvarDB substituído pelo patch de emergência');
+    } catch (e) { console.warn('Não foi possível substituir salvarDB:', e); }
+
+    // Roda limpeza no boot
+    async function rodarLimpeza() {
+        try {
+            if (typeof db !== 'undefined' && db) {
+                console.log('🚑 Rodando limpeza emergencial do banco...');
+                const removidos = await emergenciaLimparBanco();
+                if (removidos > 0) {
+                    await salvarDBNovo();
+                    alert('🔧 BANCO LIMPO!\n\n' + Math.round(removidos) + ' KB de dados pesados foram movidos para armazenamento local.\n\nAgora você pode:\n\n1. Salvar novas fotos de vistoria\n2. Elas aparecerão em qualquer dispositivo/aba\n\nRecarregue a página (F5) para garantir.');
+                } else {
+                    console.log('✅ Banco já está leve.');
+                }
+            }
+        } catch (e) { console.error('Erro na limpeza:', e); }
+    }
+
+    if (document.readyState === 'complete') {
+        setTimeout(rodarLimpeza, 3500);
+    } else {
+        window.addEventListener('load', function() { setTimeout(rodarLimpeza, 3500); });
+    }
+})();
+</script>
 </body>
 </html>

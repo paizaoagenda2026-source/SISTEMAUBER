@@ -5912,5 +5912,171 @@ if (document.readyState === 'loading') {
     console.log('✅ Encerramento de locação com cálculos completos restaurado');
 })();
 </script>
+<script>
+/* ============================================================
+   PATCH — ENCERRAMENTO DE LOCAÇÃO: CÁLCULOS COMPLETOS
+   Conta TODOS os aluguéis (pagos + pendentes) + caução do contrato.
+   ============================================================ */
+(function() {
+    'use strict';
+
+    window.encerrarLocacao = function(i) {
+        if (!confirmarSenhaADM()) return;
+        const l = db.locacoes[i];
+        if (!l) { alert('Locação não encontrada.'); return; }
+        const tipoLabel = (l.tipoPagamento || 'mensal').toUpperCase();
+        if (!confirm(`Encerrar a locação de ${l.locatario} - ${l.placa}?\n\nTipo: ${tipoLabel}`)) return;
+
+        const hojeISO = new Date().toISOString().split('T')[0];
+        const dataInicio = l.dataInicio || '';
+        const dataFimContrato = l.dataFim || '';
+        const dataFimEfetiva = (dataFimContrato && hojeISO > dataFimContrato) ? dataFimContrato : hojeISO;
+
+        // ===== 1. TODOS os aluguéis desta locação (pagos + pendentes) =====
+        const todosAlugueis = (db.alugueis || []).filter(a => {
+            if (!a) return false;
+            return a.locatario === l.locatario && a.placa === l.placa;
+        });
+
+        const receitaContratada = todosAlugueis.reduce((s, a) => s + (Number(a.valorNumerico) || parseMoeda(a.valor) || 0), 0);
+        const alugueisPagos = todosAlugueis.filter(a => a.status === 'pago');
+        const receitaPaga = alugueisPagos.reduce((s, a) => s + (Number(a.valorNumerico) || parseMoeda(a.valor) || 0), 0);
+        const receitaPendente = receitaContratada - receitaPaga;
+
+        // Fallback: se não há aluguéis, usa valorTotalParcelas ou valorAluguel da locação
+        let receitaTotalFallback = receitaContratada;
+        if (receitaTotalFallback === 0) {
+            receitaTotalFallback = Number(l.valorTotalParcelas) || parseMoeda(l.valorAluguel) || 0;
+        }
+
+        // ===== 2. CAUÇÃO =====
+        const caucaoContrato = parseMoeda(l.caucao);
+        const caucaoPagoInicial = parseMoeda(l.caucaoPago);
+
+        // Soma de caução efetivamente recebida (nos aluguéis com origem contendo "CAU")
+        let caucaoRecebido = 0;
+        todosAlugueis.forEach(a => {
+            const origem = (a.origem || '').toUpperCase();
+            if (origem.includes('CAU')) {
+                const v = Number(a.valorNumerico) || parseMoeda(a.valor) || 0;
+                // Só conta a parte da caução (não o aluguel em si)
+                const valorAluguelBase = parseMoeda(l.valorAluguel) || parseMoeda(l.aluguelMensal) || 0;
+                const parteCaucao = Math.max(0, v - valorAluguelBase);
+                caucaoRecebido += parteCaucao;
+            }
+        });
+        // Se tem caução à vista pago, soma o pago inicial
+        if (l.pagCaucao === 'avista' && caucaoPagoInicial > 0) {
+            caucaoRecebido = Math.max(caucaoRecebido, caucaoPagoInicial);
+        }
+        if (caucaoRecebido > caucaoContrato) caucaoRecebido = caucaoContrato;
+
+        // ===== 3. Pergunta se extorna o caução recebido =====
+        let caucaoExtornada = false;
+        if (caucaoRecebido > 0) {
+            const msgCaucao =
+                `💰 CAUÇÃO DO CONTRATO\n\n` +
+                `Locatário: ${l.locatario}\n` +
+                `Veículo: ${l.fabricante} - ${l.placa}\n` +
+                `Período: ${formatarDataBR(dataInicio)} até ${formatarDataBR(dataFimEfetiva)}\n\n` +
+                `Valor total do caução (contrato): ${formatarMoedaBR(caucaoContrato)}\n` +
+                `Forma de pagamento: ${(l.pagCaucao || 'avista').toUpperCase()}\n` +
+                `Caução recebido até agora: ${formatarMoedaBR(caucaoRecebido)}\n` +
+                `──────────────────────────\n` +
+                `VALOR A EXTORNAR: ${formatarMoedaBR(caucaoRecebido)}\n\n` +
+                `Deseja extornar esse valor para ${l.locatario}?`;
+            caucaoExtornada = confirm(msgCaucao);
+
+            if (caucaoExtornada) {
+                if (!Array.isArray(db.fluxoCaixa)) db.fluxoCaixa = [];
+                db.fluxoCaixa.push({
+                    data: hojeISO,
+                    descricao: `Extorno de Caução - ${l.locatario} - ${l.placa}`,
+                    categoria: 'Extorno Caução',
+                    valor: formatarMoedaBR(caucaoRecebido),
+                    valorNumerico: caucaoRecebido,
+                    tipo: 'saida',
+                    _reaberturaTag: 'extorno:' + l.locatario + ':' + l.placa
+                });
+                registrarAuditoria('Extorno', `Caução extornada: ${l.locatario} - ${l.placa} | Valor: ${formatarMoedaBR(caucaoRecebido)}`);
+                atualizarTabelaFluxoCaixa();
+            }
+        }
+
+        // ===== 4. DESPESAS do veículo =====
+        const despMec = (db.mecanico || []).filter(m => m.placa === l.placa).reduce((s, m) => s + parseMoeda(m.valor), 0);
+        const despMan = (db.manutencao || []).filter(m => m.placa === l.placa).reduce((s, m) => s + parseMoeda(m.custo || 0), 0);
+        const despComp = (db.compras || []).filter(c => c.placa === l.placa).reduce((s, c) => s + parseMoeda(c.valorTotal || c.valorUnitario), 0);
+        const despesasVeiculo = despMec + despMan + despComp;
+
+        // ===== 5. LUCRO =====
+        const valorExtorno = caucaoExtornada ? caucaoRecebido : 0;
+        const despesasTotais = despesasVeiculo + valorExtorno;
+        const lucro = receitaPaga - despesasTotais;
+
+        // ===== 6. OBJETO ENCERRADO =====
+        const encerrada = Object.assign({}, l, {
+            dataEncerramento: hojeISO,
+            dataFimEfetiva: dataFimEfetiva,
+            caucaoExtornada: caucaoExtornada ? 'SIM' : 'NÃO',
+            caucaoTotalContrato: caucaoContrato,
+            caucaoTotalContratoFormatado: formatarMoedaBR(caucaoContrato),
+            caucaoPagoPeriodoNumerico: caucaoRecebido,
+            caucaoPagoPeriodoFormatado: formatarMoedaBR(caucaoRecebido),
+            qtdParcelasCaucaoPeriodo: alugueisPagos.length,
+            qtdPagamentosPeriodo: alugueisPagos.length,
+            receitaContratadaNumerica: receitaContratada,
+            receitaContratadaFormatada: formatarMoedaBR(receitaContratada),
+            receitaPagaNumerica: receitaPaga,
+            receitaPagaFormatada: formatarMoedaBR(receitaPaga),
+            receitaPendenteNumerica: receitaPendente,
+            receitaPendenteFormatada: formatarMoedaBR(receitaPendente),
+            despesasVeiculoNumerica: despesasVeiculo,
+            despesasVeiculoFormatado: formatarMoedaBR(despesasVeiculo),
+            extornoNumerico: valorExtorno,
+            extornoFormatado: formatarMoedaBR(valorExtorno),
+            receitaNumerica: receitaPaga,
+            despesasNumerica: despesasTotais,
+            lucroNumerico: lucro,
+            valorGerado: formatarMoedaBR(receitaPaga),
+            despesas: formatarMoedaBR(despesasTotais),
+            lucro: formatarMoedaBR(lucro)
+        });
+
+        if (!Array.isArray(db.locacoesEncerradas)) db.locacoesEncerradas = [];
+        db.locacoesEncerradas.push(encerrada);
+        db.locacoes.splice(i, 1);
+        if (locacaoEditandoIndex === i) { locacaoEditandoIndex = null; atualizarEstadoEdicaoLocacao(); limparCamposLocacao(); }
+        else if (locacaoEditandoIndex !== null && locacaoEditandoIndex > i) locacaoEditandoIndex--;
+
+        atualizarTabelaLocacoes();
+        atualizarAbasVistoria();
+        atualizarTabelaLocEncerrada();
+        registrarAuditoria('Encerramento', `Locação encerrada: ${l.locatario} - ${l.placa} | Recebido: ${formatarMoedaBR(receitaPaga)} | Extorno: ${formatarMoedaBR(valorExtorno)} | Lucro: ${formatarMoedaBR(lucro)}`);
+        salvarDB();
+
+        // ===== 7. Mensagem final com todos os valores =====
+        let msgAlerta = `✅ LOCAÇÃO ENCERRADA!\n\n`;
+        msgAlerta += `Locatário: ${l.locatario}\n`;
+        msgAlerta += `Veículo: ${l.fabricante} - ${l.placa}\n`;
+        msgAlerta += `Período: ${formatarDataBR(dataInicio)} até ${formatarDataBR(dataFimEfetiva)}\n`;
+        msgAlerta += `──────────────────────────\n`;
+        msgAlerta += `💰 RECEITA CONTRATADA (total): ${formatarMoedaBR(receitaContratada)}\n`;
+        msgAlerta += `💵 RECEITA RECEBIDA (paga): ${formatarMoedaBR(receitaPaga)} (${alugueisPagos.length} pagamento(s))\n`;
+        if (receitaPendente > 0) msgAlerta += `⏳ RECEITA PENDENTE: ${formatarMoedaBR(receitaPendente)}\n`;
+        msgAlerta += `🏦 CAUÇÃO (contrato): ${formatarMoedaBR(caucaoContrato)}\n`;
+        msgAlerta += `💳 CAUÇÃO RECEBIDO: ${formatarMoedaBR(caucaoRecebido)}\n`;
+        msgAlerta += `🔧 Despesas do veículo: ${formatarMoedaBR(despesasVeiculo)}\n`;
+        if (valorExtorno > 0) msgAlerta += `↩ Extorno (ABATIDO no lucro): -${formatarMoedaBR(valorExtorno)}\n`;
+        msgAlerta += `──────────────────────────\n`;
+        msgAlerta += `📈 LUCRO FINAL: ${formatarMoedaBR(lucro)}\n`;
+        if (caucaoExtornada) msgAlerta += `\n↩ CAUÇÃO EXTORNADA: ${formatarMoedaBR(caucaoRecebido)}`;
+        else if (caucaoRecebido > 0) msgAlerta += `\nℹ️ Caução NÃO extornado (opção do usuário).`;
+        alert(msgAlerta);
+    };
+
+    console.log('✅ Encerramento de locação — cálculos de receita/caução/despesas/lucro ativos');
+})();
+</script>
 </body>
 </html>

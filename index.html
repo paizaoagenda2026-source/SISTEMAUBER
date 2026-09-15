@@ -41,18 +41,7 @@
         }
         .login-container { display: flex; justify-content: center; align-items: center; height: 100vh; background: url('lobao.jpg') no-repeat center center fixed; background-size: cover; }
         .login-box { background: rgba(255, 255, 255, 0.92); padding: 40px; border-radius: var(--radius); box-shadow: 0 15px 30px rgba(0,0,0,0.3); width: 400px; text-align: center; }
-        /* ===== LOGO DO LOGIN (substitui o emoji do leão) ===== */
-        .login-logo {
-            width: 130px;
-            height: 130px;
-            object-fit: cover;
-            border-radius: 50%;
-            display: block;
-            margin: 0 auto 15px auto;
-            border: 4px solid var(--primary);
-            box-shadow: 0 6px 18px rgba(0,0,0,0.25);
-            background: #fff;
-        }
+        .login-logo { width: 130px; height: 130px; object-fit: cover; border-radius: 50%; display: block; margin: 0 auto 15px auto; border: 4px solid var(--primary); box-shadow: 0 6px 18px rgba(0,0,0,0.25); background: #fff; }
         .login-box h1 { color: var(--primary); margin-bottom: 10px; font-size: 28px; }
         .login-box h2 { color: var(--secondary); margin-bottom: 30px; font-size: 20px; }
         .login-box input { width: 100%; padding: 12px; margin-bottom: 15px; border: 2px solid #ddd; border-radius: var(--radius); font-size: 16px; transition: border-color 0.3s; text-transform: uppercase; }
@@ -211,7 +200,6 @@
         .doc-veiculo-status .badge { background: var(--success); color: #fff; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; }
         .doc-veiculo-status .badge.warn { background: var(--warning); color: #333; }
 
-        /* ===================== CARTÃO DE GUINCHO 24 HORAS ===================== */
         .guincho-card {
             position: relative;
             width: 100%;
@@ -254,7 +242,6 @@
             letter-spacing: 6px;
             text-shadow: 0 0 15px rgba(244,162,97,0.8);
         }
-        /* ===== IMAGEM DO CARTÃO (SUBSTITUI O EMOJI) ===== */
         .guincho-imagem {
             width: 100%;
             height: 100%;
@@ -281,7 +268,6 @@
             to   { transform: scale(1.05); }
         }
 
-        /* ===================== OVERLAY TELA CHEIA - GUINCHO AO INICIAR ===================== */
         .guincho-overlay {
             position: fixed;
             top: 0;
@@ -337,7 +323,6 @@
             transform: scale(1.05);
         }
 
-        /* Fallback específico para iOS Safari */
         @supports (-webkit-touch-callout: none) {
             .guincho-overlay {
                 height: -webkit-fill-available;
@@ -361,7 +346,6 @@
     </div>
 </div>
 
-<!-- ===================== OVERLAY TELA CHEIA DO GUINCHO (AO INICIAR O SISTEMA) ===================== -->
 <div class="guincho-overlay" id="guinchoOverlay">
     <div class="guincho-card">
         <button class="guincho-close-btn" onclick="fecharGuinchoFullscreen()">✕ FECHAR</button>
@@ -1013,10 +997,13 @@ async function carregarDB() {
             db = docSnap.data();
             console.log('📥 DB carregado do Firestore');
 
+            // Recupera do localStorage quando o Firestore tiver versão mais antiga
             try {
                 const stored = localStorage.getItem(DB_STORAGE_KEY);
                 if (stored) {
                     const localDb = JSON.parse(stored);
+
+                    // Fotos SOS / Garagem (como já existia)
                     if (localDb && localDb.imagens) {
                         ['sos', 'garagem'].forEach(cat => {
                             const fsFotos = (db.imagens && db.imagens[cat] && Array.isArray(db.imagens[cat].fotos)) ? db.imagens[cat].fotos : [];
@@ -1026,6 +1013,21 @@ async function carregarDB() {
                                 if (!db.imagens[cat]) db.imagens[cat] = { fotos: [] };
                                 db.imagens[cat].fotos = localFotos;
                                 console.log(`📥 Recuperadas ${localFotos.length} foto(s) de "${cat}" do localStorage`);
+                            }
+                        });
+                    }
+
+                    // NOVO: Recupera fotos de VISTORIA (o problema relatado!)
+                    if (localDb && Array.isArray(localDb.locacoes) && Array.isArray(db.locacoes)) {
+                        localDb.locacoes.forEach(function(localLoc) {
+                            if (!localLoc || !localLoc.placa) return;
+                            const fsLoc = db.locacoes.find(function(l) { return l && l.placa === localLoc.placa; });
+                            if (!fsLoc) return;
+                            const fsVist = Array.isArray(fsLoc.vistoria) ? fsLoc.vistoria : [];
+                            const localVist = Array.isArray(localLoc.vistoria) ? localLoc.vistoria : [];
+                            if (localVist.length > fsVist.length) {
+                                fsLoc.vistoria = localVist;
+                                console.log('📥 Recuperadas ' + localVist.length + ' foto(s) de vistoria da placa ' + localLoc.placa);
                             }
                         });
                     }
@@ -1317,6 +1319,51 @@ async function migrarImagensAntigas() {
     }
 }
 
+/* ============================================================
+   NOVA FUNÇÃO — Migra fotos de VISTORIA antigas (base64) para IndexedDB
+   Assim o `db` fica pequeno e o Firestore salva sem estourar 1MB.
+   ============================================================ */
+async function migrarVistoriaAntigas() {
+    if (!db || !Array.isArray(db.locacoes)) return;
+    let precisaSalvar = false;
+    const hoje = new Date().toLocaleString('pt-BR');
+
+    for (const loc of db.locacoes) {
+        if (!loc || !Array.isArray(loc.vistoria)) continue;
+        for (let i = 0; i < loc.vistoria.length; i++) {
+            const foto = loc.vistoria[i];
+            if (typeof foto === 'string' && foto.length > 100) {
+                try {
+                    const blob = dataUrlParaBlobLocal(foto);
+                    const id = gerarIdImagem();
+                    await idbSalvar(id, blob, {
+                        nomeArquivo: 'vistoria_' + (loc.placa || 'sem_placa') + '_' + i + '.jpg',
+                        tipo: 'image/jpeg', dataUpload: hoje, categoria: 'vistoria', placa: loc.placa
+                    });
+                    let thumb = null;
+                    try {
+                        const thumbBlob = await gerarThumbnailBlob(blob, 400, 0.8);
+                        if (thumbBlob) thumb = await blobParaDataURL(thumbBlob);
+                    } catch(e) {}
+                    const ref = { id, nome: 'vistoria_' + (loc.placa || '') + '_' + i + '.jpg', dataUpload: hoje };
+                    if (thumb) ref.thumb = thumb;
+                    loc.vistoria[i] = ref;
+                    precisaSalvar = true;
+                    console.log('📥 Foto de vistoria migrada para IndexedDB (placa ' + loc.placa + ')');
+                } catch (err) { console.warn('Erro ao migrar foto de vistoria:', err); }
+            }
+        }
+    }
+
+    if (precisaSalvar) {
+        try {
+            await dbFirestore.collection('lobao_db').doc('principal').set(db);
+            try { localStorage.setItem(DB_STORAGE_KEY, JSON.stringify(db)); } catch(e) {}
+            console.log('✅ Migração de vistoria concluída. DB agora está leve.');
+        } catch (err) { console.error('Erro ao salvar após migração de vistoria:', err); }
+    }
+}
+
 /* ============================================================ */
 
 const todasAbas = [
@@ -1329,9 +1376,6 @@ const todasAbas = [
 ];
 const todasPermissoes = ['veiculos_salvar','veiculos_rastreador','veiculos_multas','clientes_salvar','locacoes_salvar','locacoes_contrato','manutencao_salvar','mecanico_salvar','usuario_salvar','usuario_editar','usuario_excluir','usuario_limpar','garagem_buscar','garagem_salvar','sos_buscar','sos_salvar','sos_baixar','comprovantes_buscar','comprovantes_salvar','banco_salvar','banco_editar','banco_copiar','banco_excluir','fluxocaixa_salvar','doc_salvar','doc_limpar','doc_selecionar','compras_salvar','compras_editar','compras_limpar','compras_excluir','config_salvar','config_restaurar','auditoria_filtrar','auditoria_limpar','pendente_salvar','pendente_editar','pendente_excluir','vistoria_camera'];
 
-/* ============================================================
-   PERMISSÕES POR TIPO DE USUÁRIO
-   ============================================================ */
 const permissoesPadrao = {
     ADM: { abas: Object.fromEntries(todasAbas.map(a => [a.id, true])), botoes: Object.fromEntries(todasPermissoes.map(b => [b, true])), veiculos: {} },
     MOTORISTA: {
@@ -4221,31 +4265,75 @@ function atualizarAbasVistoria() {
     }
 }
 
-function renderizarFotosVistoria(locacao) {
+/* ============================================================
+   RENDERIZAÇÃO DE FOTOS DE VISTORIA — AGORA SUPORTA:
+   - Fotos antigas (string base64) — migração automática
+   - Fotos novas ({id, thumb}) — via IndexedDB
+   ============================================================ */
+async function renderizarFotosVistoria(locacao) {
     const container = document.getElementById('vistoriaFotosContainer');
     if (!container) return;
     container.innerHTML = '';
     if (!locacao.vistoria) locacao.vistoria = [];
     const fotos = locacao.vistoria;
     const podeExcluir = temPermissao('vistoria_camera');
-    if (fotos.length === 0) { container.innerHTML = '<p style="color:#999; width:100%;">Nenhuma foto de vistoria registrada para este veículo.</p>'; return; }
+
+    if (fotos.length === 0) {
+        container.innerHTML = '<p style="color:#999; width:100%;">Nenhuma foto de vistoria registrada para este veículo.</p>';
+        return;
+    }
+
+    // Carrega thumbs em paralelo
+    const thumbs = await Promise.all(fotos.map(f => obterUrlImagem(f)));
+
     fotos.forEach((foto, index) => {
+        const srcThumb = thumbs[index] || (typeof foto === 'string' ? foto : '');
         const div = document.createElement('div');
         div.className = 'saved-image-item';
-        const img = document.createElement('img');
-        img.src = foto;
-        img.onclick = () => openImageModal(foto, fotos, index);
-        div.appendChild(img);
+
+        if (srcThumb) {
+            const img = document.createElement('img');
+            img.src = srcThumb;
+            img.alt = 'vistoria';
+            img.onerror = function() {
+                if (foto && typeof foto === 'object' && foto.thumb && this.src !== foto.thumb) {
+                    this.onerror = null;
+                    this.src = foto.thumb;
+                }
+            };
+            img.onclick = async () => {
+                // Carrega full-res para o modal
+                const fullUrls = await Promise.all(fotos.map(f => obterUrlImagemFull(f)));
+                openImageModal(fullUrls[index] || srcThumb, fullUrls, index);
+            };
+            div.appendChild(img);
+        } else {
+            const placeholder = document.createElement('div');
+            placeholder.style.cssText = 'display:flex;align-items:center;justify-content:center;height:200px;background:#f0f0f0;color:#999;font-size:12px;text-align:center;padding:10px;width:200px;';
+            placeholder.textContent = 'Imagem indisponível';
+            div.appendChild(placeholder);
+        }
+
         if (podeExcluir) {
             const btn = document.createElement('button');
             btn.className = 'delete-btn';
             btn.textContent = '×';
-            btn.onclick = (e) => {
+            btn.onclick = async (e) => {
                 e.stopPropagation();
-                if (confirm('Excluir esta foto?')) { locacao.vistoria.splice(index, 1); salvarDB(); renderizarFotosVistoria(locacao); }
+                if (!confirm('Excluir esta foto?')) return;
+                // Remove do IndexedDB, se for referência
+                if (foto && typeof foto === 'object' && foto.id) {
+                    try { await idbExcluir(foto.id); } catch (err) { console.warn('Erro ao excluir foto IDB:', err); }
+                    liberarUrlImagem(foto);
+                }
+                locacao.vistoria.splice(index, 1);
+                try { await salvarDB(); } catch(e) {}
+                renderizarFotosVistoria(locacao);
+                registrarAuditoria('Exclusão', 'Foto de vistoria excluída (placa ' + (locacao.placa || '') + ')');
             };
             div.appendChild(btn);
         }
+
         container.appendChild(div);
     });
 }
@@ -4286,18 +4374,58 @@ function capturarVistoria() {
     document.getElementById('vistoriaVideo').srcObject = null;
 }
 
-function confirmarVistoria() {
+/* ============================================================
+   CONFIRMAR VISTORIA — AGORA SALVA EM IndexedDB (blob + thumb)
+   Isso resolve o bug onde as fotos sumiam ao recarregar.
+   ============================================================ */
+async function confirmarVistoria() {
     if (!vistoriaDataUrl) { alert('Nenhuma foto capturada!'); return; }
     const locacao = db.locacoes.find(l => l.placa === vistoriaPlacaAtual);
-    if (locacao) {
+    if (!locacao) { alert('Erro: Locação não encontrada.'); fecharCameraVistoria(); return; }
+
+    const btn = document.getElementById('vistoriaConfirmBtn');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Salvando...'; }
+
+    try {
+        // Converte dataURL -> blob
+        const blob = dataUrlParaBlobLocal(vistoriaDataUrl);
+        const id = gerarIdImagem();
+        const hoje = new Date().toLocaleString('pt-BR');
+
+        // Salva o blob original no IndexedDB
+        await idbSalvar(id, blob, {
+            nomeArquivo: 'vistoria_' + (vistoriaPlacaAtual || 'sem_placa') + '_' + Date.now() + '.jpg',
+            tipo: 'image/jpeg',
+            dataUpload: hoje,
+            categoria: 'vistoria',
+            placa: vistoriaPlacaAtual
+        });
+
+        // Gera thumbnail pequeno para exibição rápida na grade
+        let thumb = null;
+        try {
+            const thumbBlob = await gerarThumbnailBlob(blob, 400, 0.8);
+            if (thumbBlob) thumb = await blobParaDataURL(thumbBlob);
+        } catch (e) { console.warn('Falha ao gerar thumb da vistoria:', e); }
+
+        // Monta a referência leve (sem base64 gigante!)
+        const ref = { id, nome: 'vistoria_' + (vistoriaPlacaAtual || '') + '.jpg', dataUpload: hoje };
+        if (thumb) ref.thumb = thumb;
+
         if (!locacao.vistoria) locacao.vistoria = [];
-        locacao.vistoria.push(vistoriaDataUrl);
-        salvarDB();
-        registrarAuditoria('Vistoria', `Nova foto de vistoria adicionada para a placa ${vistoriaPlacaAtual}`);
-        renderizarFotosVistoria(locacao);
+        locacao.vistoria.push(ref);
+
+        await salvarDB();
+        registrarAuditoria('Vistoria', 'Nova foto de vistoria adicionada para a placa ' + vistoriaPlacaAtual);
+        await renderizarFotosVistoria(locacao);
         alert('✅ Foto de vistoria salva com sucesso!');
-    } else { alert('Erro: Locação não encontrada.'); }
-    fecharCameraVistoria();
+    } catch (err) {
+        console.error('Erro ao salvar foto de vistoria:', err);
+        alert('Erro ao salvar a foto. Tente novamente.');
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = '✅ Confirmar'; }
+        fecharCameraVistoria();
+    }
 }
 
 function comprimirImagemDataURL(dataUrl, maxWidth, quality, callback) {
@@ -6636,7 +6764,10 @@ async function inicializarSistemaCompleto() {
         db.usuarios.push({ nome: 'SERGIO', senha: '080888', tipo: 'ADM', permissoes: JSON.parse(JSON.stringify(permissoesPadrao.ADM)), selfie: null });
     }
 
+    // Migração SOS/Garagem (como já existia)
     try { await migrarImagensAntigas(); } catch(e) { console.warn('Erro na migração:', e); }
+    // ⭐ NOVA migração: fotos de vistoria antigas (base64) -> IndexedDB
+    try { await migrarVistoriaAntigas(); } catch(e) { console.warn('Erro na migração de vistoria:', e); }
 
     gerarPermissoesUI();
     atualizarTabelaVeiculos();

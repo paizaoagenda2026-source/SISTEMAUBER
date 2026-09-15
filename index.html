@@ -5239,21 +5239,39 @@ function atualizarGaleriaComprovantes() {
             btnAbrir.className = 'btn-info';
             btnAbrir.textContent = '👁️ Abrir';
             btnAbrir.onclick = async () => {
+                let urlParaAbrir = null;
+                let revogarUrl = false;
+
+                // 1) Tentar IndexedDB (armazenamento local de PDFs/imagens)
                 if (doc.storageId) {
                     try {
                         const reg = await idbObter(doc.storageId);
                         if (reg && reg.blob) {
-                            const url = URL.createObjectURL(reg.blob);
-                            const win = window.open();
-                            if (win) win.document.write(`<iframe src="${url}" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>`);
-                            setTimeout(() => URL.revokeObjectURL(url), 120000);
-                            return;
-                        } else { alert('Arquivo não encontrado no armazenamento local.'); return; }
-                    } catch (e) { alert('Erro ao carregar o PDF.'); return; }
+                            urlParaAbrir = URL.createObjectURL(reg.blob);
+                            revogarUrl = true;
+                        }
+                    } catch (e) { console.warn('Erro ao buscar no IndexedDB:', e); }
                 }
-                if (!doc.data) { alert('Documento sem conteúdo.'); return; }
+
+                // 2) Fallback: dataURL salvo diretamente em doc.data
+                if (!urlParaAbrir && doc.data) {
+                    urlParaAbrir = doc.data;
+                }
+
+                if (!urlParaAbrir) {
+                    alert('⚠️ Arquivo não encontrado.\n\nO conteúdo deste documento não está mais disponível no armazenamento deste navegador. Isso pode acontecer se:\n\n• O armazenamento do navegador foi limpo (dados de navegação)\n• O documento foi salvo em outro dispositivo/navegador\n• O arquivo foi removido do IndexedDB\n\nPor favor, reimporte o documento usando a aba "📤 Anexar Novo".');
+                    return;
+                }
+
                 const win = window.open();
-                if (win) win.document.write(`<iframe src="${doc.data}" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>`);
+                if (!win) {
+                    alert('Bloqueio de pop-up. Permita pop-ups para abrir o PDF.');
+                    if (revogarUrl) setTimeout(() => { try { URL.revokeObjectURL(urlParaAbrir); } catch(e){} }, 1000);
+                    return;
+                }
+                const nomeSafe = (doc.nome || 'Documento').replace(/</g, '&lt;');
+                win.document.write('<html><head><title>' + nomeSafe + '</title></head><body style="margin:0;"><iframe src="' + urlParaAbrir + '" frameborder="0" style="border:0;position:fixed;top:0;left:0;width:100%;height:100%;" allowfullscreen></iframe></body></html>');
+                if (revogarUrl) setTimeout(() => { try { URL.revokeObjectURL(urlParaAbrir); } catch(e){} }, 120000);
             };
             const btnExcluir = document.createElement('button');
             btnExcluir.className = 'btn-danger';
@@ -5703,7 +5721,11 @@ function abrirIDB() {
             const d = e.target.result;
             if (!d.objectStoreNames.contains('pdfs')) d.createObjectStore('pdfs', { keyPath: 'id' });
         };
-        req.onsuccess = () => { idbHandle = req.result; resolve(idbHandle); };
+        req.onsuccess = () => {
+            idbHandle = req.result;
+            try { idbHandle.onclose = () => { idbHandle = null; }; } catch(e) {}
+            resolve(idbHandle);
+        };
         req.onerror = () => reject(req.error);
     });
 }

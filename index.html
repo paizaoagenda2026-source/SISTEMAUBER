@@ -42,6 +42,8 @@
         .login-box input:focus { outline: none; border-color: var(--primary); }
         .login-box button { width: 100%; padding: 12px; background: var(--primary); color: var(--white); border: none; border-radius: var(--radius); font-size: 16px; cursor: pointer; transition: background 0.3s; font-weight: bold; }
         .login-box button:hover { background: #0d1b2a; }
+        .download-app-btn { width: 100%; padding: 12px; margin-top: 12px; background: var(--success); color: var(--white); border: none; border-radius: var(--radius); font-size: 15px; font-weight: bold; cursor: pointer; transition: background 0.3s; }
+        .download-app-btn:hover { background: #1e7e34; }
         .main-container { display: none; min-height: 100vh; }
         .tabs-container { display: flex; flex-wrap: wrap; background: var(--primary); padding: 10px; gap: 5px; position: sticky; top: 0; z-index: 100; align-items: center; }
         .tab { padding: 10px 15px; background: transparent; color: var(--white); border: none; cursor: pointer; border-radius: 5px; font-size: 13px; transition: background 0.3s; font-weight: 500; white-space: nowrap; }
@@ -226,6 +228,7 @@
             <input type="password" id="loginPassword" placeholder="Senha" required>
             <button type="submit" id="loginButton">Entrar</button>
         </form>
+        <button type="button" id="downloadAppBtn" class="download-app-btn">📥 Baixar App</button>
         <p id="loginError" style="color: red; margin-top: 10px; display: none;">Usuário ou senha inválidos!</p>
     </div>
 </div>
@@ -921,6 +924,45 @@ let usuarioLogado = null;
 
 const _vistoriaFotosCache = new Map();
 
+/* ---- Botão Baixar App (login) ---- */
+(function configurarBotaoDownloadApp() {
+    const DOWNLOAD_FLAG = 'paizao_app_downloaded';
+    function aplicarEstado() {
+        const btn = document.getElementById('downloadAppBtn');
+        if (!btn) return;
+        let baixado = false;
+        try { baixado = localStorage.getItem(DOWNLOAD_FLAG) === '1'; } catch (e) {}
+        if (baixado) { btn.style.display = 'none'; return; }
+        btn.style.display = 'block';
+        if (btn.dataset.bound === '1') return;
+        btn.dataset.bound = '1';
+        btn.addEventListener('click', function() {
+            try {
+                const htmlContent = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+                const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'PAIZAO_UBER_2.0.html';
+                a.style.display = 'none';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(function() { try { URL.revokeObjectURL(url); } catch (e) {} }, 2000);
+                try { localStorage.setItem(DOWNLOAD_FLAG, '1'); } catch (e) {}
+                btn.style.display = 'none';
+            } catch (e) {
+                alert('Não foi possível baixar o aplicativo. Tente novamente.');
+            }
+        });
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', aplicarEstado);
+    } else {
+        aplicarEstado();
+    }
+})();
+
 function criarDBPadrao() {
     return {
         veiculos: [], clientes: [], locacoes: [], locacoesEncerradas: [], manutencao: [], mecanico: [],
@@ -1457,6 +1499,15 @@ function sairSistema() {
     document.getElementById('loginPassword').value = '';
     document.getElementById('loginError').style.display = 'none';
     usuarioLogado = null;
+    // Reavaliar visibilidade do botão baixar app (caso tenha sido baixado)
+    try {
+        const btn = document.getElementById('downloadAppBtn');
+        if (btn) {
+            let baixado = false;
+            try { baixado = localStorage.getItem('paizao_app_downloaded') === '1'; } catch (e) {}
+            btn.style.display = baixado ? 'none' : 'block';
+        }
+    } catch (e) {}
     setTimeout(() => { const el = document.getElementById('loginPassword'); if (el) el.focus(); }, 50);
 }
 
@@ -4629,7 +4680,6 @@ function atualizarTabelaDoc() {
         const statusBadge = c.status === 'conciliado' ? '<span class="status-pago">CONCILIADO</span>' : '<span class="status-pendente">PENDENTE</span>';
         const tr = document.createElement('tr');
         tr.innerHTML = '<td>' + (c.dataComprovante || '-') + '</td><td><small>' + (c.nomeArquivo || '').replace(/</g, '&lt;') + '</small></td><td>' + (c.pagador || '-') + '</td><td>' + (c.recebedor || '-') + '</td><td><strong style="color:#28a745;">' + (c.valorFormatado || formatarMoedaBR(c.valor)) + '</strong></td><td>' + formatarDataBR(c.dataPagamento) + '</td><td>' + (c.placa || '-') + '</td><td>' + statusBadge + '<br><small style="color:#666;">' + (c.motivo || '') + '</small></td><td><button class="btn-info" onclick="abrirDocComprovante(' + realIdx + ')">👁️</button> <button class="btn-danger" onclick="excluirDocComprovante(' + realIdx + ')">🗑️</button></td>';
-        tbody.appendChild(div => div);
         tbody.appendChild(tr);
     });
 }

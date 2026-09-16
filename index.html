@@ -1073,10 +1073,10 @@ async function carregarDB() {
     if (!Array.isArray(db.imagens.comprovantes.fotos)) db.imagens.comprovantes.fotos = [];
     if (!db.documentosPlacas) db.documentosPlacas = {};
     if (!db.config) db.config = criarDBPadrao().config;
-    if (db.locacoes) db.locacoes.forEach(l => { if (!l.vistoria) l.vistoria = []; });
-    if (db.locacoesEncerradas) db.locacoesEncerradas.forEach(l => { if (!l.vistoria) l.vistoria = []; });
-    db.pendentes.forEach(p => { if (!p.status) p.status = 'Pendente'; });
-    db.mecanico.forEach(m => { if (m.pago === undefined) m.pago = false; });
+    if (db.locacoes) db.locacoes.forEach(l => { if (!l) return; if (!l.vistoria) l.vistoria = []; });
+    if (db.locacoesEncerradas) db.locacoesEncerradas.forEach(l => { if (!l) return; if (!l.vistoria) l.vistoria = []; });
+    db.pendentes.forEach(p => { if (!p) return; if (!p.status) p.status = 'Pendente'; });
+    db.mecanico.forEach(m => { if (!m) return; if (m.pago === undefined) m.pago = false; });
 
     let precisaSalvar = false;
     const lobao = db.usuarios.find(u => u && u.nome === 'LOBÃO');
@@ -1098,23 +1098,7 @@ async function emergenciaLimparBanco() {
     if (!db) return 0;
     let removidosKB = 0;
     const hoje = new Date().toLocaleString('pt-BR');
-    if (db.documentosPlacas && typeof db.documentosPlacas === 'object') {
-        for (const placa of Object.keys(db.documentosPlacas)) {
-            const docs = db.documentosPlacas[placa];
-            if (!Array.isArray(docs)) continue;
-            for (const doc of docs) {
-                if (doc && typeof doc.data === 'string' && doc.data.length > 1000 && !doc.storageId) {
-                    try {
-                        const blob = dataUrlParaBlobLocal(doc.data);
-                        const id = 'doc_b64_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
-                        await idbSalvar(id, blob, { nomeArquivo: doc.nome || 'documento', tipo: doc.tipo || 'application/octet-stream' });
-                        removidosKB += doc.data.length / 1024;
-                        doc.storageId = id; delete doc.data;
-                    } catch (e) {}
-                }
-            }
-        }
-    }
+    
     if (Array.isArray(db.comprovantesPagamento)) {
         for (const c of db.comprovantesPagamento) {
             if (c && typeof c.dataUrl === 'string' && c.dataUrl.length > 1000 && !c.storageId) {
@@ -1158,27 +1142,33 @@ async function emergenciaLimparBanco() {
     });
     if (Array.isArray(db.clientes)) {
         for (const c of db.clientes) {
-            if (c && typeof c.selfie === 'string' && c.selfie.length > 5000 && !c.selfieStorageId) {
-                try {
-                    const blob = dataUrlParaBlobLocal(c.selfie);
-                    const id = 'sel_cli_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
-                    await idbSalvar(id, blob, { nomeArquivo: 'selfie.jpg', tipo: 'image/jpeg' });
-                    removidosKB += c.selfie.length / 1024;
-                    c.selfieStorageId = id; c.selfie = null;
-                } catch (e) {}
+            if (c && typeof c.selfie === 'string' && c.selfie.length > 5000) {
+                if (!c.selfieStorageId) {
+                    try {
+                        const blob = dataUrlParaBlobLocal(c.selfie);
+                        const id = 'sel_cli_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+                        await idbSalvar(id, blob, { nomeArquivo: 'selfie.jpg', tipo: 'image/jpeg' });
+                        c.selfieStorageId = id;
+                        removidosKB += c.selfie.length / 1024;
+                    } catch (e) { continue; }
+                }
+                c.selfie = null;
             }
         }
     }
     if (Array.isArray(db.usuarios)) {
         for (const u of db.usuarios) {
-            if (u && typeof u.selfie === 'string' && u.selfie.length > 5000 && !u.selfieStorageId) {
-                try {
-                    const blob = dataUrlParaBlobLocal(u.selfie);
-                    const id = 'sel_usr_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
-                    await idbSalvar(id, blob, { nomeArquivo: 'selfie.jpg', tipo: 'image/jpeg' });
-                    removidosKB += u.selfie.length / 1024;
-                    u.selfieStorageId = id; u.selfie = null;
-                } catch (e) {}
+            if (u && typeof u.selfie === 'string' && u.selfie.length > 5000) {
+                if (!u.selfieStorageId) {
+                    try {
+                        const blob = dataUrlParaBlobLocal(u.selfie);
+                        const id = 'sel_usr_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+                        await idbSalvar(id, blob, { nomeArquivo: 'selfie.jpg', tipo: 'image/jpeg' });
+                        u.selfieStorageId = id;
+                        removidosKB += u.selfie.length / 1024;
+                    } catch (e) { continue; }
+                }
+                u.selfie = null;
             }
         }
     }
@@ -1499,7 +1489,6 @@ function sairSistema() {
     document.getElementById('loginPassword').value = '';
     document.getElementById('loginError').style.display = 'none';
     usuarioLogado = null;
-    // Reavaliar visibilidade do botão baixar app (caso tenha sido baixado)
     try {
         const btn = document.getElementById('downloadAppBtn');
         if (btn) {
@@ -1949,6 +1938,7 @@ async function salvarCliente() {
     const cpfLimpo = cpf.replace(/\D/g, '');
     const nomeUpper = nome.toUpperCase().trim();
     const clienteDuplicado = db.clientes.find((c, idx) => {
+        if (!c) return false;
         if (clienteEditandoIndex !== null && idx === clienteEditandoIndex) return false;
         const mesmoCpf = (c.cpf || '').replace(/\D/g, '') === cpfLimpo && cpfLimpo.length > 0;
         const mesmoNome = (c.nome || '').toUpperCase().trim() === nomeUpper;
@@ -1966,6 +1956,8 @@ async function salvarCliente() {
         selfie: selfieClienteTemp || null
     };
     if (clienteEditandoIndex !== null && db.clientes[clienteEditandoIndex]) {
+        const antigo = db.clientes[clienteEditandoIndex];
+        if (antigo && antigo.selfieStorageId) cliente.selfieStorageId = antigo.selfieStorageId;
         db.clientes[clienteEditandoIndex] = cliente;
         registrarAuditoria('Edição', `Cliente atualizado: ${cliente.nome}`);
         clienteEditandoIndex = null;
@@ -1998,21 +1990,36 @@ function atualizarEstadoEdicaoCliente() {
     if (clienteEditandoIndex !== null) { if (btn) btn.textContent = '💾 Atualizar Cliente'; if (aviso) aviso.classList.add('ativo'); }
     else { if (btn) btn.textContent = '💾 Salvar Cliente'; if (aviso) aviso.classList.remove('ativo'); }
 }
-function atualizarTabelaClientes() {
+async function atualizarTabelaClientes() {
     const tbody = document.querySelector('#tabelaClientes tbody');
     if (!tbody) return;
     tbody.innerHTML = '';
-    const selfiesClientes = (db.clientes || []).filter(c => c.selfie).map(c => c.selfie);
+    const clientes = db.clientes || [];
+    const selfiesResolvidas = [];
+    for (const c of clientes) {
+        if (!c) { selfiesResolvidas.push(null); continue; }
+        let src = c.selfie || null;
+        if (!src && c.selfieStorageId) {
+            try {
+                const reg = await idbObter(c.selfieStorageId);
+                if (reg && reg.blob) src = await blobParaDataURL(reg.blob);
+            } catch(e) {}
+        }
+        selfiesResolvidas.push(src);
+    }
+    const selfiesClientes = selfiesResolvidas.filter(s => s);
     window._galeriaClientes = selfiesClientes;
-    (db.clientes || []).forEach((c, i) => {
-        const selfieIdx = c.selfie ? selfiesClientes.indexOf(c.selfie) : -1;
-        const selfieCell = c.selfie ? `<img src="${c.selfie}" class="selfie-thumbnail" alt="selfie" onclick="event.stopPropagation(); openImageModal('${c.selfie}', window._galeriaClientes, ${selfieIdx})">` : '-';
+    clientes.forEach((c, i) => {
+        if (!c) return;
+        const selfie = selfiesResolvidas[i];
+        const selfieIdx = selfie ? selfiesClientes.indexOf(selfie) : -1;
+        const selfieCell = selfie ? `<img src="${selfie}" class="selfie-thumbnail" alt="selfie" onclick="event.stopPropagation(); openImageModal('${selfie}', window._galeriaClientes, ${selfieIdx})">` : '-';
         const tr = document.createElement('tr');
         tr.innerHTML = `<td>${c.nome || ''}</td><td>${c.cpf || ''}</td><td>${c.telefone || ''}</td><td>${c.cidade || ''}</td><td>${selfieCell}</td><td><button class="btn-warning" onclick="editarCliente(${i})">✏️</button> <button class="btn-danger" onclick="excluirCliente(${i})">🗑️</button></td>`;
         tbody.appendChild(tr);
     });
 }
-function editarCliente(i) {
+async function editarCliente(i) {
     if (!confirmarSenhaADM()) return;
     const c = db.clientes[i];
     if (!c) { alert('Cliente não encontrado.'); return; }
@@ -2028,9 +2035,16 @@ function editarCliente(i) {
     document.getElementById('cliCep').value = c.cep || '';
     document.getElementById('cliCidade').value = c.cidade || '';
     document.getElementById('cliEstado').value = c.estado || '';
-    selfieClienteTemp = c.selfie || null;
+    let selfieSrc = c.selfie || null;
+    if (!selfieSrc && c.selfieStorageId) {
+        try {
+            const reg = await idbObter(c.selfieStorageId);
+            if (reg && reg.blob) selfieSrc = await blobParaDataURL(reg.blob);
+        } catch(e) {}
+    }
+    selfieClienteTemp = selfieSrc;
     const prevSelfie = document.getElementById('selfiePreviewCliente');
-    if (prevSelfie) prevSelfie.innerHTML = c.selfie ? `<img src="${c.selfie}" class="selfie-thumbnail" alt="selfie" onclick="openImageModal('${c.selfie}')">` : '';
+    if (prevSelfie) prevSelfie.innerHTML = selfieSrc ? `<img src="${selfieSrc}" class="selfie-thumbnail" alt="selfie" onclick="openImageModal('${selfieSrc}')">` : '';
     atualizarEstadoEdicaoCliente();
     window.scrollTo(0, 0);
 }
@@ -2077,29 +2091,44 @@ function excluirCliente(i) {
 }
 function criarUsuarioDoCliente(cliente) {
     const primeiroNome = cliente.nome.split(/\s+/)[0].toUpperCase();
-    if (db.usuarios.some(u => u.nome === primeiroNome)) return;
+    if (db.usuarios.some(u => u && u.nome === primeiroNome)) return;
     const tel = cliente.telefone.replace(/\D/g, '');
     const senha = tel.length >= 10 ? tel.substring(2) : tel;
-    db.usuarios.push({ nome: primeiroNome, senha, tipo: 'MOTORISTA', permissoes: JSON.parse(JSON.stringify(permissoesPadrao.MOTORISTA)), selfie: cliente.selfie || null });
+    db.usuarios.push({ nome: primeiroNome, senha, tipo: 'MOTORISTA', permissoes: JSON.parse(JSON.stringify(permissoesPadrao.MOTORISTA)), selfie: cliente.selfie || null, selfieStorageId: cliente.selfieStorageId || null });
     atualizarTabelaUsuario();
 }
 
 /* ---- Usuários ---- */
-function atualizarTabelaUsuario() {
+async function atualizarTabelaUsuario() {
     const tbody = document.querySelector('#tabelaUsuario tbody');
     if (!tbody) return;
     tbody.innerHTML = '';
-    const selfiesUsuarios = (db.usuarios || []).filter(u => u.selfie).map(u => u.selfie);
+    const usuarios = db.usuarios || [];
+    const selfiesResolvidas = [];
+    for (const u of usuarios) {
+        if (!u) { selfiesResolvidas.push(null); continue; }
+        let src = u.selfie || null;
+        if (!src && u.selfieStorageId) {
+            try {
+                const reg = await idbObter(u.selfieStorageId);
+                if (reg && reg.blob) src = await blobParaDataURL(reg.blob);
+            } catch(e) {}
+        }
+        selfiesResolvidas.push(src);
+    }
+    const selfiesUsuarios = selfiesResolvidas.filter(s => s);
     window._galeriaUsuarios = selfiesUsuarios;
-    (db.usuarios || []).forEach((u, i) => {
-        const selfieIdx = u.selfie ? selfiesUsuarios.indexOf(u.selfie) : -1;
-        const selfieCell = u.selfie ? `<img src="${u.selfie}" class="selfie-thumbnail" alt="selfie" onclick="event.stopPropagation(); openImageModal('${u.selfie}', window._galeriaUsuarios, ${selfieIdx})">` : '-';
+    usuarios.forEach((u, i) => {
+        if (!u) return;
+        const selfie = selfiesResolvidas[i];
+        const selfieIdx = selfie ? selfiesUsuarios.indexOf(selfie) : -1;
+        const selfieCell = selfie ? `<img src="${selfie}" class="selfie-thumbnail" alt="selfie" onclick="event.stopPropagation(); openImageModal('${selfie}', window._galeriaUsuarios, ${selfieIdx})">` : '-';
         const tr = document.createElement('tr');
         tr.innerHTML = `<td>${u.nome || ''}</td><td>${u.tipo || ''}</td><td>${selfieCell}</td><td><button class="btn-warning" onclick="editarUsuario(${i})">✏️</button> <button class="btn-danger" onclick="excluirUsuario(${i})">🗑️</button></td>`;
         tbody.appendChild(tr);
     });
 }
-function editarUsuario(i) {
+async function editarUsuario(i) {
     if (!confirmarSenhaADM()) return;
     const u = db.usuarios[i];
     if (!u) { alert('Usuário não encontrado.'); return; }
@@ -2107,7 +2136,16 @@ function editarUsuario(i) {
     document.getElementById('userSenha').value = u.senha || '';
     document.getElementById('userTipo').value = u.tipo || 'ADM';
     usuarioEditandoIndex = i;
-    selfieUsuarioTemp = u.selfie || null;
+    let selfieSrc = u.selfie || null;
+    if (!selfieSrc && u.selfieStorageId) {
+        try {
+            const reg = await idbObter(u.selfieStorageId);
+            if (reg && reg.blob) selfieSrc = await blobParaDataURL(reg.blob);
+        } catch(e) {}
+    }
+    selfieUsuarioTemp = selfieSrc;
+    const prev = document.getElementById('selfiePreviewUsuario');
+    if (prev) prev.innerHTML = selfieSrc ? `<img src="${selfieSrc}" class="selfie-thumbnail" alt="selfie" onclick="openImageModal('${selfieSrc}')">` : '';
     preencherPermissoesUI(u.permissoes);
     window.scrollTo(0, 0);
 }
@@ -2129,12 +2167,15 @@ function salvarUsuario() {
     const permissoes = coletarPermissoesUI();
     const selfie = selfieUsuarioTemp || null;
     if (usuarioEditandoIndex !== null) {
-        const outro = db.usuarios.find((u, idx) => idx !== usuarioEditandoIndex && u.nome === nome);
+        const outro = db.usuarios.find((u, idx) => idx !== usuarioEditandoIndex && u && u.nome === nome);
         if (outro) { alert('Já existe outro usuário com esse nome!'); return; }
-        db.usuarios[usuarioEditandoIndex] = { nome, senha, tipo, permissoes, selfie };
+        const antigo = db.usuarios[usuarioEditandoIndex];
+        const novo = { nome, senha, tipo, permissoes, selfie };
+        if (antigo && antigo.selfieStorageId) novo.selfieStorageId = antigo.selfieStorageId;
+        db.usuarios[usuarioEditandoIndex] = novo;
         usuarioEditandoIndex = null;
     } else {
-        if (db.usuarios.some(u => u.nome === nome)) { alert('Já existe esse usuário!'); return; }
+        if (db.usuarios.some(u => u && u.nome === nome)) { alert('Já existe esse usuário!'); return; }
         db.usuarios.push({ nome, senha, tipo, permissoes, selfie });
     }
     atualizarTabelaUsuario();
@@ -2196,21 +2237,21 @@ function aplicarPermissoes(usuario) {
 /* ---- Locações ---- */
 function atualizarCombosLocacao() {
     const sCli = document.getElementById('locLocatario');
-    if (sCli) { sCli.innerHTML = '<option value="">Selecione</option>'; (db.clientes || []).forEach(c => { const o = document.createElement('option'); o.value = c.nome; o.textContent = c.nome; sCli.appendChild(o); }); }
+    if (sCli) { sCli.innerHTML = '<option value="">Selecione</option>'; (db.clientes || []).forEach(c => { if (!c) return; const o = document.createElement('option'); o.value = c.nome; o.textContent = c.nome; sCli.appendChild(o); }); }
     const sVei = document.getElementById('locVeiculo');
-    if (sVei) { sVei.innerHTML = '<option value="">Selecione</option>'; (db.veiculos || []).forEach(v => { const o = document.createElement('option'); o.value = v.fabricante; o.textContent = v.fabricante; sVei.appendChild(o); }); }
+    if (sVei) { sVei.innerHTML = '<option value="">Selecione</option>'; (db.veiculos || []).forEach(v => { if (!v) return; const o = document.createElement('option'); o.value = v.fabricante; o.textContent = v.fabricante; sVei.appendChild(o); }); }
     const sPl = document.getElementById('locPlaca');
-    if (sPl) { sPl.innerHTML = '<option value="">Selecione</option>'; (db.veiculos || []).forEach(v => { const o = document.createElement('option'); o.value = v.placa; o.textContent = v.placa; sPl.appendChild(o); }); }
+    if (sPl) { sPl.innerHTML = '<option value="">Selecione</option>'; (db.veiculos || []).forEach(v => { if (!v) return; const o = document.createElement('option'); o.value = v.placa; o.textContent = v.placa; sPl.appendChild(o); }); }
 }
 function selecionarClienteCombo() {
     const nome = document.getElementById('locLocatario').value;
-    const c = (db.clientes || []).find(x => x.nome === nome);
+    const c = (db.clientes || []).find(x => x && x.nome === nome);
     if (c) document.getElementById('locCpfPropr').value = c.cpf || '';
 }
 function selecionarVeiculoCombo() {
     const f = document.getElementById('locVeiculo').value;
     if (!f) return;
-    const v = (db.veiculos || []).find(x => x.fabricante === f);
+    const v = (db.veiculos || []).find(x => x && x.fabricante === f);
     if (v) {
         document.getElementById('locCor').value = v.cor || '';
         document.getElementById('locPlaca').value = v.placa || '';
@@ -2223,7 +2264,7 @@ function selecionarVeiculoCombo() {
 function selecionarPlacaCombo() {
     const p = document.getElementById('locPlaca').value;
     if (!p) return;
-    const v = (db.veiculos || []).find(x => x.placa === p);
+    const v = (db.veiculos || []).find(x => x && x.placa === p);
     if (v) {
         document.getElementById('locVeiculo').value = v.fabricante || '';
         document.getElementById('locCor').value = v.cor || '';
@@ -2360,6 +2401,7 @@ function atualizarTabelaLocacoes() {
     if (!tbody) return;
     tbody.innerHTML = '';
     (db.locacoes || []).forEach((l, i) => {
+        if (!l) return;
         const tipoLabel = (l.tipoPagamento || 'mensal').toUpperCase();
         const caucaoLabel = l.pagCaucao ? l.pagCaucao.toUpperCase() : 'À VISTA';
         const totalTxt = l.valorTotalParcelas ? `<br><small style="color:#e63946;font-weight:bold;">Total: ${formatarMoedaBR(l.valorTotalParcelas)}</small>` : '';
@@ -2376,7 +2418,7 @@ function editarLocacao(i) {
     const selCli = document.getElementById('locLocatario'); if (selCli) selCli.value = l.locatario || '';
     const selVei = document.getElementById('locVeiculo'); if (selVei) selVei.value = l.fabricante || '';
     const selPl = document.getElementById('locPlaca'); if (selPl) selPl.value = l.placa || '';
-    const v = (db.veiculos || []).find(x => x.placa === l.placa) || {};
+    const v = (db.veiculos || []).find(x => x && x.placa === l.placa) || {};
     document.getElementById('locCor').value = v.cor || '';
     document.getElementById('locAnoFabr').value = v.anoFabr || '';
     document.getElementById('locAnoModel').value = v.anoModel || '';
@@ -2399,9 +2441,7 @@ function excluirLocacao(i) {
     if (!confirm(`Excluir a locação de "${l.locatario}" - ${l.placa}?`)) return;
     const nomeUpper = String(l.locatario || '').toUpperCase().trim();
     const placaNorm = normalizarPlaca(l.placa);
-    let antes = db.alugueis.length;
     db.alugueis = db.alugueis.filter(a => { if (!a) return true; const mesmoLoc = String(a.locatario || '').toUpperCase().trim() === nomeUpper; const mesmaPlaca = normalizarPlaca(a.placa) === placaNorm; if (mesmoLoc && mesmaPlaca) return false; return true; });
-    antes = db.historicoAlugueis.length;
     db.historicoAlugueis = db.historicoAlugueis.filter(h => { if (!h) return true; const mesmoLoc = String(h.locatario || '').toUpperCase().trim() === nomeUpper; const mesmaPlaca = normalizarPlaca(h.placa) === placaNorm; if (mesmoLoc && mesmaPlaca) return false; return true; });
     if (Array.isArray(l.vistoria)) {
         l.vistoria.forEach(f => { if (f && typeof f === 'object' && f.id) excluirFotoVistoriaFirestore(f.id); });
@@ -2511,9 +2551,9 @@ function encerrarLocacao(i) {
         }
     }
 
-    const despMec = (db.mecanico || []).filter(m => m.placa === l.placa).reduce((s, m) => s + parseMoeda(m.valor), 0);
-    const despMan = (db.manutencao || []).filter(m => m.placa === l.placa).reduce((s, m) => s + parseMoeda(m.custo || 0), 0);
-    const despComp = (db.compras || []).filter(c => c.placa === l.placa).reduce((s, c) => s + parseMoeda(c.valorTotal || c.valorUnitario), 0);
+    const despMec = (db.mecanico || []).filter(m => m && m.placa === l.placa).reduce((s, m) => s + parseMoeda(m.valor), 0);
+    const despMan = (db.manutencao || []).filter(m => m && m.placa === l.placa).reduce((s, m) => s + parseMoeda(m.custo || 0), 0);
+    const despComp = (db.compras || []).filter(c => c && c.placa === l.placa).reduce((s, c) => s + parseMoeda(c.valorTotal || c.valorUnitario), 0);
     const despesasVeiculo = despMec + despMan + despComp;
     const valorExtorno = caucaoExtornada ? caucaoRecebido : 0;
     const despesasTotais = despesasVeiculo + valorExtorno;
@@ -2587,6 +2627,7 @@ function atualizarTabelaLocEncerrada() {
     tbody.innerHTML = '';
     if (total === 0) { tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:#999;padding:20px;">Nenhuma locação encerrada.</td></tr>'; return; }
     lista.forEach((l, i) => {
+        if (!l) return;
         const tipoLabel = (l.tipoPagamento || 'mensal').toUpperCase();
         const caucaoInfo = l.caucaoPagoPeriodoFormatado && l.caucaoPagoPeriodoFormatado !== 'R$ 0,00' ? `<br><small style="color:#e63946;font-weight:bold;">Caução pago: ${l.caucaoPagoPeriodoFormatado} (${l.caucaoExtornada === 'SIM' ? 'EXTORNADO' : 'NÃO EXTORNADO'})</small>` : '';
         const extornoInfo = (Number(l.extornoNumerico) || 0) > 0 ? `<br><small style="color:#dc3545;font-weight:bold;">↩️ Extorno: -${formatarMoedaBR(l.extornoNumerico)}</small>` : '';
@@ -2653,11 +2694,11 @@ function atualizarPlacasManutencao() {
     const s = document.getElementById('manPlaca');
     if (!s) return;
     s.innerHTML = '<option value="">Selecione</option>';
-    (db.veiculos || []).forEach(v => { const o = document.createElement('option'); o.value = v.placa; o.textContent = `${v.placa} - ${v.fabricante}`; s.appendChild(o); });
+    (db.veiculos || []).forEach(v => { if (!v) return; const o = document.createElement('option'); o.value = v.placa; o.textContent = `${v.placa} - ${v.fabricante}`; s.appendChild(o); });
 }
 function selecionarPlacaManutencao() {
     const p = document.getElementById('manPlaca').value;
-    const v = (db.veiculos || []).find(x => x.placa === p);
+    const v = (db.veiculos || []).find(x => x && x.placa === p);
     if (v) document.getElementById('manVeiculo').value = v.fabricante || '';
 }
 function salvarManutencao() {
@@ -2674,6 +2715,7 @@ function atualizarTabelaManutencao() {
     if (!tbody) return;
     tbody.innerHTML = '';
     (db.manutencao || []).forEach((m, i) => {
+        if (!m) return;
         const tr = document.createElement('tr');
         tr.innerHTML = `<td>${m.veiculo||''}</td><td>${m.placa||''}</td><td>${m.tipo||''}</td><td>${m.km||''}</td><td><button class="btn-danger" onclick="excluirManutencao(${i})">🗑️</button></td>`;
         tbody.appendChild(tr);
@@ -2693,11 +2735,11 @@ function atualizarPlacasMecanico() {
     const s = document.getElementById('mecPlaca');
     if (!s) return;
     s.innerHTML = '<option value="">Selecione</option>';
-    (db.veiculos || []).forEach(v => { const o = document.createElement('option'); o.value = v.placa; o.textContent = `${v.placa} - ${v.fabricante}`; s.appendChild(o); });
+    (db.veiculos || []).forEach(v => { if (!v) return; const o = document.createElement('option'); o.value = v.placa; o.textContent = `${v.placa} - ${v.fabricante}`; s.appendChild(o); });
 }
 function selecionarPlacaMecanico() {
     const p = document.getElementById('mecPlaca').value;
-    const v = (db.veiculos || []).find(x => x.placa === p);
+    const v = (db.veiculos || []).find(x => x && x.placa === p);
     if (v) document.getElementById('mecCarro').value = v.fabricante || '';
 }
 async function salvarMecanico() {
@@ -2721,7 +2763,7 @@ function atualizarTabelaMecanico() {
     const tbody = document.querySelector('#tabelaMecanico tbody');
     if (!tbody) return;
     tbody.innerHTML = '';
-    const itens = (db.mecanico || []).map((m, idx) => ({ m, idx, ordem: m.pago ? 1 : 0 }));
+    const itens = (db.mecanico || []).map((m, idx) => ({ m, idx, ordem: m && m.pago ? 1 : 0 })).filter(x => x.m);
     itens.sort((a, b) => a.ordem - b.ordem);
     itens.forEach(({ m, idx: i }) => {
         const statusBadge = m.pago ? '<span class="status-pago">PAGO</span>' : '<span class="status-pendente">PENDENTE</span>';
@@ -2744,13 +2786,14 @@ function gerarRelatorioMecanico() {
     const oficinaFiltro = document.getElementById('relMecOficina').value.trim().toUpperCase();
     if (!dtInicio && !dtFim && !oficinaFiltro) { alert('Preencha pelo menos um filtro.'); return; }
     relatorioMecanicoTemp = (db.mecanico || []).filter(m => {
-        if (m.pago) return false;
+        if (!m || m.pago) return false;
         if (dtInicio && m.data < dtInicio) return false;
         if (dtFim && m.data > dtFim) return false;
         if (oficinaFiltro && !(m.oficina || '').toUpperCase().includes(oficinaFiltro)) return false;
         return true;
     });
     const tbody = document.querySelector('#tabelaRelatorioMecanico tbody');
+    if (!tbody) return;
     tbody.innerHTML = '';
     let total = 0;
     if (relatorioMecanicoTemp.length === 0) {
@@ -2780,7 +2823,7 @@ function pagarRelatorioMecanico() {
     if (!Array.isArray(db.fluxoCaixa)) db.fluxoCaixa = [];
     db.fluxoCaixa.push({ data: hojeISO, descricao: `Pagamento Oficina(s): ${oficinas}`, categoria: 'Mecânica/Oficina', valor: formatarMoedaBR(total), valorNumerico: total, tipo: 'saida' });
     relatorioMecanicoTemp.forEach(itemTemp => {
-        const realItem = db.mecanico.find(m => m.data === itemTemp.data && m.oficina === itemTemp.oficina && m.servico === itemTemp.servico && m.valor === itemTemp.valor && !m.pago);
+        const realItem = db.mecanico.find(m => m && m.data === itemTemp.data && m.oficina === itemTemp.oficina && m.servico === itemTemp.servico && m.valor === itemTemp.valor && !m.pago);
         if (realItem) realItem.pago = true;
     });
     registrarAuditoria('Pagamento', `Pagamento de oficina: ${oficinas} | Total: ${formatarMoedaBR(total)}`);
@@ -2808,6 +2851,7 @@ function atualizarTabelaHistorico() {
     const lista = (db.historico || []).slice().reverse();
     if (lista.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#999;padding:20px;">Nenhum registro.</td></tr>'; return; }
     lista.forEach((h, visualIndex) => {
+        if (!h) return;
         const realIndex = (db.historico.length - 1) - visualIndex;
         const tr = document.createElement('tr');
         tr.innerHTML = `<td>${h.data||''}</td><td>${h.descricao||''}</td><td>${h.placa||''}</td><td>${h.valor||''}</td><td>${h.fornecedor||''}</td><td>${h.oficina||''}</td><td><button class="btn-danger" onclick="excluirHistorico(${realIndex})" title="Excluir">🗑️</button></td>`;
@@ -2845,6 +2889,7 @@ function atualizarTabelaHistoricoAlugueis() {
     if (lista.length === 0) { tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#999;padding:20px;">Nenhum aluguel pago registrado ainda.</td></tr>'; return; }
     const listaReversa = lista.slice().reverse();
     listaReversa.forEach((h, visualIndex) => {
+        if (!h) return;
         const realIndex = (lista.length - 1) - visualIndex;
         const tipoLabel = (h.tipoPagamento || 'mensal').toUpperCase();
         const tr = document.createElement('tr');
@@ -2874,6 +2919,7 @@ function atualizarTabelaAuditoria() {
     if (!tbody) return;
     tbody.innerHTML = '';
     (db.auditoria || []).slice(-100).reverse().forEach(a => {
+        if (!a) return;
         const tr = document.createElement('tr');
         tr.innerHTML = `<td>${a.data||''}</td><td>${a.usuario||''}</td><td>${a.acao||''}</td><td>${a.descricao||''}</td>`;
         tbody.appendChild(tr);
@@ -3055,8 +3101,8 @@ function imprimirContratoNota() { _ctPrint(gerarHTMLNotaPromissoria()); }
 function _setContratoVal(id, valor) { const el = document.getElementById(id); if (el && valor !== undefined && valor !== null && valor !== '') el.value = valor; }
 function preencherContratosAutomatico(locacao) {
     if (!locacao) return;
-    const cliente = (db.clientes || []).find(c => c.nome === locacao.locatario) || {};
-    const veiculo = (db.veiculos || []).find(v => v.placa === locacao.placa) || {};
+    const cliente = (db.clientes || []).find(c => c && c.nome === locacao.locatario) || {};
+    const veiculo = (db.veiculos || []).find(v => v && v.placa === locacao.placa) || {};
     const dataHoje = new Date().toLocaleDateString('pt-BR');
     const numeroInterno = String((db.locacoes || []).length + (db.locacoesEncerradas || []).length).padStart(4, '0');
     _setContratoVal('ctLoc_numero', '0001');
@@ -3172,7 +3218,6 @@ function gerarPDFNotaPromissoriaBlob() {
     const v = id => _ctVal('ctNot_' + id);
     const pageW = 210, pageH = 297, margin = 15, maxW = pageW - 30;
     let y = margin;
-    function ensurePage(n) { if (y + (n||5) > pageH - margin) { doc.addPage(); y = margin; } }
     doc.setFont('times','bold'); doc.setFontSize(14);
     doc.text('NOTA PROMISSÓRIA', pageW/2, y, {align:'center'}); y += 12;
     doc.setFont('times','normal'); doc.setFontSize(10);
@@ -3368,7 +3413,7 @@ function capturarVistoria() {
 }
 async function confirmarVistoria() {
     if (!vistoriaDataUrl) { alert('Nenhuma foto capturada!'); return; }
-    const locacao = db.locacoes.find(l => l.placa === vistoriaPlacaAtual);
+    const locacao = db.locacoes.find(l => l && l.placa === vistoriaPlacaAtual);
     if (!locacao) { alert('Erro: Locação não encontrada.'); fecharCameraVistoria(); return; }
     const btn = document.getElementById('vistoriaConfirmBtn');
     if (btn) { btn.disabled = true; btn.textContent = '⏳ Enviando...'; }
@@ -3641,10 +3686,11 @@ function atualizarTabelaAlugueis() {
     tbody.innerHTML = '';
     const hojeISO = new Date().toISOString().split('T')[0];
     const itens = (db.alugueis || []).map((a, idx) => {
+        if (!a) return null;
         let status = a.status || 'pendente';
         if (status === 'pendente' && a.vencimento && a.vencimento < hojeISO) { status = 'atrasado'; a.status = status; }
         return { a, idx, status };
-    });
+    }).filter(x => x);
     itens.sort((x, y) => { const ox = x.status === 'pago' ? 1 : 0; const oy = y.status === 'pago' ? 1 : 0; return ox - oy; });
     itens.forEach(({ a, idx: i, status }) => {
         const tipoLabel = (a.tipoPagamento || 'mensal').toUpperCase();
@@ -3663,7 +3709,7 @@ function processarPagamentoAutomatico(aluguelObj, dataPagamentoISO) {
     if (!Array.isArray(db.historicoAlugueis)) db.historicoAlugueis = [];
     db.fluxoCaixa.push({ data: dataPagamentoISO, descricao: `Aluguel (Auto) - ${aluguelObj.locatario} - ${aluguelObj.placa}`, categoria: 'Aluguel', valor: aluguelObj.valor, valorNumerico: Number(aluguelObj.valorNumerico) || parseMoeda(aluguelObj.valor), tipo: 'entrada' });
     db.historicoAlugueis.push({ data: dataPagamentoISO, dataPagamento: dataPagamentoISO, locatario: aluguelObj.locatario || '', fabricante: aluguelObj.fabricante || '', placa: aluguelObj.placa || '', parcela: aluguelObj.parcela || '', origem: aluguelObj.origem || 'Aluguel', valor: aluguelObj.valor || '', valorNumerico: Number(aluguelObj.valorNumerico) || parseMoeda(aluguelObj.valor) || 0, vencimento: aluguelObj.vencimento || '', tipoPagamento: aluguelObj.tipoPagamento || 'mensal', status: 'pago' });
-    const locAtiva = (db.locacoes || []).find(l => l.locatario === aluguelObj.locatario && l.placa === aluguelObj.placa);
+    const locAtiva = (db.locacoes || []).find(l => l && l.locatario === aluguelObj.locatario && l.placa === aluguelObj.placa);
     if (locAtiva) {
         const tipoPag = (aluguelObj.tipoPagamento || 'mensal').toLowerCase();
         const intervalDias = tipoPag === 'semanal' ? 7 : 30;
@@ -3671,12 +3717,12 @@ function processarPagamentoAutomatico(aluguelObj, dataPagamentoISO) {
         const d = new Date(baseVenc + 'T00:00:00');
         d.setDate(d.getDate() + intervalDias);
         const proximoVenc = d.toISOString().split('T')[0];
-        const jaExiste = (db.alugueis || []).some(x => x.locatario === aluguelObj.locatario && x.placa === aluguelObj.placa && x.vencimento === proximoVenc && x.status !== 'pago');
+        const jaExiste = (db.alugueis || []).some(x => x && x.locatario === aluguelObj.locatario && x.placa === aluguelObj.placa && x.vencimento === proximoVenc && x.status !== 'pago');
         if (!jaExiste) {
             const valorBase = parseMoeda(locAtiva.valorAluguel) || parseMoeda(locAtiva.aluguelMensal);
             let valorProx = valorBase;
             let descricaoProx = 'Aluguel';
-            const parcelasExistentes = (db.alugueis || []).filter(x => x.locatario === aluguelObj.locatario && x.placa === aluguelObj.placa).length;
+            const parcelasExistentes = (db.alugueis || []).filter(x => x && x.locatario === aluguelObj.locatario && x.placa === aluguelObj.placa).length;
             const pagCaucao = locAtiva.pagCaucao || 'avista';
             const caucaoTotal = parseMoeda(locAtiva.caucao);
             const numDivisoes = getNumDivisoesCaucao(tipoPag);
@@ -3744,6 +3790,7 @@ function atualizarTabelaFluxoCaixa() {
     const lista = db.fluxoCaixa || [];
     let totalEntradas = 0, totalSaidas = 0;
     lista.slice().reverse().forEach((f, index) => {
+        if (!f) return;
         const valorNum = Number(f.valorNumerico) || parseMoeda(f.valor) || 0;
         if (f.tipo === 'entrada') totalEntradas += valorNum; else totalSaidas += valorNum;
         const tr = document.createElement('tr');
@@ -3849,6 +3896,7 @@ function atualizarTabelaBancos() {
     const lista = db.bancos || [];
     if (lista.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#999;padding:20px;">Nenhum banco cadastrado.</td></tr>'; return; }
     lista.forEach((b, i) => {
+        if (!b) return;
         const botoes = [];
         if (temPermissao('banco_editar')) botoes.push(`<button class="btn-warning" onclick="editarBanco(${i})">✏️</button>`);
         if (temPermissao('banco_copiar')) botoes.push(`<button class="btn-copy" onclick="copiarPix(${i})">📋 Copiar PIX</button>`);
@@ -3865,6 +3913,7 @@ function atualizarTabelaCompras() {
     const lista = db.compras || [];
     if (lista.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#999;padding:20px;">Nenhuma compra registrada.</td></tr>'; return; }
     lista.forEach((c, i) => {
+        if (!c) return;
         const statusBadge = (c.status === 'pago') ? '<span class="status-pago">PAGO</span>' : '<span class="status-pendente">PENDENTE</span>';
         const tr = document.createElement('tr');
         tr.innerHTML = `<td>${formatarDataBR(c.data)}</td><td>${c.produto || ''}</td><td>${c.fornecedor || ''}</td><td>${c.placa || ''}</td><td>${c.valorTotal || c.valorUnitario || ''}</td><td>${statusBadge}</td><td><button class="btn-warning" onclick="editarCompra(${i})">✏️</button> <button class="btn-danger" onclick="excluirCompra(${i})">🗑️</button></td>`;
@@ -4001,7 +4050,7 @@ function atualizarTabelaPendentes() {
     tbody.innerHTML = '';
     const lista = db.pendentes || [];
     if (lista.length === 0) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#999;padding:20px;">Nenhuma pendência registrada.</td></tr>'; return; }
-    const itens = lista.map((p, i) => ({ p, idx: i, ordem: p.status === 'Pago' ? 1 : 0 }));
+    const itens = lista.map((p, i) => ({ p, idx: i, ordem: p && p.status === 'Pago' ? 1 : 0 })).filter(x => x.p);
     itens.sort((a, b) => a.ordem - b.ordem);
     itens.forEach(({ p, idx: i }) => {
         const statusBadge = (p.status === 'Pago') ? '<span class="status-pago">PAGO</span>' : '<span class="status-pendente">PENDENTE</span>';
@@ -4261,6 +4310,39 @@ async function handleDocVeiculoSelecionado(e) {
         const qtdEl = document.getElementById('docVeiculoQtd'); if (qtdEl) qtdEl.textContent = qtd + ' campo(s)';
         const avisoEl = document.getElementById('docVeiculoAviso'); if (avisoEl) avisoEl.style.display = dados.placa ? 'none' : 'inline-block';
         alert('✅ Documento lido! Campos encontrados: ' + qtd + (dados.placa ? '\n🚗 Placa: ' + dados.placa : '\n⚠️ Placa não identificada.'));
+
+        try {
+            let placaSalvar = String(dados.placa || '').toUpperCase().trim();
+            if (!placaSalvar) {
+                const elPlaca = document.getElementById('veicPlaca');
+                if (elPlaca) placaSalvar = String(elPlaca.value || '').toUpperCase().trim();
+            }
+            if (placaSalvar) {
+                if (!db.documentosPlacas) db.documentosPlacas = {};
+                if (!db.documentosPlacas[placaSalvar]) db.documentosPlacas[placaSalvar] = [];
+                const agora = new Date().toLocaleString('pt-BR');
+                const nomeDoc = 'DOC VEÍCULO - ' + (file.name || 'documento.pdf');
+                let salvoOk = false;
+                try {
+                    const dataUrl = await fileToDataURL(file);
+                    db.documentosPlacas[placaSalvar].push({ nome: nomeDoc, tipo: 'application/pdf', data: dataUrl, dataUpload: agora });
+                    salvoOk = true;
+                } catch (b64Err) {
+                    try {
+                        const id = 'doc_veiculo_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
+                        await idbSalvar(id, file, { nomeArquivo: file.name, placa: placaSalvar, tipo: 'application/pdf' });
+                        db.documentosPlacas[placaSalvar].push({ nome: nomeDoc, tipo: 'application/pdf', storageId: id, dataUpload: agora });
+                        salvoOk = true;
+                    } catch (idbErr) { salvoOk = false; }
+                }
+                if (salvoOk) {
+                    await salvarDB();
+                    try { atualizarGaleriaComprovantes(); } catch(e) {}
+                    try { registrarAuditoria('Cadastro', 'DOC VEÍCULO salvo em Documentos: ' + file.name + ' - Placa: ' + placaSalvar); } catch(e) {}
+                }
+            }
+        } catch (saveErr) { }
+
     } catch (err) { alert('Erro ao ler o documento.'); if (info) info.classList.remove('ativo'); }
 }
 function cancelarDocVeiculo() { const info = document.getElementById('docVeiculoInfo'); if (info) info.classList.remove('ativo'); }
@@ -4270,7 +4352,7 @@ function atualizarComboPlacasDocumentos() {
     if (!sel) return;
     sel.innerHTML = '<option value="">Selecione uma placa...</option>';
     const placasFiltro = getPlacasPermitidasParaFiltro();
-    (db.veiculos || []).forEach(v => { if (placasFiltro !== null && !placasFiltro.includes(normalizarPlaca(v.placa))) return; const opt = document.createElement('option'); opt.value = v.placa; opt.textContent = `${v.placa} - ${v.fabricante}`; sel.appendChild(opt); });
+    (db.veiculos || []).forEach(v => { if (!v) return; if (placasFiltro !== null && !placasFiltro.includes(normalizarPlaca(v.placa))) return; const opt = document.createElement('option'); opt.value = v.placa; opt.textContent = `${v.placa} - ${v.fabricante}`; sel.appendChild(opt); });
 }
 function salvarDocumentosPlaca() {
     const placa = document.getElementById('docPlacaSelect').value;
@@ -4305,7 +4387,7 @@ function atualizarGaleriaComprovantes() {
     placasOrdenadas.forEach(placa => {
         const docs = db.documentosPlacas[placa] || [];
         if (docs.length === 0) return;
-        const veiculo = (db.veiculos || []).find(v => v.placa === placa);
+        const veiculo = (db.veiculos || []).find(v => v && v.placa === placa);
         const nomeVeiculo = veiculo ? `${veiculo.fabricante} - ${veiculo.cor}` : 'Veículo Desconhecido';
         const folderDiv = document.createElement('div'); folderDiv.className = 'documento-folder';
         const headerDiv = document.createElement('div'); headerDiv.className = 'documento-folder-header';
@@ -4442,7 +4524,7 @@ function salvarComprovantesPagamento() {
         const placa = String(item.placa || '').toUpperCase().trim();
         if (!placa) semPlaca++;
         const valorNum = Number(item.valor) || 0;
-        const duplicado = db.comprovantesPagamento.some(function(c) { return (c.placa === placa) && Math.abs((c.valor || 0) - valorNum) < 0.01 && c.dataComprovante === (item.dataComprovante || '') && c.nomeArquivo === (item.nomeArquivo || ''); });
+        const duplicado = db.comprovantesPagamento.some(function(c) { return c && (c.placa === placa) && Math.abs((c.valor || 0) - valorNum) < 0.01 && c.dataComprovante === (item.dataComprovante || '') && c.nomeArquivo === (item.nomeArquivo || ''); });
         if (duplicado) { duplicados++; return; }
         db.comprovantesPagamento.push({ id: 'comp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6), nomeArquivo: item.nomeArquivo, tipoArquivo: item.tipoArquivo, dataUrl: item.dataUrl, pagador: item.pagador || '', recebedor: item.recebedor || '', valor: valorNum, valorFormatado: item.valorFormatado || formatarMoedaBR(valorNum), dataComprovante: item.dataComprovante || '', placa: placa, dataUpload: item.dataUpload || new Date().toLocaleString('pt-BR') });
         if (placa) {
@@ -4454,7 +4536,7 @@ function salvarComprovantesPagamento() {
         if (item.dataComprovante && item.dataComprovante.includes('/')) { const parts = item.dataComprovante.split('/'); if (parts.length === 3) dataPgtoISO = `${parts[2]}-${parts[1]}-${parts[0]}`; }
         if (!dataPgtoISO) dataPgtoISO = new Date().toISOString().split('T')[0];
         if (placa && valorNum > 0 && Array.isArray(db.alugueis)) {
-            const candidatos = db.alugueis.filter(a => { if (a.placa !== placa) return false; if (a.status === 'pago') return false; const valA = Number(a.valorNumerico) || parseMoeda(a.valor) || 0; return Math.abs(valA - valorNum) < 0.01; });
+            const candidatos = db.alugueis.filter(a => { if (!a || a.placa !== placa) return false; if (a.status === 'pago') return false; const valA = Number(a.valorNumerico) || parseMoeda(a.valor) || 0; return Math.abs(valA - valorNum) < 0.01; });
             if (candidatos.length > 0) {
                 candidatos.sort((a, b) => { const dtA = a.vencimento ? new Date(a.vencimento + 'T00:00:00') : new Date('2099-12-31'); const dtB = b.vencimento ? new Date(b.vencimento + 'T00:00:00') : new Date('2099-12-31'); return dtA - dtB; });
                 let matchingAluguel = candidatos.find(a => { if (!a.vencimento) return false; return dataPgtoISO <= a.vencimento; });
@@ -4485,7 +4567,7 @@ function atualizarTabelaComprovantesPag() {
     tbody.innerHTML = '';
     const lista = db.comprovantesPagamento || [];
     const placasFiltro = getPlacasPermitidasParaFiltro();
-    const indices = lista.map(function(_, i) { return i; }).filter(function(i) { if (placasFiltro === null) return true; return placasFiltro.includes(normalizarPlaca(lista[i].placa)); }).reverse();
+    const indices = lista.map(function(_, i) { return i; }).filter(function(i) { if (!lista[i]) return false; if (placasFiltro === null) return true; return placasFiltro.includes(normalizarPlaca(lista[i].placa)); }).reverse();
     if (indices.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#999;padding:20px;">Nenhum comprovante.</td></tr>'; return; }
     indices.forEach(function(realIdx) {
         const c = lista[realIdx];
@@ -4495,11 +4577,27 @@ function atualizarTabelaComprovantesPag() {
         tbody.appendChild(tr);
     });
 }
-function abrirComprovanteSalvo(idx) {
+async function abrirComprovanteSalvo(idx) {
     const c = (db.comprovantesPagamento || [])[idx];
-    if (!c || !c.dataUrl) { alert('Arquivo não disponível.'); return; }
-    if (c.tipoArquivo && c.tipoArquivo.indexOf('image/') === 0) openImageModal(c.dataUrl);
-    else { const win = window.open(); if (!win) { alert('Bloqueio de pop-up.'); return; } const nomeSafe = (c.nomeArquivo || 'Comprovante').replace(/</g, '&lt;'); win.document.write('<html><head><title>' + nomeSafe + '</title></head><body style="margin:0;"><iframe src="' + c.dataUrl + '" frameborder="0" style="border:0;position:fixed;top:0;left:0;width:100%;height:100%;" allowfullscreen></iframe></body></html>'); }
+    if (!c) { alert('Arquivo não disponível.'); return; }
+    let urlToOpen = null, revogar = false;
+    if (c.dataUrl) urlToOpen = c.dataUrl;
+    else if (c.storageId) {
+        try {
+            const reg = await idbObter(c.storageId);
+            if (reg && reg.blob) { urlToOpen = URL.createObjectURL(reg.blob); revogar = true; }
+        } catch(e) {}
+    }
+    if (!urlToOpen) { alert('Arquivo não disponível.'); return; }
+    if (c.tipoArquivo && c.tipoArquivo.indexOf('image/') === 0) {
+        openImageModal(urlToOpen);
+    } else {
+        const win = window.open();
+        if (!win) { alert('Bloqueio de pop-up.'); if (revogar) setTimeout(() => { try { URL.revokeObjectURL(urlToOpen); } catch(e){} }, 1000); return; }
+        const nomeSafe = (c.nomeArquivo || 'Comprovante').replace(/</g, '&lt;');
+        win.document.write('<html><head><title>' + nomeSafe + '</title></head><body style="margin:0;"><iframe src="' + urlToOpen + '" frameborder="0" style="border:0;position:fixed;top:0;left:0;width:100%;height:100%;" allowfullscreen></iframe></body></html>');
+        if (revogar) setTimeout(() => { try { URL.revokeObjectURL(urlToOpen); } catch(e){} }, 120000);
+    }
 }
 function editarComprovanteSalvo(idx) {
     if (!confirmarSenhaADM()) return;
@@ -4579,7 +4677,7 @@ function renderizarPreviewDocComprovante() {
         const lblPlaca = document.createElement('label'); lblPlaca.textContent = 'Placa';
         const selPlaca = document.createElement('select');
         selPlaca.innerHTML = '<option value="">-- Selecione --</option>';
-        (db.veiculos || []).forEach(function(v) { const o = document.createElement('option'); o.value = v.placa; o.textContent = v.placa + ' - ' + (v.fabricante || ''); if (item.placa === v.placa) o.selected = true; selPlaca.appendChild(o); });
+        (db.veiculos || []).forEach(function(v) { if (!v) return; const o = document.createElement('option'); o.value = v.placa; o.textContent = v.placa + ' - ' + (v.fabricante || ''); if (item.placa === v.placa) o.selected = true; selPlaca.appendChild(o); });
         selPlaca.onchange = function() { item.placa = this.value; const m = encontrarPagamentoCorrespondente(item.valor, item.placa); item.aluguelMatch = m ? m.aluguel : null; item.aluguelMatchIdx = m ? m.idx : -1; renderizarPreviewDocComprovante(); };
         wrapPlaca.appendChild(lblPlaca); wrapPlaca.appendChild(selPlaca); card.appendChild(wrapPlaca);
         container.appendChild(card);
@@ -4625,7 +4723,7 @@ function salvarDoc() {
         if (item.dataComprovante && item.dataComprovante.includes('/')) { const parts = item.dataComprovante.split('/'); if (parts.length === 3) dataPgtoISO = `${parts[2]}-${parts[1]}-${parts[0]}`; }
         if (!dataPgtoISO) dataPgtoISO = new Date().toISOString().split('T')[0];
         if (!placa) semPlaca++;
-        const duplicado = db.comprovantesDoc.some(function(c) { return (c.placa === placa) && Math.abs((c.valor || 0) - valorNum) < 0.01 && c.dataComprovante === (item.dataComprovante || '') && c.nomeArquivo === (item.nomeArquivo || ''); });
+        const duplicado = db.comprovantesDoc.some(function(c) { return c && (c.placa === placa) && Math.abs((c.valor || 0) - valorNum) < 0.01 && c.dataComprovante === (item.dataComprovante || '') && c.nomeArquivo === (item.nomeArquivo || ''); });
         if (duplicado) { duplicados++; return; }
         let aprovado = false, motivo = 'Sem pagamento correspondente', aluguelParaConciliar = null;
         if (placa && valorNum > 0) {
@@ -4671,7 +4769,7 @@ function atualizarTabelaDoc() {
     tbody.innerHTML = '';
     const lista = db.comprovantesDoc || [];
     const placasFiltro = getPlacasPermitidasParaFiltro();
-    const itens = lista.map(function(c, i) { return { c, idx: i, ordem: c.status === 'conciliado' ? 1 : 0 }; }).filter(function(entry) { if (placasFiltro === null) return true; return placasFiltro.includes(normalizarPlaca(entry.c.placa)); });
+    const itens = lista.map(function(c, i) { return { c, idx: i, ordem: c && c.status === 'conciliado' ? 1 : 0 }; }).filter(function(entry) { if (!entry.c) return false; if (placasFiltro === null) return true; return placasFiltro.includes(normalizarPlaca(entry.c.placa)); });
     if (itens.length === 0) { tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#999;padding:20px;">Nenhum comprovante.</td></tr>'; return; }
     itens.sort(function(x, y) { if (x.ordem !== y.ordem) return x.ordem - y.ordem; return y.idx - x.idx; });
     itens.forEach(function(entry) {
@@ -4683,11 +4781,27 @@ function atualizarTabelaDoc() {
         tbody.appendChild(tr);
     });
 }
-function abrirDocComprovante(idx) {
+async function abrirDocComprovante(idx) {
     const c = (db.comprovantesDoc || [])[idx];
-    if (!c || !c.dataUrl) { alert('Arquivo indisponível.'); return; }
-    if (c.tipoArquivo && c.tipoArquivo.indexOf('image/') === 0) openImageModal(c.dataUrl);
-    else { const win = window.open(); if (!win) { alert('Bloqueio de pop-up.'); return; } const nomeSafe = (c.nomeArquivo || 'Comprovante').replace(/</g, '&lt;'); win.document.write('<html><head><title>' + nomeSafe + '</title></head><body style="margin:0;"><iframe src="' + c.dataUrl + '" frameborder="0" style="border:0;position:fixed;top:0;left:0;width:100%;height:100%;" allowfullscreen></iframe></body></html>'); }
+    if (!c) { alert('Arquivo indisponível.'); return; }
+    let urlToOpen = null, revogar = false;
+    if (c.dataUrl) urlToOpen = c.dataUrl;
+    else if (c.storageId) {
+        try {
+            const reg = await idbObter(c.storageId);
+            if (reg && reg.blob) { urlToOpen = URL.createObjectURL(reg.blob); revogar = true; }
+        } catch(e) {}
+    }
+    if (!urlToOpen) { alert('Arquivo indisponível.'); return; }
+    if (c.tipoArquivo && c.tipoArquivo.indexOf('image/') === 0) {
+        openImageModal(urlToOpen);
+    } else {
+        const win = window.open();
+        if (!win) { alert('Bloqueio de pop-up.'); if (revogar) setTimeout(() => { try { URL.revokeObjectURL(urlToOpen); } catch(e){} }, 1000); return; }
+        const nomeSafe = (c.nomeArquivo || 'Comprovante').replace(/</g, '&lt;');
+        win.document.write('<html><head><title>' + nomeSafe + '</title></head><body style="margin:0;"><iframe src="' + urlToOpen + '" frameborder="0" style="border:0;position:fixed;top:0;left:0;width:100%;height:100%;" allowfullscreen></iframe></body></html>');
+        if (revogar) setTimeout(() => { try { URL.revokeObjectURL(urlToOpen); } catch(e){} }, 120000);
+    }
 }
 function excluirDocComprovante(idx) {
     if (!confirmarSenhaADM()) return;
@@ -4770,7 +4884,6 @@ async function inicializarSistemaCompleto() {
     const loginUserEl = document.getElementById('loginUser');
     if (loginUserEl && !loginUserEl.value) loginUserEl.value = 'SERGIO';
     setTimeout(() => { const el = document.getElementById('loginPassword'); if (el && document.getElementById('loginContainer').style.display !== 'none') { try { el.focus(); } catch(e) {} } }, 100);
-    // Limpeza automática do banco no boot
     setTimeout(async function() {
         if (typeof db === 'undefined' || !db) return;
         try {

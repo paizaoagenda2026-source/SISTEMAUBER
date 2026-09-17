@@ -1138,6 +1138,23 @@ async function emergenciaLimparBanco() {
             }
         }
     }
+    /* CORRIGIDO: também limpa imagens antigas da GARAGEM que estejam em base64 dentro do doc */
+    if (db.imagens && db.imagens.garagem && Array.isArray(db.imagens.garagem.fotos)) {
+        for (let i = 0; i < db.imagens.garagem.fotos.length; i++) {
+            const f = db.imagens.garagem.fotos[i];
+            if (f && typeof f === 'object' && typeof f.dataUrl === 'string' && f.dataUrl.length > 1000 && !f.id) {
+                const id = 'gar_b64_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+                try {
+                    const blob = dataUrlParaBlobLocal(f.dataUrl);
+                    await idbSalvar(id, blob, { nomeArquivo: f.nome || 'garagem.jpg', tipo: 'image/jpeg', categoria: 'garagem' });
+                    removidosKB += f.dataUrl.length / 1024;
+                    const novoRef = { id: id, nome: f.nome || 'garagem.jpg', dataUpload: f.dataUpload || hoje };
+                    if (f.thumb) novoRef.thumb = f.thumb;
+                    db.imagens.garagem.fotos[i] = novoRef;
+                } catch (e) {}
+            }
+        }
+    }
     if (Array.isArray(db.clientes)) {
         for (const c of db.clientes) {
             if (c && typeof c.selfie === 'string' && c.selfie.length > 5000) {
@@ -1187,7 +1204,6 @@ async function salvarDB() {
             await dbFirestore.collection('lobao_db').doc('principal').set(db);
         } catch (error) {
             console.error('[PAIZÃO] Erro ao salvar no Firestore:', error);
-            /* CORRIGIDO: avisa se estourou o limite de 1MB */
             const kb = Math.round(json.length / 1024);
             if (kb > 900) {
                 console.warn('[PAIZÃO] Documento muito grande (' + kb + 'KB). Considere apagar fotos antigas da Garagem/SOS.');
@@ -2254,11 +2270,9 @@ function atualizarCombosLocacao() {
     const sPl = document.getElementById('locPlaca');
     if (sPl) { sPl.innerHTML = '<option value="">Selecione</option>'; (db.veiculos || []).forEach(v => { if (!v) return; const o = document.createElement('option'); o.value = v.placa; o.textContent = v.placa; sPl.appendChild(o); }); }
 }
-/* CORRIGIDO: não sobrescreve mais CPF do Proprietário com CPF do Locatário */
 function selecionarClienteCombo() {
     const nome = document.getElementById('locLocatario').value;
     if (!nome) return;
-    /* Nada a fazer: os dados do proprietário são preenchidos ao selecionar o veículo */
 }
 function selecionarVeiculoCombo() {
     const f = document.getElementById('locVeiculo').value;
@@ -2994,7 +3008,6 @@ function capturarSelfie() {
     if (selfieStream) { selfieStream.getTracks().forEach(t => t.stop()); selfieStream = null; }
     document.getElementById('selfieVideo').srcObject = null;
 }
-/* CORRIGIDO: valida campos antes de chamar salvarCliente() */
 function confirmarSelfie() {
     if (!selfieDataUrl) { alert('Nenhuma selfie capturada!'); return; }
     if (selfieDestino === 'usuario') {
@@ -3007,7 +3020,6 @@ function confirmarSelfie() {
         const c = document.getElementById('selfiePreviewCliente');
         if (c) c.innerHTML = `<img src="${selfieDataUrl}" class="selfie-thumbnail" alt="selfie" onclick="openImageModal('${selfieDataUrl}')">`;
         fecharModalSelfie();
-        /* Só salva se todos os campos obrigatórios estiverem preenchidos */
         const campos = ['cliNome','cliCpf','cliRg','cliTelefone','cliEndereco','cliCidade','cliEstado'];
         const faltando = campos.some(id => { const el = document.getElementById(id); return !el || !String(el.value || '').trim(); });
         if (!faltando) {
@@ -3121,7 +3133,6 @@ function imprimirContratoLocacao() { _ctPrint(gerarHTMLContratoLocacao()); }
 function imprimirContratoTermo() { _ctPrint(gerarHTMLTermoResponsabilidade()); }
 function imprimirContratoNota() { _ctPrint(gerarHTMLNotaPromissoria()); }
 function _setContratoVal(id, valor) { const el = document.getElementById(id); if (el && valor !== undefined && valor !== null && valor !== '') el.value = valor; }
-/* CORRIGIDO: número sequencial */
 function _proximoNumeroContrato() {
     const total = (db.locacoes || []).length + (db.locacoesEncerradas || []).length + 1;
     return String(total).padStart(4, '0');
@@ -3540,7 +3551,10 @@ function renderizarPreviewSOS() {
 }
 
 /* ============================================================
-   GARAGEM — salva inline (nuvem via lobao_db)
+   GARAGEM — CORRIGIDA
+   - Imagem completa salva no IndexedDB (não estoura o Firestore)
+   - Thumbnail leve guardada no doc para preview rápido
+   - Nenhuma outra aba foi alterada
    ============================================================ */
 async function salvarGaragem() {
     if (!Array.isArray(garagemImagensTemp) || garagemImagensTemp.length === 0) { alert('Nenhuma imagem selecionada!'); return; }
@@ -3553,25 +3567,34 @@ async function salvarGaragem() {
     let salvas = 0, erros = 0;
     for (const item of garagemImagensTemp) {
         try {
+            // Caso já seja dataURL (compatibilidade antiga) - salva direto
             if (typeof item === 'string' && item.startsWith('data:')) {
                 db.imagens.garagem.fotos.push({ nome: 'foto_' + Date.now() + '.jpg', dataUrl: item, thumb: item, dataUpload: hoje });
                 salvas++;
                 continue;
             }
             if (!item || !item.blob) { erros++; continue; }
-            const dataUrlGrande = await blobParaDataURL(item.blob);
-            if (!dataUrlGrande) { erros++; continue; }
-            const dataUrlComprimida = await comprimirDataUrlParaDataUrl(dataUrlGrande, 700, 0.5);
-            const thumb = await comprimirDataUrlParaDataUrl(dataUrlGrande, 200, 0.5);
-            db.imagens.garagem.fotos.push({
-                nome: item.nome || 'foto.jpg',
-                dataUrl: dataUrlComprimida || dataUrlGrande,
-                thumb: thumb || dataUrlComprimida || dataUrlGrande,
-                dataUpload: hoje
+            // 1) Salva o blob original no IndexedDB (imagem completa)
+            const id = 'gar_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
+            await idbSalvar(id, item.blob, {
+                nomeArquivo: item.nome || 'foto.jpg',
+                tipo: item.blob.type || 'image/jpeg',
+                dataUpload: hoje,
+                categoria: 'garagem'
             });
+            // 2) Gera thumbnail leve (para preview rápido no doc)
+            let thumb = null;
+            try {
+                const dataUrlGrande = await blobParaDataURL(item.blob);
+                if (dataUrlGrande) thumb = await comprimirDataUrlParaDataUrl(dataUrlGrande, 300, 0.6);
+            } catch (e) {}
+            // 3) Guarda no doc apenas a referência + thumbnail
+            const ref = { id: id, nome: item.nome || 'foto.jpg', dataUpload: hoje };
+            if (thumb) ref.thumb = thumb;
+            db.imagens.garagem.fotos.push(ref);
             salvas++;
         } catch (err) {
-            console.error('Erro ao salvar foto da garagem:', err);
+            console.error('[PAIZÃO] Erro ao salvar foto da garagem:', err);
             erros++;
         }
     }
@@ -3601,28 +3624,48 @@ async function atualizarGaleriaGaragem() {
         const foto = fotos[i];
         const div = document.createElement('div');
         div.className = 'saved-image-item';
-        let src = '';
-        let srcFull = '';
+        let srcPreview = '';       // o que aparece no card (thumb leve)
+        let temIdb = false;        // se tem imagem completa no IDB
         if (typeof foto === 'string') {
-            src = foto; srcFull = foto;
+            srcPreview = foto;
         } else if (foto && typeof foto === 'object') {
-            src = foto.thumb || foto.dataUrl || '';
-            srcFull = foto.dataUrl || foto.thumb || '';
-            if (!src && foto.id) {
-                try {
-                    const reg = await idbObter(foto.id);
-                    if (reg && reg.blob) {
-                        const d = await blobParaDataURL(reg.blob);
-                        if (d) { src = d; srcFull = d; }
-                    }
-                } catch (e) {}
+            if (foto.thumb) srcPreview = foto.thumb;
+            if (foto.id) {
+                temIdb = true;
+                if (!srcPreview) {
+                    try {
+                        const reg = await idbObter(foto.id);
+                        if (reg && reg.blob) {
+                            const d = await blobParaDataURL(reg.blob);
+                            if (d) srcPreview = d;
+                        }
+                    } catch (e) {}
+                }
+            } else if (!srcPreview && foto.dataUrl) {
+                srcPreview = foto.dataUrl;
             }
         }
-        if (src) {
+        if (srcPreview) {
             const img = document.createElement('img');
-            img.src = src;
+            img.src = srcPreview;
             img.alt = 'foto';
-            img.addEventListener('click', (ev) => { ev.stopPropagation(); openImageModal(srcFull || src, [srcFull || src], 0); });
+            // Ao clicar, carrega a imagem COMPLETA do IDB (se existir)
+            img.addEventListener('click', async (ev) => {
+                ev.stopPropagation();
+                let srcFull = srcPreview;
+                if (foto && typeof foto === 'object' && foto.id) {
+                    try {
+                        const reg = await idbObter(foto.id);
+                        if (reg && reg.blob) {
+                            const d = await blobParaDataURL(reg.blob);
+                            if (d) srcFull = d;
+                        }
+                    } catch (e) {}
+                } else if (foto && typeof foto === 'object' && foto.dataUrl) {
+                    srcFull = foto.dataUrl;
+                }
+                openImageModal(srcFull, [srcFull], 0);
+            });
             div.appendChild(img);
         } else {
             const placeholder = document.createElement('div');

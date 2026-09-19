@@ -751,6 +751,8 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
             <h4 id="vistoriaLocacaoInfo"></h4>
             <div id="vistoriaFotosContainer" class="vistoria-foto-container"></div>
             <button class="btn-primary" data-permissao="vistoria_camera" onclick="abrirCameraVistoria()">📷 Tirar Foto</button>
+            <button class="btn-buscar" data-permissao="vistoria_camera" onclick="abrirBuscaImagemVistoria()">📁 Buscar Imagens</button>
+            <input type="file" id="vistoriaImagemInput" accept="image/*" multiple style="display:none;">
         </div>
         <div id="vistoriaNenhuma" style="display:none;text-align:center;padding:30px;color:#999;">Nenhuma locação ativa.</div>
     </div>
@@ -3577,6 +3579,61 @@ async function confirmarVistoria() {
     }
 }
 
+/* ============================================================
+   NOVAS FUNÇÕES: BUSCAR IMAGENS DA VISTORIA (PC)
+   ============================================================ */
+function abrirBuscaImagemVistoria() {
+    if (!temPermissao('vistoria_camera')) { alert('⛔ Sem permissão.'); return; }
+    if (!vistoriaPlacaAtual) { alert('Selecione um veículo primeiro.'); return; }
+    const input = document.getElementById('vistoriaImagemInput');
+    if (!input) { alert('Erro interno: input não encontrado.'); return; }
+    input.value = '';
+    input.click();
+}
+
+async function handleVistoriaImagemSelecionada(e) {
+    const input = e.target || this;
+    const files = Array.from(input.files || []);
+    if (files.length === 0) return;
+    const locacao = db.locacoes.find(l => l && l.placa === vistoriaPlacaAtual);
+    if (!locacao) { alert('Erro: Locação não encontrada.'); try { input.value = ''; } catch(e){} return; }
+    const imagensValidas = files.filter(ehArquivoImagem);
+    if (imagensValidas.length === 0) { alert('⚠️ Nenhum arquivo de imagem válido selecionado.'); try { input.value = ''; } catch(e){} return; }
+    const btnBuscar = document.querySelector('#vistoriaContent button[onclick="abrirBuscaImagemVistoria()"]');
+    if (btnBuscar) { btnBuscar.disabled = true; btnBuscar.textContent = '⏳ Enviando...'; }
+    let salvas = 0, erros = 0;
+    const hoje = new Date().toLocaleString('pt-BR');
+    for (const file of imagensValidas) {
+        try {
+            if (file.size > 10 * 1024 * 1024) { erros++; continue; }
+            let blob;
+            try { blob = await comprimirArquivoParaBlob(file, COMPRESS_MAX_WIDTH, COMPRESS_QUALITY); }
+            catch (compErr) { blob = file; }
+            const base64 = await blobParaDataURL(blob);
+            if (!base64) { erros++; continue; }
+            const id = gerarIdImagem();
+            const nomeArquivo = file.name || ('vistoria_' + vistoriaPlacaAtual + '.jpg');
+            await salvarImagemFirestore(id, base64, { nomeArquivo: nomeArquivo, tipo: 'image/jpeg', placa: vistoriaPlacaAtual, categoria: 'vistoria' });
+            if (!locacao.vistoria) locacao.vistoria = [];
+            locacao.vistoria.push({ id: id, nome: nomeArquivo, dataUpload: hoje });
+            salvas++;
+        } catch (err) {
+            console.error('[PAIZÃO] Erro ao salvar imagem da vistoria:', err);
+            erros++;
+        }
+    }
+    try { input.value = ''; } catch(e) {}
+    if (salvas > 0) {
+        await salvarDB();
+        registrarAuditoria('Vistoria', salvas + ' imagem(ns) adicionada(s) via upload para placa ' + vistoriaPlacaAtual);
+        await renderizarFotosVistoria(locacao);
+    }
+    if (btnBuscar) { btnBuscar.disabled = false; btnBuscar.textContent = '📁 Buscar Imagens'; }
+    let msg = '✅ ' + salvas + ' imagem(ns) salva(s)!';
+    if (erros > 0) msg += '\n⚠️ ' + erros + ' falha(s).';
+    if (salvas > 0 || erros > 0) alert(msg);
+}
+
 function renderizarPreviewSelecionadas(containerId, itens, onRemove) {
     const container = document.getElementById(containerId);
     if (!container) return;
@@ -5058,6 +5115,9 @@ async function inicializarSistemaCompleto() {
     if (compPagInput && compPagInput.dataset.bound !== '1') { compPagInput.dataset.bound = '1'; compPagInput.addEventListener('change', handleComprovantesPagInputChange); }
     const docCompInput = document.getElementById('docComprovanteInput');
     if (docCompInput && docCompInput.dataset.bound !== '1') { docCompInput.dataset.bound = '1'; docCompInput.addEventListener('change', handleDocComprovanteInputChange); }
+    // Binding do input de busca de imagens da Vistoria
+    const vistImagemInput = document.getElementById('vistoriaImagemInput');
+    if (vistImagemInput && vistImagemInput.dataset.bound !== '1') { vistImagemInput.dataset.bound = '1'; vistImagemInput.addEventListener('change', handleVistoriaImagemSelecionada); }
     atualizarTabelaComprovantesPag();
     const loginUserEl = document.getElementById('loginUser');
     if (loginUserEl && !loginUserEl.value) loginUserEl.value = 'SERGIO';

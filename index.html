@@ -398,7 +398,15 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
             <div class="form-group"><label>KM</label><input type="text" id="manKm"></div>
             <div class="form-group"><label>OBS</label><textarea id="manObs"></textarea></div>
         </div>
-        <button class="btn-primary" data-permissao="manutencao_salvar" onclick="salvarManutencao()">💾 Salvar</button>
+        
+        <!-- DASHBOARD E BOTÃO SALVAR -->
+        <div style="display: flex; align-items: flex-start; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
+            <button class="btn-primary" style="margin-bottom: 0; white-space: nowrap;" data-permissao="manutencao_salvar" onclick="salvarManutencao()">💾 Salvar</button>
+            <div id="dashboardKmManutencao" style="display: flex; gap: 10px; overflow-x: auto; padding: 10px; background: #f8f9fa; border-radius: 8px; border: 1px solid #ddd; flex: 1; min-height: 42px; align-items: center;">
+                <!-- Dashboard cards serão gerados aqui automaticamente -->
+            </div>
+        </div>
+
         <div class="table-container">
             <table id="tabelaManutencao">
                 <thead><tr><th>Veículo</th><th>Placa</th><th>Tipo</th><th>KM</th><th>Ações</th></tr></thead>
@@ -2801,6 +2809,38 @@ function salvarManutencao() {
     alert('Manutenção salva!');
     ['manVeiculo','manPlaca','manTipo','manKm','manObs'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
 }
+
+/* NOVO: Dashboard de KM da Manutenção */
+function atualizarDashboardKmManutencao() {
+    const container = document.getElementById('dashboardKmManutencao');
+    if (!container) return;
+    container.innerHTML = '';
+    if (!db.veiculos || db.veiculos.length === 0) {
+        container.innerHTML = '<span style="color:#999;font-size:14px;padding-left:10px;">Nenhum veículo cadastrado para exibir KM.</span>';
+        return;
+    }
+    
+    db.veiculos.forEach(v => {
+        if (!v || !v.placa) return;
+        
+        // Encontra os registros de manutenção para esta placa
+        const manutencoes = (db.manutencao || []).filter(m => m && m.placa === v.placa && m.km);
+        let kmAtual = 'Sem registro';
+        
+        if (manutencoes.length > 0) {
+            // Pega o último registro adicionado para esta placa
+            const ultima = manutencoes[manutencoes.length - 1];
+            kmAtual = ultima.km;
+        }
+        
+        const card = document.createElement('div');
+        card.style.cssText = 'background: white; padding: 8px 12px; border-radius: 6px; border-left: 4px solid var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); min-width: 140px; text-align: center;';
+        card.innerHTML = `<div style="font-size: 11px; color: #666; font-weight: bold; margin-bottom: 2px;">${v.placa}</div>
+                          <div style="font-size: 14px; color: var(--primary); font-weight: bold;">KM: ${kmAtual}</div>`;
+        container.appendChild(card);
+    });
+}
+
 function atualizarTabelaManutencao() {
     const tbody = document.querySelector('#tabelaManutencao tbody');
     if (!tbody) return;
@@ -2808,10 +2848,49 @@ function atualizarTabelaManutencao() {
     (db.manutencao || []).forEach((m, i) => {
         if (!m) return;
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${m.veiculo||''}</td><td>${m.placa||''}</td><td>${m.tipo||''}</td><td>${m.km||''}</td><td><button class="btn-danger" onclick="excluirManutencao(${i})">🗑️</button></td>`;
+        tr.innerHTML = `<td>${m.veiculo||''}</td><td>${m.placa||''}</td><td>${m.tipo||''}</td><td>${m.km||''}</td>
+        <td>
+            <button class="btn-info" style="padding: 8px 12px; font-size: 13px; margin: 2px;" onclick="cadastrarNovaRevisaoManutencao(${i})" title="Nova Revisão (+10.000 KM)">🔄 +10K KM</button>
+            <button class="btn-danger" style="padding: 8px 12px; font-size: 13px; margin: 2px;" onclick="excluirManutencao(${i})">🗑️</button>
+        </td>`;
         tbody.appendChild(tr);
     });
+    
+    // Atualiza o dashboard sempre que a tabela for atualizada
+    atualizarDashboardKmManutencao();
 }
+
+/* NOVO: Função para cadastrar nova revisão (+10.000 KM) */
+function cadastrarNovaRevisaoManutencao(i) {
+    if (!confirmarSenhaADM()) return;
+    const m = db.manutencao[i];
+    if (!m) {
+        alert('Registro de manutenção não encontrado.');
+        return;
+    }
+
+    const kmAtualStr = String(m.km || '0').replace(/\D/g, '');
+    const kmAtual = parseInt(kmAtualStr, 10) || 0;
+    const novoKm = kmAtual + 10000;
+    const novoKmFormatado = novoKm.toLocaleString('pt-BR');
+
+    if (!confirm(`Cadastrar nova revisão para a placa ${m.placa}?\n\nKM Atual: ${m.km || '0'}\nNovo KM: ${novoKmFormatado}`)) return;
+
+    const novaManutencao = {
+        veiculo: m.veiculo || '',
+        placa: m.placa || '',
+        tipo: 'REVISÃO PROGRAMADA',
+        km: novoKmFormatado,
+        obs: 'Revisão gerada automaticamente (+10.000 KM) a partir do registro anterior.'
+    };
+
+    db.manutencao.push(novaManutencao);
+    atualizarTabelaManutencao(); // Atualiza tabela e dashboard
+    salvarDB();
+    registrarAuditoria('Cadastro', `Nova revisão cadastrada: ${m.placa} - ${novoKmFormatado} KM`);
+    alert('✅ Nova revisão cadastrada com sucesso!');
+}
+
 function excluirManutencao(i) {
     if (!confirmarSenhaADM()) return;
     if (!confirm('Excluir esta manutenção?')) return;

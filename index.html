@@ -460,7 +460,12 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
             <div class="form-group"><label>Senha</label><input type="password" id="userSenha"></div>
             <div class="form-group"><label>Tipo</label><select id="userTipo" onchange="preencherPermissoesPadrao()"><option value="ADM">ADM</option><option value="MOTORISTA">MOTORISTA</option><option value="OFICINA">OFICINA</option><option value="VISITANTE">VISITANTE</option></select></div>
         </div>
-        <div class="config-section"><h3>🔐 Permissões</h3><div id="permissoesContainer"></div></div>
+        <div class="config-section">
+            <h3>🔐 Permissões</h3>
+            <div id="permissoesContainer"></div>
+            <h3 style="margin-top: 20px;">🚗 Placas Permitidas</h3>
+            <div id="placasPermissoesContainer" class="permissoes-grid"></div>
+        </div>
         <button class="btn-primary" onclick="salvarUsuario()">💾 Salvar</button>
         <div class="table-container">
             <table id="tabelaUsuario">
@@ -1018,10 +1023,27 @@ function obterTodasPlacasCadastradas() {
 }
 function getPlacasPermitidasParaFiltro() {
     if (!usuarioLogado) return null;
-    if (usuarioLogado.tipo !== 'MOTORISTA') return null;
-    let placas = [];
-    try { placas = obterPlacasDoUsuarioLogado() || []; } catch(e) {}
-    return placas.map(p => normalizarPlaca(p)).filter(Boolean);
+    if (usuarioLogado.tipo === 'ADM') return null; // ADM vê todas
+    
+    // Verifica se o admin configurou placas específicas para este usuário
+    const temConfigPlacas = usuarioLogado.permissoes && usuarioLogado.permissoes.veiculos && Object.keys(usuarioLogado.permissoes.veiculos).length > 0;
+    
+    if (temConfigPlacas) {
+        const permitidas = [];
+        for (const [placa, permitido] of Object.entries(usuarioLogado.permissoes.veiculos)) {
+            if (permitido) permitidas.push(placa);
+        }
+        return permitidas; // Pode ser vazio (bloqueia tudo)
+    }
+    
+    // Fallback para não quebrar usuários antigos
+    if (usuarioLogado.tipo === 'MOTORISTA') {
+        let placas = [];
+        try { placas = obterPlacasDoUsuarioLogado() || []; } catch(e) {}
+        return placas;
+    }
+    
+    return null; // Outros tipos (OFICINA, VISITANTE) veem tudo por padrão se não configurado
 }
 function confirmarSenhaADM() {
     if (usuarioLogado && usuarioLogado.tipo === 'ADM') return true;
@@ -1560,16 +1582,62 @@ function gerarPermissoesUI() {
         grid2.appendChild(d);
     });
     container.appendChild(grid2);
+
+    // NOVO: Populate plates permissions UI
+    const placasContainer = document.getElementById('placasPermissoesContainer');
+    if (placasContainer) {
+        placasContainer.innerHTML = '';
+        if (!db.veiculos || db.veiculos.length === 0) {
+            placasContainer.innerHTML = '<p style="color:#999; font-size:14px; width:100%;">Nenhum veículo cadastrado no sistema.</p>';
+        } else {
+            db.veiculos.forEach(v => {
+                if (!v || !v.placa) return;
+                const placaNorm = normalizarPlaca(v.placa);
+                const d = document.createElement('div');
+                d.className = 'permissao-item';
+                d.innerHTML = `<input type="checkbox" id="perm_placa_${placaNorm}" data-placa="${v.placa}" checked> <label for="perm_placa_${placaNorm}">${v.placa} - ${v.fabricante}</label>`;
+                placasContainer.appendChild(d);
+            });
+        }
+    }
 }
 function preencherPermissoesUI(permissoes) {
     if (!permissoes) return;
     todasAbas.forEach(a => { const cb = document.getElementById(`perm_aba_${a.id}`); if (cb) cb.checked = !!(permissoes.abas && permissoes.abas[a.id]); });
     todasPermissoes.forEach(p => { const cb = document.getElementById(`perm_botao_${p}`); if (cb) cb.checked = !!(permissoes.botoes && permissoes.botoes[p]); });
+    
+    // NOVO: Fill plates permissions UI
+    if (db.veiculos) {
+        db.veiculos.forEach(v => {
+            if (!v || !v.placa) return;
+            const placaNorm = normalizarPlaca(v.placa);
+            const cb = document.getElementById(`perm_placa_${placaNorm}`);
+            if (cb) {
+                if (permissoes.veiculos && permissoes.veiculos[v.placa] !== undefined) {
+                    cb.checked = permissoes.veiculos[v.placa];
+                } else {
+                    cb.checked = true; // Default for old users or new templates
+                }
+            }
+        });
+    }
 }
 function coletarPermissoesUI() {
     const p = { abas: {}, botoes: {}, veiculos: {} };
     todasAbas.forEach(a => { const cb = document.getElementById(`perm_aba_${a.id}`); p.abas[a.id] = cb ? cb.checked : false; });
     todasPermissoes.forEach(b => { const cb = document.getElementById(`perm_botao_${b}`); p.botoes[b] = cb ? cb.checked : false; });
+    
+    // NOVO: Collect plates permissions
+    if (db.veiculos) {
+        db.veiculos.forEach(v => {
+            if (!v || !v.placa) return;
+            const placaNorm = normalizarPlaca(v.placa);
+            const cb = document.getElementById(`perm_placa_${placaNorm}`);
+            if (cb) {
+                p.veiculos[v.placa] = cb.checked;
+            }
+        });
+    }
     return p;
 }
 function preencherPermissoesPadrao() {
@@ -1617,6 +1685,7 @@ document.querySelectorAll('.tab').forEach(tab => {
         if (tabId === 'vistoria') atualizarAbasVistoria();
         if (tabId === 'compras') { atualizarPlacasCompras(); atualizarTabelaCompras(); }
         if (tabId === 'configuracao') carregarConfiguracoes();
+        if (tabId === 'usuario') { gerarPermissoesUI(); atualizarTabelaUsuario(); }
     });
 });
 document.getElementById('fullscreenBtn').addEventListener('click', function() {
@@ -1898,6 +1967,7 @@ async function salvarVeiculo() {
     atualizarPlacasPendentes();
     salvarDB();
     limparCamposVeiculo();
+    gerarPermissoesUI(); // Atualiza a lista de placas na aba usuário
 }
 function limparCamposVeiculo() {
     ['veicFabricante','veicCor','veicPlaca','veicCambio','veicAnoFabr','veicAnoModel','veicRenavan','veicChassi','veicFipe','veicProprietario','veicCpfPropr'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
@@ -2022,6 +2092,7 @@ async function excluirVeiculo(i) {
     atualizarGaleriaComprovantes();
     atualizarTabelaFluxoCaixa();
     atualizarTabelaCompras();
+    gerarPermissoesUI(); // Atualiza a lista de placas na aba usuário
     registrarAuditoria('Exclusão', `Veículo excluído: ${v.fabricante} - ${v.placa}`);
     salvarDB();
     alert('✅ Veículo excluído!' + (relatorio.length ? '\n\n📋 Itens removidos:\n' + relatorio.join('\n') : ''));
@@ -4560,7 +4631,8 @@ async function handleComprovantesPagInputChange(e) {
     input.value = '';
     const container = document.getElementById('compPagPreviewContainer');
     if (container) container.innerHTML = '<p style="color:#666;padding:10px;">⏳ Processando arquivos...</p>';
-    const placasUsuario = obterTodasPlacasCadastradas();
+    let placasUsuario = getPlacasPermitidasParaFiltro();
+    if (placasUsuario === null) placasUsuario = obterTodasPlacasCadastradas();
     const placaAuto = placasUsuario.length > 0 ? placasUsuario[0] : '';
     const errors = [];
     for (let i = 0; i < files.length; i++) {

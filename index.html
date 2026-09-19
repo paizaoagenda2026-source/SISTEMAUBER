@@ -910,11 +910,6 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
 <script>
 /* ============================================================
    NÚCLEO — PAIZÃO UBER 2.0  (VERSÃO CORRIGIDA - FOTOS NO FIRESTORE)
-   ------------------------------------------------------------
-   • Firebase / Firestore: todos os dados + imagens comprimidas em Base64.
-   • Compressão ajustada para 600px / qualidade 0.5 → caber MUITAS fotos
-     dentro do limite de 1MB por documento do Firestore (free tier).
-   • IDB usado apenas como cache local para performance.
    ============================================================ */
 const firebaseConfig = {
   apiKey: "AIzaSyApeHoLWESXU8j50ckswmJZ7j9qzWlZtlY",
@@ -926,7 +921,6 @@ const firebaseConfig = {
   measurementId: "G-ZZ2MVW89TL"
 };
 
-/* ---- Firebase ---- */
 let dbFirestore = null;
 try {
     if (typeof firebase !== 'undefined' && typeof firebase.initializeApp === 'function') {
@@ -942,17 +936,12 @@ let usuarioLogado = null;
 let sistemaInicializado = false;
 let idbHandle = null;
 
-/* ---- Constantes de compressão (muito importante) ---- */
-/* Firestore aceita no máximo 1.048.576 bytes por documento.
-   Base64 infla ~33% → usamos 600px + quality 0.5 para ficar em ~40-80KB. */
 const COMPRESS_MAX_WIDTH = 600;
 const COMPRESS_QUALITY = 0.5;
-const FIRESTORE_MAX_BASE64 = 900000; // ~660KB original, margem de segurança
+const FIRESTORE_MAX_BASE64 = 900000;
 
-/* ---- Cache de imagens em memória ---- */
 const _imageCache = new Map();
 
-/* ---- Permissões ---- */
 const todasAbas = [
     { id: 'veiculos' }, { id: 'clientes' }, { id: 'locacoes' }, { id: 'locEncerrada' },
     { id: 'manutencao' }, { id: 'mecanico' }, { id: 'usuario' }, { id: 'garagem' },
@@ -975,7 +964,6 @@ const permissoesPadrao = {
     VISITANTE: { abas: Object.fromEntries(todasAbas.map(a => [a.id, true])), botoes: {}, veiculos: {} }
 };
 
-/* ---- Estado global ---- */
 let selfieStream = null, selfieDataUrl = null, selfieClienteTemp = null, selfieUsuarioTemp = null, selfieDestino = 'cliente';
 let vistoriaStream = null, vistoriaDataUrl = null, vistoriaPlacaAtual = null;
 let usuarioEditandoIndex = null, compraEditandoIndex = null, pendenciaEditandoIndex = null;
@@ -990,9 +978,6 @@ let comprovantesPagTemp = [];
 let docComprovantesTemp = [];
 let docVeiculoAtual = null;
 
-/* ============================================================
-   HELPERS
-   ============================================================ */
 function campoVazio(v) { return !v || String(v).trim() === ''; }
 function formatarMoedaBR(v) { return 'R$ ' + (Number(v) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 function normalizarPlaca(p) { return String(p || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); }
@@ -1021,7 +1006,6 @@ function obterPlacasDoUsuarioLogado() {
     });
     return placas;
 }
-/* NOVO: retorna TODAS as placas cadastradas no sistema (db.veiculos) */
 function obterTodasPlacasCadastradas() {
     const placas = [];
     (db.veiculos || []).forEach(function(v) {
@@ -1031,27 +1015,21 @@ function obterTodasPlacasCadastradas() {
 }
 function getPlacasPermitidasParaFiltro() {
     if (!usuarioLogado) return null;
-    if (usuarioLogado.tipo === 'ADM') return null; // ADM vê todas
-    
-    // Verifica se o admin configurou placas específicas para este usuário
+    if (usuarioLogado.tipo === 'ADM') return null;
     const temConfigPlacas = usuarioLogado.permissoes && usuarioLogado.permissoes.veiculos && Object.keys(usuarioLogado.permissoes.veiculos).length > 0;
-    
     if (temConfigPlacas) {
         const permitidas = [];
         for (const [placa, permitido] of Object.entries(usuarioLogado.permissoes.veiculos)) {
             if (permitido) permitidas.push(placa);
         }
-        return permitidas; // Pode ser vazio (bloqueia tudo)
+        return permitidas;
     }
-    
-    // Fallback para não quebrar usuários antigos
     if (usuarioLogado.tipo === 'MOTORISTA') {
         let placas = [];
         try { placas = obterPlacasDoUsuarioLogado() || []; } catch(e) {}
         return placas;
     }
-    
-    return null; // Outros tipos (OFICINA, VISITANTE) veem tudo por padrão se não configurado
+    return null;
 }
 function confirmarSenhaADM() {
     if (usuarioLogado && usuarioLogado.tipo === 'ADM') return true;
@@ -1064,9 +1042,6 @@ function confirmarSenhaADM() {
     return false;
 }
 
-/* ============================================================
-   INDEXEDDB — Cache local
-   ============================================================ */
 function abrirIDB() {
     if (idbHandle) return Promise.resolve(idbHandle);
     return new Promise((resolve, reject) => {
@@ -1108,9 +1083,6 @@ function idbExcluir(id) {
     })).catch(() => false);
 }
 
-/* ============================================================
-   FIRESTORE — Armazenamento principal de imagens (Base64)
-   ============================================================ */
 async function salvarImagemFirestore(id, base64String, meta) {
     if (!dbFirestore) throw new Error('Firestore não inicializado');
     if (!base64String || typeof base64String !== 'string') throw new Error('Base64 inválido');
@@ -1164,9 +1136,6 @@ async function excluirImagemFirestore(id) {
     catch(e) { console.error('[PAIZÃO] Erro ao excluir imagem do Firestore:', e); }
 }
 
-/* ============================================================
-   CONVERSÃO / COMPRESSÃO DE IMAGEM
-   ============================================================ */
 function dataUrlParaBlobLocal(dataUrl) {
     const partes = dataUrl.split(',');
     const mime = (partes[0].match(/:(.*?);/) || [, 'image/jpeg'])[1];
@@ -1268,9 +1237,6 @@ async function processarArquivosImagem(files, maxWidth, quality) {
     return resultados;
 }
 
-/* ============================================================
-   DB PADRÃO / CARREGAR / SALVAR
-   ============================================================ */
 function criarDBPadrao() {
     return {
         veiculos: [], clientes: [], locacoes: [], locacoesEncerradas: [], manutencao: [], mecanico: [],
@@ -1348,9 +1314,6 @@ async function salvarDB() {
     }
 }
 
-/* ============================================================
-   MIGRAÇÃO — Imagens antigas em base64 direto no Firestore
-   ============================================================ */
 async function migrarFotosAntigasParaIDB() {
     if (!db) return;
     let precisaSalvar = false;
@@ -1456,9 +1419,6 @@ async function migrarFotosAntigasParaIDB() {
     if (precisaSalvar) { try { await salvarDB(); } catch(e) {} }
 }
 
-/* ============================================================
-   AUDITORIA
-   ============================================================ */
 function registrarAuditoria(acao, descricao) {
     if (!db) return;
     if (!Array.isArray(db.auditoria)) db.auditoria = [];
@@ -1478,9 +1438,6 @@ function atualizarTabelaAuditoria() {
     });
 }
 
-/* ============================================================
-   LOGIN
-   ============================================================ */
 document.getElementById('loginForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const user = document.getElementById('loginUser').value.trim().toUpperCase();
@@ -1569,9 +1526,6 @@ function sairSistema() {
     else aplicarEstado();
 })();
 
-/* ============================================================
-   PERMISSÕES - UI
-   ============================================================ */
 function gerarPermissoesUI() {
     const container = document.getElementById('permissoesContainer');
     if (!container) return;
@@ -1591,7 +1545,6 @@ function gerarPermissoesUI() {
     });
     container.appendChild(grid2);
 
-    // NOVO: Populate plates permissions UI
     const placasContainer = document.getElementById('placasPermissoesContainer');
     if (placasContainer) {
         placasContainer.innerHTML = '';
@@ -1613,8 +1566,6 @@ function preencherPermissoesUI(permissoes) {
     if (!permissoes) return;
     todasAbas.forEach(a => { const cb = document.getElementById(`perm_aba_${a.id}`); if (cb) cb.checked = !!(permissoes.abas && permissoes.abas[a.id]); });
     todasPermissoes.forEach(p => { const cb = document.getElementById(`perm_botao_${p}`); if (cb) cb.checked = !!(permissoes.botoes && permissoes.botoes[p]); });
-    
-    // NOVO: Fill plates permissions UI
     if (db.veiculos) {
         db.veiculos.forEach(v => {
             if (!v || !v.placa) return;
@@ -1624,7 +1575,7 @@ function preencherPermissoesUI(permissoes) {
                 if (permissoes.veiculos && permissoes.veiculos[v.placa] !== undefined) {
                     cb.checked = permissoes.veiculos[v.placa];
                 } else {
-                    cb.checked = true; // Default for old users or new templates
+                    cb.checked = true;
                 }
             }
         });
@@ -1634,8 +1585,6 @@ function coletarPermissoesUI() {
     const p = { abas: {}, botoes: {}, veiculos: {} };
     todasAbas.forEach(a => { const cb = document.getElementById(`perm_aba_${a.id}`); p.abas[a.id] = cb ? cb.checked : false; });
     todasPermissoes.forEach(b => { const cb = document.getElementById(`perm_botao_${b}`); p.botoes[b] = cb ? cb.checked : false; });
-    
-    // NOVO: Collect plates permissions
     if (db.veiculos) {
         db.veiculos.forEach(v => {
             if (!v || !v.placa) return;
@@ -1662,9 +1611,6 @@ function aplicarPermissoes(usuario) {
     if (firstTab) firstTab.click();
 }
 
-/* ============================================================
-   ABAS / NAVEGAÇÃO
-   ============================================================ */
 document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', function() {
         if (this.classList.contains('hidden-tab')) return;
@@ -1805,9 +1751,6 @@ function preencherDatasAutomaticas() {
     preencherDataInicioLocacao();
 }
 
-/* ============================================================
-   FIPE
-   ============================================================ */
 function normalizarTextoFipe(t) {
     return String(t || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
 }
@@ -1932,9 +1875,6 @@ function configurarBuscaFipeAutomatica() {
     });
 }
 
-/* ============================================================
-   VEÍCULOS
-   ============================================================ */
 async function salvarVeiculo() {
     const fabricante = document.getElementById('veicFabricante').value.trim();
     const cor = document.getElementById('veicCor').value.trim();
@@ -1975,7 +1915,7 @@ async function salvarVeiculo() {
     atualizarPlacasPendentes();
     salvarDB();
     limparCamposVeiculo();
-    gerarPermissoesUI(); // Atualiza a lista de placas na aba usuário
+    gerarPermissoesUI();
 }
 function limparCamposVeiculo() {
     ['veicFabricante','veicCor','veicPlaca','veicCambio','veicAnoFabr','veicAnoModel','veicRenavan','veicChassi','veicFipe','veicProprietario','veicCpfPropr'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
@@ -2100,7 +2040,7 @@ async function excluirVeiculo(i) {
     atualizarGaleriaComprovantes();
     atualizarTabelaFluxoCaixa();
     atualizarTabelaCompras();
-    gerarPermissoesUI(); // Atualiza a lista de placas na aba usuário
+    gerarPermissoesUI();
     registrarAuditoria('Exclusão', `Veículo excluído: ${v.fabricante} - ${v.placa}`);
     salvarDB();
     alert('✅ Veículo excluído!' + (relatorio.length ? '\n\n📋 Itens removidos:\n' + relatorio.join('\n') : ''));
@@ -2116,9 +2056,6 @@ function debugVeiculos() {
     alert('USUÁRIOS:\n' + (db.usuarios || []).map(u => '• ' + u.nome + ' (' + u.tipo + ')').join('\n') + '\n\nTotal de veículos: ' + (db.veiculos || []).length);
 }
 
-/* ============================================================
-   CLIENTES
-   ============================================================ */
 async function salvarCliente() {
     const nome = document.getElementById('cliNome').value.trim();
     const cpf = document.getElementById('cliCpf').value.trim();
@@ -2301,9 +2238,6 @@ function criarUsuarioDoCliente(cliente) {
     atualizarTabelaUsuario();
 }
 
-/* ============================================================
-   USUÁRIOS
-   ============================================================ */
 async function atualizarTabelaUsuario() {
     const tbody = document.querySelector('#tabelaUsuario tbody');
     if (!tbody) return;
@@ -2398,9 +2332,6 @@ function limparCamposUsuario() {
     usuarioEditandoIndex = null;
 }
 
-/* ============================================================
-   LOCAÇÕES
-   ============================================================ */
 function atualizarCombosLocacao() {
     const sCli = document.getElementById('locLocatario');
     if (sCli) { sCli.innerHTML = '<option value="">Selecione</option>'; (db.clientes || []).forEach(c => { if (!c) return; const o = document.createElement('option'); o.value = c.nome; o.textContent = c.nome; sCli.appendChild(o); }); }
@@ -2786,9 +2717,6 @@ async function excluirLocacaoEncerrada(i) {
     alert('✅ Locação encerrada excluída!');
 }
 
-/* ============================================================
-   MANUTENÇÃO / MECÂNICO
-   ============================================================ */
 function atualizarPlacasManutencao() {
     const s = document.getElementById('manPlaca');
     if (!s) return;
@@ -2810,7 +2738,6 @@ function salvarManutencao() {
     ['manVeiculo','manPlaca','manTipo','manKm','manObs'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
 }
 
-/* NOVO: Dashboard de KM da Manutenção */
 function atualizarDashboardKmManutencao() {
     const container = document.getElementById('dashboardKmManutencao');
     if (!container) return;
@@ -2823,12 +2750,10 @@ function atualizarDashboardKmManutencao() {
     db.veiculos.forEach(v => {
         if (!v || !v.placa) return;
         
-        // Encontra os registros de manutenção para esta placa
         const manutencoes = (db.manutencao || []).filter(m => m && m.placa === v.placa && m.km);
         let kmAtual = 'Sem registro';
         
         if (manutencoes.length > 0) {
-            // Pega o último registro adicionado para esta placa
             const ultima = manutencoes[manutencoes.length - 1];
             kmAtual = ultima.km;
         }
@@ -2856,11 +2781,16 @@ function atualizarTabelaManutencao() {
         tbody.appendChild(tr);
     });
     
-    // Atualiza o dashboard sempre que a tabela for atualizada
     atualizarDashboardKmManutencao();
 }
 
-/* NOVO: Função para cadastrar nova revisão (+10.000 KM) */
+/* ============================================================
+   ALTERAÇÃO SOLICITADA: cadastrarNovaRevisaoManutencao
+   ------------------------------------------------------------
+   • Lança o KM NOVO (+10.000) na aba MANUTENÇÃO
+   • Lança o KM ATUAL (anterior) na aba HISTÓRICO GERAL
+   • Apaga o histórico atual da aba MANUTENÇÃO (substitui o registro)
+   ============================================================ */
 function cadastrarNovaRevisaoManutencao(i) {
     if (!confirmarSenhaADM()) return;
     const m = db.manutencao[i];
@@ -2876,7 +2806,22 @@ function cadastrarNovaRevisaoManutencao(i) {
 
     if (!confirm(`Cadastrar nova revisão para a placa ${m.placa}?\n\nKM Atual: ${m.km || '0'}\nNovo KM: ${novoKmFormatado}`)) return;
 
-    const novaManutencao = {
+    const hojeISO = new Date().toISOString().split('T')[0];
+
+    // 1) LANÇAR O KM ATUAL (anterior) NA ABA HISTÓRICO GERAL
+    if (!Array.isArray(db.historico)) db.historico = [];
+    db.historico.push({
+        data: hojeISO,
+        descricao: 'Revisão Manutenção - KM Anterior: ' + (m.km || '0'),
+        placa: m.placa || '',
+        valor: m.km || '0',
+        fornecedor: '',
+        oficina: ''
+    });
+
+    // 2) APAGAR O HISTÓRICO ATUAL DA ABA MANUTENÇÃO (substitui o registro antigo pelo novo)
+    //    e LANÇAR O KM NOVO (+10.000) NA ABA MANUTENÇÃO
+    db.manutencao[i] = {
         veiculo: m.veiculo || '',
         placa: m.placa || '',
         tipo: 'REVISÃO PROGRAMADA',
@@ -2884,11 +2829,11 @@ function cadastrarNovaRevisaoManutencao(i) {
         obs: 'Revisão gerada automaticamente (+10.000 KM) a partir do registro anterior.'
     };
 
-    db.manutencao.push(novaManutencao);
-    atualizarTabelaManutencao(); // Atualiza tabela e dashboard
+    atualizarTabelaManutencao();   // Atualiza Manutenção (com o KM NOVO)
+    atualizarTabelaHistorico();    // Atualiza Histórico Geral (com o KM ATUAL/ANTERIOR)
     salvarDB();
-    registrarAuditoria('Cadastro', `Nova revisão cadastrada: ${m.placa} - ${novoKmFormatado} KM`);
-    alert('✅ Nova revisão cadastrada com sucesso!');
+    registrarAuditoria('Cadastro', `Nova revisão cadastrada: ${m.placa} - ${novoKmFormatado} KM | KM anterior ${m.km || '0'} enviado ao Histórico Geral`);
+    alert('✅ Nova revisão cadastrada com sucesso!\n\n🔧 Manutenção: KM ' + novoKmFormatado + '\n📜 Histórico Geral: KM anterior ' + (m.km || '0') + ' lançado');
 }
 
 function excluirManutencao(i) {
@@ -3011,9 +2956,6 @@ function gerarPDFReciboMecanico(lista, total, oficinas) {
     window.print();
 }
 
-/* ============================================================
-   HISTÓRICO
-   ============================================================ */
 function atualizarTabelaHistorico() {
     const tbody = document.querySelector('#tabelaHistorico tbody');
     if (!tbody) return;
@@ -3076,9 +3018,6 @@ function excluirHistoricoAluguel(index) {
     registrarAuditoria('Exclusão', 'Registro do histórico de aluguéis excluído');
 }
 
-/* ============================================================
-   SELFIE (selfie comprimida a 0.5 qualidade para caber no Firestore)
-   ============================================================ */
 function abrirModalSelfie(destino) {
     destino = destino || 'cliente';
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -3152,9 +3091,6 @@ function confirmarSelfie() {
 }
 function limparSelfieCliente() { selfieClienteTemp = null; const c = document.getElementById('selfiePreviewCliente'); if (c) c.innerHTML = ''; }
 
-/* ============================================================
-   MODAL DE IMAGEM
-   ============================================================ */
 function openImageModal(src, gallery, index) {
     if (Array.isArray(gallery) && gallery.length > 0) {
         galeriaAtual = gallery.slice();
@@ -3207,9 +3143,6 @@ document.addEventListener('keydown', function(e) {
 }, true);
 function fecharDespesasModal() { document.getElementById('despesasModal').classList.remove('active'); }
 
-/* ============================================================
-   CONTRATOS
-   ============================================================ */
 const CONTRATO_LOC_CAMPOS = ['numero','numeroInterno','locadora','locadoraEndereco','locadoraCnpj','locatario','locatarioEndereco','locatarioCep','locatarioRg','locatarioCpf','veiculo','veiculoCor','veiculoPlaca','anoFabr','anoModel','gestor','localVistoria','prazo','multaRescisao','taxaTroca','valorAluguel','limiteKm','valorKm','caucao','caucaoParcelas','caucaoDevolucao','multaInadimplencia','taxaHigienizacao','taxaEntrega','foro','data'];
 const CONTRATO_TER_CAMPOS = ['nome','rg','cpf','cnh','cnhValidade','veiculo','placa','proprietario','proprietarioCpf','prazo','data'];
 const CONTRATO_NOT_CAMPOS = ['numero','vencimento','valor','dataEmissao','credor','credorCnpj','valorExtenso','cidade','emitenteNome','emitenteCpf','emitenteDoc','emitenteDocExp','emitenteEndereco','emitenteCep','cartorio','data'];
@@ -3435,9 +3368,6 @@ async function gerarESalvarContratosAutomaticos(locacao) {
     return salvos;
 }
 
-/* ============================================================
-   DOCUMENTOS POR PLACA
-   ============================================================ */
 function switchSubTab(t) {
     document.querySelectorAll('#comprovantes .sub-tab').forEach(x => x.classList.remove('active'));
     document.querySelectorAll('#comprovantes .sub-tab-content').forEach(x => x.classList.remove('active'));
@@ -3451,9 +3381,6 @@ function switchSubTab(t) {
     if (t === 'leituraAuto') atualizarTabelaDoc();
 }
 
-/* ============================================================
-   VISTORIA — compressão ajustada para caber no Firestore
-   ============================================================ */
 async function atualizarAbasVistoria() {
     const tabsContainer = document.getElementById('vistoriaSubTabs');
     const contentContainer = document.getElementById('vistoriaContent');
@@ -3610,9 +3537,6 @@ async function confirmarVistoria() {
     }
 }
 
-/* ============================================================
-   GALERIAS — GARAGEM E SOS (compressão 600px/0.5)
-   ============================================================ */
 function renderizarPreviewSelecionadas(containerId, itens, onRemove) {
     const container = document.getElementById(containerId);
     if (!container) return;
@@ -3857,9 +3781,6 @@ async function atualizarImagemGuincho() {
 function mostrarGuinchoFullscreen() { const overlay = document.getElementById('guinchoOverlay'); if (overlay) { overlay.style.display = 'flex'; overlay.classList.add('active'); } atualizarImagemGuincho(); }
 function fecharGuinchoFullscreen() { const overlay = document.getElementById('guinchoOverlay'); if (overlay) { overlay.classList.remove('active'); overlay.style.display = 'none'; } }
 
-/* ============================================================
-   PAGAMENTOS
-   ============================================================ */
 function atualizarTabelaAlugueis() {
     const tbody = document.querySelector('#tabelaPagamentos tbody');
     if (!tbody) return;
@@ -3962,9 +3883,6 @@ function excluirPagamento(i) {
     alert('✅ Pagamento excluído!' + (removidos > 0 ? '\n\n📋 ' + removidos + ' registro(s) do histórico removido(s).' : ''));
 }
 
-/* ============================================================
-   FLUXO / BANCO / COMPRAS / PENDENTES / CONFIG
-   ============================================================ */
 function atualizarTabelaFluxoCaixa() {
     const tbody = document.querySelector('#tabelaFluxoCaixa tbody');
     if (!tbody) return;
@@ -4318,9 +4236,6 @@ function excluirPendencia(i) {
     salvarDB();
 }
 
-/* ============================================================
-   LEITURA DE PDF / OCR
-   ============================================================ */
 function fileToDataURL(file) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = e => resolve(e.target.result); reader.onerror = () => reject(new Error('Erro ao ler arquivo')); reader.readAsDataURL(file); }); }
 async function extrairTextoPDF(file) {
     if (typeof pdfjsLib === 'undefined') throw new Error('Biblioteca PDF não carregada');
@@ -4648,9 +4563,6 @@ function excluirDocumentoPlaca(placa, idx) {
     registrarAuditoria('Exclusão', 'Documento excluído da placa ' + placa);
 }
 
-/* ============================================================
-   COMPROVANTES DE PAGAMENTO
-   ============================================================ */
 function renderizarPreviewComprovantesPag() {
     const container = document.getElementById('compPagPreviewContainer');
     if (!container) return;
@@ -4845,9 +4757,6 @@ async function excluirComprovanteSalvo(idx) {
     alert('✅ Comprovante excluído.');
 }
 
-/* ============================================================
-   LEITURA AUTOMÁTICA (DOC)
-   ============================================================ */
 function converterDataBRparaISO(dataBR) { if (!dataBR || !dataBR.includes('/')) return ''; const parts = dataBR.split('/'); if (parts.length !== 3) return ''; return parts[2] + '-' + parts[1] + '-' + parts[0]; }
 function encontrarPagamentoCorrespondente(valor, placa) {
     if (!valor || valor <= 0) return null;
@@ -5032,9 +4941,6 @@ async function excluirDocComprovante(idx) {
     registrarAuditoria('Exclusão', 'Comprovante excluído: ' + c.nomeArquivo);
 }
 
-/* ============================================================
-   INSTALL / PWA
-   ============================================================ */
 let deferredInstallPrompt = null;
 window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredInstallPrompt = e; const btn = document.getElementById('installBtn'); if (btn) btn.style.display = 'inline-block'; });
 window.addEventListener('appinstalled', () => { deferredInstallPrompt = null; const btn = document.getElementById('installBtn'); if (btn) btn.style.display = 'none'; });
@@ -5053,18 +4959,12 @@ function configurarBotaoInstalar() {
     });
 }
 
-/* ============================================================
-   SERVICE WORKER
-   ============================================================ */
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js').catch(() => {});
     });
 }
 
-/* ============================================================
-   INICIALIZAÇÃO
-   ============================================================ */
 async function inicializarSistemaCompleto() {
     if (sistemaInicializado) return;
     sistemaInicializado = true;

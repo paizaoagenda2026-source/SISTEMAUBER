@@ -704,7 +704,8 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
             <div class="form-group"><label>Placa</label><select id="pendPlaca" class="campo-enter"><option value="">Selecione</option></select></div>
             <div class="form-group"><label>Crédito</label><input type="text" id="pendCredito" class="money"></div>
             <div class="form-group"><label>Débito</label><input type="text" id="pendDebito" class="money"></div>
-            <div class="form-group"><label>Vencimento</label><input type="date" id="pendVencimento"></div>
+            <div class="form-group"><label>Data Inicio</label><input type="date" id="pendVencimento"></div>
+            <div class="form-group"><label>Data Final</label><input type="date" id="pendDataFinal"></div>
         </div>
         <button class="btn-primary" onclick="salvarPendencia()">💾 Salvar</button>
         <div class="table-container">
@@ -2827,13 +2828,6 @@ function atualizarTabelaManutencao() {
     atualizarDashboardKmManutencao();
 }
 
-/* ============================================================
-   ALTERAÇÃO SOLICITADA: cadastrarNovaRevisaoManutencao
-   ------------------------------------------------------------
-   • Lança o KM NOVO (+10.000) na aba MANUTENÇÃO
-   • Lança o KM ATUAL (anterior) na aba HISTÓRICO GERAL
-   • Apaga o histórico atual da aba MANUTENÇÃO (substitui o registro)
-   ============================================================ */
 function cadastrarNovaRevisaoManutencao(i) {
     if (!confirmarSenhaADM()) return;
     const m = db.manutencao[i];
@@ -2851,7 +2845,6 @@ function cadastrarNovaRevisaoManutencao(i) {
 
     const hojeISO = new Date().toISOString().split('T')[0];
 
-    // 1) LANÇAR O KM ATUAL (anterior) NA ABA HISTÓRICO GERAL
     if (!Array.isArray(db.historico)) db.historico = [];
     db.historico.push({
         data: hojeISO,
@@ -2862,8 +2855,6 @@ function cadastrarNovaRevisaoManutencao(i) {
         oficina: ''
     });
 
-    // 2) APAGAR O HISTÓRICO ATUAL DA ABA MANUTENÇÃO (substitui o registro antigo pelo novo)
-    //    e LANÇAR O KM NOVO (+10.000) NA ABA MANUTENÇÃO
     db.manutencao[i] = {
         veiculo: m.veiculo || '',
         placa: m.placa || '',
@@ -2872,8 +2863,8 @@ function cadastrarNovaRevisaoManutencao(i) {
         obs: 'Revisão gerada automaticamente (+10.000 KM) a partir do registro anterior.'
     };
 
-    atualizarTabelaManutencao();   // Atualiza Manutenção (com o KM NOVO)
-    atualizarTabelaHistorico();    // Atualiza Histórico Geral (com o KM ATUAL/ANTERIOR)
+    atualizarTabelaManutencao();
+    atualizarTabelaHistorico();
     salvarDB();
     registrarAuditoria('Cadastro', `Nova revisão cadastrada: ${m.placa} - ${novoKmFormatado} KM | KM anterior ${m.km || '0'} enviado ao Histórico Geral`);
     alert('✅ Nova revisão cadastrada com sucesso!\n\n🔧 Manutenção: KM ' + novoKmFormatado + '\n📜 Histórico Geral: KM anterior ' + (m.km || '0') + ' lançado');
@@ -3580,9 +3571,6 @@ async function confirmarVistoria() {
     }
 }
 
-/* ============================================================
-   NOVAS FUNÇÕES: BUSCAR IMAGENS DA VISTORIA (PC)
-   ============================================================ */
 function abrirBuscaImagemVistoria() {
     if (!temPermissao('vistoria_camera')) { alert('⛔ Sem permissão.'); return; }
     if (!vistoriaPlacaAtual) { alert('Selecione um veículo primeiro.'); return; }
@@ -4272,12 +4260,13 @@ function salvarPendencia() {
     const credito = document.getElementById('pendCredito').value.trim();
     const debito = document.getElementById('pendDebito').value.trim();
     const vencimento = document.getElementById('pendVencimento').value;
+    const dataFinal = document.getElementById('pendDataFinal').value;
     if (!data || !descricao || !placa || !vencimento || (!credito && !debito)) { alert('Preencha todos os campos obrigatórios!'); return; }
     if (!Array.isArray(db.pendentes)) db.pendentes = [];
     if (!Array.isArray(db.historico)) db.historico = [];
-    db.pendentes.push({ data, descricao, placa, credito: credito || '', debito: debito || '', vencimento, status: 'Pendente', dataPagamento: null });
+    db.pendentes.push({ data, descricao, placa, credito: credito || '', debito: debito || '', vencimento, dataFinal: dataFinal || '', status: 'Pendente', dataPagamento: null });
     db.historico.push({ data, descricao: 'Pendência: ' + descricao, placa, valor: credito || debito || '', fornecedor: '', oficina: '' });
-    ['pendDescricao','pendPlaca','pendCredito','pendDebito','pendVencimento'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    ['pendDescricao','pendPlaca','pendCredito','pendDebito','pendVencimento','pendDataFinal'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
     const pendDataEl = document.getElementById('pendData'); if (pendDataEl) pendDataEl.value = obterDataHojeISO();
     atualizarTabelaPendentes();
     atualizarTabelaHistorico();
@@ -4336,13 +4325,24 @@ function marcarPendenciaPaga(i) {
         const dtVenc = new Date(baseVenc + 'T00:00:00');
         dtVenc.setDate(dtVenc.getDate() + 30);
         const proximoVencimento = dtVenc.toISOString().split('T')[0];
-        const baseData = p.data || hojeISO;
-        const dtData = new Date(baseData + 'T00:00:00');
-        dtData.setDate(dtData.getDate() + 30);
-        const proximaData = dtData.toISOString().split('T')[0];
-        if (!Array.isArray(db.pendentes)) db.pendentes = [];
-        db.pendentes.push({ data: proximaData, descricao: p.descricao, placa: p.placa, credito: p.credito || '', debito: p.debito || '', vencimento: proximoVencimento, status: 'Pendente', dataPagamento: null });
-        registrarAuditoria('Renovação', 'Próxima pendência gerada: ' + p.descricao + ' - Placa: ' + p.placa);
+        
+        // Verifica se o próximo vencimento está dentro do período (Data Final)
+        let podeGerarProximo = true;
+        if (p.dataFinal) {
+            podeGerarProximo = proximoVencimento <= p.dataFinal;
+        }
+        
+        if (podeGerarProximo) {
+            const baseData = p.data || hojeISO;
+            const dtData = new Date(baseData + 'T00:00:00');
+            dtData.setDate(dtData.getDate() + 30);
+            const proximaData = dtData.toISOString().split('T')[0];
+            if (!Array.isArray(db.pendentes)) db.pendentes = [];
+            db.pendentes.push({ data: proximaData, descricao: p.descricao, placa: p.placa, credito: p.credito || '', debito: p.debito || '', vencimento: proximoVencimento, dataFinal: p.dataFinal || '', status: 'Pendente', dataPagamento: null });
+            registrarAuditoria('Renovação', 'Próxima pendência gerada: ' + p.descricao + ' - Placa: ' + p.placa);
+        } else {
+            registrarAuditoria('Pagamento', 'Última pendência do período paga: ' + p.descricao + ' - Placa: ' + p.placa);
+        }
     } catch (err) {}
     atualizarTabelaPendentes();
     atualizarTabelaFluxoCaixa();
@@ -5142,7 +5142,6 @@ async function inicializarSistemaCompleto() {
     if (compPagInput && compPagInput.dataset.bound !== '1') { compPagInput.dataset.bound = '1'; compPagInput.addEventListener('change', handleComprovantesPagInputChange); }
     const docCompInput = document.getElementById('docComprovanteInput');
     if (docCompInput && docCompInput.dataset.bound !== '1') { docCompInput.dataset.bound = '1'; docCompInput.addEventListener('change', handleDocComprovanteInputChange); }
-    // Binding do input de busca de imagens da Vistoria
     const vistImagemInput = document.getElementById('vistoriaImagemInput');
     if (vistImagemInput && vistImagemInput.dataset.bound !== '1') { vistImagemInput.dataset.bound = '1'; vistImagemInput.addEventListener('change', handleVistoriaImagemSelecionada); }
     atualizarTabelaComprovantesPag();

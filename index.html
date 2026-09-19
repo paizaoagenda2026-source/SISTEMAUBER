@@ -639,7 +639,7 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
             <div class="form-group"><label>Data</label><input type="date" id="compData"></div>
             <div class="form-group"><label>Produto</label><input type="text" id="compProduto"></div>
             <div class="form-group"><label>Fornecedor</label><input type="text" id="compFornecedor"></div>
-            <div class="form-group"><label>Placa</label><input type="text" id="compPlaca"></div>
+            <div class="form-group"><label>Placa</label><select id="compPlaca"><option value="">Selecione</option></select></div>
             <div class="form-group"><label>Qtd</label><input type="number" id="compQuantidade"></div>
             <div class="form-group"><label>Valor Unit</label><input type="text" id="compValorUnitario" class="money"></div>
             <div class="form-group"><label>Total</label><input type="text" id="compValorTotal" class="money" readonly></div>
@@ -684,7 +684,7 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
         <div class="form-grid">
             <div class="form-group"><label>Data</label><input type="date" id="pendData"></div>
             <div class="form-group"><label>Descrição</label><input type="text" id="pendDescricao" class="campo-enter"></div>
-            <div class="form-group"><label>Placa</label><input type="text" id="pendPlaca" class="campo-enter"></div>
+            <div class="form-group"><label>Placa</label><select id="pendPlaca" class="campo-enter"><option value="">Selecione</option></select></div>
             <div class="form-group"><label>Crédito</label><input type="text" id="pendCredito" class="money"></div>
             <div class="form-group"><label>Débito</label><input type="text" id="pendDebito" class="money"></div>
             <div class="form-group"><label>Vencimento</label><input type="date" id="pendVencimento"></div>
@@ -1008,6 +1008,14 @@ function obterPlacasDoUsuarioLogado() {
     });
     return placas;
 }
+/* NOVO: retorna TODAS as placas cadastradas no sistema (db.veiculos) */
+function obterTodasPlacasCadastradas() {
+    const placas = [];
+    (db.veiculos || []).forEach(function(v) {
+        if (v && v.placa && placas.indexOf(v.placa) < 0) placas.push(v.placa);
+    });
+    return placas;
+}
 function getPlacasPermitidasParaFiltro() {
     if (!usuarioLogado) return null;
     if (usuarioLogado.tipo !== 'MOTORISTA') return null;
@@ -1076,7 +1084,6 @@ function idbExcluir(id) {
 async function salvarImagemFirestore(id, base64String, meta) {
     if (!dbFirestore) throw new Error('Firestore não inicializado');
     if (!base64String || typeof base64String !== 'string') throw new Error('Base64 inválido');
-    // Verifica tamanho (Firestore 1MB/doc). Base64 tem overhead ~33%.
     if (base64String.length > FIRESTORE_MAX_BASE64) {
         throw new Error('Imagem muito grande (' + Math.round(base64String.length/1024) + 'KB). Reduza a qualidade.');
     }
@@ -1086,7 +1093,6 @@ async function salvarImagemFirestore(id, base64String, meta) {
         dataUpload: new Date().toISOString()
     });
     _imageCache.set(id, base64String);
-    // Salva no IDB como cache (opcional, para performance local)
     try {
         const blob = dataUrlParaBlobLocal(base64String);
         await idbSalvar(id, blob, meta);
@@ -1095,7 +1101,6 @@ async function salvarImagemFirestore(id, base64String, meta) {
 
 async function obterImagemFirestore(id) {
     if (_imageCache.has(id)) return _imageCache.get(id);
-    // IDB (cache local)
     try {
         const reg = await idbObter(id);
         if (reg && reg.blob) {
@@ -1103,7 +1108,6 @@ async function obterImagemFirestore(id) {
             if (base64) { _imageCache.set(id, base64); return base64; }
         }
     } catch(e) {}
-    // Firestore (nuvem)
     if (!dbFirestore) return null;
     try {
         const docSnap = await dbFirestore.collection('paizao_imagens').doc(id).get();
@@ -1611,7 +1615,7 @@ document.querySelectorAll('.tab').forEach(tab => {
         if (tabId === 'banco') atualizarTabelaBancos();
         if (tabId === 'pendente') atualizarTabelaPendentes();
         if (tabId === 'vistoria') atualizarAbasVistoria();
-        if (tabId === 'compras') atualizarTabelaCompras();
+        if (tabId === 'compras') { atualizarPlacasCompras(); atualizarTabelaCompras(); }
         if (tabId === 'configuracao') carregarConfiguracoes();
     });
 });
@@ -1890,6 +1894,8 @@ async function salvarVeiculo() {
     atualizarPlacasManutencao();
     atualizarPlacasMecanico();
     atualizarComboPlacasDocumentos();
+    atualizarPlacasCompras();
+    atualizarPlacasPendentes();
     salvarDB();
     limparCamposVeiculo();
 }
@@ -2001,6 +2007,8 @@ async function excluirVeiculo(i) {
     atualizarPlacasManutencao();
     atualizarPlacasMecanico();
     atualizarComboPlacasDocumentos();
+    atualizarPlacasCompras();
+    atualizarPlacasPendentes();
     atualizarTabelaLocacoes();
     atualizarTabelaLocEncerrada();
     atualizarTabelaAlugueis();
@@ -2961,7 +2969,6 @@ function capturarSelfie() {
     const v = document.getElementById('selfieVideo');
     const c = document.getElementById('selfieCanvas');
     if (v.readyState !== v.HAVE_ENOUGH_DATA) { alert('Câmera não pronta.'); return; }
-    // Redimensiona para caber no Firestore
     let w = v.videoWidth, h = v.videoHeight;
     if (w > COMPRESS_MAX_WIDTH) { h = Math.round(h * (COMPRESS_MAX_WIDTH / w)); w = COMPRESS_MAX_WIDTH; }
     c.width = w; c.height = h;
@@ -3417,7 +3424,6 @@ function capturarVistoria() {
     const v = document.getElementById('vistoriaVideo');
     const c = document.getElementById('vistoriaCanvas');
     if (v.readyState !== v.HAVE_ENOUGH_DATA) { alert('Câmera não pronta.'); return; }
-    // Comprimir direto no canvas
     let w = v.videoWidth, h = v.videoHeight;
     if (w > COMPRESS_MAX_WIDTH) { h = Math.round(h * (COMPRESS_MAX_WIDTH / w)); w = COMPRESS_MAX_WIDTH; }
     c.width = w; c.height = h;
@@ -3439,7 +3445,6 @@ async function confirmarVistoria() {
     try {
         const id = gerarIdImagem();
         const hoje = new Date().toLocaleString('pt-BR');
-        // vistoriaDataUrl já foi capturada no tamanho COMPRESS_MAX_WIDTH
         await salvarImagemFirestore(id, vistoriaDataUrl, { nomeArquivo: 'vistoria_' + vistoriaPlacaAtual + '.jpg', tipo: 'image/jpeg', placa: vistoriaPlacaAtual, categoria: 'vistoria' });
         const ref = { id: id, nome: 'vistoria_' + vistoriaPlacaAtual + '.jpg', dataUpload: hoje };
         if (!locacao.vistoria) locacao.vistoria = [];
@@ -3933,6 +3938,40 @@ function atualizarTabelaBancos() {
         tbody.appendChild(tr);
     });
 }
+function atualizarPlacasCompras() {
+    const s = document.getElementById('compPlaca');
+    if (!s) return;
+    const valorAtual = s.value;
+    s.innerHTML = '<option value="">Selecione</option>';
+    (db.veiculos || []).forEach(v => {
+        if (!v || !v.placa) return;
+        const o = document.createElement('option');
+        o.value = v.placa;
+        o.textContent = v.placa + ' - ' + (v.fabricante || '');
+        s.appendChild(o);
+    });
+    if (valorAtual) {
+        const existe = Array.from(s.options).some(o => o.value === valorAtual);
+        if (existe) s.value = valorAtual;
+    }
+}
+function atualizarPlacasPendentes() {
+    const s = document.getElementById('pendPlaca');
+    if (!s) return;
+    const valorAtual = s.value;
+    s.innerHTML = '<option value="">Selecione</option>';
+    (db.veiculos || []).forEach(v => {
+        if (!v || !v.placa) return;
+        const o = document.createElement('option');
+        o.value = v.placa;
+        o.textContent = v.placa + ' - ' + (v.fabricante || '');
+        s.appendChild(o);
+    });
+    if (valorAtual) {
+        const existe = Array.from(s.options).some(o => o.value === valorAtual);
+        if (existe) s.value = valorAtual;
+    }
+}
 function atualizarTabelaCompras() {
     const tbody = document.querySelector('#tabelaCompras tbody');
     if (!tbody) return;
@@ -3983,6 +4022,7 @@ function editarCompra(i) {
     document.getElementById('compData').value = c.data || '';
     document.getElementById('compProduto').value = c.produto || '';
     document.getElementById('compFornecedor').value = c.fornecedor || '';
+    atualizarPlacasCompras();
     document.getElementById('compPlaca').value = c.placa || '';
     document.getElementById('compQuantidade').value = c.quantidade || '';
     document.getElementById('compValorUnitario').value = c.valorUnitario || '';
@@ -4468,7 +4508,7 @@ function renderizarPreviewComprovantesPag() {
     const btn = document.getElementById('btnSalvarComprovantesPag');
     if (comprovantesPagTemp.length === 0) { if (btn) { btn.disabled = true; btn.style.opacity = '0.5'; } return; }
     if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
-    const placasUsuario = obterPlacasDoUsuarioLogado();
+    const placasUsuario = obterTodasPlacasCadastradas();
     comprovantesPagTemp.forEach(function(item, idx) {
         const card = document.createElement('div'); card.className = 'comp-pag-card';
         const header = document.createElement('div'); header.className = 'comp-pag-header';
@@ -4491,7 +4531,7 @@ function renderizarPreviewComprovantesPag() {
         const wrapPlaca = document.createElement('div'); wrapPlaca.className = 'comp-pag-field';
         const lblPlaca = document.createElement('label'); lblPlaca.textContent = 'Placa do Carro';
         const selPlaca = document.createElement('select');
-        const optEmpty = document.createElement('option'); optEmpty.value = ''; optEmpty.textContent = placasUsuario.length > 0 ? '-- Selecione a placa --' : '-- Nenhuma locação ativa --';
+        const optEmpty = document.createElement('option'); optEmpty.value = ''; optEmpty.textContent = placasUsuario.length > 0 ? '-- Selecione a placa --' : '-- Nenhuma placa cadastrada --';
         selPlaca.appendChild(optEmpty);
         placasUsuario.forEach(function(p) { const o = document.createElement('option'); o.value = p; o.textContent = p; if (item.placa === p) o.selected = true; selPlaca.appendChild(o); });
         selPlaca.onchange = function() { atualizarCampoComprovante(idx, 'placa', this.value); };
@@ -4520,7 +4560,7 @@ async function handleComprovantesPagInputChange(e) {
     input.value = '';
     const container = document.getElementById('compPagPreviewContainer');
     if (container) container.innerHTML = '<p style="color:#666;padding:10px;">⏳ Processando arquivos...</p>';
-    const placasUsuario = obterPlacasDoUsuarioLogado();
+    const placasUsuario = obterTodasPlacasCadastradas();
     const placaAuto = placasUsuario.length > 0 ? placasUsuario[0] : '';
     const errors = [];
     for (let i = 0; i < files.length; i++) {
@@ -4890,6 +4930,8 @@ async function inicializarSistemaCompleto() {
     preencherDatasAutomaticas();
     atualizarPlacasManutencao();
     atualizarPlacasMecanico();
+    atualizarPlacasCompras();
+    atualizarPlacasPendentes();
     atualizarTabelaLocacoes();
     atualizarTabelaLocEncerrada();
     atualizarTabelaManutencao();

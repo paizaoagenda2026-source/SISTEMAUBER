@@ -896,11 +896,12 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
 
 <script>
 /* ============================================================
-   NÚCLEO — PAIZÃO UBER 2.0  (VERSÃO FINAL - FOTOS SOMENTE EM IDB)
+   NÚCLEO — PAIZÃO UBER 2.0  (VERSÃO FINAL - FOTOS NO FIRESTORE)
    ------------------------------------------------------------
-   • Firebase / Firestore: SOMENTE metadados (texto).
-   • Fotos, PDFs e imagens: SEMPRE no IndexedDB (sem Storage).
-   • Nenhuma imagem em base64 é gravada no documento do Firestore.
+   • Firebase / Firestore: TODOS os dados, incluindo imagens (Base64).
+   • Fotos, PDFs e imagens: Convertidos para Base64 e salvos na coleção
+     'paizao_imagens' no Firestore. IDB é usado apenas como cache local
+     para evitar leituras desnecessárias no Firestore.
    ============================================================ */
 const firebaseConfig = {
   apiKey: "AIzaSyApeHoLWESXU8j50ckswmJZ7j9qzWlZtlY",
@@ -928,8 +929,8 @@ let usuarioLogado = null;
 let sistemaInicializado = false;
 let idbHandle = null;
 
-/* ---- Cache de thumbs em memória (evita reler IDB) ---- */
-const _thumbCache = new Map();   // id -> objectURL
+/* ---- Cache de imagens em memória (evita reler Firestore) ---- */
+const _imageCache = new Map();   // id -> base64
 
 /* ---- Permissões (precisa vir ANTES de criarDBPadrao ser chamado) ---- */
 const todasAbas = [
@@ -1019,7 +1020,7 @@ function confirmarSenhaADM() {
 }
 
 /* ============================================================
-   INDEXEDDB — único armazenamento de fotos/PDFs
+   INDEXEDDB — CACHE LOCAL (Fallback e Performance)
    ============================================================ */
 function abrirIDB() {
     if (idbHandle) return Promise.resolve(idbHandle);
@@ -1062,37 +1063,71 @@ function idbExcluir(id) {
     })).catch(() => false);
 }
 
-/* ---- Salvar imagem + thumb ---- */
-async function idbSalvarImagemComThumb(baseId, blob, meta) {
-    await idbSalvar(baseId, blob, Object.assign({}, meta, { tipo: meta && meta.tipo || blob.type || 'image/jpeg' }));
+/* ============================================================
+   FIRESTORE — ARMAZENAMENTO PRINCIPAL DE IMAGENS (Base64)
+   ============================================================ */
+async function salvarImagemFirestore(id, base64String, meta) {
+    if (!dbFirestore) throw new Error('Firestore não inicializado');
+    // Limita o tamanho do Base64 para evitar estourar o limite de 1MB do Firestore
+    // 1MB = 1048576 bytes. Base64 é ~33% maior. Então limitamos a ~700KB de string Base64.
+    if (base64String.length > 700000) {
+        throw new Error('Imagem muito grande para o Firestore. Comprima mais a imagem.');
+    }
+    await dbFirestore.collection('paizao_imagens').doc(id).set({
+        base64: base64String,
+        meta: meta || {},
+        dataUpload: new Date().toISOString()
+    });
+    _imageCache.set(id, base64String);
+    // Salva também no IDB como cache local para performance
     try {
-        const thumbBlob = await gerarThumbnailBlob(blob, 320, 0.65);
-        if (thumbBlob) await idbSalvar(baseId + '_thumb', thumbBlob, { isThumb: true, tipo: 'image/jpeg' });
+        const blob = dataUrlParaBlobLocal(base64String);
+        await idbSalvar(id, blob, meta);
     } catch(e) {}
 }
-async function idbExcluirImagemComThumb(baseId) {
-    _thumbCache.delete(baseId);
-    await idbExcluir(baseId);
-    await idbExcluir(baseId + '_thumb');
+
+async function obterImagemFirestore(id) {
+    if (_imageCache.has(id)) return _imageCache.get(id);
+    
+    // Tenta obter do IDB primeiro (cache local)
+    try {
+        const reg = await idbObter(id);
+        if (reg && reg.blob) {
+            const base64 = await blobParaDataURL(reg.blob);
+            if (base64) {
+                _imageCache.set(id, base64);
+                return base64;
+            }
+        }
+    } catch(e) {}
+
+    // Se não estiver no IDB, busca do Firestore
+    if (!dbFirestore) return null;
+    try {
+        const docSnap = await dbFirestore.collection('paizao_imagens').doc(id).get();
+        if (docSnap.exists) {
+            const data = docSnap.data();
+            if (data && data.base64) {
+                _imageCache.set(id, data.base64);
+                // Salva no IDB para futuras consultas
+                try {
+                    const blob = dataUrlParaBlobLocal(data.base64);
+                    await idbSalvar(id, blob, data.meta);
+                } catch(e) {}
+                return data.base64;
+            }
+        }
+    } catch(e) { console.error('Erro ao buscar imagem no Firestore:', e); }
+    return null;
 }
-async function idbObterThumbURL(baseId) {
-    if (_thumbCache.has(baseId)) return _thumbCache.get(baseId);
-    const reg = await idbObter(baseId + '_thumb');
-    if (!reg || !reg.blob) {
-        const full = await idbObter(baseId);
-        if (!full || !full.blob) return null;
-        const url = URL.createObjectURL(full.blob);
-        _thumbCache.set(baseId, url);
-        return url;
-    }
-    const url = URL.createObjectURL(reg.blob);
-    _thumbCache.set(baseId, url);
-    return url;
-}
-async function idbObterBlobURL(baseId) {
-    const reg = await idbObter(baseId);
-    if (!reg || !reg.blob) return null;
-    return URL.createObjectURL(reg.blob);
+
+async function excluirImagemFirestore(id) {
+    _imageCache.delete(id);
+    try { await idbExcluir(id); } catch(e) {}
+    if (!dbFirestore) return;
+    try {
+        await dbFirestore.collection('paizao_imagens').doc(id).delete();
+    } catch(e) { console.error('Erro ao excluir imagem do Firestore:', e); }
 }
 
 /* ============================================================
@@ -1106,6 +1141,16 @@ function dataUrlParaBlobLocal(dataUrl) {
     const u8 = new Uint8Array(len);
     for (let i = 0; i < len; i++) u8[i] = bin.charCodeAt(i);
     return new Blob([u8], { type: mime });
+}
+function blobParaDataURL(blob) {
+    return new Promise((resolve) => {
+        try {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = () => resolve(null);
+            reader.readAsDataURL(blob);
+        } catch (e) { resolve(null); }
+    });
 }
 function comprimirArquivoParaBlob(file, maxWidth, quality) {
     return new Promise((resolve, reject) => {
@@ -1158,16 +1203,6 @@ function gerarThumbnailBlob(blob, maxDim, quality) {
             };
             img.onerror = function() { URL.revokeObjectURL(url); resolve(null); };
             img.src = url;
-        } catch (e) { resolve(null); }
-    });
-}
-function blobParaDataURL(blob) {
-    return new Promise((resolve) => {
-        try {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = () => resolve(null);
-            reader.readAsDataURL(blob);
         } catch (e) { resolve(null); }
     });
 }
@@ -1277,7 +1312,7 @@ async function salvarDB() {
 }
 
 /* ============================================================
-   MIGRAÇÃO: mover fotos antigas em base64 do Firestore para IDB
+   MIGRAÇÃO: mover fotos antigas em base64 do Firestore para IDB/Novo Formato
    ============================================================ */
 async function migrarFotosAntigasParaIDB() {
     if (!db) return;
@@ -1286,9 +1321,8 @@ async function migrarFotosAntigasParaIDB() {
 
     async function migrarDataURL(dataUrl, meta) {
         try {
-            const blob = dataUrlParaBlobLocal(dataUrl);
             const id = 'mig_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
-            await idbSalvarImagemComThumb(id, blob, meta || {});
+            await salvarImagemFirestore(id, dataUrl, meta || {});
             return id;
         } catch (e) { return null; }
     }
@@ -1319,7 +1353,6 @@ async function migrarFotosAntigasParaIDB() {
                 const id = await migrarDataURL(f.dataUrl, { nomeArquivo: f.nome || 'garagem.jpg', tipo: 'image/jpeg', categoria: 'garagem' });
                 if (id) { db.imagens.garagem.fotos[i] = { id, nome: f.nome || 'garagem.jpg', dataUpload: f.dataUpload || hoje }; precisaSalvar = true; }
             } else if (f && typeof f === 'object' && f.id && typeof f.thumb === 'string') {
-                /* remove thumbs em base64 do doc (geramos do IDB) */
                 delete f.thumb; precisaSalvar = true;
             }
         }
@@ -1367,9 +1400,8 @@ async function migrarFotosAntigasParaIDB() {
             for (const d of arr) {
                 if (d && typeof d.data === 'string' && d.data.startsWith('data:') && !d.storageId) {
                     try {
-                        const blob = dataUrlParaBlobLocal(d.data);
                         const id = 'docmig_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
-                        await idbSalvar(id, blob, { nomeArquivo: d.nome, tipo: d.tipo || 'application/pdf', placa });
+                        await salvarImagemFirestore(id, d.data, { nomeArquivo: d.nome, tipo: d.tipo || 'application/pdf', placa });
                         d.storageId = id; delete d.data; precisaSalvar = true;
                     } catch(e) {}
                 }
@@ -1381,9 +1413,8 @@ async function migrarFotosAntigasParaIDB() {
         for (const c of db.clientes) {
             if (c && typeof c.selfie === 'string' && c.selfie.length > 5000 && c.selfie.startsWith('data:')) {
                 try {
-                    const blob = dataUrlParaBlobLocal(c.selfie);
                     const id = 'sel_cli_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
-                    await idbSalvarImagemComThumb(id, blob, { nomeArquivo: 'selfie_cliente.jpg', tipo: 'image/jpeg', categoria: 'selfie' });
+                    await salvarImagemFirestore(id, c.selfie, { nomeArquivo: 'selfie_cliente.jpg', tipo: 'image/jpeg', categoria: 'selfie' });
                     c.selfieStorageId = id; c.selfie = null; precisaSalvar = true;
                 } catch(e) {}
             }
@@ -1393,9 +1424,8 @@ async function migrarFotosAntigasParaIDB() {
         for (const u of db.usuarios) {
             if (u && typeof u.selfie === 'string' && u.selfie.length > 5000 && u.selfie.startsWith('data:')) {
                 try {
-                    const blob = dataUrlParaBlobLocal(u.selfie);
                     const id = 'sel_usr_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
-                    await idbSalvarImagemComThumb(id, blob, { nomeArquivo: 'selfie_usuario.jpg', tipo: 'image/jpeg', categoria: 'selfie' });
+                    await salvarImagemFirestore(id, u.selfie, { nomeArquivo: 'selfie_usuario.jpg', tipo: 'image/jpeg', categoria: 'selfie' });
                     u.selfieStorageId = id; u.selfie = null; precisaSalvar = true;
                 } catch(e) {}
             }
@@ -1961,14 +1991,14 @@ async function excluirVeiculo(i) {
     /* Comprovantes Pagamento */
     antes = db.comprovantesPagamento.length;
     for (const c of db.comprovantesPagamento) {
-        if (c && normalizarPlaca(c.placa) === placaNorm && c.storageId) { await idbExcluirImagemComThumb(c.storageId); }
+        if (c && normalizarPlaca(c.placa) === placaNorm && c.storageId) { await excluirImagemFirestore(c.storageId); }
     }
     db.comprovantesPagamento = db.comprovantesPagamento.filter(c => !c || normalizarPlaca(c.placa) !== placaNorm);
     if (antes - db.comprovantesPagamento.length > 0) relatorio.push('• ' + (antes - db.comprovantesPagamento.length) + ' comprovante(s) de pagamento');
     /* Comprovantes DOC */
     antes = db.comprovantesDoc.length;
     for (const c of db.comprovantesDoc) {
-        if (c && normalizarPlaca(c.placa) === placaNorm && c.storageId) { await idbExcluirImagemComThumb(c.storageId); }
+        if (c && normalizarPlaca(c.placa) === placaNorm && c.storageId) { await excluirImagemFirestore(c.storageId); }
     }
     db.comprovantesDoc = db.comprovantesDoc.filter(c => !c || normalizarPlaca(c.placa) !== placaNorm);
     if (antes - db.comprovantesDoc.length > 0) relatorio.push('• ' + (antes - db.comprovantesDoc.length) + ' comprovante(s) DOC');
@@ -1978,7 +2008,7 @@ async function excluirVeiculo(i) {
         if (chave) {
             const qtd = (db.documentosPlacas[chave] || []).length;
             for (const doc of (db.documentosPlacas[chave] || [])) {
-                if (doc && doc.storageId) { try { await idbExcluir(doc.storageId); } catch(e) {} }
+                if (doc && doc.storageId) { try { await excluirImagemFirestore(doc.storageId); } catch(e) {} }
             }
             delete db.documentosPlacas[chave];
             if (qtd > 0) relatorio.push('• ' + qtd + ' documento(s) da placa');
@@ -2012,7 +2042,7 @@ async function excluirVeiculo(i) {
 async function apagarFotosLocacao(loc) {
     if (!loc || !Array.isArray(loc.vistoria)) return;
     for (const f of loc.vistoria) {
-        if (f && typeof f === 'object' && f.id) await idbExcluirImagemComThumb(f.id);
+        if (f && typeof f === 'object' && f.id) await excluirImagemFirestore(f.id);
     }
     loc.vistoria = [];
 }
@@ -2043,13 +2073,12 @@ async function salvarCliente() {
     });
     if (clienteDuplicado) { alert('Já existe cliente com esse CPF ou Nome!'); return; }
 
-    /* Selfie: se veio como dataURL do temp, salva no IDB */
+    /* Selfie: se veio como dataURL do temp, salva no Firestore */
     let selfieStorageId = null;
     if (selfieClienteTemp && typeof selfieClienteTemp === 'string' && selfieClienteTemp.startsWith('data:')) {
         try {
-            const blob = dataUrlParaBlobLocal(selfieClienteTemp);
             selfieStorageId = 'sel_cli_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
-            await idbSalvarImagemComThumb(selfieStorageId, blob, { nomeArquivo: 'selfie_cliente.jpg', tipo: 'image/jpeg', categoria: 'selfie' });
+            await salvarImagemFirestore(selfieStorageId, selfieClienteTemp, { nomeArquivo: 'selfie_cliente.jpg', tipo: 'image/jpeg', categoria: 'selfie' });
         } catch(e) { selfieStorageId = null; }
     } else if (clienteEditandoIndex !== null && db.clientes[clienteEditandoIndex] && db.clientes[clienteEditandoIndex].selfieStorageId) {
         selfieStorageId = db.clientes[clienteEditandoIndex].selfieStorageId;
@@ -2108,7 +2137,7 @@ async function atualizarTabelaClientes() {
         if (!c) { selfiesResolvidas.push(null); continue; }
         let url = null;
         if (c.selfieStorageId) {
-            try { url = await idbObterThumbURL(c.selfieStorageId); } catch(e) {}
+            try { url = await obterImagemFirestore(c.selfieStorageId); } catch(e) {}
         } else if (typeof c.selfie === 'string' && c.selfie.startsWith('data:')) {
             url = c.selfie;
         }
@@ -2147,7 +2176,7 @@ async function editarCliente(i) {
     if (prevSelfie) {
         prevSelfie.innerHTML = '';
         if (c.selfieStorageId) {
-            const url = await idbObterThumbURL(c.selfieStorageId);
+            const url = await obterImagemFirestore(c.selfieStorageId);
             if (url) prevSelfie.innerHTML = `<img src="${url}" class="selfie-thumbnail" alt="selfie" onclick="openImageModal('${url}')">`;
         } else if (typeof c.selfie === 'string' && c.selfie.startsWith('data:')) {
             prevSelfie.innerHTML = `<img src="${c.selfie}" class="selfie-thumbnail" alt="selfie">`;
@@ -2161,13 +2190,13 @@ async function excluirCliente(i) {
     const c = db.clientes[i];
     if (!c) { alert('Cliente não encontrado.'); return; }
     if (!confirm(`Excluir o cliente "${c.nome}"?`)) return;
-    if (c.selfieStorageId) { try { await idbExcluirImagemComThumb(c.selfieStorageId); } catch(e) {} }
+    if (c.selfieStorageId) { try { await excluirImagemFirestore(c.selfieStorageId); } catch(e) {} }
     const nomeUpper = String(c.nome || '').toUpperCase().trim();
     const primeiroNome = nomeUpper.split(/\s+/)[0];
     const relatorio = [];
     if (primeiroNome && primeiroNome !== 'SERGIO') {
         const antesU = db.usuarios.length;
-        for (const u of db.usuarios) { if (u && String(u.nome || '').toUpperCase().trim() === primeiroNome && u.tipo === 'MOTORISTA' && u.selfieStorageId) { try { await idbExcluirImagemComThumb(u.selfieStorageId); } catch(e) {} } }
+        for (const u of db.usuarios) { if (u && String(u.nome || '').toUpperCase().trim() === primeiroNome && u.tipo === 'MOTORISTA' && u.selfieStorageId) { try { await excluirImagemFirestore(u.selfieStorageId); } catch(e) {} } }
         db.usuarios = db.usuarios.filter(u => { if (!u) return true; const uNome = String(u.nome || '').toUpperCase().trim(); if (uNome === primeiroNome && u.tipo === 'MOTORISTA') return false; return true; });
         const removidosU = antesU - db.usuarios.length;
         if (removidosU > 0) relatorio.push('• ' + removidosU + ' usuário(s) vinculado(s)');
@@ -2222,7 +2251,7 @@ async function atualizarTabelaUsuario() {
     for (const u of usuarios) {
         if (!u) { selfiesResolvidas.push(null); continue; }
         let url = null;
-        if (u.selfieStorageId) { try { url = await idbObterThumbURL(u.selfieStorageId); } catch(e) {} }
+        if (u.selfieStorageId) { try { url = await obterImagemFirestore(u.selfieStorageId); } catch(e) {} }
         else if (typeof u.selfie === 'string' && u.selfie.startsWith('data:')) url = u.selfie;
         selfiesResolvidas.push(url);
     }
@@ -2251,7 +2280,7 @@ async function editarUsuario(i) {
     if (prev) {
         prev.innerHTML = '';
         if (u.selfieStorageId) {
-            const url = await idbObterThumbURL(u.selfieStorageId);
+            const url = await obterImagemFirestore(u.selfieStorageId);
             if (url) prev.innerHTML = `<img src="${url}" class="selfie-thumbnail" alt="selfie" onclick="openImageModal('${url}')">`;
         }
     }
@@ -2263,7 +2292,7 @@ async function excluirUsuario(i) {
     if (!confirm('Excluir este usuário?')) return;
     if ((db.usuarios[i].nome || '').toUpperCase() === 'SERGIO') { alert('Não é possível excluir o SERGIO.'); return; }
     const u = db.usuarios[i];
-    if (u && u.selfieStorageId) { try { await idbExcluirImagemComThumb(u.selfieStorageId); } catch(e) {} }
+    if (u && u.selfieStorageId) { try { await excluirImagemFirestore(u.selfieStorageId); } catch(e) {} }
     db.usuarios.splice(i, 1);
     if (usuarioEditandoIndex === i) usuarioEditandoIndex = null;
     else if (usuarioEditandoIndex !== null && usuarioEditandoIndex > i) usuarioEditandoIndex--;
@@ -2279,9 +2308,8 @@ async function salvarUsuario() {
     let selfieStorageId = null;
     if (selfieUsuarioTemp && selfieUsuarioTemp.startsWith('data:')) {
         try {
-            const blob = dataUrlParaBlobLocal(selfieUsuarioTemp);
             selfieStorageId = 'sel_usr_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
-            await idbSalvarImagemComThumb(selfieStorageId, blob, { nomeArquivo: 'selfie_usuario.jpg', tipo: 'image/jpeg', categoria: 'selfie' });
+            await salvarImagemFirestore(selfieStorageId, selfieUsuarioTemp, { nomeArquivo: 'selfie_usuario.jpg', tipo: 'image/jpeg', categoria: 'selfie' });
         } catch(e) { selfieStorageId = null; }
     } else if (usuarioEditandoIndex !== null && db.usuarios[usuarioEditandoIndex] && db.usuarios[usuarioEditandoIndex].selfieStorageId) {
         selfieStorageId = db.usuarios[usuarioEditandoIndex].selfieStorageId;
@@ -3260,8 +3288,13 @@ async function gerarESalvarContratosAutomaticos(locacao) {
     let salvos = 0;
     for (const d of docs) {
         const id = 'doc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
-        try { await idbSalvar(id, d.blob, { nomeArquivo: d.nome, placa: locacao.placa, tipo: 'application/pdf' }); db.documentosPlacas[locacao.placa].push({ nome: d.nome, tipo: 'application/pdf', storageId: id, dataUpload: agora }); salvos++; }
-        catch (err) {}
+        try { 
+            const base64 = await blobParaDataURL(d.blob);
+            await salvarImagemFirestore(id, base64, { nomeArquivo: d.nome, placa: locacao.placa, tipo: 'application/pdf' }); 
+            db.documentosPlacas[locacao.placa].push({ nome: d.nome, tipo: 'application/pdf', storageId: id, dataUpload: agora }); 
+            salvos++; 
+        }
+        catch (err) { console.error('Erro ao salvar contrato no Firestore', err); }
     }
     registrarAuditoria('Contrato', salvos + ' contrato(s) gerado(s) em PDF para ' + (locacao.locatario || '') + ' - ' + locacao.placa);
     try { atualizarGaleriaComprovantes(); } catch(e) {}
@@ -3333,29 +3366,29 @@ async function renderizarFotosVistoria(locacao) {
         div.appendChild(loadingBox);
         container.appendChild(div);
 
-        let thumbURL = null;
+        let base64Img = null;
         let idFoto = null;
         if (foto && typeof foto === 'object' && foto.id) idFoto = foto.id;
-        else if (typeof foto === 'string' && foto.startsWith('data:')) thumbURL = foto;
+        else if (typeof foto === 'string' && foto.startsWith('data:')) base64Img = foto;
 
-        if (idFoto) { try { thumbURL = await idbObterThumbURL(idFoto); } catch(e) {} }
+        if (idFoto) { try { base64Img = await obterImagemFirestore(idFoto); } catch(e) {} }
         div.innerHTML = '';
-        if (thumbURL) {
+        if (base64Img) {
             const img = document.createElement('img');
-            img.src = thumbURL; img.alt = 'vistoria';
+            img.src = base64Img; img.alt = 'vistoria';
             img.onclick = async (ev) => {
                 ev.stopPropagation();
                 const urls = [];
                 for (const f of locacao.vistoria) {
                     if (f && typeof f === 'object' && f.id) {
-                        const u = await idbObterBlobURL(f.id);
+                        const u = await obterImagemFirestore(f.id);
                         if (u) urls.push(u);
                     } else if (typeof f === 'string' && f.startsWith('data:')) {
                         urls.push(f);
                     }
                 }
-                const idxAtual = urls.indexOf(thumbURL);
-                openImageModal(thumbURL, urls, idxAtual >= 0 ? idxAtual : 0);
+                const idxAtual = urls.indexOf(base64Img);
+                openImageModal(base64Img, urls, idxAtual >= 0 ? idxAtual : 0);
             };
             div.appendChild(img);
         } else {
@@ -3371,7 +3404,7 @@ async function renderizarFotosVistoria(locacao) {
                 e.stopPropagation();
                 if (!confirm('Excluir esta foto?')) return;
                 const f = locacao.vistoria[index];
-                if (f && typeof f === 'object' && f.id) await idbExcluirImagemComThumb(f.id);
+                if (f && typeof f === 'object' && f.id) await excluirImagemFirestore(f.id);
                 locacao.vistoria.splice(index, 1);
                 await salvarDB();
                 registrarAuditoria('Exclusão', 'Foto de vistoria excluída: ' + locacao.placa);
@@ -3424,10 +3457,14 @@ async function confirmarVistoria() {
     const btn = document.getElementById('vistoriaConfirmBtn');
     if (btn) { btn.disabled = true; btn.textContent = '⏳ Enviando...'; }
     try {
-        const blob = dataUrlParaBlobLocal(vistoriaDataUrl);
         const id = gerarIdImagem();
         const hoje = new Date().toLocaleString('pt-BR');
-        await idbSalvarImagemComThumb(id, blob, { nomeArquivo: 'vistoria_' + vistoriaPlacaAtual + '.jpg', tipo: 'image/jpeg', placa: vistoriaPlacaAtual, categoria: 'vistoria' });
+        // Comprimir para caber no Firestore
+        const blob = dataUrlParaBlobLocal(vistoriaDataUrl);
+        const blobComprimido = await gerarThumbnailBlob(blob, 800, 0.6); // Comprime para max 800px
+        const base64Final = await blobParaDataURL(blobComprimido);
+        
+        await salvarImagemFirestore(id, base64Final, { nomeArquivo: 'vistoria_' + vistoriaPlacaAtual + '.jpg', tipo: 'image/jpeg', placa: vistoriaPlacaAtual, categoria: 'vistoria' });
         const ref = { id: id, nome: 'vistoria_' + vistoriaPlacaAtual + '.jpg', dataUpload: hoje };
         if (!locacao.vistoria) locacao.vistoria = [];
         locacao.vistoria.push(ref);
@@ -3435,7 +3472,7 @@ async function confirmarVistoria() {
         registrarAuditoria('Vistoria', 'Foto adicionada para placa ' + vistoriaPlacaAtual);
         await renderizarFotosVistoria(locacao);
         alert('✅ Foto salva!');
-    } catch (err) { alert('Erro ao salvar a foto.'); }
+    } catch (err) { alert('Erro ao salvar a foto: ' + err.message); }
     finally {
         if (btn) { btn.disabled = false; btn.textContent = '✅ Confirmar'; }
         fecharCameraVistoria();
@@ -3481,7 +3518,7 @@ function configurarInputMultiplasImagens() {
             if (!files || files.length === 0) return;
             const inputAtual = this;
             try {
-                const novos = await processarArquivosImagem(files, 1400, 0.78);
+                const novos = await processarArquivosImagem(files, 800, 0.6); // Comprimir para Firestore
                 garagemImagensTemp = garagemImagensTemp.concat(novos);
                 renderizarPreviewGaragem();
                 if (novos.length === 0) alert('⚠️ Nenhum arquivo válido.');
@@ -3496,7 +3533,7 @@ function configurarInputMultiplasImagens() {
             if (!files || files.length === 0) return;
             const inputAtual = this;
             try {
-                const novos = await processarArquivosImagem(files, 1400, 0.78);
+                const novos = await processarArquivosImagem(files, 800, 0.6); // Comprimir para Firestore
                 sosImagensTemp = sosImagensTemp.concat(novos);
                 renderizarPreviewSOS();
                 if (novos.length === 0) alert('⚠️ Nenhum arquivo válido.');
@@ -3514,7 +3551,7 @@ function renderizarPreviewSOS() {
     renderizarPreviewSelecionadas('sosPreviewSelecionadas', sosImagensTemp, remover);
 }
 
-/* ---- GARAGEM (IDB) ---- */
+/* ---- GARAGEM (Firestore) ---- */
 async function salvarGaragem() {
     if (!Array.isArray(garagemImagensTemp) || garagemImagensTemp.length === 0) { alert('Nenhuma imagem selecionada!'); return; }
     if (!db.imagens) db.imagens = { garagem:{fotos:[]}, sos:{fotos:[]}, comprovantes:{fotos:[]} };
@@ -3528,10 +3565,11 @@ async function salvarGaragem() {
         try {
             if (!item || !item.blob) { erros++; continue; }
             const id = 'gar_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
-            await idbSalvarImagemComThumb(id, item.blob, { nomeArquivo: item.nome || 'foto.jpg', tipo: item.blob.type || 'image/jpeg', categoria: 'garagem' });
+            const base64 = await blobParaDataURL(item.blob);
+            await salvarImagemFirestore(id, base64, { nomeArquivo: item.nome || 'foto.jpg', tipo: item.blob.type || 'image/jpeg', categoria: 'garagem' });
             db.imagens.garagem.fotos.push({ id: id, nome: item.nome || 'foto.jpg', dataUpload: hoje });
             salvas++;
-        } catch (err) { erros++; }
+        } catch (err) { erros++; console.error(err); }
     }
     garagemImagensTemp.forEach(item => { if (item && typeof item === 'object' && item.previewUrl) { try { URL.revokeObjectURL(item.previewUrl); } catch(e) {} } });
     garagemImagensTemp = [];
@@ -3557,20 +3595,15 @@ async function atualizarGaleriaGaragem() {
         const foto = fotos[i];
         const div = document.createElement('div');
         div.className = 'saved-image-item';
-        let thumbURL = null;
-        if (foto && typeof foto === 'object' && foto.id) { try { thumbURL = await idbObterThumbURL(foto.id); } catch(e) {} }
-        else if (typeof foto === 'string') { thumbURL = foto; }
-        if (thumbURL) {
+        let base64Img = null;
+        if (foto && typeof foto === 'object' && foto.id) { try { base64Img = await obterImagemFirestore(foto.id); } catch(e) {} }
+        else if (typeof foto === 'string') { base64Img = foto; }
+        if (base64Img) {
             const img = document.createElement('img');
-            img.src = thumbURL; img.alt = 'foto';
+            img.src = base64Img; img.alt = 'foto';
             img.addEventListener('click', async (ev) => {
                 ev.stopPropagation();
-                let srcFull = thumbURL;
-                if (foto && typeof foto === 'object' && foto.id) {
-                    const u = await idbObterBlobURL(foto.id);
-                    if (u) srcFull = u;
-                }
-                openImageModal(srcFull, [srcFull], 0);
+                openImageModal(base64Img, [base64Img], 0);
             });
             div.appendChild(img);
         } else {
@@ -3591,14 +3624,14 @@ async function excluirFotoGaragem(i) {
     if (!confirm('Excluir esta imagem?')) return;
     if (!db.imagens || !db.imagens.garagem || !Array.isArray(db.imagens.garagem.fotos)) return;
     const foto = db.imagens.garagem.fotos[i];
-    if (foto && typeof foto === 'object' && foto.id) { try { await idbExcluirImagemComThumb(foto.id); } catch(e) {} }
+    if (foto && typeof foto === 'object' && foto.id) { try { await excluirImagemFirestore(foto.id); } catch(e) {} }
     db.imagens.garagem.fotos.splice(i, 1);
     await atualizarGaleriaGaragem();
     await salvarDB();
     registrarAuditoria('Exclusão', 'Foto excluída da Garagem (índice ' + i + ')');
 }
 
-/* ---- SOS (IDB) ---- */
+/* ---- SOS (Firestore) ---- */
 async function salvarSOS() {
     if (!Array.isArray(sosImagensTemp) || sosImagensTemp.length === 0) { alert('Nenhuma imagem selecionada!'); return; }
     if (!db.imagens) db.imagens = { garagem:{fotos:[]}, sos:{fotos:[]}, comprovantes:{fotos:[]} };
@@ -3612,10 +3645,11 @@ async function salvarSOS() {
         try {
             if (!item || !item.blob) { erros++; continue; }
             const id = 'sos_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
-            await idbSalvarImagemComThumb(id, item.blob, { nomeArquivo: item.nome || 'foto.jpg', tipo: item.blob.type || 'image/jpeg', categoria: 'sos' });
+            const base64 = await blobParaDataURL(item.blob);
+            await salvarImagemFirestore(id, base64, { nomeArquivo: item.nome || 'foto.jpg', tipo: item.blob.type || 'image/jpeg', categoria: 'sos' });
             db.imagens.sos.fotos.push({ id: id, nome: item.nome || 'foto.jpg', dataUpload: hoje });
             salvas++;
-        } catch (err) { erros++; }
+        } catch (err) { erros++; console.error(err); }
     }
     sosImagensTemp.forEach(item => { if (item && typeof item === 'object' && item.previewUrl) { try { URL.revokeObjectURL(item.previewUrl); } catch(e) {} } });
     sosImagensTemp = [];
@@ -3637,19 +3671,14 @@ async function atualizarGaleriaSOS() {
     for (let i = 0; i < fotos.length; i++) {
         const foto = fotos[i];
         const div = document.createElement('div'); div.className = 'saved-image-item';
-        let thumbURL = null;
-        if (foto && typeof foto === 'object' && foto.id) { try { thumbURL = await idbObterThumbURL(foto.id); } catch(e) {} }
-        else if (typeof foto === 'string') { thumbURL = foto; }
-        if (thumbURL) {
-            const img = document.createElement('img'); img.src = thumbURL; img.alt = 'foto';
+        let base64Img = null;
+        if (foto && typeof foto === 'object' && foto.id) { try { base64Img = await obterImagemFirestore(foto.id); } catch(e) {} }
+        else if (typeof foto === 'string') { base64Img = foto; }
+        if (base64Img) {
+            const img = document.createElement('img'); img.src = base64Img; img.alt = 'foto';
             img.addEventListener('click', async (ev) => {
                 ev.stopPropagation();
-                let srcFull = thumbURL;
-                if (foto && typeof foto === 'object' && foto.id) {
-                    const u = await idbObterBlobURL(foto.id);
-                    if (u) srcFull = u;
-                }
-                openImageModal(srcFull, [srcFull], 0);
+                openImageModal(base64Img, [base64Img], 0);
             });
             div.appendChild(img);
         } else {
@@ -3670,7 +3699,7 @@ async function excluirFotoSOS(i) {
     if (!confirm('Excluir esta imagem?')) return;
     if (!db.imagens || !db.imagens.sos || !Array.isArray(db.imagens.sos.fotos)) return;
     const foto = db.imagens.sos.fotos[i];
-    if (foto && typeof foto === 'object' && foto.id) { try { await idbExcluirImagemComThumb(foto.id); } catch(e) {} }
+    if (foto && typeof foto === 'object' && foto.id) { try { await excluirImagemFirestore(foto.id); } catch(e) {} }
     db.imagens.sos.fotos.splice(i, 1);
     await atualizarGaleriaSOS();
     await salvarDB();
@@ -3682,7 +3711,7 @@ async function atualizarImagemGuincho() {
     const ultima = fotos.length > 0 ? fotos[fotos.length - 1] : null;
     let src = null;
     if (ultima && typeof ultima === 'object' && ultima.id) {
-        try { src = await idbObterThumbURL(ultima.id); } catch(e) {}
+        try { src = await obterImagemFirestore(ultima.id); } catch(e) {}
     } else if (typeof ultima === 'string') src = ultima;
     ['guinchoCardImg', 'guinchoOverlayImg'].forEach(function(id) {
         const img = document.getElementById(id);
@@ -4347,7 +4376,8 @@ async function handleDocVeiculoSelecionado(e) {
                 const nomeDoc = 'DOC VEÍCULO - ' + (file.name || 'documento.pdf');
                 try {
                     const id = 'doc_veiculo_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
-                    await idbSalvar(id, file, { nomeArquivo: file.name, placa: placaSalvar, tipo: 'application/pdf' });
+                    const base64 = await blobParaDataURL(file);
+                    await salvarImagemFirestore(id, base64, { nomeArquivo: file.name, placa: placaSalvar, tipo: 'application/pdf' });
                     db.documentosPlacas[placaSalvar].push({ nome: nomeDoc, tipo: 'application/pdf', storageId: id, dataUpload: agora });
                     await salvarDB();
                     try { atualizarGaleriaComprovantes(); } catch(e) {}
@@ -4380,7 +4410,8 @@ async function salvarDocumentosPlaca() {
         aceitos++;
         try {
             const id = 'doc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
-            await idbSalvar(id, file, { nomeArquivo: file.name, tipo: file.type || 'application/octet-stream', placa });
+            const base64 = await blobParaDataURL(file);
+            await salvarImagemFirestore(id, base64, { nomeArquivo: file.name, tipo: file.type || 'application/octet-stream', placa });
             db.documentosPlacas[placa].push({ nome: file.name, tipo: file.type || 'application/octet-stream', storageId: id, dataUpload: new Date().toLocaleString('pt-BR') });
             processados++;
         } catch (e) { console.error('Erro ao salvar documento', e); }
@@ -4422,7 +4453,7 @@ function atualizarGaleriaComprovantes() {
             const btnAbrir = document.createElement('button'); btnAbrir.className = 'btn-info'; btnAbrir.textContent = '👁️ Abrir';
             btnAbrir.onclick = async () => {
                 let urlParaAbrir = null;
-                if (doc.storageId) { try { urlParaAbrir = await idbObterBlobURL(doc.storageId); } catch (e) {} }
+                if (doc.storageId) { try { urlParaAbrir = await obterImagemFirestore(doc.storageId); } catch (e) {} }
                 if (!urlParaAbrir && doc.data) urlParaAbrir = doc.data;
                 if (!urlParaAbrir) { alert('⚠️ Arquivo não encontrado.'); return; }
                 const win = window.open();
@@ -4445,7 +4476,7 @@ function excluirDocumentoPlaca(placa, idx) {
     const doc = db.documentosPlacas[placa][idx];
     if (!doc) return;
     if (!confirm('Excluir o documento "' + doc.nome + '"?')) return;
-    if (doc.storageId) { try { idbExcluir(doc.storageId).catch(function(){}); } catch(e) {} }
+    if (doc.storageId) { try { excluirImagemFirestore(doc.storageId).catch(function(){}); } catch(e) {} }
     db.documentosPlacas[placa].splice(idx, 1);
     if (db.documentosPlacas[placa].length === 0) delete db.documentosPlacas[placa];
     salvarDB();
@@ -4530,11 +4561,11 @@ async function handleComprovantesPagInputChange(e) {
             else if (isImg) texto = await extrairTextoImagem(file);
             else { errors.push(file.name + ': tipo não suportado'); continue; }
             const dados = extrairDadosComprovante(texto);
-            const blob = file;
             const id = 'comp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
-            await idbSalvarImagemComThumb(id, blob, { nomeArquivo: file.name, tipo: file.type || (isPDF ? 'application/pdf' : 'image/jpeg'), categoria: 'comprovante' });
+            const base64 = await blobParaDataURL(file);
+            await salvarImagemFirestore(id, base64, { nomeArquivo: file.name, tipo: file.type || (isPDF ? 'application/pdf' : 'image/jpeg'), categoria: 'comprovante' });
             let previewUrl = null;
-            if (isImg) previewUrl = await idbObterBlobURL(id);
+            if (isImg) previewUrl = base64;
             comprovantesPagTemp.push({ storageId: id, nomeArquivo: file.name, tipoArquivo: file.type || (isPDF ? 'application/pdf' : 'image/jpeg'), previewUrl: previewUrl, pagador: dados.pagador || '', recebedor: dados.recebedor || '', valor: dados.valor || 0, valorFormatado: dados.valor ? formatarMoedaBR(dados.valor) : '', dataComprovante: dados.data || '', placa: placaAuto, dataUpload: new Date().toLocaleString('pt-BR') });
         } catch (err) { errors.push(file.name + ': ' + (err.message || 'erro')); }
     }
@@ -4607,7 +4638,7 @@ async function abrirComprovanteSalvo(idx) {
     const c = (db.comprovantesPagamento || [])[idx];
     if (!c) { alert('Arquivo não disponível.'); return; }
     let urlToOpen = null;
-    if (c.storageId) { try { urlToOpen = await idbObterBlobURL(c.storageId); } catch(e) {} }
+    if (c.storageId) { try { urlToOpen = await obterImagemFirestore(c.storageId); } catch(e) {} }
     if (!urlToOpen && c.dataUrl) urlToOpen = c.dataUrl;
     if (!urlToOpen) { alert('Arquivo não disponível.'); return; }
     if (c.tipoArquivo && c.tipoArquivo.indexOf('image/') === 0) {
@@ -4641,7 +4672,7 @@ async function excluirComprovanteSalvo(idx) {
     const c = (db.comprovantesPagamento || [])[idx];
     if (!c) return;
     if (!confirm('Excluir o comprovante "' + c.nomeArquivo + '"?')) return;
-    if (c.storageId) { try { await idbExcluirImagemComThumb(c.storageId); } catch(e) {} }
+    if (c.storageId) { try { await excluirImagemFirestore(c.storageId); } catch(e) {} }
     db.comprovantesPagamento.splice(idx, 1);
     atualizarTabelaComprovantesPag();
     salvarDB();
@@ -4728,9 +4759,10 @@ async function handleDocComprovanteInputChange(e) {
             const dados = extrairDadosComprovante(texto);
             const match = encontrarPagamentoCorrespondente(dados.valor, '');
             const id = 'doc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
-            await idbSalvarImagemComThumb(id, file, { nomeArquivo: file.name, tipo: file.type || (isPDF ? 'application/pdf' : 'image/jpeg'), categoria: 'comprovante' });
+            const base64 = await blobParaDataURL(file);
+            await salvarImagemFirestore(id, base64, { nomeArquivo: file.name, tipo: file.type || (isPDF ? 'application/pdf' : 'image/jpeg'), categoria: 'comprovante' });
             let previewUrl = null;
-            if (isImg) previewUrl = await idbObterBlobURL(id);
+            if (isImg) previewUrl = base64;
             docComprovantesTemp.push({ storageId: id, nomeArquivo: file.name, tipoArquivo: file.type || (isPDF ? 'application/pdf' : 'image/jpeg'), previewUrl: previewUrl, pagador: dados.pagador || '', recebedor: dados.recebedor || '', valor: dados.valor || 0, valorFormatado: dados.valor ? formatarMoedaBR(dados.valor) : '', dataComprovante: dados.data || '', placa: match ? match.aluguel.placa : '', aluguelMatch: match ? match.aluguel : null, aluguelMatchIdx: match ? match.idx : -1, dataUpload: new Date().toLocaleString('pt-BR') });
         } catch (err) { errors.push(file.name + ': ' + (err.message || 'erro')); }
     }
@@ -4811,7 +4843,7 @@ async function abrirDocComprovante(idx) {
     const c = (db.comprovantesDoc || [])[idx];
     if (!c) { alert('Arquivo indisponível.'); return; }
     let urlToOpen = null;
-    if (c.storageId) { try { urlToOpen = await idbObterBlobURL(c.storageId); } catch(e) {} }
+    if (c.storageId) { try { urlToOpen = await obterImagemFirestore(c.storageId); } catch(e) {} }
     if (!urlToOpen && c.dataUrl) urlToOpen = c.dataUrl;
     if (!urlToOpen) { alert('Arquivo indisponível.'); return; }
     if (c.tipoArquivo && c.tipoArquivo.indexOf('image/') === 0) {
@@ -4828,7 +4860,7 @@ async function excluirDocComprovante(idx) {
     const c = (db.comprovantesDoc || [])[idx];
     if (!c) return;
     if (!confirm('Excluir?')) return;
-    if (c.storageId) { try { await idbExcluirImagemComThumb(c.storageId); } catch(e) {} }
+    if (c.storageId) { try { await excluirImagemFirestore(c.storageId); } catch(e) {} }
     db.comprovantesDoc.splice(idx, 1);
     atualizarTabelaDoc();
     salvarDB();

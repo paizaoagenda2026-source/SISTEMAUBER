@@ -627,6 +627,7 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
         <h2>💵 Fluxo de Caixa</h2>
         <div class="form-grid">
             <div class="form-group"><label>Data</label><input type="date" id="fcData"></div>
+            <div class="form-group"><label>Vencimento</label><input type="date" id="fcVencimento"></div>
             <div class="form-group"><label>Descrição</label><input type="text" id="fcDescricao"></div>
             <div class="form-group"><label>Categoria</label><input type="text" id="fcCategoria"></div>
             <div class="form-group"><label>Valor</label><input type="text" id="fcValor" class="money"></div>
@@ -640,7 +641,7 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
         </div>
         <div class="table-container">
             <table id="tabelaFluxoCaixa">
-                <thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Valor</th><th>Tipo</th><th>Ações</th></tr></thead>
+                <thead><tr><th>Data</th><th>Vencimento</th><th>Descrição</th><th>Categoria</th><th>Valor</th><th>Tipo</th><th>Ações</th></tr></thead>
                 <tbody></tbody>
             </table>
         </div>
@@ -2627,7 +2628,7 @@ function encerrarLocacao(i) {
         );
         if (caucaoExtornada) {
             if (!Array.isArray(db.fluxoCaixa)) db.fluxoCaixa = [];
-            db.fluxoCaixa.push({ data: hojeISO, descricao: 'Extorno de Caução - ' + l.locatario + ' - ' + l.placa, categoria: 'Extorno Caução', valor: formatarMoedaBR(caucaoRecebido), valorNumerico: caucaoRecebido, tipo: 'saida', _reaberturaTag: 'extorno:' + l.locatario + ':' + l.placa });
+            db.fluxoCaixa.push({ data: hojeISO, vencimento: '', descricao: 'Extorno de Caução - ' + l.locatario + ' - ' + l.placa, categoria: 'Extorno Caução', valor: formatarMoedaBR(caucaoRecebido), valorNumerico: caucaoRecebido, tipo: 'saida', _reaberturaTag: 'extorno:' + l.locatario + ':' + l.placa });
             registrarAuditoria('Extorno', `Caução extornada: ${l.locatario} - ${l.placa}`);
             atualizarTabelaFluxoCaixa();
         }
@@ -2976,7 +2977,7 @@ function pagarRelatorioMecanico() {
     const hojeISO = new Date().toISOString().split('T')[0];
     const oficinas = [...new Set(relatorioMecanicoTemp.map(m => m.oficina))].join(', ');
     if (!Array.isArray(db.fluxoCaixa)) db.fluxoCaixa = [];
-    db.fluxoCaixa.push({ data: hojeISO, descricao: 'Pagamento Oficina(s): ' + oficinas, categoria: 'Mecânica/Oficina', valor: formatarMoedaBR(total), valorNumerico: total, tipo: 'saida' });
+    db.fluxoCaixa.push({ data: hojeISO, vencimento: '', descricao: 'Pagamento Oficina(s): ' + oficinas, categoria: 'Mecânica/Oficina', valor: formatarMoedaBR(total), valorNumerico: total, tipo: 'saida' });
     relatorioMecanicoTemp.forEach(itemTemp => {
         const realItem = db.mecanico.find(m => m && m.data === itemTemp.data && m.oficina === itemTemp.oficina && m.servico === itemTemp.servico && m.valor === itemTemp.valor && !m.pago);
         if (realItem) realItem.pago = true;
@@ -3905,7 +3906,15 @@ function processarPagamentoAutomatico(aluguelObj, dataPagamentoISO) {
     aluguelObj.dataPagamento = dataPagamentoISO;
     if (!Array.isArray(db.fluxoCaixa)) db.fluxoCaixa = [];
     if (!Array.isArray(db.historicoAlugueis)) db.historicoAlugueis = [];
-    db.fluxoCaixa.push({ data: dataPagamentoISO, descricao: 'Aluguel (Auto) - ' + aluguelObj.locatario + ' - ' + aluguelObj.placa, categoria: 'Aluguel', valor: aluguelObj.valor, valorNumerico: Number(aluguelObj.valorNumerico) || parseMoeda(aluguelObj.valor), tipo: 'entrada' });
+    db.fluxoCaixa.push({ 
+        data: dataPagamentoISO, 
+        vencimento: aluguelObj.vencimento || '', 
+        descricao: 'Aluguel (Auto) - ' + aluguelObj.locatario + ' - ' + aluguelObj.placa, 
+        categoria: 'Aluguel', 
+        valor: aluguelObj.valor, 
+        valorNumerico: Number(aluguelObj.valorNumerico) || parseMoeda(aluguelObj.valor), 
+        tipo: 'entrada' 
+    });
     db.historicoAlugueis.push({ data: dataPagamentoISO, dataPagamento: dataPagamentoISO, locatario: aluguelObj.locatario || '', fabricante: aluguelObj.fabricante || '', placa: aluguelObj.placa || '', parcela: aluguelObj.parcela || '', origem: aluguelObj.origem || 'Aluguel', valor: aluguelObj.valor || '', valorNumerico: Number(aluguelObj.valorNumerico) || parseMoeda(aluguelObj.valor) || 0, vencimento: aluguelObj.vencimento || '', tipoPagamento: aluguelObj.tipoPagamento || 'mensal', status: 'pago' });
     const locAtiva = (db.locacoes || []).find(l => l && l.locatario === aluguelObj.locatario && l.placa === aluguelObj.placa);
     if (locAtiva) {
@@ -3991,7 +4000,7 @@ function atualizarTabelaFluxoCaixa() {
         const valorNum = Number(f.valorNumerico) || parseMoeda(f.valor) || 0;
         if (f.tipo === 'entrada') totalEntradas += valorNum; else totalSaidas += valorNum;
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${formatarDataBR(f.data)}</td><td>${f.descricao || ''}</td><td>${f.categoria || ''}</td><td>${f.valor || formatarMoedaBR(valorNum)}</td><td>${(f.tipo || '').toUpperCase()}</td><td><button class="btn-danger" onclick="excluirFluxoCaixa(${lista.length - 1 - index})">🗑️</button></td>`;
+        tr.innerHTML = `<td>${formatarDataBR(f.data)}</td><td>${formatarDataBR(f.vencimento)}</td><td>${f.descricao || ''}</td><td>${f.categoria || ''}</td><td>${f.valor || formatarMoedaBR(valorNum)}</td><td>${(f.tipo || '').toUpperCase()}</td><td><button class="btn-danger" onclick="excluirFluxoCaixa(${lista.length - 1 - index})">🗑️</button></td>`;
         tbody.appendChild(tr);
     });
     const saldo = totalEntradas - totalSaidas;
@@ -4002,6 +4011,7 @@ function atualizarTabelaFluxoCaixa() {
 function excluirFluxoCaixa(i) { if (!confirmarSenhaADM()) return; if (!confirm('Excluir este lançamento?')) return; db.fluxoCaixa.splice(i, 1); atualizarTabelaFluxoCaixa(); salvarDB(); }
 function salvarFluxoCaixa() {
     const data = document.getElementById('fcData').value || obterDataHojeISO();
+    const vencimento = document.getElementById('fcVencimento').value;
     const descricao = document.getElementById('fcDescricao').value.trim();
     const categoria = document.getElementById('fcCategoria').value.trim();
     const valorStr = document.getElementById('fcValor').value;
@@ -4009,10 +4019,11 @@ function salvarFluxoCaixa() {
     if (!data || !descricao || !valorStr) { alert('Preencha Data, Descrição e Valor!'); return; }
     const valorNum = parseMoeda(valorStr);
     if (!Array.isArray(db.fluxoCaixa)) db.fluxoCaixa = [];
-    db.fluxoCaixa.push({ data, descricao, categoria, valor: valorStr, valorNumerico: valorNum, tipo });
+    db.fluxoCaixa.push({ data, vencimento, descricao, categoria, valor: valorStr, valorNumerico: valorNum, tipo });
     document.getElementById('fcDescricao').value = '';
     document.getElementById('fcCategoria').value = '';
     document.getElementById('fcValor').value = '';
+    document.getElementById('fcVencimento').value = '';
     document.getElementById('fcData').value = obterDataHojeISO();
     atualizarTabelaFluxoCaixa();
     salvarDB();
@@ -4168,7 +4179,7 @@ function salvarCompra() {
         db.compras.push(compra);
         registrarAuditoria('Cadastro', 'Nova compra: ' + produto);
         const valorNum = parseMoeda(valorTotal || valorUnitario);
-        if (valorNum > 0) { if (!Array.isArray(db.fluxoCaixa)) db.fluxoCaixa = []; db.fluxoCaixa.push({ data, descricao: 'Compra: ' + produto + ' - ' + fornecedor, categoria: 'Compras', valor: valorTotal || valorUnitario, valorNumerico: valorNum, tipo: 'saida' }); }
+        if (valorNum > 0) { if (!Array.isArray(db.fluxoCaixa)) db.fluxoCaixa = []; db.fluxoCaixa.push({ data, vencimento: '', descricao: 'Compra: ' + produto + ' - ' + fornecedor, categoria: 'Compras', valor: valorTotal || valorUnitario, valorNumerico: valorNum, tipo: 'saida' }); }
         if (!Array.isArray(db.historico)) db.historico = [];
         db.historico.push({ data, descricao: 'Compra: ' + produto + (quantidade ? ' (Qtd: ' + quantidade + ')' : ''), placa, valor: valorTotal || valorUnitario, fornecedor, oficina: '' });
         alert('✅ Compra salva!');
@@ -4300,8 +4311,24 @@ function marcarPendenciaPaga(i) {
     if (!confirm('Confirmar PAGAMENTO desta pendência?\n\nDescrição: ' + p.descricao + '\nPlaca: ' + p.placa)) return;
     const hojeISO = new Date().toISOString().split('T')[0];
     if (!Array.isArray(db.fluxoCaixa)) db.fluxoCaixa = [];
-    if (creditoNum > 0) db.fluxoCaixa.push({ data: hojeISO, descricao: 'Pendência Paga - ' + p.descricao + ' - ' + p.placa, categoria: 'Pendência', valor: p.credito, valorNumerico: creditoNum, tipo: 'entrada' });
-    if (debitoNum > 0) db.fluxoCaixa.push({ data: hojeISO, descricao: 'Pendência Paga - ' + p.descricao + ' - ' + p.placa, categoria: 'Pendência', valor: p.debito, valorNumerico: debitoNum, tipo: 'saida' });
+    if (creditoNum > 0) db.fluxoCaixa.push({ 
+        data: hojeISO, 
+        vencimento: p.vencimento || '', 
+        descricao: 'Pendência Paga - ' + p.descricao + ' - ' + p.placa, 
+        categoria: 'Pendência', 
+        valor: p.credito, 
+        valorNumerico: creditoNum, 
+        tipo: 'entrada' 
+    });
+    if (debitoNum > 0) db.fluxoCaixa.push({ 
+        data: hojeISO, 
+        vencimento: p.vencimento || '', 
+        descricao: 'Pendência Paga - ' + p.descricao + ' - ' + p.placa, 
+        categoria: 'Pendência', 
+        valor: p.debito, 
+        valorNumerico: debitoNum, 
+        tipo: 'saida' 
+    });
     p.status = 'Pago';
     p.dataPagamento = hojeISO;
     try {

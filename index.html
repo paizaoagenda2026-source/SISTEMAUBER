@@ -683,7 +683,10 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
     </div>
 
     <div class="tab-content" id="auditoria">
-        <h2>🔍 Auditoria</h2>
+        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+            <h2 style="margin: 0;">🔍 Auditoria</h2>
+            <button class="btn-danger" onclick="limparAuditoriaManual()" style="padding: 8px 15px; font-size: 14px;">🗑️ Limpar Auditoria</button>
+        </div>
         <div class="table-container">
             <table id="tabelaAuditoria">
                 <thead><tr><th>Data/Hora</th><th>Usuário</th><th>Ação</th><th>Descrição</th></tr></thead>
@@ -1419,6 +1422,27 @@ async function migrarFotosAntigasParaIDB() {
     if (precisaSalvar) { try { await salvarDB(); } catch(e) {} }
 }
 
+async function verificarLimpezaAutomaticaAuditoria() {
+    if (!db || !db.config) return;
+    const hoje = new Date();
+    const ultimaLimpeza = db.config.ultimaLimpezaAuditoria ? new Date(db.config.ultimaLimpezaAuditoria) : null;
+
+    if (!ultimaLimpeza || isNaN(ultimaLimpeza.getTime())) {
+        db.config.ultimaLimpezaAuditoria = hoje.toISOString();
+        await salvarDB();
+        return;
+    }
+
+    const diffTempo = Math.abs(hoje - ultimaLimpeza);
+    const diffDias = Math.ceil(diffTempo / (1000 * 60 * 60 * 24));
+
+    if (diffDias >= 15) {
+        db.auditoria = [];
+        db.config.ultimaLimpezaAuditoria = hoje.toISOString();
+        await salvarDB();
+    }
+}
+
 function registrarAuditoria(acao, descricao) {
     if (!db) return;
     if (!Array.isArray(db.auditoria)) db.auditoria = [];
@@ -1426,6 +1450,22 @@ function registrarAuditoria(acao, descricao) {
     if (db.auditoria.length > 1000) db.auditoria.shift();
     try { atualizarTabelaAuditoria(); } catch(e) {}
 }
+
+async function limparAuditoriaManual() {
+    if (!confirmarSenhaADM()) return;
+    if (!confirm('⚠️ ATENÇÃO: Deseja apagar TODOS os registros da auditoria?\n\nEsta ação não pode ser desfeita.')) return;
+    
+    db.auditoria = [];
+    if (!db.config) db.config = {};
+    db.config.ultimaLimpezaAuditoria = new Date().toISOString();
+    
+    registrarAuditoria('Limpeza', 'Auditoria limpa manualmente pelo usuário');
+    
+    atualizarTabelaAuditoria();
+    await salvarDB();
+    alert('✅ Auditoria limpa com sucesso!');
+}
+
 function atualizarTabelaAuditoria() {
     const tbody = document.querySelector('#tabelaAuditoria tbody');
     if (!tbody) return;
@@ -4970,6 +5010,9 @@ async function inicializarSistemaCompleto() {
     sistemaInicializado = true;
     try { await carregarDB(); } catch(e) { if (!db) { db = criarDBPadrao(); dbCarregado = true; } }
     if (!db) db = criarDBPadrao();
+    
+    await verificarLimpezaAutomaticaAuditoria();
+    
     if (!Array.isArray(db.usuarios)) db.usuarios = [];
     if (!db.usuarios.some(u => u && u.nome === 'SERGIO')) { db.usuarios.push({ nome: 'SERGIO', senha: '080888', tipo: 'ADM', permissoes: JSON.parse(JSON.stringify(permissoesPadrao.ADM)), selfie: null }); }
     try { await migrarFotosAntigasParaIDB(); } catch(e) {}

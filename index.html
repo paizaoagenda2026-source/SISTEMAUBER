@@ -1726,7 +1726,7 @@ document.querySelectorAll('.tab').forEach(tab => {
         if (tabId === 'clientes') atualizarTabelaClientes();
         if (tabId === 'locacoes') { atualizarCombosLocacao(); preencherDataInicioLocacao(); atualizarTabelaLocacoes(); }
         if (tabId === 'locEncerrada') atualizarTabelaLocEncerrada();
-        if (tabId === 'manutencao') atualizarPlacasManutencao();
+        if (tabId === 'manutencao') { atualizarPlacasManutencao(); atualizarTabelaManutencao(); }
         if (tabId === 'mecanico') atualizarPlacasMecanico();
         if (tabId === 'historico') { atualizarTabelaHistorico(); atualizarTabelaHistoricoAlugueis(); }
         if (tabId === 'auditoria') atualizarTabelaAuditoria();
@@ -2917,12 +2917,20 @@ function atualizarDashboardKmManutencao() {
     const container = document.getElementById('dashboardKmManutencao');
     if (!container) return;
     container.innerHTML = '';
-    if (!db.veiculos || db.veiculos.length === 0) {
+    
+    // Filtra veículos pelas placas permitidas
+    const placasFiltro = getPlacasPermitidasParaFiltro();
+    let veiculosVisiveis = db.veiculos || [];
+    if (placasFiltro !== null) {
+        veiculosVisiveis = veiculosVisiveis.filter(v => v && v.placa && placasFiltro.includes(normalizarPlaca(v.placa)));
+    }
+    
+    if (!veiculosVisiveis || veiculosVisiveis.length === 0) {
         container.innerHTML = '<span style="color:#999;font-size:14px;padding-left:10px;">Nenhum veículo cadastrado para exibir KM.</span>';
         return;
     }
     
-    db.veiculos.forEach(v => {
+    veiculosVisiveis.forEach(v => {
         if (!v || !v.placa) return;
         
         const manutencoes = (db.manutencao || []).filter(m => m && m.placa === v.placa && m.km);
@@ -2945,16 +2953,30 @@ function atualizarTabelaManutencao() {
     const tbody = document.querySelector('#tabelaManutencao tbody');
     if (!tbody) return;
     tbody.innerHTML = '';
-    (db.manutencao || []).forEach((m, i) => {
-        if (!m) return;
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${m.veiculo||''}</td><td>${m.placa||''}</td><td>${m.tipo||''}</td><td>${m.km||''}</td>
-        <td>
-            <button class="btn-info" style="padding: 8px 12px; font-size: 13px; margin: 2px;" onclick="cadastrarNovaRevisaoManutencao(${i})" title="Nova Revisão (+10.000 KM)">🔄 +10K KM</button>
-            <button class="btn-danger" style="padding: 8px 12px; font-size: 13px; margin: 2px;" onclick="excluirManutencao(${i})">🗑️</button>
-        </td>`;
-        tbody.appendChild(tr);
-    });
+    
+    // Filtra registros de manutenção pelas placas permitidas
+    const placasFiltro = getPlacasPermitidasParaFiltro();
+    let manutencoesVisiveis = db.manutencao || [];
+    if (placasFiltro !== null) {
+        manutencoesVisiveis = manutencoesVisiveis.filter(m => m && m.placa && placasFiltro.includes(normalizarPlaca(m.placa)));
+    }
+    
+    if (manutencoesVisiveis.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#999;padding:20px;">Nenhum registro de manutenção.</td></tr>';
+    } else {
+        manutencoesVisiveis.forEach((m, i) => {
+            if (!m) return;
+            // Encontra o índice real no array original
+            const realIndex = db.manutencao.indexOf(m);
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${m.veiculo||''}</td><td>${m.placa||''}</td><td>${m.tipo||''}</td><td>${m.km||''}</td>
+            <td>
+                <button class="btn-info" style="padding: 8px 12px; font-size: 13px; margin: 2px;" onclick="cadastrarNovaRevisaoManutencao(${realIndex})" title="Nova Revisão (+10.000 KM)">🔄 +10K KM</button>
+                <button class="btn-danger" style="padding: 8px 12px; font-size: 13px; margin: 2px;" onclick="excluirManutencao(${realIndex})">🗑️</button>
+            </td>`;
+            tbody.appendChild(tr);
+        });
+    }
     
     atualizarDashboardKmManutencao();
 }

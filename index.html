@@ -4111,8 +4111,7 @@ async function atualizarGaleriaSOS() {
             placeholder.textContent = 'Imagem indisponível';
             div.appendChild(placeholder);
         }
-        const btn = document.createElement('button');
-        btn.className = 'delete-btn'; btn.textContent = '×';
+        const btn = document.createElement('button'); btn.className = 'delete-btn'; btn.textContent = '×';
         btn.addEventListener('click', (ev) => { ev.stopPropagation(); excluirFotoSOS(i); });
         div.appendChild(btn);
         container.appendChild(div);
@@ -4174,6 +4173,16 @@ function atualizarTabelaAlugueis() {
         tbody.appendChild(tr);
     });
 }
+
+/* ============================================================
+   PROCESSA PAGAMENTO AUTOMÁTICO
+   Ao conciliar um comprovante, esta função:
+   1) Marca o aluguel como pago
+   2) Lança no Fluxo de Caixa (entrada)
+   3) Lança no Histórico de Aluguéis
+   4) Gera o próximo vencimento automaticamente
+   5) NOVO: EXCLUI o pagamento com status 'pago' da lista
+   ============================================================ */
 function processarPagamentoAutomatico(aluguelObj, dataPagamentoISO) {
     aluguelObj.status = 'pago';
     aluguelObj.dataPagamento = dataPagamentoISO;
@@ -4217,15 +4226,17 @@ function processarPagamentoAutomatico(aluguelObj, dataPagamentoISO) {
             db.alugueis.push({ locatario: aluguelObj.locatario, fabricante: aluguelObj.fabricante || '', placa: aluguelObj.placa, data: dataPagamentoISO, vencimento: proximoVenc, valor: formatarMoedaBR(valorProx), valorNumerico: valorProx, origem: descricaoProx, tipoPagamento: aluguelObj.tipoPagamento || 'mensal', status: 'pendente', parcela: parcelasExistentes + 1, dataInicio: aluguelObj.dataInicio || locAtiva.dataInicio, dataFim: aluguelObj.dataFim || locAtiva.dataFim, pagCaucao: pagCaucao, totalParcelas: aluguelObj.totalParcelas || formatarMoedaBR(locAtiva.valorTotalParcelas) });
         }
     }
+    // NOVO: Exclui o pagamento com status 'pago' da lista de Sub Pagamentos
+    const idxRemover = db.alugueis.indexOf(aluguelObj);
+    if (idxRemover !== -1) db.alugueis.splice(idxRemover, 1);
 }
+
 function marcarPagamentoPago(i) {
     const a = db.alugueis[i];
     if (!a) return;
     if (!confirm('Confirmar pagamento de ' + a.valor + ' referente a ' + a.locatario + '?')) return;
     const hojeISO = new Date().toISOString().split('T')[0];
     processarPagamentoAutomatico(a, hojeISO);
-    const idx = db.alugueis.indexOf(a);
-    if (idx !== -1) db.alugueis.splice(idx, 1);
     atualizarTabelaAlugueis();
     atualizarTabelaHistoricoAlugueis();
     atualizarTabelaFluxoCaixa();

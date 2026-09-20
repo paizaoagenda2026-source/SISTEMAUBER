@@ -479,6 +479,17 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
                 <tbody></tbody>
             </table>
         </div>
+        
+        <div class="config-section" style="margin-top: 25px; border-left-color: var(--warning); background: #fff8e1;">
+            <h3>🔐 Acesso ao Botão "+10K KM" (Manutenção)</h3>
+            <p style="color:#666; font-size: 14px; margin-bottom: 12px;">
+                Marque os usuários que podem clicar no botão <strong>"🔄 +10K KM"</strong> da aba <strong>Manutenção</strong> <strong>sem precisar da senha do ADM</strong>.
+                Usuários do tipo <strong>ADM</strong> sempre têm acesso liberado automaticamente.
+                Os demais só conseguem usar o botão se estiverem marcados aqui OU digitando a senha do ADM no momento do clique.
+            </p>
+            <div id="listaAcessoKmSemSenha" class="permissoes-grid"></div>
+            <button class="btn-primary" onclick="salvarAcessoKmSemSenha()">💾 Salvar Permissões de Acesso</button>
+        </div>
     </div>
 
     <div class="tab-content" id="garagem">
@@ -1294,7 +1305,7 @@ async function processarArquivosImagem(files, maxWidth, quality) {
 function criarDBPadrao() {
     return {
         veiculos: [], clientes: [], locacoes: [], locacoesEncerradas: [], manutencao: [], mecanico: [],
-        usuarios: [{ nome: 'SERGIO', senha: '080888', tipo: 'ADM', permissoes: JSON.parse(JSON.stringify(permissoesPadrao.ADM)), selfie: null }],
+        usuarios: [{ nome: 'SERGIO', senha: '080888', tipo: 'ADM', permissoes: JSON.parse(JSON.stringify(permissoesPadrao.ADM)), selfie: null, podeRevisaoKmSemSenha: true }],
         alugueis: [], fluxoCaixa: [], documentos: [], compras: [], auditoria: [], bancos: [], pendentes: [], historico: [],
         historicoAlugueis: [], comprovantesPagamento: [], comprovantesDoc: [],
         documentosPlacas: {}, docsVeiculos: [],
@@ -1347,7 +1358,7 @@ async function carregarDB() {
         precisaSalvar = true;
     }
     if (!db.usuarios.some(u => u && u.nome === 'SERGIO')) {
-        db.usuarios.push({ nome: 'SERGIO', senha: '080888', tipo: 'ADM', permissoes: JSON.parse(JSON.stringify(permissoesPadrao.ADM)), selfie: null });
+        db.usuarios.push({ nome: 'SERGIO', senha: '080888', tipo: 'ADM', permissoes: JSON.parse(JSON.stringify(permissoesPadrao.ADM)), selfie: null, podeRevisaoKmSemSenha: true });
         precisaSalvar = true;
     }
     dbCarregado = true;
@@ -1549,7 +1560,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     if (!dbCarregado) { alert('Sistema ainda carregando... aguarde alguns segundos.'); return; }
     if (campoVazio(user) || campoVazio(pass)) { alert('Preencha usuário e senha!'); return; }
     if (user === 'SERGIO' && !db.usuarios.some(u => u && u.nome === 'SERGIO')) {
-        db.usuarios.push({ nome: 'SERGIO', senha: '080888', tipo: 'ADM', permissoes: JSON.parse(JSON.stringify(permissoesPadrao.ADM)), selfie: null });
+        db.usuarios.push({ nome: 'SERGIO', senha: '080888', tipo: 'ADM', permissoes: JSON.parse(JSON.stringify(permissoesPadrao.ADM)), selfie: null, podeRevisaoKmSemSenha: true });
         await salvarDB();
     }
     const u = db.usuarios.find(x => x && x.nome === user && x.senha === pass);
@@ -1663,6 +1674,43 @@ function gerarPermissoesUI() {
         }
     }
 }
+
+/* NOVO: Renderiza a lista de acesso ao botão +10K KM sem senha ADM */
+function renderizarListaAcessoKmSemSenha() {
+    const container = document.getElementById('listaAcessoKmSemSenha');
+    if (!container) return;
+    container.innerHTML = '';
+    if (!db || !Array.isArray(db.usuarios) || db.usuarios.length === 0) {
+        container.innerHTML = '<p style="color:#999; font-size:14px; width:100%;">Nenhum usuário cadastrado.</p>';
+        return;
+    }
+    db.usuarios.forEach((u, idx) => {
+        if (!u) return;
+        const div = document.createElement('div');
+        div.className = 'permissao-item';
+        const isADM = u.tipo === 'ADM';
+        const checked = (isADM || u.podeRevisaoKmSemSenha === true) ? 'checked' : '';
+        const disabled = isADM ? 'disabled' : '';
+        div.innerHTML = `<input type="checkbox" id="perm_km_sem_senha_${idx}" data-idx="${idx}" ${checked} ${disabled}> <label for="perm_km_sem_senha_${idx}">${u.nome || ''} (${u.tipo || ''})${isADM ? ' — sempre liberado' : ''}</label>`;
+        container.appendChild(div);
+    });
+}
+
+/* NOVO: Salva permissões de acesso ao botão +10K KM */
+async function salvarAcessoKmSemSenha() {
+    if (!confirmarSenhaADM()) return;
+    if (!db || !Array.isArray(db.usuarios)) return;
+    db.usuarios.forEach((u, idx) => {
+        if (!u) return;
+        if (u.tipo === 'ADM') { u.podeRevisaoKmSemSenha = true; return; }
+        const cb = document.getElementById(`perm_km_sem_senha_${idx}`);
+        if (cb) u.podeRevisaoKmSemSenha = cb.checked;
+    });
+    await salvarDB();
+    registrarAuditoria('Permissão', 'Permissões de acesso ao botão +10K KM atualizadas');
+    alert('✅ Permissões de acesso ao botão +10K KM salvas!');
+}
+
 function preencherPermissoesUI(permissoes) {
     if (!permissoes) return;
     todasAbas.forEach(a => { const cb = document.getElementById(`perm_aba_${a.id}`); if (cb) cb.checked = !!(permissoes.abas && permissoes.abas[a.id]); });
@@ -1740,7 +1788,7 @@ document.querySelectorAll('.tab').forEach(tab => {
         if (tabId === 'vistoria') atualizarAbasVistoria();
         if (tabId === 'compras') { atualizarPlacasCompras(); atualizarTabelaCompras(); }
         if (tabId === 'configuracao') carregarConfiguracoes();
-        if (tabId === 'usuario') { gerarPermissoesUI(); atualizarTabelaUsuario(); }
+        if (tabId === 'usuario') { gerarPermissoesUI(); atualizarTabelaUsuario(); renderizarListaAcessoKmSemSenha(); }
     });
 });
 document.getElementById('fullscreenBtn').addEventListener('click', function() {
@@ -2335,7 +2383,7 @@ function criarUsuarioDoCliente(cliente) {
     if (db.usuarios.some(u => u && u.nome === primeiroNome)) return;
     const tel = cliente.telefone.replace(/\D/g, '');
     const senha = tel.length >= 10 ? tel.substring(2) : tel;
-    db.usuarios.push({ nome: primeiroNome, senha, tipo: 'MOTORISTA', permissoes: JSON.parse(JSON.stringify(permissoesPadrao.MOTORISTA)), selfieStorageId: cliente.selfieStorageId || null });
+    db.usuarios.push({ nome: primeiroNome, senha, tipo: 'MOTORISTA', permissoes: JSON.parse(JSON.stringify(permissoesPadrao.MOTORISTA)), selfieStorageId: cliente.selfieStorageId || null, podeRevisaoKmSemSenha: false });
     atualizarTabelaUsuario();
 }
 
@@ -2414,13 +2462,16 @@ async function salvarUsuario() {
     if (usuarioEditandoIndex !== null) {
         const outro = db.usuarios.find((u, idx) => idx !== usuarioEditandoIndex && u && u.nome === nome);
         if (outro) { alert('Já existe outro usuário com esse nome!'); return; }
-        db.usuarios[usuarioEditandoIndex] = { nome, senha, tipo, permissoes, selfieStorageId };
+        const usuarioAnterior = db.usuarios[usuarioEditandoIndex] || {};
+        const podeRevisaoKmSemSenha = (tipo === 'ADM') ? true : (usuarioAnterior.podeRevisaoKmSemSenha === true);
+        db.usuarios[usuarioEditandoIndex] = { nome, senha, tipo, permissoes, selfieStorageId, podeRevisaoKmSemSenha: podeRevisaoKmSemSenha };
         usuarioEditandoIndex = null;
     } else {
         if (db.usuarios.some(u => u && u.nome === nome)) { alert('Já existe esse usuário!'); return; }
-        db.usuarios.push({ nome, senha, tipo, permissoes, selfieStorageId });
+        db.usuarios.push({ nome, senha, tipo, permissoes, selfieStorageId, podeRevisaoKmSemSenha: (tipo === 'ADM') });
     }
     atualizarTabelaUsuario();
+    renderizarListaAcessoKmSemSenha();
     salvarDB();
     alert('Usuário salvo!');
     limparCamposUsuario();
@@ -2981,8 +3032,17 @@ function atualizarTabelaManutencao() {
     atualizarDashboardKmManutencao();
 }
 
+/* ============================================================
+   MODIFICADO: cadastrarNovaRevisaoManutencao
+   Agora exige senha do ADM para usuários não-ADM, EXCETO se
+   o usuário tiver a permissão especial 'podeRevisaoKmSemSenha'.
+   ============================================================ */
 function cadastrarNovaRevisaoManutencao(i) {
-    if (!confirmarSenhaADM()) return;
+    const isADM = usuarioLogado && usuarioLogado.tipo === 'ADM';
+    const temAcessoEspecial = usuarioLogado && usuarioLogado.podeRevisaoKmSemSenha === true;
+    if (!isADM && !temAcessoEspecial) {
+        if (!confirmarSenhaADM()) return;
+    }
     const m = db.manutencao[i];
     if (!m) {
         alert('Registro de manutenção não encontrado.');
@@ -5454,7 +5514,7 @@ async function inicializarSistemaCompleto() {
     await verificarLimpezaAutomaticaAuditoria();
     
     if (!Array.isArray(db.usuarios)) db.usuarios = [];
-    if (!db.usuarios.some(u => u && u.nome === 'SERGIO')) { db.usuarios.push({ nome: 'SERGIO', senha: '080888', tipo: 'ADM', permissoes: JSON.parse(JSON.stringify(permissoesPadrao.ADM)), selfie: null }); }
+    if (!db.usuarios.some(u => u && u.nome === 'SERGIO')) { db.usuarios.push({ nome: 'SERGIO', senha: '080888', tipo: 'ADM', permissoes: JSON.parse(JSON.stringify(permissoesPadrao.ADM)), selfie: null, podeRevisaoKmSemSenha: true }); }
     try { await migrarFotosAntigasParaIDB(); } catch(e) {}
     gerarPermissoesUI();
     atualizarTabelaVeiculos();

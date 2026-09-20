@@ -916,7 +916,7 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
 
 <script>
 /* ============================================================
-   NÚCLEO — PAIZÃO UBER 2.0  (VERSÃO CORRIGIDA - FOTOS NO FIRESTORE)
+   NÚCLEO — PAIZÃO UBER 2.0
    ============================================================ */
 const firebaseConfig = {
   apiKey: "AIzaSyApeHoLWESXU8j50ckswmJZ7j9qzWlZtlY",
@@ -4253,6 +4253,11 @@ function salvarConfiguracao() {
     registrarAuditoria('Configuração', 'Configurações gerais atualizadas');
     alert('✅ Configurações salvas!');
 }
+
+/* ============================================================
+   PENDÊNCIAS — CORRIGIDO
+   - Ao clicar em PAGO: grava no Histórico Geral e remove da aba Pendente.
+   ============================================================ */
 function salvarPendencia() {
     const data = document.getElementById('pendData').value || obterDataHojeISO();
     const descricao = document.getElementById('pendDescricao').value.trim();
@@ -4263,13 +4268,10 @@ function salvarPendencia() {
     const dataFinal = document.getElementById('pendDataFinal').value;
     if (!data || !descricao || !placa || !vencimento || (!credito && !debito)) { alert('Preencha todos os campos obrigatórios!'); return; }
     if (!Array.isArray(db.pendentes)) db.pendentes = [];
-    if (!Array.isArray(db.historico)) db.historico = [];
     db.pendentes.push({ data, descricao, placa, credito: credito || '', debito: debito || '', vencimento, dataFinal: dataFinal || '', status: 'Pendente', dataPagamento: null });
-    db.historico.push({ data, descricao: 'Pendência: ' + descricao, placa, valor: credito || debito || '', fornecedor: '', oficina: '' });
     ['pendDescricao','pendPlaca','pendCredito','pendDebito','pendVencimento','pendDataFinal'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
     const pendDataEl = document.getElementById('pendData'); if (pendDataEl) pendDataEl.value = obterDataHojeISO();
     atualizarTabelaPendentes();
-    atualizarTabelaHistorico();
     registrarAuditoria('Cadastro', 'Nova pendência: ' + descricao + ' - Placa: ' + placa);
     salvarDB();
     alert('✅ Pendência salva!');
@@ -4293,45 +4295,60 @@ function atualizarTabelaPendentes() {
     });
 }
 function marcarPendenciaPaga(i) {
-    const p = db.pendentes[i]; if (!p) { alert('Pendência não encontrada.'); return; }
+    const p = db.pendentes[i];
+    if (!p) { alert('Pendência não encontrada.'); return; }
     if (p.status === 'Pago') { alert('Esta pendência já está paga!'); return; }
     const creditoNum = parseMoeda(p.credito);
     const debitoNum = parseMoeda(p.debito);
     if (!confirm('Confirmar PAGAMENTO desta pendência?\n\nDescrição: ' + p.descricao + '\nPlaca: ' + p.placa)) return;
     const hojeISO = new Date().toISOString().split('T')[0];
+
+    // 1) Lança no Fluxo de Caixa
     if (!Array.isArray(db.fluxoCaixa)) db.fluxoCaixa = [];
-    if (creditoNum > 0) db.fluxoCaixa.push({ 
-        data: hojeISO, 
-        vencimento: p.vencimento || '', 
-        descricao: 'Pendência Paga - ' + p.descricao + ' - ' + p.placa, 
-        categoria: 'Pendência', 
-        valor: p.credito, 
-        valorNumerico: creditoNum, 
-        tipo: 'entrada' 
+    if (creditoNum > 0) db.fluxoCaixa.push({
+        data: hojeISO,
+        vencimento: p.vencimento || '',
+        descricao: 'Pendência Paga - ' + p.descricao + ' - ' + p.placa,
+        categoria: 'Pendência',
+        valor: p.credito,
+        valorNumerico: creditoNum,
+        tipo: 'entrada'
     });
-    if (debitoNum > 0) db.fluxoCaixa.push({ 
-        data: hojeISO, 
-        vencimento: p.vencimento || '', 
-        descricao: 'Pendência Paga - ' + p.descricao + ' - ' + p.placa, 
-        categoria: 'Pendência', 
-        valor: p.debito, 
-        valorNumerico: debitoNum, 
-        tipo: 'saida' 
+    if (debitoNum > 0) db.fluxoCaixa.push({
+        data: hojeISO,
+        vencimento: p.vencimento || '',
+        descricao: 'Pendência Paga - ' + p.descricao + ' - ' + p.placa,
+        categoria: 'Pendência',
+        valor: p.debito,
+        valorNumerico: debitoNum,
+        tipo: 'saida'
     });
-    p.status = 'Pago';
-    p.dataPagamento = hojeISO;
+
+    // 2) Lança no Histórico Geral (com status pago)
+    if (!Array.isArray(db.historico)) db.historico = [];
+    db.historico.push({
+        data: hojeISO,
+        descricao: 'Pendência Paga: ' + p.descricao,
+        placa: p.placa || '',
+        valor: p.credito || p.debito || '',
+        fornecedor: '',
+        oficina: '',
+        status: 'Pago',
+        dataPagamento: hojeISO,
+        vencimento: p.vencimento || ''
+    });
+
+    // 3) Remove da aba Pendente
+    db.pendentes.splice(i, 1);
+
+    // 4) Gera próxima pendência (recorrência) — mantém comportamento anterior
     try {
         const baseVenc = p.vencimento || hojeISO;
         const dtVenc = new Date(baseVenc + 'T00:00:00');
         dtVenc.setDate(dtVenc.getDate() + 30);
         const proximoVencimento = dtVenc.toISOString().split('T')[0];
-        
-        // Verifica se o próximo vencimento está dentro do período (Data Final)
         let podeGerarProximo = true;
-        if (p.dataFinal) {
-            podeGerarProximo = proximoVencimento <= p.dataFinal;
-        }
-        
+        if (p.dataFinal) { podeGerarProximo = proximoVencimento <= p.dataFinal; }
         if (podeGerarProximo) {
             const baseData = p.data || hojeISO;
             const dtData = new Date(baseData + 'T00:00:00');
@@ -4344,11 +4361,13 @@ function marcarPendenciaPaga(i) {
             registrarAuditoria('Pagamento', 'Última pendência do período paga: ' + p.descricao + ' - Placa: ' + p.placa);
         }
     } catch (err) {}
+
     atualizarTabelaPendentes();
     atualizarTabelaFluxoCaixa();
+    atualizarTabelaHistorico();
     registrarAuditoria('Pagamento', 'Pendência paga: ' + p.descricao + ' - Placa: ' + p.placa);
     salvarDB();
-    alert('✅ Pendência marcada como PAGA!');
+    alert('✅ Pendência PAGA e enviada ao Histórico Geral!');
 }
 function excluirPendencia(i) {
     if (!confirmarSenhaADM()) return;

@@ -84,6 +84,10 @@ th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; font-si
 th { background: var(--primary); color: white; font-weight: 600; }
 tr:hover { background: #f5f5f5; }
 .filter-input { margin-bottom: 15px; padding: 10px; width: 300px; max-width: 100%; border: 2px solid #ddd; border-radius: 5px; font-size: 14px; }
+.filter-bar { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 15px; }
+.filter-bar .filter-date-group { display: flex; flex-direction: column; gap: 4px; }
+.filter-bar .filter-date-group label { font-size: 12px; font-weight: 600; color: var(--primary); }
+.filter-bar .filter-date-group input { padding: 10px; border: 2px solid #ddd; border-radius: 5px; font-size: 14px; width: 170px; }
 .subfolder { background: #f8f9fa; border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin: 15px 0; }
 .subfolder-header { display: flex; align-items: center; gap: 15px; margin-bottom: 10px; border-bottom: 2px solid var(--primary); padding-bottom: 5px; }
 .subfolder h4 { color: var(--primary); font-size: 16px; }
@@ -267,7 +271,10 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
     <div class="tab-content active" id="veiculos">
         <h2>🚗 Cadastro de Veículos</h2>
         <div class="editando-aviso" id="avisoEditandoVeiculo">✏️ <strong>Modo Edição</strong> — Você está editando um veículo existente. Salve para confirmar ou limpe o formulário.</div>
-        <input type="text" class="filter-input" placeholder="🔍 Filtrar veículos..." id="filterVeiculos">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:15px;">
+            <input type="text" class="filter-input" placeholder="🔍 Filtrar veículos..." id="filterVeiculos" style="margin-bottom:0;">
+            <button class="btn-buscar" onclick="limparFiltro('filterVeiculos', null, null, 'tabelaVeiculos')" style="padding:10px 20px;margin:0;font-size:14px;">🧹 Limpar Filtro</button>
+        </div>
         <div class="form-grid" id="formVeiculos">
             <div class="form-group"><label>Fabricante/Modelo</label><input type="text" id="veicFabricante" class="campo-enter"></div>
             <div class="form-group"><label>Cor Predominante</label><input type="text" id="veicCor" class="campo-enter"></div>
@@ -310,7 +317,18 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
     <div class="tab-content" id="clientes">
         <h2>👤 Cadastro de Clientes</h2>
         <div class="editando-aviso" id="avisoEditandoCliente">✏️ <strong>Modo Edição</strong> — Você está editando um cliente existente. Salve para confirmar ou limpe o formulário.</div>
-        <input type="text" class="filter-input" placeholder="🔍 Filtrar clientes..." id="filterClientes">
+        <div class="filter-bar">
+            <input type="text" class="filter-input" placeholder="🔍 Filtrar clientes..." id="filterClientes" style="margin-bottom:0;">
+            <div class="filter-date-group">
+                <label>Data Início</label>
+                <input type="date" id="filterClientesDataInicio">
+            </div>
+            <div class="filter-date-group">
+                <label>Data Fim</label>
+                <input type="date" id="filterClientesDataFim">
+            </div>
+            <button class="btn-buscar" onclick="limparFiltro('filterClientes', 'filterClientesDataInicio', 'filterClientesDataFim', 'tabelaClientes')" style="padding:10px 20px;margin:0;font-size:14px;">🧹 Limpar Filtro</button>
+        </div>
         <div class="form-grid" id="formClientes">
             <div class="form-group"><label>Data do Cadastro</label><input type="date" id="cliDataCadastro" class="campo-enter"></div>
             <div class="form-group"><label>Nome</label><input type="text" id="cliNome" class="campo-enter"></div>
@@ -375,6 +393,18 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
 
     <div class="tab-content" id="locEncerrada">
         <h2>🏁 Locações Encerradas</h2>
+        <div class="filter-bar">
+            <input type="text" class="filter-input" placeholder="🔍 Filtrar locações encerradas..." id="filterLocEncerrada" style="margin-bottom:0;">
+            <div class="filter-date-group">
+                <label>Data Início</label>
+                <input type="date" id="filterLocEncerradaDataInicio">
+            </div>
+            <div class="filter-date-group">
+                <label>Data Fim</label>
+                <input type="date" id="filterLocEncerradaDataFim">
+            </div>
+            <button class="btn-buscar" onclick="limparFiltro('filterLocEncerrada', 'filterLocEncerradaDataInicio', 'filterLocEncerradaDataFim', 'tabelaLocEncerrada')" style="padding:10px 20px;margin:0;font-size:14px;">🧹 Limpar Filtro</button>
+        </div>
         <div class="dashboard-encerradas">
             <div class="kpi-card"><div class="kpi-value" id="kpiTotalLocs">0</div><div class="kpi-label">Total</div></div>
             <div class="kpi-card green"><div class="kpi-value" id="kpiReceitaTotal">R$ 0,00</div><div class="kpi-label">Receita</div></div>
@@ -569,7 +599,18 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
             <div id="compPagPreviewContainer" style="display:flex;flex-wrap:wrap;gap:15px;margin-top:15px;"></div>
             <div class="subfolder" style="margin-top:25px;">
                 <div class="subfolder-header"><h4>📋 Comprovantes Salvos</h4></div>
-                <input type="text" class="filter-input" placeholder="🔍 Filtrar comprovantes..." id="filterComprovantesPag" style="max-width:100%;">
+                <div class="filter-bar">
+                    <input type="text" class="filter-input" placeholder="🔍 Filtrar comprovantes..." id="filterComprovantesPag" style="max-width:100%;margin-bottom:0;">
+                    <div class="filter-date-group">
+                        <label>Data Início</label>
+                        <input type="date" id="filterComprovantesPagDataInicio">
+                    </div>
+                    <div class="filter-date-group">
+                        <label>Data Fim</label>
+                        <input type="date" id="filterComprovantesPagDataFim">
+                    </div>
+                    <button class="btn-buscar" onclick="limparFiltro('filterComprovantesPag', 'filterComprovantesPagDataInicio', 'filterComprovantesPagDataFim', 'tabelaComprovantesPag')" style="padding:10px 20px;margin:0;font-size:14px;">🧹 Limpar Filtro</button>
+                </div>
                 <div class="table-container">
                     <table id="tabelaComprovantesPag">
                         <thead><tr><th>Data</th><th>Pagador</th><th>Recebedor</th><th>Valor</th><th>Placa</th><th>Arquivo</th><th>Ações</th></tr></thead>
@@ -592,7 +633,18 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
             <div id="docComprovantePreview" style="display:flex;flex-wrap:wrap;gap:15px;margin-top:15px;"></div>
             <div class="subfolder" style="margin-top:25px;">
                 <div class="subfolder-header"><h4>📋 Comprovantes Registrados</h4></div>
-                <input type="text" class="filter-input" placeholder="🔍 Filtrar comprovantes..." id="filterDoc" style="max-width:100%;">
+                <div class="filter-bar">
+                    <input type="text" class="filter-input" placeholder="🔍 Filtrar comprovantes..." id="filterDoc" style="max-width:100%;margin-bottom:0;">
+                    <div class="filter-date-group">
+                        <label>Data Início</label>
+                        <input type="date" id="filterDocDataInicio">
+                    </div>
+                    <div class="filter-date-group">
+                        <label>Data Fim</label>
+                        <input type="date" id="filterDocDataFim">
+                    </div>
+                    <button class="btn-buscar" onclick="limparFiltro('filterDoc', 'filterDocDataInicio', 'filterDocDataFim', 'tabelaDoc')" style="padding:10px 20px;margin:0;font-size:14px;">🧹 Limpar Filtro</button>
+                </div>
                 <div class="table-container">
                     <table id="tabelaDoc">
                         <thead><tr><th>Data</th><th>Nome/Arquivo</th><th>Pagador</th><th>Recebedor</th><th>Valor</th><th>Pgto</th><th>Placa</th><th>Status</th><th>Ações</th></tr></thead>
@@ -647,6 +699,18 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
             <div class="kpi-card green"><div class="kpi-value" id="totalEntradas">R$ 0,00</div><div class="kpi-label">Entradas</div></div>
             <div class="kpi-card red"><div class="kpi-value" id="totalSaidas">R$ 0,00</div><div class="kpi-label">Saídas</div></div>
             <div class="kpi-card blue"><div class="kpi-value" id="saldoTotal">R$ 0,00</div><div class="kpi-label">Saldo</div></div>
+        </div>
+        <div class="filter-bar">
+            <input type="text" class="filter-input" placeholder="🔍 Filtrar fluxo de caixa..." id="filterFluxoCaixa" style="margin-bottom:0;">
+            <div class="filter-date-group">
+                <label>Data Início</label>
+                <input type="date" id="filterFluxoCaixaDataInicio">
+            </div>
+            <div class="filter-date-group">
+                <label>Data Fim</label>
+                <input type="date" id="filterFluxoCaixaDataFim">
+            </div>
+            <button class="btn-buscar" onclick="limparFiltro('filterFluxoCaixa', 'filterFluxoCaixaDataInicio', 'filterFluxoCaixaDataFim', 'tabelaFluxoCaixa')" style="padding:10px 20px;margin:0;font-size:14px;">🧹 Limpar Filtro</button>
         </div>
         <div class="table-container">
             <table id="tabelaFluxoCaixa">
@@ -732,7 +796,18 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
             <button class="sub-tab" onclick="switchSubTabHistorico('alugueis')">💰 Histórico de Aluguéis</button>
         </div>
         <div class="sub-tab-content active" id="subTabHistGeral">
-            <input type="text" class="filter-input" placeholder="🔍 Filtrar histórico..." id="filterHistorico">
+            <div class="filter-bar">
+                <input type="text" class="filter-input" placeholder="🔍 Filtrar histórico..." id="filterHistorico" style="margin-bottom:0;">
+                <div class="filter-date-group">
+                    <label>Data Início</label>
+                    <input type="date" id="filterHistoricoDataInicio">
+                </div>
+                <div class="filter-date-group">
+                    <label>Data Fim</label>
+                    <input type="date" id="filterHistoricoDataFim">
+                </div>
+                <button class="btn-buscar" onclick="limparFiltro('filterHistorico', 'filterHistoricoDataInicio', 'filterHistoricoDataFim', 'tabelaHistorico')" style="padding:10px 20px;margin:0;font-size:14px;">🧹 Limpar Filtro</button>
+            </div>
             <div class="table-container">
                 <table id="tabelaHistorico">
                     <thead><tr><th>Data</th><th>Descrição</th><th>Placa</th><th>Valor</th><th>Fornecedor</th><th>Oficina</th><th>Ações</th></tr></thead>
@@ -741,7 +816,18 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
             </div>
         </div>
         <div class="sub-tab-content" id="subTabHistAlugueis">
-            <input type="text" class="filter-input" placeholder="🔍 Filtrar aluguéis pagos..." id="filterHistoricoAlugueis">
+            <div class="filter-bar">
+                <input type="text" class="filter-input" placeholder="🔍 Filtrar aluguéis pagos..." id="filterHistoricoAlugueis" style="margin-bottom:0;">
+                <div class="filter-date-group">
+                    <label>Data Início</label>
+                    <input type="date" id="filterHistAlugDataInicio">
+                </div>
+                <div class="filter-date-group">
+                    <label>Data Fim</label>
+                    <input type="date" id="filterHistAlugDataFim">
+                </div>
+                <button class="btn-buscar" onclick="limparFiltro('filterHistoricoAlugueis', 'filterHistAlugDataInicio', 'filterHistAlugDataFim', 'tabelaHistoricoAlugueis')" style="padding:10px 20px;margin:0;font-size:14px;">🧹 Limpar Filtro</button>
+            </div>
             <div class="dashboard-encerradas" style="margin-top:15px;">
                 <div class="kpi-card green"><div class="kpi-value" id="kpiHistAlugTotal">R$ 0,00</div><div class="kpi-label">Total Recebido</div></div>
                 <div class="kpi-card blue"><div class="kpi-value" id="kpiHistAlugQtd">0</div><div class="kpi-label">Pagamentos</div></div>
@@ -1050,6 +1136,29 @@ function formatarDataBR(d) { if (!d) return ''; const p = String(d).split('-'); 
 function parseMoeda(s) { if (typeof s === 'number') return s; return parseFloat(String(s || '0').replace('R$', '').replace(/\./g, '').replace(',', '.').trim()) || 0; }
 function gerarIdImagem() { return 'img_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8); }
 function obterDataHojeISO() { const h = new Date(); return h.getFullYear() + '-' + String(h.getMonth() + 1).padStart(2, '0') + '-' + String(h.getDate()).padStart(2, '0'); }
+
+/* ============================================================
+   CONVERSÃO DE DATA — auxiliar para filtros por data
+   Converte "DD/MM/YYYY" para "YYYY-MM-DD" (ISO)
+   ============================================================ */
+function converterDataParaISO(dataStr) {
+    if (!dataStr) return '';
+    const s = String(dataStr).trim();
+    if (!s) return '';
+    // Se já está no formato ISO (YYYY-MM-DD)
+    if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.substring(0, 10);
+    // Se está no formato BR (DD/MM/YYYY)
+    if (s.includes('/')) {
+        const p = s.split('/');
+        if (p.length === 3) {
+            const dia = p[0].padStart(2, '0');
+            const mes = p[1].padStart(2, '0');
+            const ano = p[2].length === 2 ? '20' + p[2] : p[2];
+            return ano + '-' + mes + '-' + dia;
+        }
+    }
+    return '';
+}
 
 function temPermissao(perm) {
     if (!usuarioLogado) return false;
@@ -1675,7 +1784,6 @@ function gerarPermissoesUI() {
     }
 }
 
-/* NOVO: Renderiza a lista de acesso ao botão +10K KM sem senha ADM */
 function renderizarListaAcessoKmSemSenha() {
     const container = document.getElementById('listaAcessoKmSemSenha');
     if (!container) return;
@@ -1696,7 +1804,6 @@ function renderizarListaAcessoKmSemSenha() {
     });
 }
 
-/* NOVO: Salva permissões de acesso ao botão +10K KM */
 async function salvarAcessoKmSemSenha() {
     if (!confirmarSenhaADM()) return;
     if (!db || !Array.isArray(db.usuarios)) return;
@@ -1812,19 +1919,256 @@ function switchSubTabHistorico(tipo) {
     }
 }
 
-function setupFilter(inputId, tableId) {
+/* ============================================================
+   FILTROS DINÂMICOS — agora com suporte a Data Início / Data Fim
+   ============================================================ */
+
+/**
+ * Filtro genérico com suporte a intervalo de datas.
+ * @param inputId     - id do input de texto
+ * @param tableId     - id da tabela a filtrar
+ * @param dashboardCallback - função opcional chamada após filtrar
+ * @param dateIniId   - id do input de data início (opcional)
+ * @param dateFimId   - id do input de data fim (opcional)
+ */
+function setupFilter(inputId, tableId, dashboardCallback, dateIniId, dateFimId) {
     const input = document.getElementById(inputId);
     if (!input) return;
-    input.addEventListener('keyup', function() {
+    if (input._filterHandler) input.removeEventListener('keyup', input._filterHandler);
+    input._filterHandler = function() {
         const f = this.value.toLowerCase();
+        const dtIni = dateIniId ? document.getElementById(dateIniId) : null;
+        const dtFim = dateFimId ? document.getElementById(dateFimId) : null;
+        const dataInicio = dtIni ? dtIni.value : '';
+        const dataFim = dtFim ? dtFim.value : '';
+        const temFiltroData = !!(dataInicio || dataFim);
         document.querySelectorAll('#' + tableId + ' tbody tr').forEach(row => {
-            row.style.display = row.textContent.toLowerCase().includes(f) ? '' : 'none';
+            let mostrar = true;
+            if (f && !row.textContent.toLowerCase().includes(f)) mostrar = false;
+            if (temFiltroData && mostrar) {
+                const rowDate = row.getAttribute('data-date') || '';
+                if (!rowDate) mostrar = false;
+                else {
+                    if (dataInicio && rowDate < dataInicio) mostrar = false;
+                    if (dataFim && rowDate > dataFim) mostrar = false;
+                }
+            }
+            row.style.display = mostrar ? '' : 'none';
         });
-    });
+        if (typeof dashboardCallback === 'function') dashboardCallback(f);
+    };
+    input.addEventListener('keyup', input._filterHandler);
+    const dtIniEl = dateIniId ? document.getElementById(dateIniId) : null;
+    const dtFimEl = dateFimId ? document.getElementById(dateFimId) : null;
+    if (dtIniEl) {
+        if (dtIniEl._filterHandler) dtIniEl.removeEventListener('change', dtIniEl._filterHandler);
+        dtIniEl._filterHandler = input._filterHandler;
+        dtIniEl.addEventListener('change', input._filterHandler);
+    }
+    if (dtFimEl) {
+        if (dtFimEl._filterHandler) dtFimEl.removeEventListener('change', dtFimEl._filterHandler);
+        dtFimEl._filterHandler = input._filterHandler;
+        dtFimEl.addEventListener('change', input._filterHandler);
+    }
 }
-['filterVeiculos','filterClientes','filterLocacoes','filterManutencao','filterMecanico','filterUsuario','filterPagamentos','filterBancos','filterFluxoCaixa','filterDoc','filterCompras','filterAuditoria','filterLocEncerrada','filterPendentes','filterHistorico','filterHistoricoAlugueis','filterComprovantesPag'].forEach(id => {
-    setupFilter(id, id.replace('filter', 'tabela'));
-});
+
+/* --- Dashboards reativos --- */
+
+function recalcularDashboardLocEncerrada(filtroTexto) {
+    const lista = db.locacoesEncerradas || [];
+    const f = (filtroTexto || '').toLowerCase();
+    const dtIni = document.getElementById('filterLocEncerradaDataInicio');
+    const dtFim = document.getElementById('filterLocEncerradaDataFim');
+    const dataInicio = dtIni ? dtIni.value : '';
+    const dataFim = dtFim ? dtFim.value : '';
+    const filtrados = lista.filter(l => {
+        if (!l) return false;
+        if (dataInicio || dataFim) {
+            const dataISO = converterDataParaISO(l.dataEncerramento);
+            if (!dataISO) return false;
+            if (dataInicio && dataISO < dataInicio) return false;
+            if (dataFim && dataISO > dataFim) return false;
+        }
+        if (!f) return true;
+        return (
+            (l.locatario || '').toLowerCase().includes(f) ||
+            (l.fabricante || '').toLowerCase().includes(f) ||
+            (l.placa || '').toLowerCase().includes(f) ||
+            (l.dataInicio || '').toLowerCase().includes(f) ||
+            (l.dataFim || '').toLowerCase().includes(f) ||
+            (l.dataEncerramento || '').toLowerCase().includes(f)
+        );
+    });
+    const total = filtrados.length;
+    const receitaTotal = filtrados.reduce((s, l) => s + (Number(l.receitaNumerica) || 0), 0);
+    const despesasTotal = filtrados.reduce((s, l) => s + (Number(l.despesasNumerica) || 0), 0);
+    const lucroTotal = filtrados.reduce((s, l) => s + (Number(l.lucroNumerico) || 0), 0);
+    const elTotal = document.getElementById('kpiTotalLocs'); if (elTotal) elTotal.textContent = total;
+    const elRec = document.getElementById('kpiReceitaTotal'); if (elRec) elRec.textContent = formatarMoedaBR(receitaTotal);
+    const elDesp = document.getElementById('kpiDespesasTotal'); if (elDesp) elDesp.textContent = formatarMoedaBR(despesasTotal);
+    const elLucro = document.getElementById('kpiLucroTotal'); if (elLucro) elLucro.textContent = formatarMoedaBR(lucroTotal);
+}
+
+function recalcularDashboardFluxoCaixa(filtroTexto) {
+    const lista = db.fluxoCaixa || [];
+    const f = (filtroTexto || '').toLowerCase();
+    const dtIni = document.getElementById('filterFluxoCaixaDataInicio');
+    const dtFim = document.getElementById('filterFluxoCaixaDataFim');
+    const dataInicio = dtIni ? dtIni.value : '';
+    const dataFim = dtFim ? dtFim.value : '';
+    const filtrados = lista.filter(fc => {
+        if (!fc) return false;
+        if (dataInicio || dataFim) {
+            const dataISO = converterDataParaISO(fc.data);
+            if (!dataISO) return false;
+            if (dataInicio && dataISO < dataInicio) return false;
+            if (dataFim && dataISO > dataFim) return false;
+        }
+        if (!f) return true;
+        return (
+            (fc.descricao || '').toLowerCase().includes(f) ||
+            (fc.categoria || '').toLowerCase().includes(f) ||
+            (fc.valor || '').toLowerCase().includes(f) ||
+            (fc.tipo || '').toLowerCase().includes(f) ||
+            (fc.data || '').toLowerCase().includes(f) ||
+            (fc.vencimento || '').toLowerCase().includes(f)
+        );
+    });
+    let totalEntradas = 0, totalSaidas = 0;
+    filtrados.forEach(fc => {
+        const valorNum = Number(fc.valorNumerico) || parseMoeda(fc.valor) || 0;
+        if (fc.tipo === 'entrada') totalEntradas += valorNum; else totalSaidas += valorNum;
+    });
+    const saldo = totalEntradas - totalSaidas;
+    const elEntradas = document.getElementById('totalEntradas'); if (elEntradas) elEntradas.textContent = formatarMoedaBR(totalEntradas);
+    const elSaidas = document.getElementById('totalSaidas'); if (elSaidas) elSaidas.textContent = formatarMoedaBR(totalSaidas);
+    const elSaldo = document.getElementById('saldoTotal'); if (elSaldo) elSaldo.textContent = formatarMoedaBR(saldo);
+}
+
+function recalcularDashboardHistoricoAlugueis(filtroTexto) {
+    const lista = db.historicoAlugueis || [];
+    const f = (filtroTexto || '').toLowerCase();
+    const elDataIni = document.getElementById('filterHistAlugDataInicio');
+    const elDataFim = document.getElementById('filterHistAlugDataFim');
+    const dataInicio = elDataIni ? elDataIni.value : '';
+    const dataFim = elDataFim ? elDataFim.value : '';
+    const filtrados = lista.filter(h => {
+        if (!h) return false;
+        if (dataInicio || dataFim) {
+            const dataPgto = h.dataPagamento || h.data || '';
+            const dataISO = converterDataParaISO(dataPgto);
+            if (!dataISO) return false;
+            if (dataInicio && dataISO < dataInicio) return false;
+            if (dataFim && dataISO > dataFim) return false;
+        }
+        if (!f) return true;
+        return (
+            (h.locatario || '').toLowerCase().includes(f) ||
+            (h.placa || '').toLowerCase().includes(f) ||
+            (h.origem || '').toLowerCase().includes(f) ||
+            (h.valor || '').toLowerCase().includes(f) ||
+            (h.dataPagamento || '').toLowerCase().includes(f) ||
+            (h.data || '').toLowerCase().includes(f) ||
+            (h.vencimento || '').toLowerCase().includes(f) ||
+            (h.tipoPagamento || '').toLowerCase().includes(f) ||
+            (h.parcela || '').toLowerCase().includes(f)
+        );
+    });
+    const totalRecebido = filtrados.reduce((s, h) => s + (Number(h.valorNumerico) || parseMoeda(h.valor) || 0), 0);
+    const elTotal = document.getElementById('kpiHistAlugTotal'); if (elTotal) elTotal.textContent = formatarMoedaBR(totalRecebido);
+    const elQtd = document.getElementById('kpiHistAlugQtd'); if (elQtd) elQtd.textContent = filtrados.length;
+}
+
+/**
+ * Filtro do Histórico de Aluguéis — agora robusto:
+ *  - Usa o atributo data-date quando disponível
+ *  - Fallback: extrai a data do primeiro <td> da linha (formato BR)
+ *  - Normaliza data para ISO e compara como string
+ */
+function aplicarFiltroHistoricoAlugueis() {
+    const txt = document.getElementById('filterHistoricoAlugueis');
+    const dtIni = document.getElementById('filterHistAlugDataInicio');
+    const dtFim = document.getElementById('filterHistAlugDataFim');
+    const f = txt ? txt.value.toLowerCase() : '';
+    const dataInicio = dtIni ? dtIni.value : '';
+    const dataFim = dtFim ? dtFim.value : '';
+    const temFiltroData = !!(dataInicio || dataFim);
+    document.querySelectorAll('#tabelaHistoricoAlugueis tbody tr').forEach(row => {
+        let mostrar = true;
+        if (f && !row.textContent.toLowerCase().includes(f)) mostrar = false;
+        if (temFiltroData && mostrar) {
+            let rowDate = row.getAttribute('data-date') || '';
+            if (!rowDate) {
+                // Fallback: extrai do primeiro <td> (Data Pgto)
+                const firstCell = row.querySelector('td');
+                if (firstCell) {
+                    const cellText = (firstCell.textContent || '').trim();
+                    rowDate = converterDataParaISO(cellText);
+                }
+            } else {
+                rowDate = converterDataParaISO(rowDate) || rowDate;
+            }
+            if (!rowDate) mostrar = false;
+            else {
+                if (dataInicio && rowDate < dataInicio) mostrar = false;
+                if (dataFim && rowDate > dataFim) mostrar = false;
+            }
+        }
+        row.style.display = mostrar ? '' : 'none';
+    });
+    recalcularDashboardHistoricoAlugueis(f);
+}
+
+// Aplica os filtros com os callbacks de dashboard
+setupFilter('filterVeiculos', 'tabelaVeiculos');
+setupFilter('filterClientes', 'tabelaClientes', null, 'filterClientesDataInicio', 'filterClientesDataFim');
+setupFilter('filterLocacoes', 'tabelaLocacoes');
+setupFilter('filterManutencao', 'tabelaManutencao');
+setupFilter('filterMecanico', 'tabelaMecanico');
+setupFilter('filterUsuario', 'tabelaUsuario');
+setupFilter('filterPagamentos', 'tabelaPagamentos');
+setupFilter('filterBancos', 'tabelaBancos');
+setupFilter('filterFluxoCaixa', 'tabelaFluxoCaixa', recalcularDashboardFluxoCaixa, 'filterFluxoCaixaDataInicio', 'filterFluxoCaixaDataFim');
+setupFilter('filterDoc', 'tabelaDoc', null, 'filterDocDataInicio', 'filterDocDataFim');
+setupFilter('filterCompras', 'tabelaCompras');
+setupFilter('filterAuditoria', 'tabelaAuditoria');
+setupFilter('filterLocEncerrada', 'tabelaLocEncerrada', recalcularDashboardLocEncerrada, 'filterLocEncerradaDataInicio', 'filterLocEncerradaDataFim');
+setupFilter('filterPendentes', 'tabelaPendentes');
+setupFilter('filterHistorico', 'tabelaHistorico', null, 'filterHistoricoDataInicio', 'filterHistoricoDataFim');
+setupFilter('filterComprovantesPag', 'tabelaComprovantesPag', null, 'filterComprovantesPagDataInicio', 'filterComprovantesPagDataFim');
+
+// Filtro customizado do Histórico de Aluguéis
+(function configurarFiltroHistoricoAlugueis() {
+    const txt = document.getElementById('filterHistoricoAlugueis');
+    const dtIni = document.getElementById('filterHistAlugDataInicio');
+    const dtFim = document.getElementById('filterHistAlugDataFim');
+    if (txt) txt.addEventListener('keyup', aplicarFiltroHistoricoAlugueis);
+    if (dtIni) dtIni.addEventListener('change', aplicarFiltroHistoricoAlugueis);
+    if (dtFim) dtFim.addEventListener('change', aplicarFiltroHistoricoAlugueis);
+})();
+
+/* ============================================================
+   LIMPAR FILTRO — botão genérico para limpar filtros
+   ============================================================ */
+function limparFiltro(inputId, dateIniId, dateFimId, tableId) {
+    const input = document.getElementById(inputId);
+    if (input) input.value = '';
+    if (dateIniId) { const el = document.getElementById(dateIniId); if (el) el.value = ''; }
+    if (dateFimId) { const el = document.getElementById(dateFimId); if (el) el.value = ''; }
+
+    // Histórico de Aluguéis usa filtro customizado
+    if (inputId === 'filterHistoricoAlugueis') {
+        aplicarFiltroHistoricoAlugueis();
+        return;
+    }
+
+    // Reaproveita o handler existente (que já atualiza tabela + dashboards)
+    if (input && typeof input._filterHandler === 'function') {
+        input._filterHandler.call(input);
+    } else if (tableId) {
+        document.querySelectorAll('#' + tableId + ' tbody tr').forEach(function(r) { r.style.display = ''; });
+    }
+}
 
 document.querySelectorAll('.money').forEach(input => {
     input.addEventListener('input', function() {
@@ -2299,6 +2643,8 @@ async function atualizarTabelaClientes() {
         const selfieIdx = selfie ? galeria.indexOf(selfie) : -1;
         const selfieCell = selfie ? `<img src="${selfie}" class="selfie-thumbnail" alt="selfie" onclick="event.stopPropagation(); openImageModal('${selfie}', window._galeriaClientes, ${selfieIdx})">` : '-';
         const tr = document.createElement('tr');
+        // NOVO: atributo data-date para filtro por data de cadastro
+        tr.setAttribute('data-date', converterDataParaISO(c.dataCadastro) || '');
         tr.innerHTML = `<td>${c.nome || ''}</td><td>${c.cpf || ''}</td><td>${c.telefone || ''}</td><td>${c.cidade || ''}</td><td>${selfieCell}</td><td><button class="btn-warning" onclick="editarCliente(${i})">✏️</button> <button class="btn-danger" onclick="excluirCliente(${i})">🗑️</button></td>`;
         tbody.appendChild(tr);
     });
@@ -2680,13 +3026,6 @@ function editarLocacao(i) {
     window.scrollTo(0, 0);
 }
 
-/* ============================================================
-   EXCLUSÃO DE LOCAÇÃO - REGRA ATUALIZADA
-   Remove automaticamente:
-   - Sub Pagamentos (db.alugueis)
-   - Histórico de Aluguéis (db.historicoAlugueis)
-   - Fluxo de Caixa (db.fluxoCaixa) - SOMENTE os lançamentos referentes ao contrato
-   ============================================================ */
 async function excluirLocacao(i) {
     if (!confirmarSenhaADM()) return;
     const l = db.locacoes[i];
@@ -2696,13 +3035,10 @@ async function excluirLocacao(i) {
     const placaNorm = normalizarPlaca(l.placa);
     const placaUpper = String(l.placa || '').toUpperCase().trim();
 
-    // Sub Pagamentos
     db.alugueis = db.alugueis.filter(a => { if (!a) return true; const mesmoLoc = String(a.locatario || '').toUpperCase().trim() === nomeUpper; const mesmaPlaca = normalizarPlaca(a.placa) === placaNorm; return !(mesmoLoc && mesmaPlaca); });
 
-    // Histórico de Aluguéis
     db.historicoAlugueis = db.historicoAlugueis.filter(h => { if (!h) return true; const mesmoLoc = String(h.locatario || '').toUpperCase().trim() === nomeUpper; const mesmaPlaca = normalizarPlaca(h.placa) === placaNorm; return !(mesmoLoc && mesmaPlaca); });
 
-    // Fluxo de Caixa — remove lançamentos que contenham locatário E placa na descrição, ou tag de reabertura correspondente
     if (Array.isArray(db.fluxoCaixa)) {
         db.fluxoCaixa = db.fluxoCaixa.filter(f => {
             if (!f) return true;
@@ -2728,9 +3064,6 @@ async function excluirLocacao(i) {
     alert('✅ Locação excluída com todos os registros relacionados!');
 }
 
-/* ============================================================
-   ENCERRAR LOCAÇÃO - REGRAS ATUALIZADAS CONFORME SOLICITAÇÃO
-   ============================================================ */
 function encerrarLocacao(i) {
     if (!confirmarSenhaADM()) return;
     const l = db.locacoes[i];
@@ -2886,9 +3219,16 @@ function atualizarTabelaLocEncerrada() {
         const caucaoInfo = l.caucaoPagoPeriodoFormatado && l.caucaoPagoPeriodoFormatado !== 'R$ 0,00' ? `<br><small style="color:#e63946;font-weight:bold;">Caução pago: ${l.caucaoPagoPeriodoFormatado} (${l.caucaoExtornada === 'SIM' ? 'EXTORNADO' : 'NÃO EXTORNADO'})</small>` : '';
         const extornoInfo = (Number(l.extornoNumerico) || 0) > 0 ? `<br><small style="color:#dc3545;font-weight:bold;">↩️ Extorno: -${formatarMoedaBR(l.extornoNumerico)}</small>` : '';
         const tr = document.createElement('tr');
+        // NOVO: data-date baseada em dataEncerramento (ISO)
+        tr.setAttribute('data-date', converterDataParaISO(l.dataEncerramento) || '');
         tr.innerHTML = `<td>${l.locatario || ''}</td><td>${l.fabricante || ''}</td><td>${l.placa || ''}</td><td>${formatarDataBR(l.dataInicio)}</td><td>${formatarDataBR(l.dataFim)}</td><td>${formatarDataBR(l.dataEncerramento)}</td><td>${l.valorGerado || 'R$ 0,00'}<br><small style="color:#666;">${tipoLabel}</small>${caucaoInfo}</td><td>${l.despesas || 'R$ 0,00'}${extornoInfo}</td><td>${l.lucro || 'R$ 0,00'}</td><td><button class="btn-warning" onclick="reabrirLocacao(${i})">↩️</button> <button class="btn-danger" onclick="excluirLocacaoEncerrada(${i})">🗑️</button></td>`;
         tbody.appendChild(tr);
     });
+    // Reaplica o filtro ativo, se houver
+    const filtroEl = document.getElementById('filterLocEncerrada');
+    if (filtroEl && (filtroEl.value.trim() || (document.getElementById('filterLocEncerradaDataInicio')||{}).value || (document.getElementById('filterLocEncerradaDataFim')||{}).value)) {
+        if (filtroEl._filterHandler) filtroEl._filterHandler.call(filtroEl);
+    }
 }
 function reabrirLocacao(i) {
     if (!confirmarSenhaADM()) return;
@@ -2969,7 +3309,6 @@ function atualizarDashboardKmManutencao() {
     if (!container) return;
     container.innerHTML = '';
     
-    // Filtra veículos pelas placas permitidas
     const placasFiltro = getPlacasPermitidasParaFiltro();
     let veiculosVisiveis = db.veiculos || [];
     if (placasFiltro !== null) {
@@ -3005,7 +3344,6 @@ function atualizarTabelaManutencao() {
     if (!tbody) return;
     tbody.innerHTML = '';
     
-    // Filtra registros de manutenção pelas placas permitidas
     const placasFiltro = getPlacasPermitidasParaFiltro();
     let manutencoesVisiveis = db.manutencao || [];
     if (placasFiltro !== null) {
@@ -3017,7 +3355,6 @@ function atualizarTabelaManutencao() {
     } else {
         manutencoesVisiveis.forEach((m, i) => {
             if (!m) return;
-            // Encontra o índice real no array original
             const realIndex = db.manutencao.indexOf(m);
             const tr = document.createElement('tr');
             tr.innerHTML = `<td>${m.veiculo||''}</td><td>${m.placa||''}</td><td>${m.tipo||''}</td><td>${m.km||''}</td>
@@ -3032,11 +3369,6 @@ function atualizarTabelaManutencao() {
     atualizarDashboardKmManutencao();
 }
 
-/* ============================================================
-   MODIFICADO: cadastrarNovaRevisaoManutencao
-   Agora exige senha do ADM para usuários não-ADM, EXCETO se
-   o usuário tiver a permissão especial 'podeRevisaoKmSemSenha'.
-   ============================================================ */
 function cadastrarNovaRevisaoManutencao(i) {
     const isADM = usuarioLogado && usuarioLogado.tipo === 'ADM';
     const temAcessoEspecial = usuarioLogado && usuarioLogado.podeRevisaoKmSemSenha === true;
@@ -3213,6 +3545,8 @@ function atualizarTabelaHistorico() {
         if (!h) return;
         const realIndex = (db.historico.length - 1) - visualIndex;
         const tr = document.createElement('tr');
+        // NOVO: data-date para filtro por data
+        tr.setAttribute('data-date', converterDataParaISO(h.data) || '');
         tr.innerHTML = `<td>${h.data||''}</td><td>${h.descricao||''}</td><td>${h.placa||''}</td><td>${h.valor||''}</td><td>${h.fornecedor||''}</td><td>${h.oficina||''}</td><td><button class="btn-danger" onclick="excluirHistorico(${realIndex})" title="Excluir">🗑️</button></td>`;
         tbody.appendChild(tr);
     });
@@ -3242,19 +3576,26 @@ function atualizarTabelaHistoricoAlugueis() {
     if (!tbody) return;
     tbody.innerHTML = '';
     const lista = db.historicoAlugueis || [];
-    const totalRecebido = lista.reduce((s, h) => s + (Number(h.valorNumerico) || parseMoeda(h.valor) || 0), 0);
-    const elTotal = document.getElementById('kpiHistAlugTotal'); if (elTotal) elTotal.textContent = formatarMoedaBR(totalRecebido);
-    const elQtd = document.getElementById('kpiHistAlugQtd'); if (elQtd) elQtd.textContent = lista.length;
-    if (lista.length === 0) { tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#999;padding:20px;">Nenhum aluguel pago registrado ainda.</td></tr>'; return; }
+    if (lista.length === 0) {
+        const elTotal = document.getElementById('kpiHistAlugTotal'); if (elTotal) elTotal.textContent = formatarMoedaBR(0);
+        const elQtd = document.getElementById('kpiHistAlugQtd'); if (elQtd) elQtd.textContent = 0;
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#999;padding:20px;">Nenhum aluguel pago registrado ainda.</td></tr>';
+        return;
+    }
     const listaReversa = lista.slice().reverse();
     listaReversa.forEach((h, visualIndex) => {
         if (!h) return;
         const realIndex = (lista.length - 1) - visualIndex;
         const tipoLabel = (h.tipoPagamento || 'mensal').toUpperCase();
+        const dataPgto = h.dataPagamento || h.data || '';
+        let dataISO = converterDataParaISO(dataPgto);
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${formatarDataBR(h.dataPagamento || h.data)}</td><td>${h.locatario || ''}</td><td>${h.placa || ''}</td><td>${h.parcela || ''}</td><td>${h.origem || 'Aluguel'}</td><td><strong style="color:#28a745;">${h.valor || ''}</strong></td><td>${formatarDataBR(h.vencimento)}</td><td>${tipoLabel}</td><td><button class="btn-danger" onclick="excluirHistoricoAluguel(${realIndex})" title="Excluir">🗑️</button></td>`;
+        // NOVO: data-date robusto (garante ISO)
+        tr.setAttribute('data-date', dataISO);
+        tr.innerHTML = `<td>${formatarDataBR(dataPgto)}</td><td>${h.locatario || ''}</td><td>${h.placa || ''}</td><td>${h.parcela || ''}</td><td>${h.origem || 'Aluguel'}</td><td><strong style="color:#28a745;">${h.valor || ''}</strong></td><td>${formatarDataBR(h.vencimento)}</td><td>${tipoLabel}</td><td><button class="btn-danger" onclick="excluirHistoricoAluguel(${realIndex})" title="Excluir">🗑️</button></td>`;
         tbody.appendChild(tr);
     });
+    aplicarFiltroHistoricoAlugueis();
 }
 function excluirHistoricoAluguel(index) {
     if (!confirmarSenhaADM()) return;
@@ -3425,7 +3766,6 @@ function limparContratoTermo() { if (!confirm('Limpar?')) return; CONTRATO_TER_C
 function limparContratoNota() { if (!confirm('Limpar?')) return; CONTRATO_NOT_CAMPOS.forEach(k => { const el = document.getElementById('ctNot_' + k); if (el) el.value = ''; }); }
 function _ctPrint(html) { const area = document.getElementById('printArea'); if (!area) return; area.innerHTML = html; window.print(); }
 
-/* ============ DOCUMENTO 1: CONTRATO DE LOCAÇÃO ============ */
 function gerarHTMLContratoLocacao() {
     const v = id => _ctVal('ctLoc_' + id);
     return `<div style="padding:40px;font-family:'Times New Roman',serif;color:#000;line-height:1.6;font-size:12px;text-align:justify;">
@@ -3505,7 +3845,6 @@ function gerarHTMLContratoLocacao() {
     </div>`;
 }
 
-/* ============ DOCUMENTO 2: TERMO DE RESPONSABILIDADE ============ */
 function gerarHTMLTermoResponsabilidade() {
     const v = id => _ctVal('ctTer_' + id);
     return `<div style="padding:40px;font-family:'Times New Roman',serif;color:#000;line-height:1.7;font-size:13px;text-align:justify;">
@@ -3518,7 +3857,6 @@ function gerarHTMLTermoResponsabilidade() {
     </div>`;
 }
 
-/* ============ DOCUMENTO 3: NOTA PROMISSÓRIA ============ */
 function gerarHTMLNotaPromissoria() {
     const v = id => _ctVal('ctNot_' + id);
     return `<div style="padding:40px;font-family:'Times New Roman',serif;color:#000;line-height:1.7;font-size:13px;text-align:justify;">
@@ -3627,7 +3965,6 @@ function preencherContratosAutomatico(locacao) {
 }
 function _getJsPDF() { if (window.jspdf && window.jspdf.jsPDF) return window.jspdf.jsPDF; if (window.jsPDF) return window.jsPDF; throw new Error('jsPDF não carregado'); }
 
-/* ============ PDF 1: CONTRATO DE LOCAÇÃO ============ */
 function gerarPDFContratoLocacaoBlob() {
     const JsPDF = _getJsPDF();
     const doc = new JsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
@@ -3708,7 +4045,6 @@ function gerarPDFContratoLocacaoBlob() {
     return doc.output('blob');
 }
 
-/* ============ PDF 2: TERMO DE RESPONSABILIDADE ============ */
 function gerarPDFTermoResponsabilidadeBlob() {
     const JsPDF = _getJsPDF();
     const doc = new JsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
@@ -3729,7 +4065,6 @@ function gerarPDFTermoResponsabilidadeBlob() {
     return doc.output('blob');
 }
 
-/* ============ PDF 3: NOTA PROMISSÓRIA ============ */
 function gerarPDFNotaPromissoriaBlob() {
     const JsPDF = _getJsPDF();
     const doc = new JsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
@@ -4283,15 +4618,6 @@ function atualizarTabelaAlugueis() {
     });
 }
 
-/* ============================================================
-   PROCESSA PAGAMENTO AUTOMÁTICO
-   Ao conciliar um comprovante, esta função:
-   1) Marca o aluguel como pago
-   2) Lança no Fluxo de Caixa (entrada)
-   3) Lança no Histórico de Aluguéis
-   4) Gera o próximo vencimento automaticamente
-   5) NOVO: EXCLUI o pagamento com status 'pago' da lista
-   ============================================================ */
 function processarPagamentoAutomatico(aluguelObj, dataPagamentoISO) {
     aluguelObj.status = 'pago';
     aluguelObj.dataPagamento = dataPagamentoISO;
@@ -4335,7 +4661,6 @@ function processarPagamentoAutomatico(aluguelObj, dataPagamentoISO) {
             db.alugueis.push({ locatario: aluguelObj.locatario, fabricante: aluguelObj.fabricante || '', placa: aluguelObj.placa, data: dataPagamentoISO, vencimento: proximoVenc, valor: formatarMoedaBR(valorProx), valorNumerico: valorProx, origem: descricaoProx, tipoPagamento: aluguelObj.tipoPagamento || 'mensal', status: 'pendente', parcela: parcelasExistentes + 1, dataInicio: aluguelObj.dataInicio || locAtiva.dataInicio, dataFim: aluguelObj.dataFim || locAtiva.dataFim, pagCaucao: pagCaucao, totalParcelas: aluguelObj.totalParcelas || formatarMoedaBR(locAtiva.valorTotalParcelas) });
         }
     }
-    // NOVO: Exclui o pagamento com status 'pago' da lista de Sub Pagamentos
     const idxRemover = db.alugueis.indexOf(aluguelObj);
     if (idxRemover !== -1) db.alugueis.splice(idxRemover, 1);
 }
@@ -4393,6 +4718,7 @@ function atualizarTabelaFluxoCaixa() {
         const valorNum = Number(f.valorNumerico) || parseMoeda(f.valor) || 0;
         if (f.tipo === 'entrada') totalEntradas += valorNum; else totalSaidas += valorNum;
         const tr = document.createElement('tr');
+        tr.setAttribute('data-date', converterDataParaISO(f.data) || '');
         tr.innerHTML = `<td>${formatarDataBR(f.data)}</td><td>${formatarDataBR(f.vencimento)}</td><td>${f.descricao || ''}</td><td>${f.categoria || ''}</td><td>${f.valor || formatarMoedaBR(valorNum)}</td><td>${(f.tipo || '').toUpperCase()}</td><td><button class="btn-danger" onclick="excluirFluxoCaixa(${lista.length - 1 - index})">🗑️</button></td>`;
         tbody.appendChild(tr);
     });
@@ -4400,6 +4726,10 @@ function atualizarTabelaFluxoCaixa() {
     const elEntradas = document.getElementById('totalEntradas'); if (elEntradas) elEntradas.textContent = formatarMoedaBR(totalEntradas);
     const elSaidas = document.getElementById('totalSaidas'); if (elSaidas) elSaidas.textContent = formatarMoedaBR(totalSaidas);
     const elSaldo = document.getElementById('saldoTotal'); if (elSaldo) elSaldo.textContent = formatarMoedaBR(saldo);
+    const filtroEl = document.getElementById('filterFluxoCaixa');
+    if (filtroEl && (filtroEl.value.trim() || (document.getElementById('filterFluxoCaixaDataInicio')||{}).value || (document.getElementById('filterFluxoCaixaDataFim')||{}).value)) {
+        if (filtroEl._filterHandler) filtroEl._filterHandler.call(filtroEl);
+    }
 }
 function excluirFluxoCaixa(i) { if (!confirmarSenhaADM()) return; if (!confirm('Excluir este lançamento?')) return; db.fluxoCaixa.splice(i, 1); atualizarTabelaFluxoCaixa(); salvarDB(); }
 function salvarFluxoCaixa() {
@@ -5246,10 +5576,16 @@ function atualizarTabelaComprovantesPag() {
     indices.forEach(function(realIdx) {
         const c = lista[realIdx];
         const tr = document.createElement('tr');
+        // NOVO: data-date
+        tr.setAttribute('data-date', converterDataParaISO(c.dataComprovante) || converterDataParaISO(c.dataPagamento) || '');
         const nomeSafe = (c.nomeArquivo || '').replace(/</g, '&lt;');
         tr.innerHTML = '<td>' + (c.dataComprovante || '-') + '</td><td>' + (c.pagador || '-') + '</td><td>' + (c.recebedor || '-') + '</td><td><strong style="color:#28a745;">' + (c.valorFormatado || formatarMoedaBR(c.valor)) + '</strong></td><td>' + (c.placa || '-') + '</td><td><small>' + nomeSafe + '</small></td><td><button class="btn-info" onclick="abrirComprovanteSalvo(' + realIdx + ')">👁️</button> <button class="btn-warning" onclick="editarComprovanteSalvo(' + realIdx + ')">✏️</button> <button class="btn-danger" onclick="excluirComprovanteSalvo(' + realIdx + ')">🗑️</button></td>';
         tbody.appendChild(tr);
     });
+    const filtroEl = document.getElementById('filterComprovantesPag');
+    if (filtroEl && (filtroEl.value.trim() || (document.getElementById('filterComprovantesPagDataInicio')||{}).value || (document.getElementById('filterComprovantesPagDataFim')||{}).value)) {
+        if (filtroEl._filterHandler) filtroEl._filterHandler.call(filtroEl);
+    }
 }
 async function abrirComprovanteSalvo(idx) {
     const c = (db.comprovantesPagamento || [])[idx];
@@ -5449,9 +5785,14 @@ function atualizarTabelaDoc() {
         const realIdx = entry.idx;
         const statusBadge = c.status === 'conciliado' ? '<span class="status-pago">CONCILIADO</span>' : '<span class="status-pendente">PENDENTE</span>';
         const tr = document.createElement('tr');
+        tr.setAttribute('data-date', converterDataParaISO(c.dataComprovante) || converterDataParaISO(c.dataPagamento) || '');
         tr.innerHTML = '<td>' + (c.dataComprovante || '-') + '</td><td><small>' + (c.nomeArquivo || '').replace(/</g, '&lt;') + '</small></td><td>' + (c.pagador || '-') + '</td><td>' + (c.recebedor || '-') + '</td><td><strong style="color:#28a745;">' + (c.valorFormatado || formatarMoedaBR(c.valor)) + '</strong></td><td>' + formatarDataBR(c.dataPagamento) + '</td><td>' + (c.placa || '-') + '</td><td>' + statusBadge + '<br><small style="color:#666;">' + (c.motivo || '') + '</small></td><td><button class="btn-info" onclick="abrirDocComprovante(' + realIdx + ')">👁️</button> <button class="btn-danger" onclick="excluirDocComprovante(' + realIdx + ')">🗑️</button></td>';
         tbody.appendChild(tr);
     });
+    const filtroEl = document.getElementById('filterDoc');
+    if (filtroEl && (filtroEl.value.trim() || (document.getElementById('filterDocDataInicio')||{}).value || (document.getElementById('filterDocDataFim')||{}).value)) {
+        if (filtroEl._filterHandler) filtroEl._filterHandler.call(filtroEl);
+    }
 }
 async function abrirDocComprovante(idx) {
     const c = (db.comprovantesDoc || [])[idx];

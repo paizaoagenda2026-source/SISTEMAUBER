@@ -399,11 +399,9 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
             <div class="form-group"><label>OBS</label><textarea id="manObs"></textarea></div>
         </div>
         
-        <!-- DASHBOARD E BOTÃO SALVAR -->
         <div style="display: flex; align-items: flex-start; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
             <button class="btn-primary" style="margin-bottom: 0; white-space: nowrap;" data-permissao="manutencao_salvar" onclick="salvarManutencao()">💾 Salvar</button>
             <div id="dashboardKmManutencao" style="display: flex; gap: 10px; overflow-x: auto; padding: 10px; background: #f8f9fa; border-radius: 8px; border: 1px solid #ddd; flex: 1; min-height: 42px; align-items: center;">
-                <!-- Dashboard cards serão gerados aqui automaticamente -->
             </div>
         </div>
 
@@ -954,21 +952,17 @@ const _imageCache = new Map();
    ============================================================ */
 const CALLMEBOT_PHONE  = '5511974910081';
 const CALLMEBOT_APIKEY = '7052412';
-const CALLMEBOT_DELAY_MS = 1300; // intervalo entre envios (evita bloqueio)
+const CALLMEBOT_DELAY_MS = 1300;
 
 let _callmebotFila = [];
 let _callmebotEnviando = false;
 
-/**
- * Enfileira uma mensagem para envio via WhatsApp (CallMeBot).
- * Uso de fila sequencial evita sobrecarga/bloqueio da API.
- */
 function enviarWhatsAppCallMeBot(mensagem) {
     if (!mensagem) return;
     try {
         _callmebotFila.push(String(mensagem));
         processarFilaCallMeBot();
-    } catch (e) { /* silencioso */ }
+    } catch (e) { }
 }
 
 function processarFilaCallMeBot() {
@@ -981,7 +975,6 @@ function processarFilaCallMeBot() {
             + '?phone=' + CALLMEBOT_PHONE
             + '&text=' + encodeURIComponent(msg)
             + '&apikey=' + CALLMEBOT_APIKEY;
-        // mode: 'no-cors' evita erro de CORS; resposta é opaca (fire-and-forget)
         fetch(url, { mode: 'no-cors', cache: 'no-store' })
             .catch(function() {})
             .then(function() {
@@ -994,9 +987,6 @@ function processarFilaCallMeBot() {
     }
 }
 
-/**
- * Formata a mensagem padrão de notificação.
- */
 function formatarMensagemCallMeBot(registro) {
     const dataHora = registro.data || new Date().toLocaleString('pt-BR');
     return '🔔 PAIZÃO UBER 2.0'
@@ -1504,10 +1494,6 @@ async function verificarLimpezaAutomaticaAuditoria() {
     }
 }
 
-/**
- * REGISTRA AUDITORIA E ENVIA NOTIFICAÇÃO WHATSAPP (CallMeBot)
- * Toda ação registrada aqui dispara automaticamente uma mensagem no WhatsApp.
- */
 function registrarAuditoria(acao, descricao) {
     if (!db) return;
     if (!Array.isArray(db.auditoria)) db.auditoria = [];
@@ -1521,10 +1507,9 @@ function registrarAuditoria(acao, descricao) {
     if (db.auditoria.length > 1000) db.auditoria.shift();
     try { atualizarTabelaAuditoria(); } catch(e) {}
 
-    // === NOTIFICAÇÃO WHATSAPP CALLMEBOT ===
     try {
         enviarWhatsAppCallMeBot(formatarMensagemCallMeBot(registro));
-    } catch(e) { /* silencioso — nunca interrompe o sistema */ }
+    } catch(e) { }
 }
 
 async function limparAuditoriaManual() {
@@ -2681,26 +2666,22 @@ function encerrarLocacao(i) {
     const placaNorm = normalizarPlaca(l.placa);
     const locatarioUpper = String(l.locatario || '').toUpperCase().trim();
 
-    // 1) HISTÓRICO DE ALUGUÉIS: Soma o que foi recebido desse contrato
     const historicoAlugueisFiltrado = (db.historicoAlugueis || []).filter(h => 
         h && normalizarPlaca(h.placa) === placaNorm && 
         String(h.locatario || '').toUpperCase().trim() === locatarioUpper
     );
     const receitaPaga = historicoAlugueisFiltrado.reduce((s, a) => s + (Number(a.valorNumerico) || parseMoeda(a.valor) || 0), 0);
 
-    // Para cálculo de pendentes e contratados, pegamos os aluguéis ativos que ainda não foram pagos
     const todosAlugueisAtivos = (db.alugueis || []).filter(a => a && a.locatario === l.locatario && a.placa === l.placa);
     const receitaContratada = todosAlugueisAtivos.reduce((s, a) => s + (Number(a.valorNumerico) || parseMoeda(a.valor) || 0), 0) + receitaPaga;
     const receitaPendente = Math.max(0, receitaContratada - receitaPaga);
 
-    // 2) CAUÇÃO: Verifica se é ok para extorno, e abate do valor recebido
     const caucaoContrato = parseMoeda(l.caucao);
     const caucaoPagoInicial = parseMoeda(l.caucaoPago);
     let caucaoRecebido = caucaoPagoInicial; 
 
     const valorAluguelBase = parseMoeda(l.valorAluguel) || parseMoeda(l.aluguelMensal) || 0;
 
-    // Soma caução recebido das parcelas no histórico
     historicoAlugueisFiltrado.forEach(a => {
         const o = (a.origem || '').toUpperCase();
         if (/CAU/.test(o)) {
@@ -2742,13 +2723,9 @@ function encerrarLocacao(i) {
         }
     }
 
-    // 3) VAI NA ABA HISTÓRICO GERAL: Calcula todas as despesas da placa da locação excluída
     const despesasHistGeral = (db.historico || []).filter(h => h && normalizarPlaca(h.placa) === placaNorm)
         .reduce((s, h) => s + parseMoeda(h.valor), 0);
 
-    // 4) ABATE DO VALOR RECEBIDO E LANÇA EM LOC. ENCERRADA
-    // O valor recebido é a receitaPaga.
-    // Abatemos o valorExtorno (caução devolvido) e as despesasHistGeral.
     const despesasTotais = despesasHistGeral + valorExtorno;
     const lucro = receitaPaga - despesasTotais;
 
@@ -3338,18 +3315,126 @@ function limparContratoLocacao() { if (!confirm('Limpar?')) return; CONTRATO_LOC
 function limparContratoTermo() { if (!confirm('Limpar?')) return; CONTRATO_TER_CAMPOS.forEach(k => { const el = document.getElementById('ctTer_' + k); if (el) el.value = ''; }); }
 function limparContratoNota() { if (!confirm('Limpar?')) return; CONTRATO_NOT_CAMPOS.forEach(k => { const el = document.getElementById('ctNot_' + k); if (el) el.value = ''; }); }
 function _ctPrint(html) { const area = document.getElementById('printArea'); if (!area) return; area.innerHTML = html; window.print(); }
+
+/* ============ DOCUMENTO 1: CONTRATO DE LOCAÇÃO ============ */
 function gerarHTMLContratoLocacao() {
     const v = id => _ctVal('ctLoc_' + id);
-    return `<div style="padding:40px;font-family:'Times New Roman',serif;color:#000;line-height:1.6;font-size:13px;"><h1 style="text-align:center;font-size:15px;font-weight:bold;margin-bottom:20px;">INSTRUMENTO PARTICULAR DE CONTRATO DE LOCAÇÃO DE VEÍCULOS</h1><p>Contrato Número: "${v('numero')}"</p><p style="text-align:justify;margin-top:12px;">Pelo presente Instrumento Particular de Contrato de Locação de Veículos, número ${v('numeroInterno')}, de um lado, "${v('locadora')}", com sede na "${v('locadoraEndereco')}", CNPJ nº "${v('locadoraCnpj')}", doravante LOCADORA, e, de outro, "${v('locatario')}", residente à "${v('locatarioEndereco')}", CEP "${v('locatarioCep')}", RG "${v('locatarioRg')}", CPF "${v('locatarioCpf')}", LOCATÁRIO.</p><p style="margin-top:16px;"><strong>CLÁUSULA PRIMEIRA - DO OBJETO.</strong> Veículo "${v('veiculo')}", cor ${v('veiculoCor')}, placa "${v('veiculoPlaca')}", ano fab. ${v('anoFabr')}, ano mod. ${v('anoModel')}.</p><p><strong>CLÁUSULA SEGUNDA - LOCADOR.</strong> Manter impostos em dia; revisões por conta do locador.</p><p><strong>CLÁUSULA TERCEIRA - LOCATÁRIO.</strong> Uso pessoal para aplicativos; proibido sublocar; responsável por multas.</p><p><strong>CLÁUSULA QUARTA - VISTORIA.</strong> Vistoria a cada 15 dias em "${v('localVistoria')}".</p><p><strong>CLÁUSULA QUINTA - PRAZO.</strong> Vigência de ${v('prazo')} dias, multa de rescisão de "${v('multaRescisao')}".</p><p><strong>CLÁUSULA SEXTA - PREÇO.</strong> Aluguel "${v('valorAluguel')}", limite "${v('limiteKm')}" km, excedente "${v('valorKm')}", caução "${v('caucao')}" em "${v('caucaoParcelas')}".</p><p><strong>CLÁUSULA SÉTIMA - PAGAMENTO.</strong> Conta Uber vinculada ao Sr. "${v('gestor')}".</p><p><strong>CLÁUSULA OITAVA - RESCISÃO.</strong> Multa "${v('multaRescisao')}". Higienização "${v('taxaHigienizacao')}", entrega diversa "${v('taxaEntrega')}".</p><p><strong>CLÁUSULA NONA - FORO.</strong> Comarca de ${v('foro')}.</p><p style="margin-top:20px;">São Paulo, "${v('data')}"</p><p style="margin-top:40px;">_____<br>"${v('locadora')}" - Locador</p><p style="margin-top:30px;">_____<br>"${v('locatario')}" - Locatário</p></div>`;
+    return `<div style="padding:40px;font-family:'Times New Roman',serif;color:#000;line-height:1.6;font-size:12px;text-align:justify;">
+        <h1 style="text-align:center;font-size:14px;font-weight:bold;margin-bottom:20px;">INSTRUMENTO PARTICULAR DE CONTRATO DE LOCAÇÃO DE VEÍCULOS</h1>
+        <p>Contrato Número: &ldquo;${v('numero')}&rdquo;</p>
+        <p style="margin-top:12px;">Pelo presente Instrumento Particular de Contrato de Locação de Veículos, número ${v('numeroInterno')}, e na melhor forma de direito, de um lado, &ldquo;${v('locadora')}&rdquo;, com sede na &ldquo;${v('locadoraEndereco')}&rdquo;, inscrita no CNPJ sob o nº &ldquo;${v('locadoraCnpj')}&rdquo;, doravante denominada LOCADORA, e, de outro lado, &ldquo;${v('locatario')}&rdquo;, residente e domiciliado à &ldquo;${v('locatarioEndereco')}&rdquo;, CEP &ldquo;${v('locatarioCep')}&rdquo;, portador do RG nº &ldquo;${v('locatarioRg')}&rdquo; e inscrito no CPF sob o nº ${v('locatarioCpf')}, doravante denominado LOCATÁRIO, têm, entre si, justo e contratado o presente, o qual se regerá pelas cláusulas e condições que a seguir se aduzem, com inteira submissão às disposições legais e regulamentares atinentes à espécie.</p>
+
+        <p style="margin-top:14px;"><strong>CLÁUSULA PRIMEIRA - DO OBJETO.</strong></p>
+        <p>1. O presente contrato tem por objeto a locação do veículo &ldquo;${v('veiculo')}&rdquo;, cor ${v('veiculoCor')}, placas &ldquo;${v('veiculoPlaca')}&rdquo;, quatro portas, com ar-condicionado, direção hidráulica, trava elétrica, vidro elétrico e sistema de som com multimidia, ano de fabricação &ldquo;${v('anoFabr')}&rdquo; e ano modelo &ldquo;${v('anoModel')}&rdquo;.</p>
+
+        <p style="margin-top:14px;"><strong>CLÁUSULA SEGUNDA - DAS OBRIGAÇÕES DO LOCADOR</strong></p>
+        <p>2. É dever do locador manter em dia o pagamento dos impostos, tais como IPVA, DPVAT e licenciamento.</p>
+        <p>3. Manter o seguro do veículo vigente.</p>
+        <p>4. É dever do locador providenciar a manutenção do automóvel locado tão logo seja identificada falha dos sistemas ou pane em geral, admitindo que o custo da manutenção ou reparo seja suportado por ele, salvo em caso de este não ter dado causa à ocorrência.</p>
+        <p>5. As revisões preventivas do veículo serão custeadas pelo locador, que indicará ao locatário o local onde o veículo deverá ser conduzido.</p>
+        <p>6. As revisões periódicas obrigatórias que se fizerem necessárias serão procedidas em oficina credenciada ou indicada pelo locador. Contudo, não haverá desconto no valor do aluguel, exceto se o veículo necessitar permanecer na oficina por mais de vinte e quatro horas, hipótese em que serão descontadas as diárias correspondentes até a efetiva entrega do veículo.</p>
+
+        <p style="margin-top:14px;"><strong>CLÁUSULA TERCEIRA - DAS OBRIGAÇÕES DO LOCATÁRIO</strong></p>
+        <p>6.1 O locatário se compromete a utilizar o veículo de forma pessoal e exclusiva para o transporte em aplicativos de transporte remunerado privado individual de passageiros em conformidade com a Lei nº 12.587/2012, sendo expressamente proibido o empréstimo, compartilhamento, cessão ou sublocação a terceiros.</p>
+        <p>7. É de responsabilidade do locatário zelar pelo veículo, guardando-o e protegendo-o, utilizá-lo de maneira correta durante o período da locação.</p>
+        <p>7.1 O locatário compromete-se a utilizar o veículo de forma adequada, em conformidade com as leis de trânsito e as normas de segurança pública, abstendo-se de exceder a lotação e o peso suportado pelo veículo e de praticar atos que possam causar danos ou prejuízos ao veículo ou a terceiros.</p>
+        <p>8. É vedado ao LOCATÁRIO: Utilizar o veículo para fins comerciais de competição ou para qualquer outra finalidade não prevista neste contrato. É vedado conduzir o veículo sob a influência de álcool, drogas ou substâncias psicoativas que possam comprometer sua capacidade de condução. É vedado emprestar, sublocar, ceder ou transferir, de qualquer forma, o veículo a terceiros. O locatário se compromete a não realizar modificações, reparos ou adaptações no veículo sem autorização prévia e expressa do Locador.</p>
+        <p>9. O locatário será o único responsável por eventuais multas, taxas, impostos e outras despesas decorrentes do uso do veículo durante o período de locação.</p>
+        <p>9.1 Considerando o prazo estendido deste contrato de locação, e com o propósito de o veículo manter-se em condições de uso, o locatário assumirá a responsabilidade de realizar checklist semanal, verificando e informando à empresa sobre as condições dos seguintes itens: Nível de óleo do motor; Parte elétrica; Freios; Nível de água; Pneus; A omissão de informação ou a sua prestação inverídica sobre a situação do veículo poderá dar causa à rescisão contratual, e as avarias oportunamente identificadas, e seus respectivos consertos, correrão por conta do locatário.</p>
+        <p>10. O locatário se compromete a utilizar o veículo somente em território nacional e dentro do Estado da Federação em que foi locado, sendo expressamente proibido ultrapassar qualquer fronteira ou limite geográfico diverso deste aqui mencionado. 10.1 As partes ajustam que, havendo necessidade de deslocamento do veículo para além de cem quilômetros a partir desta cidade, o locatário deverá informar previamente o locador.</p>
+        <p>11. Em relação às multas de trânsito, o Locatário, sendo responsável pelo cometimento delas, obriga-se a fornecer, no prazo de 3 (três) dias após ser comunicado, uma cópia da CNH contendo sua assinatura, bem como de arcar com os custos operacionais e administrativos para transferência dos pontos.</p>
+        <p>12. A inobservância das Cláusulas 3.1 e 3.2 ensejará a imediata devolução do veículo locado, e sua retenção imotivada poderá configurar apropriação indébita. 12.1 É de inteira responsabilidade do Locatário os custos de pagamento das multas de trânsito e custos administrativos decorrentes das infrações durante o período em que estiver na posse do veículo, salvo se tais multas ou penalidades forem imputáveis à Locadora por irregularidade na documentação do veículo.</p>
+        <p>12.2 A taxa administrativa por multa será R$ 100,00, que deverá ser paga junto com o valor da multa apresentada.</p>
+        <p>13. Sobrevindo algum sinistro durante a condução do automóvel, o Locatário deverá providenciar Boletim de Ocorrência encaminhando-o imediatamente à Locadora.</p>
+        <p>14. A apresentação do Boletim de Ocorrência citado na cláusula 3.4 deste Contrato, não exime o Locatário de arcar com todas as despesas decorrentes do evento danoso.</p>
+        <p>15. O locatário se compromete a arcar com as despesas inerentes à utilização de combustível, conserto de pneus, câmaras de ar, lâmpadas e troca de peças de reposição por mal uso.</p>
+        <p>16. Devolver o veículo nas mesmas condições de conservação nas quais lhe foram entregues no ato da retirada, inclusive devolvendo-o limpo, no endereço indicado pelo gestor do contrato, Sr. &ldquo;${v('gestor')}&rdquo;.</p>
+
+        <p style="margin-top:14px;"><strong>CLÁUSULA QUARTA - DO ACOMPANHAMENTO E FISCALIZAÇÃO</strong></p>
+        <p>17. O acompanhamento e a vistoria a serem exercidos pelo Locador, por meio de seus prepostos, consistirão no direito de vistoriar o veículo quando de sua restituição e durante o período de vigência do contrato, mediante previa comunicação.</p>
+        <p>18. As partes ajustam que a vistoria obrigatória ocorrerá a cada 15 dias em local situado a &ldquo;${v('localVistoria')}&rdquo;, por sua vez a recusa no cumprimento desta condição poderá dar ensejo à rescisão do contrato com a retenção do valor dado em caução.</p>
+        <p>19. O Locador se compromete a utilizar o veículo em conformidade com as regras aqui estabelecidas e em obediência às especificidades do veículo, ditadas pela montadora.</p>
+        <p>20. Havendo sinistro, independentemente de culpa exclusiva de terceiros, o Locatário se compromete a arcar com os custos do reparo conduzindo o veículo ao estado original.</p>
+        <p>21. Optando o Locatário por não acionar o seguro mediante o pagamento de franquia para reparar o veículo, o Locador apresentará a ele três orçamentos para que escolha a oficina e proceda ao pagamento.</p>
+        <p>22. Em caso de necessidade de remoção do veículo em decorrência de acidente, o locatário arcará com o pagamento de eventuais custas e estadias em pátio até sua liberação.</p>
+
+        <p style="margin-top:14px;"><strong>CLÁUSULA QUINTA - DO PRAZO DE LOCAÇÃO E VIGÊNCIA</strong></p>
+        <p>23. O presente Contrato tem vigência de ${v('prazo')} (cento e oitenta) dias, com início na data de sua assinatura, podendo ser prorrogado automaticamente e sua rescisão antecipada ensejará a cobrança de multa de &ldquo;${v('multaRescisao')}&rdquo;. 23.1. Após os primeiros 90 dias de contrato o LOCATARIO poderá se achar necessário solicitar a troca de veículo para outra categoria (se houver veículo disponível) sem a necessidade de fazer o cancelamento do contrato e cumprir os próximos 90 dias, pagando apenas uma taxa de troca de veículo no valor de &ldquo;${v('taxaTroca')}&rdquo;.</p>
+        <p>24. A seu critério, o Locador poderá rescindir o contrato devendo, no entanto, restituir o valor pago referente à semana vigente, bem como a caução no prazo estipulado neste contrato.</p>
+        <p>25. Após o vencimento do primeiro prazo, o contrato passará a ter duração de 30 (trinta) dias, podendo ser rescindido sem gerar ônus, desde que previamente comunicada a outra parte com antecedência de 30 (trinta) dias.</p>
+
+        <p style="margin-top:14px;"><strong>CLÁUSULA SEXTA - DO PREÇO.</strong></p>
+        <p>26. Preço da Locação: O valor ajustado entre as partes neste contrato é de &ldquo;${v('valorAluguel')}&rdquo; semanais, bem como de que o limite de quilometragem estabelecido será de &ldquo;${v('limiteKm')}&rdquo; km por semana, e que por quilômetro excedente o locatário pagará o equivalente a &ldquo;${v('valorKm')}&rdquo;. As partes ajustam ainda que nesse contrato que a caução no valor de &ldquo;${v('caucao')}&rdquo;, deverá ser dividido em &ldquo;${v('caucaoParcelas')}&rdquo; e a primeira parcela deverá ser paga na retirada do veículo e somente será devolvido 60 dias após o término do contrato o valor de &ldquo;${v('caucaoDevolucao')}&rdquo; não havendo multas e nenhuma avaria no veículo. O locatário outorga Nota Promissória previa garantindo ao locador ressarcimento de eventuais gastos futuros, ocasião em que de comum acordo as partes inserirão o valor a ser confessado. Não havendo gastos a serem descontados, o título será restituído ao locatário em até sessenta dias após a entrega do veículo.</p>
+        <p>27. Estão inclusos no preço: Manutenção preventiva (por desgaste) Documentação atualizada Seguro Troca de óleo Pneus Pastilha de freio</p>
+        <p>28. Não estão inclusos nos preços: Motorista Combustível Troca de sonda lambda Peças de suspensão do veículo Lâmpadas Bomba de combustível Pré-filtro de combustível Taxa administrativa para cobrir despesas de transferência de pontos referentes a multas que o Locatário levar.</p>
+        <p>29. Todas as multas deverão ser pagas na semana seguinte à sua comunicação.</p>
+        <p>30. O declara ter ciência de que os valores das multas penalidades variam de acordo com o município de sua ocorrência.</p>
+
+        <p style="margin-top:14px;"><strong>CLÁUSULA SÉTIMA – DO FATURAMENTO E PAGAMENTO</strong></p>
+        <p>31. O locatário concorda com que sua conta vinculada à Uber seja vinculada à conta do Sr. &ldquo;${v('gestor')}&rdquo; para que em caso de o saldo de débito não cobrir as despesas do aluguel, esta poderá ser utilizada até o limite das despesas, e em caso de ainda remanescer dívida, o locatário deverá proceder ao complemento do valor.</p>
+        <p>31.1. CASO O VALOR DO ALUGUEL NÃO SEJA FEITO EM SUA TOTALIDADE PELO APLICATIVO DA UBER, DEVERÁ SER FEITO O PAGAMENTO DA DIFERENÇA VIA PIX ATÉ AS 13:00 da data determinada.</p>
+        <p>32. O não pagamento do aluguel semanal e outros débitos em sua totalidade permitirá ao Locador rescindir o contrato imediatamente, incidindo a multa de &ldquo;${v('multaInadimplencia')}&rdquo;.</p>
+
+        <p style="margin-top:14px;"><strong>CLÁUSULA OITAVA - DA RESCISÃO</strong></p>
+        <p>33. Este Contrato poderá ser rescindido pelo LOCADOR a qualquer momento, mediante notificação escrita, desde que a comunicação seja feita com antecedência mínima de 7(sete) dias, eximindo a parte de multas pela rescisão, excetuando-se eventual dívidas inerentes a infrações, saldo de locação e avarias. No ato da rescisão, será cobrada taxa de &ldquo;${v('taxaHigienizacao')}&rdquo; caso seja necessária a higienização do veículo. O locatário poderá entregar o veículo em local diverso do ajustado, porém será cobrada taxa no valor de &ldquo;${v('taxaEntrega')}&rdquo;.</p>
+        <p>34. A inobservância da notificação prévia obriga a parte a pagar o valor referente aos dias locação não pagos.</p>
+        <p>35. O não cumprimento de qualquer uma das cláusulas constantes neste contrato por parte do Locatário dará o direito à rescisão sem aviso prévio e aplicação de multa no valor de &ldquo;${v('multaRescisao')}&rdquo;.</p>
+        <p>36. Este contrato permanecerá vigente até seu integral cumprimento com a prestação de contas.</p>
+        <p>37. O veículo possui cobertura para a atividade comercial de passageiros. Havendo necessidade de acionamento do seguro, o locatário arcará com os custos da franquia que corresponde a 10% (dez por cento) da tabela Fipe. Em caso de necessidade de acionamento da franquia para terceiros, será cobrado do locatário o equivalente a 2% da tabela Fipe do veículo.</p>
+        <p>38. Motivos que podem levar à rescisão contratual sem a necessidade prévio aviso: Inadimplência no pagamento semanal; Perda ou suspensão da habilitação (conforme legislação de trânsito vigente); emprestar ou dividir o veículo com outro motorista sem autorização da empresa; deixar o veículo pernoitar na rua, sem acomodá-lo em garagem; Promover alterações no veículo sem previa autorização do locador; deixar de comparecer à vistoria previamente agendada; Não comparecer para manutenções programadas; Omitir o registro semanal de quilometragem até as 10:00; Informar endereço diverso do que reside.</p>
+
+        <p style="margin-top:14px;"><strong>CLÁUSULA NONA - DO FORO</strong></p>
+        <p>39. Fica eleito o Foro da Comarca de ${v('foro')} como o único competente para a solução de questões oriundas do presente Contrato, renunciando a outro por mais privilegiado que seja, arcando a parte vencida, em caso de demanda, com todas as despesas processuais e honorários advocatícios.</p>
+
+        <p style="margin-top:20px;">E, por estarem assim justas e contratadas, as partes assinam o presente Contrato em duas vias de igual teor, forma e idêntico valor jurídico, para um só efeito, na presença das testemunhas abaixo assinadas dando tudo por bom, firme e valioso.</p>
+        <p style="margin-top:16px;">São Paulo, &ldquo;${v('data')}&rdquo;</p>
+        <p style="margin-top:40px;">_________________________________________<br>&ldquo;${v('locadora')}&rdquo;, CNPJ nº &ldquo;${v('locadoraCnpj')}&rdquo;, (Locador).</p>
+        <p style="margin-top:30px;">_________________________________________<br>&ldquo;${v('locatario')}&rdquo;, CPF nº &ldquo;${v('locatarioCpf')}&rdquo; (Locatário)</p>
+        <p style="margin-top:20px;">Testemunhas:</p>
+        <p style="margin-top:30px;">_________________________________________<br>Testemunha 1</p>
+        <p style="margin-top:20px;">_________________________________________<br>Testemunha 2</p>
+    </div>`;
 }
+
+/* ============ DOCUMENTO 2: TERMO DE RESPONSABILIDADE ============ */
 function gerarHTMLTermoResponsabilidade() {
     const v = id => _ctVal('ctTer_' + id);
-    return `<div style="padding:40px;font-family:'Times New Roman',serif;color:#000;line-height:1.7;font-size:13px;"><h1 style="text-align:center;font-size:14px;font-weight:bold;margin-bottom:24px;">TERMO DE RESPONSABILIDADE E AUTORIZAÇÃO DE TRANSFERÊNCIA DE PONTUAÇÕES</h1><p style="text-align:justify;">Eu, "${v('nome')}", RG "${v('rg')}", CPF "${v('cpf')}", CNH "${v('cnh')}" validade "${v('cnhValidade')}", contratante do veículo "${v('veiculo')}", placas "${v('placa')}" de propriedade de "${v('proprietario')}", CPF "${v('proprietarioCpf')}", assumo responsabilidade pelas penalidades e autorizo a transferência de pontos por ${v('prazo')} dias.</p><p style="margin-top:24px;">São Paulo "${v('data')}"</p><p style="margin-top:50px;text-align:center;">_____</p><p style="text-align:center;">"${v('nome')}"</p><p style="text-align:center;">CPF "${v('cpf')}"</p></div>`;
+    return `<div style="padding:40px;font-family:'Times New Roman',serif;color:#000;line-height:1.7;font-size:13px;text-align:justify;">
+        <h1 style="text-align:center;font-size:14px;font-weight:bold;margin-bottom:24px;">TERMO DE RESPONSABILIDADE E AUTORIZAÇÃO DE TRANSFERÊNCIA DE PONTUAÇÕES</h1>
+        <p>Eu, &ldquo;${v('nome')}&rdquo;, portador da cédula de identidade RG nº &ldquo;${v('rg')}&rdquo; e inscrito no CPF sob o nº &ldquo;${v('cpf')}&rdquo;, CNH número de registro: &ldquo;${v('cnh')}&rdquo; validade &ldquo;${v('cnhValidade')}&rdquo; que sou contratante do veículo de marca &ldquo;${v('veiculo')}&rdquo;, placas &ldquo;${v('placa')}&rdquo; de propriedade da Sra. &ldquo;${v('proprietario')}&rdquo;, devidamente inscrita no C.P.F N. &ldquo;${v('proprietarioCpf')}&rdquo;, assumo qualquer responsabilidade civil, criminal e judicial, responsabilizo-me também pelas penalidades pecuniárias ou de pontuação caso venha cometer qualquer infração que viole o código de trânsito brasileiro, autorizando a transferência de pontos das mesmas com o veículo acima descrito e de ${v('prazo')} dias a contar da assinatura do mesmo. Sem mais.</p>
+        <p style="margin-top:24px;">São Paulo &ldquo;${v('data')}&rdquo;</p>
+        <p style="margin-top:16px;">Atenciosamente:</p>
+        <p style="margin-top:60px;text-align:center;">_________________________________________</p>
+        <p style="text-align:center;">&ldquo;${v('nome')}&rdquo;</p>
+    </div>`;
 }
+
+/* ============ DOCUMENTO 3: NOTA PROMISSÓRIA ============ */
 function gerarHTMLNotaPromissoria() {
     const v = id => _ctVal('ctNot_' + id);
-    return `<div style="padding:40px;font-family:'Times New Roman',serif;color:#000;line-height:1.7;font-size:13px;"><h1 style="text-align:center;font-size:16px;font-weight:bold;margin-bottom:24px;">NOTA PROMISSÓRIA</h1><p style="text-align:right;">Nº: "${v('numero')}"</p><p style="text-align:right;">Vencimento: "${v('vencimento')}"</p><p style="text-align:right;">Valor: ${v('valor')}</p><p style="text-align:justify;margin-top:24px;">Aos "${v('dataEmissao')}", pagarei por esta NOTA PROMISSÓRIA a "${v('credor')}", CNPJ "${v('credorCnpj')}", a quantia de "${v('valorExtenso')}". Pagável em: ${v('cidade')}.</p><p style="margin-top:24px;"><strong>EMITENTE:</strong> "${v('emitenteNome')}"</p><p>CPF "${v('emitenteCpf')}"</p><p>CNH "${v('emitenteDoc')}" - ${v('emitenteDocExp')}</p><p>Endereço: "${v('emitenteEndereco')}"</p><p>CEP: "${v('emitenteCep')}"</p><p style="margin-top:24px;">"${v('cartorio')}"</p><p>São Paulo "${v('data')}"</p><p style="margin-top:50px;text-align:center;">_____</p><p style="text-align:center;">"${v('emitenteNome')}"</p></div>`;
+    return `<div style="padding:40px;font-family:'Times New Roman',serif;color:#000;line-height:1.7;font-size:13px;text-align:justify;">
+        <h1 style="text-align:center;font-size:16px;font-weight:bold;margin-bottom:30px;">NOTA PROMISSÓRIA</h1>
+        <p style="text-align:right;">№º: &ldquo;${v('numero')}&rdquo;</p>
+        <p style="text-align:right;">Vencimento: &ldquo;${v('vencimento')}&rdquo;</p>
+        <p style="text-align:right;">Valor: ${v('valor')}</p>
+        <p style="margin-top:24px;">Aos &ldquo;${v('dataEmissao')}&rdquo;, pagarei por esta única via de NOTA PROMISSÓRIA a &ldquo;${v('credor')}&rdquo;, CNPJ nº &ldquo;${v('credorCnpj')}&rdquo;, ou a sua ordem, a quantia de &ldquo;${v('valorExtenso')}&rdquo;, em moeda corrente nacional. Pagável em: ${v('cidade')}.</p>
+        <p style="margin-top:24px;"><strong>EMITENTE:</strong> Nome &ldquo;${v('emitenteNome')}&rdquo;,</p>
+        <p>CPF nº &ldquo;${v('emitenteCpf')}&rdquo;</p>
+        <p>Documento de identificação: Carteira Nacional de Habilitação (CNH) n. &ldquo;${v('emitenteDoc')}&rdquo;, expedida por ${v('emitenteDocExp')}</p>
+        <p>Endereço: &ldquo;${v('emitenteEndereco')}&rdquo;</p>
+        <p>&ldquo;São Paulo SP, CEP &ldquo;${v('emitenteCep')}&rdquo;</p>
+        <p style="margin-top:24px;">&ldquo;${v('cartorio')}&rdquo;</p>
+        <p>São Paulo &ldquo;${v('data')}&rdquo;</p>
+        <p style="margin-top:60px;text-align:center;">.</p>
+        <p style="text-align:center;">&ldquo;${v('emitenteNome')}&rdquo;.</p>
+        <p style="margin-top:40px;text-align:center;">.</p>
+        <p style="text-align:center;">&ldquo;${v('emitenteNome')}&rdquo;</p>
+        <p style="text-align:center;">CPF nº &ldquo;${v('emitenteCpf')}&rdquo;</p>
+        <p style="text-align:center;">RG nº &ldquo;${v('emitenteDoc')}&rdquo;</p>
+        <p style="text-align:center;">CNH: &ldquo;${v('emitenteDoc')}&rdquo;</p>
+    </div>`;
 }
+
 function imprimirContratoLocacao() { _ctPrint(gerarHTMLContratoLocacao()); }
 function imprimirContratoTermo() { _ctPrint(gerarHTMLTermoResponsabilidade()); }
 function imprimirContratoNota() { _ctPrint(gerarHTMLNotaPromissoria()); }
@@ -3432,6 +3517,8 @@ function preencherContratosAutomatico(locacao) {
     db.contratos.notaPromissoria = objNot;
 }
 function _getJsPDF() { if (window.jspdf && window.jspdf.jsPDF) return window.jspdf.jsPDF; if (window.jsPDF) return window.jsPDF; throw new Error('jsPDF não carregado'); }
+
+/* ============ PDF 1: CONTRATO DE LOCAÇÃO ============ */
 function gerarPDFContratoLocacaoBlob() {
     const JsPDF = _getJsPDF();
     const doc = new JsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
@@ -3439,20 +3526,80 @@ function gerarPDFContratoLocacaoBlob() {
     const pageW = 210, pageH = 297, margin = 15, maxW = pageW - 30;
     let y = margin;
     function ensurePage(n) { if (y + (n||5) > pageH - margin) { doc.addPage(); y = margin; } }
-    function addTitle(t) { doc.setFont('times','bold'); doc.setFontSize(12); doc.splitTextToSize(t, maxW).forEach(l => { ensurePage(6); doc.text(l, pageW/2, y, {align:'center'}); y += 5.5; }); y += 3; }
+    function addTitle(t) { doc.setFont('times','bold'); doc.setFontSize(11); doc.splitTextToSize(t, maxW).forEach(l => { ensurePage(6); doc.text(l, pageW/2, y, {align:'center'}); y += 5; }); y += 3; }
+    function addStrong(t) { doc.setFont('times','bold'); doc.setFontSize(10); doc.splitTextToSize(t, maxW).forEach(l => { ensurePage(5); doc.text(l, margin, y); y += 4.5; }); y += 1.5; }
     function addP(t) { doc.setFont('times','normal'); doc.setFontSize(10); doc.splitTextToSize(t, maxW).forEach(l => { ensurePage(5); doc.text(l, margin, y); y += 4.5; }); y += 1.5; }
     addTitle('INSTRUMENTO PARTICULAR DE CONTRATO DE LOCAÇÃO DE VEÍCULOS');
     addP('Contrato Número: "' + v('numero') + '"');
-    addP('Locadora: "' + v('locadora') + '", CNPJ "' + v('locadoraCnpj') + '". Locatário: "' + v('locatario') + '", CPF ' + v('locatarioCpf') + '.');
-    addP('Objeto: Veículo "' + v('veiculo') + '", cor ' + v('veiculoCor') + ', placa "' + v('veiculoPlaca') + '", ano ' + v('anoFabr') + '/' + v('anoModel') + '.');
-    addP('Aluguel semanal: "' + v('valorAluguel') + '". Limite: ' + v('limiteKm') + ' km. Excedente: ' + v('valorKm') + '. Caução: "' + v('caucao') + '" em "' + v('caucaoParcelas') + '".');
-    addP('Prazo: ' + v('prazo') + ' dias. Multa rescisão: "' + v('multaRescisao') + '". Foro: ' + v('foro') + '.');
+    addP('Pelo presente Instrumento Particular de Contrato de Locação de Veículos, número ' + v('numeroInterno') + ', e na melhor forma de direito, de um lado, "' + v('locadora') + '", com sede na "' + v('locadoraEndereco') + '", inscrita no CNPJ sob o nº "' + v('locadoraCnpj') + '", doravante denominada LOCADORA, e, de outro lado, "' + v('locatario') + '", residente e domiciliado à "' + v('locatarioEndereco') + '", CEP "' + v('locatarioCep') + '", portador do RG nº "' + v('locatarioRg') + '" e inscrito no CPF sob o nº ' + v('locatarioCpf') + ', doravante denominado LOCATÁRIO, têm, entre si, justo e contratado o presente, o qual se regerá pelas cláusulas e condições que a seguir se aduzem, com inteira submissão às disposições legais e regulamentares atinentes à espécie.');
+    addStrong('CLÁUSULA PRIMEIRA - DO OBJETO.');
+    addP('1. O presente contrato tem por objeto a locação do veículo "' + v('veiculo') + '", cor ' + v('veiculoCor') + ', placas "' + v('veiculoPlaca') + '", quatro portas, com ar-condicionado, direção hidráulica, trava elétrica, vidro elétrico e sistema de som com multimidia, ano de fabricação "' + v('anoFabr') + '" e ano modelo "' + v('anoModel') + '".');
+    addStrong('CLÁUSULA SEGUNDA - DAS OBRIGAÇÕES DO LOCADOR');
+    addP('2. É dever do locador manter em dia o pagamento dos impostos, tais como IPVA, DPVAT e licenciamento.');
+    addP('3. Manter o seguro do veículo vigente.');
+    addP('4. É dever do locador providenciar a manutenção do automóvel locado tão logo seja identificada falha dos sistemas ou pane em geral, admitindo que o custo da manutenção ou reparo seja suportado por ele, salvo em caso de este não ter dado causa à ocorrência.');
+    addP('5. As revisões preventivas do veículo serão custeadas pelo locador, que indicará ao locatário o local onde o veículo deverá ser conduzido.');
+    addP('6. As revisões periódicas obrigatórias que se fizerem necessárias serão procedidas em oficina credenciada ou indicada pelo locador. Contudo, não haverá desconto no valor do aluguel, exceto se o veículo necessitar permanecer na oficina por mais de vinte e quatro horas, hipótese em que serão descontadas as diárias correspondentes até a efetiva entrega do veículo.');
+    addStrong('CLÁUSULA TERCEIRA - DAS OBRIGAÇÕES DO LOCATÁRIO');
+    addP('6.1 O locatário se compromete a utilizar o veículo de forma pessoal e exclusiva para o transporte em aplicativos de transporte remunerado privado individual de passageiros em conformidade com a Lei nº 12.587/2012, sendo expressamente proibido o empréstimo, compartilhamento, cessão ou sublocação a terceiros.');
+    addP('7. É de responsabilidade do locatário zelar pelo veículo, guardando-o e protegendo-o, utilizá-lo de maneira correta durante o período da locação.');
+    addP('7.1 O locatário compromete-se a utilizar o veículo de forma adequada, em conformidade com as leis de trânsito e as normas de segurança pública, abstendo-se de exceder a lotação e o peso suportado pelo veículo e de praticar atos que possam causar danos ou prejuízos ao veículo ou a terceiros.');
+    addP('8. É vedado ao LOCATÁRIO: Utilizar o veículo para fins comerciais de competição ou para qualquer outra finalidade não prevista neste contrato. É vedado conduzir o veículo sob a influência de álcool, drogas ou substâncias psicoativas que possam comprometer sua capacidade de condução. É vedado emprestar, sublocar, ceder ou transferir, de qualquer forma, o veículo a terceiros. O locatário se compromete a não realizar modificações, reparos ou adaptações no veículo sem autorização prévia e expressa do Locador.');
+    addP('9. O locatário será o único responsável por eventuais multas, taxas, impostos e outras despesas decorrentes do uso do veículo durante o período de locação.');
+    addP('9.1 Considerando o prazo estendido deste contrato de locação, e com o propósito de o veículo manter-se em condições de uso, o locatário assumirá a responsabilidade de realizar checklist semanal, verificando e informando à empresa sobre as condições dos seguintes itens: Nível de óleo do motor; Parte elétrica; Freios; Nível de água; Pneus; A omissão de informação ou a sua prestação inverídica sobre a situação do veículo poderá dar causa à rescisão contratual, e as avarias oportunamente identificadas, e seus respectivos consertos, correrão por conta do locatário.');
+    addP('10. O locatário se compromete a utilizar o veículo somente em território nacional e dentro do Estado da Federação em que foi locado, sendo expressamente proibido ultrapassar qualquer fronteira ou limite geográfico diverso deste aqui mencionado. 10.1 As partes ajustam que, havendo necessidade de deslocamento do veículo para além de cem quilômetros a partir desta cidade, o locatário deverá informar previamente o locador.');
+    addP('11. Em relação às multas de trânsito, o Locatário, sendo responsável pelo cometimento delas, obriga-se a fornecer, no prazo de 3 (três) dias após ser comunicado, uma cópia da CNH contendo sua assinatura, bem como de arcar com os custos operacionais e administrativos para transferência dos pontos.');
+    addP('12. A inobservância das Cláusulas 3.1 e 3.2 ensejará a imediata devolução do veículo locado, e sua retenção imotivada poderá configurar apropriação indébita. 12.1 É de inteira responsabilidade do Locatário os custos de pagamento das multas de trânsito e custos administrativos decorrentes das infrações durante o período em que estiver na posse do veículo, salvo se tais multas ou penalidades forem imputáveis à Locadora por irregularidade na documentação do veículo. 12.2 A taxa administrativa por multa será R$ 100,00, que deverá ser paga junto com o valor da multa apresentada.');
+    addP('13. Sobrevindo algum sinistro durante a condução do automóvel, o Locatário deverá providenciar Boletim de Ocorrência encaminhando-o imediatamente à Locadora.');
+    addP('14. A apresentação do Boletim de Ocorrência citado na cláusula 3.4 deste Contrato, não exime o Locatário de arcar com todas as despesas decorrentes do evento danoso.');
+    addP('15. O locatário se compromete a arcar com as despesas inerentes à utilização de combustível, conserto de pneus, câmaras de ar, lâmpadas e troca de peças de reposição por mal uso.');
+    addP('16. Devolver o veículo nas mesmas condições de conservação nas quais lhe foram entregues no ato da retirada, inclusive devolvendo-o limpo, no endereço indicado pelo gestor do contrato, Sr. "' + v('gestor') + '".');
+    addStrong('CLÁUSULA QUARTA - DO ACOMPANHAMENTO E FISCALIZAÇÃO');
+    addP('17. O acompanhamento e a vistoria a serem exercidos pelo Locador, por meio de seus prepostos, consistirão no direito de vistoriar o veículo quando de sua restituição e durante o período de vigência do contrato, mediante previa comunicação.');
+    addP('18. As partes ajustam que a vistoria obrigatória ocorrerá a cada 15 dias em local situado a "' + v('localVistoria') + '", por sua vez a recusa no cumprimento desta condição poderá dar ensejo à rescisão do contrato com a retenção do valor dado em caução.');
+    addP('19. O Locador se compromete a utilizar o veículo em conformidade com as regras aqui estabelecidas e em obediência às especificidades do veículo, ditadas pela montadora.');
+    addP('20. Havendo sinistro, independentemente de culpa exclusiva de terceiros, o Locatário se compromete a arcar com os custos do reparo conduzindo o veículo ao estado original.');
+    addP('21. Optando o Locatário por não acionar o seguro mediante o pagamento de franquia para reparar o veículo, o Locador apresentará a ele três orçamentos para que escolha a oficina e proceda ao pagamento.');
+    addP('22. Em caso de necessidade de remoção do veículo em decorrência de acidente, o locatário arcará com o pagamento de eventuais custas e estadias em pátio até sua liberação.');
+    addStrong('CLÁUSULA QUINTA - DO PRAZO DE LOCAÇÃO E VIGÊNCIA');
+    addP('23. O presente Contrato tem vigência de ' + v('prazo') + ' (cento e oitenta) dias, com início na data de sua assinatura, podendo ser prorrogado automaticamente e sua rescisão antecipada ensejará a cobrança de multa de "' + v('multaRescisao') + '". 23.1. Após os primeiros 90 dias de contrato o LOCATARIO poderá se achar necessário solicitar a troca de veículo para outra categoria (se houver veículo disponível) sem a necessidade de fazer o cancelamento do contrato e cumprir os próximos 90 dias, pagando apenas uma taxa de troca de veículo no valor de "' + v('taxaTroca') + '".');
+    addP('24. A seu critério, o Locador poderá rescindir o contrato devendo, no entanto, restituir o valor pago referente à semana vigente, bem como a caução no prazo estipulado neste contrato.');
+    addP('25. Após o vencimento do primeiro prazo, o contrato passará a ter duração de 30 (trinta) dias, podendo ser rescindido sem gerar ônus, desde que previamente comunicada a outra parte com antecedência de 30 (trinta) dias.');
+    addStrong('CLÁUSULA SEXTA - DO PREÇO.');
+    addP('26. Preço da Locação: O valor ajustado entre as partes neste contrato é de "' + v('valorAluguel') + '" semanais, bem como de que o limite de quilometragem estabelecido será de "' + v('limiteKm') + '" km por semana, e que por quilômetro excedente o locatário pagará o equivalente a "' + v('valorKm') + '". As partes ajustam ainda que nesse contrato que a caução no valor de "' + v('caucao') + '", deverá ser dividido em "' + v('caucaoParcelas') + '" e a primeira parcela deverá ser paga na retirada do veículo e somente será devolvido 60 dias após o término do contrato o valor de "' + v('caucaoDevolucao') + '" não havendo multas e nenhuma avaria no veículo. O locatário outorga Nota Promissória previa garantindo ao locador ressarcimento de eventuais gastos futuros, ocasião em que de comum acordo as partes inserirão o valor a ser confessado. Não havendo gastos a serem descontados, o título será restituído ao locatário em até sessenta dias após a entrega do veículo.');
+    addP('27. Estão inclusos no preço: Manutenção preventiva (por desgaste) Documentação atualizada Seguro Troca de óleo Pneus Pastilha de freio');
+    addP('28. Não estão inclusos nos preços: Motorista Combustível Troca de sonda lambda Peças de suspensão do veículo Lâmpadas Bomba de combustível Pré-filtro de combustível Taxa administrativa para cobrir despesas de transferência de pontos referentes a multas que o Locatário levar.');
+    addP('29. Todas as multas deverão ser pagas na semana seguinte à sua comunicação.');
+    addP('30. O declara ter ciência de que os valores das multas penalidades variam de acordo com o município de sua ocorrência.');
+    addStrong('CLÁUSULA SÉTIMA – DO FATURAMENTO E PAGAMENTO');
+    addP('31. O locatário concorda com que sua conta vinculada à Uber seja vinculada à conta do Sr. "' + v('gestor') + '" para que em caso de o saldo de débito não cobrir as despesas do aluguel, esta poderá ser utilizada até o limite das despesas, e em caso de ainda remanescer dívida, o locatário deverá proceder ao complemento do valor.');
+    addP('31.1. CASO O VALOR DO ALUGUEL NÃO SEJA FEITO EM SUA TOTALIDADE PELO APLICATIVO DA UBER, DEVERÁ SER FEITO O PAGAMENTO DA DIFERENÇA VIA PIX ATÉ AS 13:00 da data determinada.');
+    addP('32. O não pagamento do aluguel semanal e outros débitos em sua totalidade permitirá ao Locador rescindir o contrato imediatamente, incidindo a multa de "' + v('multaInadimplencia') + '".');
+    addStrong('CLÁUSULA OITAVA - DA RESCISÃO');
+    addP('33. Este Contrato poderá ser rescindido pelo LOCADOR a qualquer momento, mediante notificação escrita, desde que a comunicação seja feita com antecedência mínima de 7(sete) dias, eximindo a parte de multas pela rescisão, excetuando-se eventual dívidas inerentes a infrações, saldo de locação e avarias. No ato da rescisão, será cobrada taxa de "' + v('taxaHigienizacao') + '" caso seja necessária a higienização do veículo. O locatário poderá entregar o veículo em local diverso do ajustado, porém será cobrada taxa no valor de "' + v('taxaEntrega') + '".');
+    addP('34. A inobservância da notificação prévia obriga a parte a pagar o valor referente aos dias locação não pagos.');
+    addP('35. O não cumprimento de qualquer uma das cláusulas constantes neste contrato por parte do Locatário dará o direito à rescisão sem aviso prévio e aplicação de multa no valor de "' + v('multaRescisao') + '".');
+    addP('36. Este contrato permanecerá vigente até seu integral cumprimento com a prestação de contas.');
+    addP('37. O veículo possui cobertura para a atividade comercial de passageiros. Havendo necessidade de acionamento do seguro, o locatário arcará com os custos da franquia que corresponde a 10% (dez por cento) da tabela Fipe. Em caso de necessidade de acionamento da franquia para terceiros, será cobrado do locatário o equivalente a 2% da tabela Fipe do veículo.');
+    addP('38. Motivos que podem levar à rescisão contratual sem a necessidade prévio aviso: Inadimplência no pagamento semanal; Perda ou suspensão da habilitação (conforme legislação de trânsito vigente); emprestar ou dividir o veículo com outro motorista sem autorização da empresa; deixar o veículo pernoitar na rua, sem acomodá-lo em garagem; Promover alterações no veículo sem previa autorização do locador; deixar de comparecer à vistoria previamente agendada; Não comparecer para manutenções programadas; Omitir o registro semanal de quilometragem até as 10:00; Informar endereço diverso do que reside.');
+    addStrong('CLÁUSULA NONA - DO FORO');
+    addP('39. Fica eleito o Foro da Comarca de ' + v('foro') + ' como o único competente para a solução de questões oriundas do presente Contrato, renunciando a outro por mais privilegiado que seja, arcando a parte vencida, em caso de demanda, com todas as despesas processuais e honorários advocatícios.');
+    addP('E, por estarem assim justas e contratadas, as partes assinam o presente Contrato em duas vias de igual teor, forma e idêntico valor jurídico, para um só efeito, na presença das testemunhas abaixo assinadas dando tudo por bom, firme e valioso.');
     addP('São Paulo, "' + v('data') + '"');
-    y += 12;
-    doc.text('_____', margin, y); y += 4; doc.text('"' + v('locadora') + '" - Locador', margin, y); y += 14;
-    doc.text('_____', margin, y); y += 4; doc.text('"' + v('locatario') + '" - Locatário', margin, y);
+    y += 15;
+    doc.text('_________________________________________', margin, y); y += 5;
+    doc.text('"' + v('locadora') + '", CNPJ "' + v('locadoraCnpj') + '" (Locador)', margin, y); y += 15;
+    doc.text('_________________________________________', margin, y); y += 5;
+    doc.text('"' + v('locatario') + '", CPF "' + v('locatarioCpf') + '" (Locatário)', margin, y); y += 10;
+    doc.text('Testemunhas:', margin, y); y += 10;
+    doc.text('_________________________________________', margin, y); y += 5;
+    doc.text('Testemunha 1', margin, y); y += 12;
+    doc.text('_________________________________________', margin, y); y += 5;
+    doc.text('Testemunha 2', margin, y);
     return doc.output('blob');
 }
+
+/* ============ PDF 2: TERMO DE RESPONSABILIDADE ============ */
 function gerarPDFTermoResponsabilidadeBlob() {
     const JsPDF = _getJsPDF();
     const doc = new JsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
@@ -3462,43 +3609,54 @@ function gerarPDFTermoResponsabilidadeBlob() {
     function ensurePage(n) { if (y + (n||5) > pageH - margin) { doc.addPage(); y = margin; } }
     function addP(t) { doc.setFont('times','normal'); doc.setFontSize(10); doc.splitTextToSize(t, maxW).forEach(l => { ensurePage(5); doc.text(l, margin, y); y += 4.5; }); y += 1.5; }
     doc.setFont('times','bold'); doc.setFontSize(12);
-    doc.text('TERMO DE RESPONSABILIDADE', pageW/2, y, {align:'center'}); y += 10;
-    addP('Eu, "' + v('nome') + '", RG "' + v('rg') + '", CPF "' + v('cpf') + '", CNH "' + v('cnh') + '" validade "' + v('cnhValidade') + '", contratante do veículo "' + v('veiculo') + '", placas "' + v('placa') + '", assumo responsabilidade pelas penalidades e autorizo a transferência de pontos por ' + v('prazo') + ' dias.');
+    doc.text('TERMO DE RESPONSABILIDADE E AUTORIZAÇÃO', pageW/2, y, {align:'center'}); y += 6;
+    doc.text('DE TRANSFERÊNCIA DE PONTUAÇÕES', pageW/2, y, {align:'center'}); y += 12;
+    addP('Eu, "' + v('nome') + '", portador da cédula de identidade RG nº "' + v('rg') + '" e inscrito no CPF sob o nº "' + v('cpf') + '", CNH número de registro: "' + v('cnh') + '" validade "' + v('cnhValidade') + '" que sou contratante do veículo de marca "' + v('veiculo') + '", placas "' + v('placa') + '" de propriedade da Sra. "' + v('proprietario') + '", devidamente inscrita no C.P.F N. "' + v('proprietarioCpf') + '", assumo qualquer responsabilidade civil, criminal e judicial, responsabilizo-me também pelas penalidades pecuniárias ou de pontuação caso venha cometer qualquer infração que viole o código de trânsito brasileiro, autorizando a transferência de pontos das mesmas com o veículo acima descrito e de ' + v('prazo') + ' dias a contar da assinatura do mesmo. Sem mais.');
     addP('São Paulo "' + v('data') + '"');
-    y += 25;
-    doc.text('_____', pageW/2, y, {align:'center'}); y += 6;
-    doc.text('"' + v('nome') + '"', pageW/2, y, {align:'center'}); y += 5;
-    doc.text('CPF "' + v('cpf') + '"', pageW/2, y, {align:'center'});
+    addP('Atenciosamente:');
+    y += 30;
+    doc.text('_________________________________________', pageW/2, y, {align:'center'}); y += 6;
+    doc.text('"' + v('nome') + '"', pageW/2, y, {align:'center'});
     return doc.output('blob');
 }
+
+/* ============ PDF 3: NOTA PROMISSÓRIA ============ */
 function gerarPDFNotaPromissoriaBlob() {
     const JsPDF = _getJsPDF();
     const doc = new JsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
     const v = id => _ctVal('ctNot_' + id);
     const pageW = 210, pageH = 297, margin = 15, maxW = pageW - 30;
     let y = margin;
+    function ensurePage(n) { if (y + (n||5) > pageH - margin) { doc.addPage(); y = margin; } }
+    function addP(t) { doc.setFont('times','normal'); doc.setFontSize(10); doc.splitTextToSize(t, maxW).forEach(l => { ensurePage(5); doc.text(l, margin, y); y += 4.5; }); y += 1.5; }
     doc.setFont('times','bold'); doc.setFontSize(14);
     doc.text('NOTA PROMISSÓRIA', pageW/2, y, {align:'center'}); y += 12;
     doc.setFont('times','normal'); doc.setFontSize(10);
-    doc.text('Nº: "' + v('numero') + '"', pageW - margin, y, {align:'right'}); y += 5;
+    doc.text('№º: "' + v('numero') + '"', pageW - margin, y, {align:'right'}); y += 5;
     doc.text('Vencimento: "' + v('vencimento') + '"', pageW - margin, y, {align:'right'}); y += 5;
     doc.text('Valor: ' + v('valor'), pageW - margin, y, {align:'right'}); y += 10;
-    doc.splitTextToSize('Aos "' + v('dataEmissao') + '", pagarei a "' + v('credor') + '", CNPJ "' + v('credorCnpj') + '", a quantia de "' + v('valorExtenso') + '". Pagável em: ' + v('cidade') + '.', maxW).forEach(l => { doc.text(l, margin, y); y += 4.5; });
-    y += 10;
+    addP('Aos "' + v('dataEmissao') + '", pagarei por esta única via de NOTA PROMISSÓRIA a "' + v('credor') + '", CNPJ nº "' + v('credorCnpj') + '", ou a sua ordem, a quantia de "' + v('valorExtenso') + '", em moeda corrente nacional. Pagável em: ' + v('cidade') + '.');
+    y += 8;
     doc.setFont('times','bold');
-    doc.text('EMITENTE: "' + v('emitenteNome') + '"', margin, y); y += 6;
+    doc.text('EMITENTE: Nome "' + v('emitenteNome') + '",', margin, y); y += 6;
     doc.setFont('times','normal');
-    doc.text('CPF "' + v('emitenteCpf') + '"', margin, y); y += 5;
-    doc.text('CNH "' + v('emitenteDoc') + '" - ' + v('emitenteDocExp'), margin, y); y += 5;
+    doc.text('CPF nº "' + v('emitenteCpf') + '"', margin, y); y += 5;
+    doc.text('Documento de identificação: Carteira Nacional de Habilitação (CNH) n. "' + v('emitenteDoc') + '", expedida por ' + v('emitenteDocExp'), margin, y); y += 5;
     doc.text('Endereço: "' + v('emitenteEndereco') + '"', margin, y); y += 5;
-    doc.text('CEP: "' + v('emitenteCep') + '"', margin, y); y += 10;
+    doc.text('"São Paulo SP, CEP "' + v('emitenteCep') + '"', margin, y); y += 10;
     doc.text('"' + v('cartorio') + '"', margin, y); y += 5;
     doc.text('São Paulo "' + v('data') + '"', margin, y);
-    y += 25;
-    doc.text('_____', pageW/2, y, {align:'center'}); y += 6;
-    doc.text('"' + v('emitenteNome') + '"', pageW/2, y, {align:'center'});
+    y += 30;
+    doc.text('.', pageW/2, y, {align:'center'}); y += 8;
+    doc.text('"' + v('emitenteNome') + '".', pageW/2, y, {align:'center'}); y += 15;
+    doc.text('.', pageW/2, y, {align:'center'}); y += 8;
+    doc.text('"' + v('emitenteNome') + '"', pageW/2, y, {align:'center'}); y += 6;
+    doc.text('CPF nº "' + v('emitenteCpf') + '"', pageW/2, y, {align:'center'}); y += 5;
+    doc.text('RG nº "' + v('emitenteDoc') + '"', pageW/2, y, {align:'center'}); y += 5;
+    doc.text('CNH: "' + v('emitenteDoc') + '"', pageW/2, y, {align:'center'});
     return doc.output('blob');
 }
+
 async function gerarESalvarContratosAutomaticos(locacao) {
     if (!locacao || !locacao.placa) return 0;
     preencherContratosAutomatico(locacao);
@@ -4381,10 +4539,6 @@ function salvarConfiguracao() {
     alert('✅ Configurações salvas!');
 }
 
-/* ============================================================
-   PENDÊNCIAS — CORRIGIDO
-   - Ao clicar em PAGO: grava no Histórico Geral e remove da aba Pendente.
-   ============================================================ */
 function salvarPendencia() {
     const data = document.getElementById('pendData').value || obterDataHojeISO();
     const descricao = document.getElementById('pendDescricao').value.trim();
@@ -4430,7 +4584,6 @@ function marcarPendenciaPaga(i) {
     if (!confirm('Confirmar PAGAMENTO desta pendência?\n\nDescrição: ' + p.descricao + '\nPlaca: ' + p.placa)) return;
     const hojeISO = new Date().toISOString().split('T')[0];
 
-    // 1) Lança no Fluxo de Caixa
     if (!Array.isArray(db.fluxoCaixa)) db.fluxoCaixa = [];
     if (creditoNum > 0) db.fluxoCaixa.push({
         data: hojeISO,
@@ -4451,7 +4604,6 @@ function marcarPendenciaPaga(i) {
         tipo: 'saida'
     });
 
-    // 2) Lança no Histórico Geral (com status pago)
     if (!Array.isArray(db.historico)) db.historico = [];
     db.historico.push({
         data: hojeISO,
@@ -4465,10 +4617,8 @@ function marcarPendenciaPaga(i) {
         vencimento: p.vencimento || ''
     });
 
-    // 3) Remove da aba Pendente
     db.pendentes.splice(i, 1);
 
-    // 4) Gera próxima pendência (recorrência) — mantém comportamento anterior
     try {
         const baseVenc = p.vencimento || hojeISO;
         const dtVenc = new Date(baseVenc + 'T00:00:00');

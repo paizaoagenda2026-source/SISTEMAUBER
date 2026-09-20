@@ -2664,98 +2664,153 @@ async function excluirLocacao(i) {
     salvarDB();
     alert('✅ Locação excluída!');
 }
+
+/* ============================================================
+   ENCERRAR LOCAÇÃO - REGRAS ATUALIZADAS CONFORME SOLICITAÇÃO
+   ============================================================ */
 function encerrarLocacao(i) {
     if (!confirmarSenhaADM()) return;
     const l = db.locacoes[i];
     if (!l) { alert('Locação não encontrada.'); return; }
     if (!confirm(`Encerrar a locação de ${l.locatario} - ${l.placa}?`)) return;
+
     const hojeISO = new Date().toISOString().split('T')[0];
     const dataInicio = l.dataInicio || '';
     const dataFimContrato = l.dataFim || '';
     const dataFimEfetiva = (dataFimContrato && hojeISO > dataFimContrato) ? dataFimContrato : hojeISO;
-    const todosAlugueis = (db.alugueis || []).filter(a => a && a.locatario === l.locatario && a.placa === l.placa);
-    const alugueisPagos = todosAlugueis.filter(a => a.status === 'pago');
-    const receitaPaga = alugueisPagos.reduce((s, a) => s + (Number(a.valorNumerico) || parseMoeda(a.valor) || 0), 0);
-    const receitaContratada = todosAlugueis.reduce((s, a) => s + (Number(a.valorNumerico) || parseMoeda(a.valor) || 0), 0);
+    const placaNorm = normalizarPlaca(l.placa);
+    const locatarioUpper = String(l.locatario || '').toUpperCase().trim();
+
+    // 1) HISTÓRICO DE ALUGUÉIS: Soma o que foi recebido desse contrato
+    const historicoAlugueisFiltrado = (db.historicoAlugueis || []).filter(h => 
+        h && normalizarPlaca(h.placa) === placaNorm && 
+        String(h.locatario || '').toUpperCase().trim() === locatarioUpper
+    );
+    const receitaPaga = historicoAlugueisFiltrado.reduce((s, a) => s + (Number(a.valorNumerico) || parseMoeda(a.valor) || 0), 0);
+
+    // Para cálculo de pendentes e contratados, pegamos os aluguéis ativos que ainda não foram pagos
+    const todosAlugueisAtivos = (db.alugueis || []).filter(a => a && a.locatario === l.locatario && a.placa === l.placa);
+    const receitaContratada = todosAlugueisAtivos.reduce((s, a) => s + (Number(a.valorNumerico) || parseMoeda(a.valor) || 0), 0) + receitaPaga;
     const receitaPendente = Math.max(0, receitaContratada - receitaPaga);
+
+    // 2) CAUÇÃO: Verifica se é ok para extorno, e abate do valor recebido
     const caucaoContrato = parseMoeda(l.caucao);
     const caucaoPagoInicial = parseMoeda(l.caucaoPago);
-    let caucaoRecebido = 0;
+    let caucaoRecebido = caucaoPagoInicial; 
+
     const valorAluguelBase = parseMoeda(l.valorAluguel) || parseMoeda(l.aluguelMensal) || 0;
-    todosAlugueis.forEach(a => {
+
+    // Soma caução recebido das parcelas no histórico
+    historicoAlugueisFiltrado.forEach(a => {
         const o = (a.origem || '').toUpperCase();
         if (/CAU/.test(o)) {
             const v = Number(a.valorNumerico) || parseMoeda(a.valor) || 0;
             caucaoRecebido += Math.max(0, v - valorAluguelBase);
         }
     });
-    if (l.pagCaucao === 'avista' && caucaoPagoInicial > 0) caucaoRecebido = Math.max(caucaoRecebido, caucaoPagoInicial);
+
+    if (l.pagCaucao === 'avista' && caucaoPagoInicial > 0) {
+        caucaoRecebido = Math.max(caucaoRecebido, caucaoPagoInicial);
+    }
     if (caucaoRecebido > caucaoContrato) caucaoRecebido = caucaoContrato;
+
     let caucaoExtornada = false;
+    let valorExtorno = 0;
+
     if (caucaoRecebido > 0) {
         caucaoExtornada = confirm(
             '💰 CAUÇÃO\n\nLocatário: ' + l.locatario + '\nVeículo: ' + l.fabricante + ' - ' + l.placa + '\n' +
             'Caução contrato: ' + formatarMoedaBR(caucaoContrato) + '\n' +
             'Caução recebido: ' + formatarMoedaBR(caucaoRecebido) + '\n\n' +
-            'Deseja extornar ' + formatarMoedaBR(caucaoRecebido) + '?'
+            'Deseja extornar ' + formatarMoedaBR(caucaoRecebido) + ' e abater do valor recebido?'
         );
         if (caucaoExtornada) {
+            valorExtorno = caucaoRecebido;
             if (!Array.isArray(db.fluxoCaixa)) db.fluxoCaixa = [];
-            db.fluxoCaixa.push({ data: hojeISO, vencimento: '', descricao: 'Extorno de Caução - ' + l.locatario + ' - ' + l.placa, categoria: 'Extorno Caução', valor: formatarMoedaBR(caucaoRecebido), valorNumerico: caucaoRecebido, tipo: 'saida', _reaberturaTag: 'extorno:' + l.locatario + ':' + l.placa });
+            db.fluxoCaixa.push({ 
+                data: hojeISO, 
+                vencimento: '', 
+                descricao: 'Extorno de Caução - ' + l.locatario + ' - ' + l.placa, 
+                categoria: 'Extorno Caução', 
+                valor: formatarMoedaBR(valorExtorno), 
+                valorNumerico: valorExtorno, 
+                tipo: 'saida', 
+                _reaberturaTag: 'extorno:' + l.locatario + ':' + l.placa 
+            });
             registrarAuditoria('Extorno', `Caução extornada: ${l.locatario} - ${l.placa}`);
             atualizarTabelaFluxoCaixa();
         }
     }
-    const despMec = (db.mecanico || []).filter(m => m && m.placa === l.placa).reduce((s, m) => s + parseMoeda(m.valor), 0);
-    const despMan = (db.manutencao || []).filter(m => m && m.placa === l.placa).reduce((s, m) => s + parseMoeda(m.custo || 0), 0);
-    const despComp = (db.compras || []).filter(c => c && c.placa === l.placa).reduce((s, c) => s + parseMoeda(c.valorTotal || c.valorUnitario), 0);
-    const despesasVeiculo = despMec + despMan + despComp;
-    const valorExtorno = caucaoExtornada ? caucaoRecebido : 0;
-    const despesasTotais = despesasVeiculo + valorExtorno;
+
+    // 3) VAI NA ABA HISTÓRICO GERAL: Calcula todas as despesas da placa da locação excluída
+    const despesasHistGeral = (db.historico || []).filter(h => h && normalizarPlaca(h.placa) === placaNorm)
+        .reduce((s, h) => s + parseMoeda(h.valor), 0);
+
+    // 4) ABATE DO VALOR RECEBIDO E LANÇA EM LOC. ENCERRADA
+    // O valor recebido é a receitaPaga.
+    // Abatemos o valorExtorno (caução devolvido) e as despesasHistGeral.
+    const despesasTotais = despesasHistGeral + valorExtorno;
     const lucro = receitaPaga - despesasTotais;
+
     const encerrada = Object.assign({}, l, {
-        dataEncerramento: hojeISO, dataFimEfetiva: dataFimEfetiva,
+        dataEncerramento: hojeISO, 
+        dataFimEfetiva: dataFimEfetiva,
         caucaoExtornada: caucaoExtornada ? 'SIM' : 'NÃO',
         caucaoTotalContrato: caucaoContrato,
         caucaoTotalContratoFormatado: formatarMoedaBR(caucaoContrato),
         caucaoPagoPeriodoNumerico: caucaoRecebido,
         caucaoPagoPeriodoFormatado: formatarMoedaBR(caucaoRecebido),
-        qtdParcelasCaucaoPeriodo: alugueisPagos.length,
-        qtdPagamentosPeriodo: alugueisPagos.length,
+        qtdParcelasCaucaoPeriodo: historicoAlugueisFiltrado.length,
+        qtdPagamentosPeriodo: historicoAlugueisFiltrado.length,
         receitaContratadaNumerica: receitaContratada,
         receitaContratadaFormatada: formatarMoedaBR(receitaContratada),
         receitaPagaNumerica: receitaPaga,
         receitaPagaFormatada: formatarMoedaBR(receitaPaga),
         receitaPendenteNumerica: receitaPendente,
         receitaPendenteFormatada: formatarMoedaBR(receitaPendente),
-        despesasVeiculoNumerica: despesasVeiculo,
-        despesasVeiculoFormatado: formatarMoedaBR(despesasVeiculo),
-        extornoNumerico: valorExtorno, extornoFormatado: formatarMoedaBR(valorExtorno),
-        receitaNumerica: receitaPaga, despesasNumerica: despesasTotais, lucroNumerico: lucro,
-        valorGerado: formatarMoedaBR(receitaPaga), despesas: formatarMoedaBR(despesasTotais), lucro: formatarMoedaBR(lucro)
+        despesasVeiculoNumerica: despesasHistGeral,
+        despesasVeiculoFormatado: formatarMoedaBR(despesasHistGeral),
+        extornoNumerico: valorExtorno, 
+        extornoFormatado: formatarMoedaBR(valorExtorno),
+        receitaNumerica: receitaPaga, 
+        despesasNumerica: despesasTotais, 
+        lucroNumerico: lucro,
+        valorGerado: formatarMoedaBR(receitaPaga), 
+        despesas: formatarMoedaBR(despesasTotais), 
+        lucro: formatarMoedaBR(lucro)
     });
+
     if (!Array.isArray(db.locacoesEncerradas)) db.locacoesEncerradas = [];
     db.locacoesEncerradas.push(encerrada);
     db.locacoes.splice(i, 1);
-    if (locacaoEditandoIndex === i) { locacaoEditandoIndex = null; atualizarEstadoEdicaoLocacao(); limparCamposLocacao(); }
-    else if (locacaoEditandoIndex !== null && locacaoEditandoIndex > i) locacaoEditandoIndex--;
+
+    if (locacaoEditandoIndex === i) { 
+        locacaoEditandoIndex = null; 
+        atualizarEstadoEdicaoLocacao(); 
+        limparCamposLocacao(); 
+    } else if (locacaoEditandoIndex !== null && locacaoEditandoIndex > i) {
+        locacaoEditandoIndex--;
+    }
+
     atualizarTabelaLocacoes();
     atualizarAbasVistoria();
     atualizarTabelaLocEncerrada();
     registrarAuditoria('Encerramento', `Locação encerrada: ${l.locatario} - ${l.placa}`);
     salvarDB();
+
     let msg = '✅ LOCAÇÃO ENCERRADA!\n\nLocatário: ' + l.locatario + '\nVeículo: ' + l.fabricante + ' - ' + l.placa + '\nPeríodo: ' + formatarDataBR(dataInicio) + ' até ' + formatarDataBR(dataFimEfetiva) + '\n──────────────\n';
     msg += '💰 Receita contratada: ' + formatarMoedaBR(receitaContratada) + '\n';
-    msg += '💵 Recebido: ' + formatarMoedaBR(receitaPaga) + ' (' + alugueisPagos.length + ' pgtos)\n';
+    msg += '💵 Recebido: ' + formatarMoedaBR(receitaPaga) + ' (' + historicoAlugueisFiltrado.length + ' pgtos)\n';
     if (receitaPendente > 0) msg += '⏳ Pendente: ' + formatarMoedaBR(receitaPendente) + '\n';
     msg += '🏦 Caução contrato: ' + formatarMoedaBR(caucaoContrato) + '\n';
     msg += '💳 Caução recebido: ' + formatarMoedaBR(caucaoRecebido) + '\n';
-    msg += '🔧 Despesas: ' + formatarMoedaBR(despesasVeiculo) + '\n';
+    msg += '🔧 Despesas (Hist. Geral): ' + formatarMoedaBR(despesasHistGeral) + '\n';
     if (valorExtorno > 0) msg += '↩ Extorno (abatido): -' + formatarMoedaBR(valorExtorno) + '\n';
     msg += '──────────────\n📈 LUCRO: ' + formatarMoedaBR(lucro) + '\n';
     if (caucaoExtornada) msg += '\n↩ Caução extornado para ' + l.locatario + '.';
     alert(msg);
 }
+
 function atualizarTabelaLocEncerrada() {
     const tbody = document.querySelector('#tabelaLocEncerrada tbody');
     const lista = db.locacoesEncerradas || [];

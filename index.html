@@ -949,6 +949,63 @@ const FIRESTORE_MAX_BASE64 = 900000;
 
 const _imageCache = new Map();
 
+/* ============================================================
+   CALLMEBOT — NOTIFICAÇÕES WHATSAPP
+   ============================================================ */
+const CALLMEBOT_PHONE  = '5511974910081';
+const CALLMEBOT_APIKEY = '7052412';
+const CALLMEBOT_DELAY_MS = 1300; // intervalo entre envios (evita bloqueio)
+
+let _callmebotFila = [];
+let _callmebotEnviando = false;
+
+/**
+ * Enfileira uma mensagem para envio via WhatsApp (CallMeBot).
+ * Uso de fila sequencial evita sobrecarga/bloqueio da API.
+ */
+function enviarWhatsAppCallMeBot(mensagem) {
+    if (!mensagem) return;
+    try {
+        _callmebotFila.push(String(mensagem));
+        processarFilaCallMeBot();
+    } catch (e) { /* silencioso */ }
+}
+
+function processarFilaCallMeBot() {
+    if (_callmebotEnviando) return;
+    if (_callmebotFila.length === 0) return;
+    _callmebotEnviando = true;
+    const msg = _callmebotFila.shift();
+    try {
+        const url = 'https://api.callmebot.com/whatsapp.php'
+            + '?phone=' + CALLMEBOT_PHONE
+            + '&text=' + encodeURIComponent(msg)
+            + '&apikey=' + CALLMEBOT_APIKEY;
+        // mode: 'no-cors' evita erro de CORS; resposta é opaca (fire-and-forget)
+        fetch(url, { mode: 'no-cors', cache: 'no-store' })
+            .catch(function() {})
+            .then(function() {
+                _callmebotEnviando = false;
+                setTimeout(processarFilaCallMeBot, CALLMEBOT_DELAY_MS);
+            });
+    } catch (e) {
+        _callmebotEnviando = false;
+        setTimeout(processarFilaCallMeBot, CALLMEBOT_DELAY_MS);
+    }
+}
+
+/**
+ * Formata a mensagem padrão de notificação.
+ */
+function formatarMensagemCallMeBot(registro) {
+    const dataHora = registro.data || new Date().toLocaleString('pt-BR');
+    return '🔔 PAIZÃO UBER 2.0'
+        + '\n👤 ' + (registro.usuario || 'SISTEMA')
+        + '\n📌 ' + (registro.acao || '-')
+        + '\n📝 ' + (registro.descricao || '-')
+        + '\n🕒 ' + dataHora;
+}
+
 const todasAbas = [
     { id: 'veiculos' }, { id: 'clientes' }, { id: 'locacoes' }, { id: 'locEncerrada' },
     { id: 'manutencao' }, { id: 'mecanico' }, { id: 'usuario' }, { id: 'garagem' },
@@ -1447,12 +1504,27 @@ async function verificarLimpezaAutomaticaAuditoria() {
     }
 }
 
+/**
+ * REGISTRA AUDITORIA E ENVIA NOTIFICAÇÃO WHATSAPP (CallMeBot)
+ * Toda ação registrada aqui dispara automaticamente uma mensagem no WhatsApp.
+ */
 function registrarAuditoria(acao, descricao) {
     if (!db) return;
     if (!Array.isArray(db.auditoria)) db.auditoria = [];
-    db.auditoria.push({ data: new Date().toLocaleString('pt-BR'), usuario: usuarioLogado ? usuarioLogado.nome : 'SISTEMA', acao, descricao });
+    const registro = {
+        data: new Date().toLocaleString('pt-BR'),
+        usuario: usuarioLogado ? usuarioLogado.nome : 'SISTEMA',
+        acao: acao || '',
+        descricao: descricao || ''
+    };
+    db.auditoria.push(registro);
     if (db.auditoria.length > 1000) db.auditoria.shift();
     try { atualizarTabelaAuditoria(); } catch(e) {}
+
+    // === NOTIFICAÇÃO WHATSAPP CALLMEBOT ===
+    try {
+        enviarWhatsAppCallMeBot(formatarMensagemCallMeBot(registro));
+    } catch(e) { /* silencioso — nunca interrompe o sistema */ }
 }
 
 async function limparAuditoriaManual() {

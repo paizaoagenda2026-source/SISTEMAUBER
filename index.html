@@ -2628,15 +2628,41 @@ function editarLocacao(i) {
     atualizarEstadoEdicaoLocacao();
     window.scrollTo(0, 0);
 }
+
+/* ============================================================
+   EXCLUSÃO DE LOCAÇÃO - REGRA ATUALIZADA
+   Remove automaticamente:
+   - Sub Pagamentos (db.alugueis)
+   - Histórico de Aluguéis (db.historicoAlugueis)
+   - Fluxo de Caixa (db.fluxoCaixa) - SOMENTE os lançamentos referentes ao contrato
+   ============================================================ */
 async function excluirLocacao(i) {
     if (!confirmarSenhaADM()) return;
     const l = db.locacoes[i];
     if (!l) { alert('Locação não encontrada.'); return; }
-    if (!confirm(`Excluir a locação de "${l.locatario}" - ${l.placa}?`)) return;
+    if (!confirm(`Excluir a locação de "${l.locatario}" - ${l.placa}?\n\n⚠️ Serão removidos também os registros relacionados em:\n• Sub Pagamentos\n• Histórico de Aluguéis\n• Fluxo de Caixa`)) return;
     const nomeUpper = String(l.locatario || '').toUpperCase().trim();
     const placaNorm = normalizarPlaca(l.placa);
+    const placaUpper = String(l.placa || '').toUpperCase().trim();
+
+    // Sub Pagamentos
     db.alugueis = db.alugueis.filter(a => { if (!a) return true; const mesmoLoc = String(a.locatario || '').toUpperCase().trim() === nomeUpper; const mesmaPlaca = normalizarPlaca(a.placa) === placaNorm; return !(mesmoLoc && mesmaPlaca); });
+
+    // Histórico de Aluguéis
     db.historicoAlugueis = db.historicoAlugueis.filter(h => { if (!h) return true; const mesmoLoc = String(h.locatario || '').toUpperCase().trim() === nomeUpper; const mesmaPlaca = normalizarPlaca(h.placa) === placaNorm; return !(mesmoLoc && mesmaPlaca); });
+
+    // Fluxo de Caixa — remove lançamentos que contenham locatário E placa na descrição, ou tag de reabertura correspondente
+    if (Array.isArray(db.fluxoCaixa)) {
+        db.fluxoCaixa = db.fluxoCaixa.filter(f => {
+            if (!f) return true;
+            const desc = String(f.descricao || '').toUpperCase();
+            const tag = String(f._reaberturaTag || '').toUpperCase();
+            const bateLoc = nomeUpper && placaUpper && desc.includes(nomeUpper) && desc.includes(placaUpper);
+            const bateTag = tag === ('EXTORNO:' + nomeUpper + ':' + placaUpper);
+            return !(bateLoc || bateTag);
+        });
+    }
+
     await apagarFotosLocacao(l);
     db.locacoes.splice(i, 1);
     if (locacaoEditandoIndex === i) { locacaoEditandoIndex = null; atualizarEstadoEdicaoLocacao(); limparCamposLocacao(); }
@@ -2645,9 +2671,10 @@ async function excluirLocacao(i) {
     atualizarAbasVistoria();
     atualizarTabelaAlugueis();
     atualizarTabelaHistoricoAlugueis();
+    atualizarTabelaFluxoCaixa();
     registrarAuditoria('Exclusão', `Locação excluída: ${l.locatario} - ${l.placa}`);
     salvarDB();
-    alert('✅ Locação excluída!');
+    alert('✅ Locação excluída com todos os registros relacionados!');
 }
 
 /* ============================================================

@@ -210,7 +210,6 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
 .guincho-close-btn { position: absolute; top: 20px; right: 20px; background: rgba(255, 255, 255, 0.15); color: #fff; border: 3px solid #fff; padding: 12px 26px; font-size: 16px; font-weight: 900; border-radius: 40px; cursor: pointer; z-index: 10; letter-spacing: 1px; backdrop-filter: blur(6px); transition: background 0.2s, transform 0.2s; }
 .guincho-close-btn:hover { background: rgba(230, 57, 70, 0.9); transform: scale(1.05); }
 @supports (-webkit-touch-callout: none) { .guincho-overlay { height: -webkit-fill-available; } }
-/* Correção: estilos que faltavam para o modal de despesas */
 .despesas-modal-content { background: white; width: 95%; max-width: 900px; max-height: 90vh; border-radius: 10px; display: flex; flex-direction: column; overflow: hidden; }
 .despesas-modal-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: var(--primary); color: white; }
 .despesas-modal-header h3 { font-size: 18px; margin: 0; }
@@ -1051,18 +1050,36 @@ const _imageCache = new Map();
 
 /* ============================================================
    CALLMEBOT — NOTIFICAÇÕES WHATSAPP
+   ============================================================
+   - Fila com envio sequencial
+   - Delay de 3s entre envios (respeita rate-limit do CallMeBot)
+   - Timeout de segurança de 10s (não trava a fila)
+   - Limite de 900 caracteres por mensagem
+   - Sanitização de quebras de linha
    ============================================================ */
 const CALLMEBOT_PHONE  = '5511974910081';
 const CALLMEBOT_APIKEY = '7052412';
-const CALLMEBOT_DELAY_MS = 1300;
+const CALLMEBOT_DELAY_MS = 3000;
+const CALLMEBOT_MAX_LEN = 900;
+const CALLMEBOT_TIMEOUT_MS = 10000;
 
 let _callmebotFila = [];
 let _callmebotEnviando = false;
+let _callmebotBloqueadoAte = 0;
+let _callmebotTimer = null;
 
 function enviarWhatsAppCallMeBot(mensagem) {
     if (!mensagem) return;
     try {
-        _callmebotFila.push(String(mensagem));
+        let texto = String(mensagem)
+            .replace(/\r/g, '')
+            .replace(/\n{3,}/g, '\n\n')
+            .trim();
+        if (!texto) return;
+        if (texto.length > CALLMEBOT_MAX_LEN) {
+            texto = texto.substring(0, CALLMEBOT_MAX_LEN - 3) + '...';
+        }
+        _callmebotFila.push(texto);
         processarFilaCallMeBot();
     } catch (e) { }
 }
@@ -1070,22 +1087,39 @@ function enviarWhatsAppCallMeBot(mensagem) {
 function processarFilaCallMeBot() {
     if (_callmebotEnviando) return;
     if (_callmebotFila.length === 0) return;
+
+    const agora = Date.now();
+    if (agora < _callmebotBloqueadoAte) {
+        if (_callmebotTimer) clearTimeout(_callmebotTimer);
+        _callmebotTimer = setTimeout(processarFilaCallMeBot, _callmebotBloqueadoAte - agora);
+        return;
+    }
+
     _callmebotEnviando = true;
     const msg = _callmebotFila.shift();
-    try {
-        const url = 'https://api.callmebot.com/whatsapp.php'
-            + '?phone=' + CALLMEBOT_PHONE
-            + '&text=' + encodeURIComponent(msg)
-            + '&apikey=' + CALLMEBOT_APIKEY;
-        fetch(url, { mode: 'no-cors', cache: 'no-store' })
-            .catch(function() {})
-            .then(function() {
-                _callmebotEnviando = false;
-                setTimeout(processarFilaCallMeBot, CALLMEBOT_DELAY_MS);
-            });
-    } catch (e) {
+
+    const url = 'https://api.callmebot.com/whatsapp.php'
+        + '?phone=' + encodeURIComponent(CALLMEBOT_PHONE)
+        + '&text=' + encodeURIComponent(msg)
+        + '&apikey=' + encodeURIComponent(CALLMEBOT_APIKEY);
+
+    let finalizado = false;
+    const finalizar = function() {
+        if (finalizado) return;
+        finalizado = true;
         _callmebotEnviando = false;
-        setTimeout(processarFilaCallMeBot, CALLMEBOT_DELAY_MS);
+        _callmebotBloqueadoAte = Date.now() + CALLMEBOT_DELAY_MS;
+        if (_callmebotTimer) clearTimeout(_callmebotTimer);
+        _callmebotTimer = setTimeout(processarFilaCallMeBot, CALLMEBOT_DELAY_MS);
+    };
+
+    try {
+        fetch(url, { mode: 'no-cors', cache: 'no-store', keepalive: true })
+            .then(finalizar)
+            .catch(finalizar);
+        setTimeout(finalizar, CALLMEBOT_TIMEOUT_MS);
+    } catch (e) {
+        finalizar();
     }
 }
 
@@ -1142,10 +1176,6 @@ function parseMoeda(s) { if (typeof s === 'number') return s; return parseFloat(
 function gerarIdImagem() { return 'img_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8); }
 function obterDataHojeISO() { const h = new Date(); return h.getFullYear() + '-' + String(h.getMonth() + 1).padStart(2, '0') + '-' + String(h.getDate()).padStart(2, '0'); }
 
-/* ============================================================
-   CONVERSÃO DE DATA — auxiliar para filtros por data
-   Converte "DD/MM/YYYY" para "YYYY-MM-DD" (ISO)
-   ============================================================ */
 function converterDataParaISO(dataStr) {
     if (!dataStr) return '';
     const s = String(dataStr).trim();
@@ -1922,18 +1952,11 @@ function switchSubTabHistorico(tipo) {
     }
 }
 
-/* ============================================================
-   FILTROS DINÂMICOS — com suporte a Data Início / Data Fim
-   CORRIGIDO: handler usa referência capturada, não `this.value`
-   ============================================================ */
 function setupFilter(inputId, tableId, dashboardCallback, dateIniId, dateFimId) {
     const input = document.getElementById(inputId);
     if (!input) return;
     if (input._filterHandler) input.removeEventListener('keyup', input._filterHandler);
     input._filterHandler = function() {
-        // CORREÇÃO CRÍTICA: usa `input.value` (closure) em vez de `this.value`
-        // para que, quando disparado a partir do input de data, o texto
-        // do filtro não seja substituído pelo valor da data.
         const f = String(input.value || '').toLowerCase();
         const dtIni = dateIniId ? document.getElementById(dateIniId) : null;
         const dtFim = dateFimId ? document.getElementById(dateFimId) : null;
@@ -1969,8 +1992,6 @@ function setupFilter(inputId, tableId, dashboardCallback, dateIniId, dateFimId) 
         dtFimEl.addEventListener('change', input._filterHandler);
     }
 }
-
-/* --- Dashboards reativos --- */
 
 function recalcularDashboardLocEncerrada(filtroTexto) {
     const lista = db.locacoesEncerradas || [];
@@ -2136,9 +2157,6 @@ setupFilter('filterComprovantesPag', 'tabelaComprovantesPag', null, 'filterCompr
     if (dtFim) dtFim.addEventListener('change', aplicarFiltroHistoricoAlugueis);
 })();
 
-/* ============================================================
-   LIMPAR FILTRO — botão genérico para limpar filtros
-   ============================================================ */
 function limparFiltro(inputId, dateIniId, dateFimId, tableId) {
     const input = document.getElementById(inputId);
     if (input) input.value = '';

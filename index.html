@@ -18,6 +18,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.15/dist/face-api.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
@@ -228,6 +229,7 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
             <input type="password" id="loginPassword" placeholder="Senha" required>
             <button type="submit" id="loginButton">Entrar</button>
         </form>
+        <button type="button" id="loginFaceBtn" class="download-app-btn" style="background: var(--secondary);">🎭 Entrar com Reconhecimento Facial</button>
         <button type="button" id="downloadAppBtn" class="download-app-btn">📥 Baixar App</button>
         <p id="loginError" style="color: red; margin-top: 10px; display: none;">Usuário ou senha inválidos!</p>
     </div>
@@ -499,6 +501,12 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
             <div class="form-group"><label>Nome</label><input type="text" id="userNome"></div>
             <div class="form-group"><label>Senha</label><input type="password" id="userSenha"></div>
             <div class="form-group"><label>Tipo</label><select id="userTipo" onchange="preencherPermissoesPadrao()"><option value="ADM">ADM</option><option value="MOTORISTA">MOTORISTA</option><option value="OFICINA">OFICINA</option><option value="VISITANTE">VISITANTE</option></select></div>
+            <div class="form-group"><label>Selfie do Usuário</label>
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <button type="button" class="btn-buscar" onclick="abrirModalSelfie('usuario')" style="padding:10px 20px;font-size:14px;">📸 Tirar Selfie</button>
+                    <div id="selfiePreviewUsuario" style="display:flex;align-items:center;"></div>
+                </div>
+            </div>
         </div>
         <div class="config-section">
             <h3>🔐 Permissões</h3>
@@ -886,6 +894,19 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
     </div>
 </div>
 
+<div class="selfie-modal" id="faceLoginModal">
+    <div class="selfie-title">🎭 Reconhecimento Facial</div>
+    <div class="selfie-instructions">Posicione o rosto na câmera — o acesso será liberado automaticamente</div>
+    <div class="selfie-container">
+        <video class="selfie-video" id="faceLoginVideo" autoplay playsinline></video>
+        <canvas class="selfie-canvas" id="faceLoginCanvas"></canvas>
+    </div>
+    <div id="faceLoginStatus" style="color: white; font-size: 16px; margin-top: 15px; text-align: center; font-weight: bold; min-height: 24px;">🔍 Procurando rosto...</div>
+    <div class="selfie-controls">
+        <button class="selfie-btn-cancel" onclick="fecharLoginFacial()">❌ Cancelar</button>
+    </div>
+</div>
+
 <div class="selfie-modal" id="vistoriaCameraModal">
     <div class="selfie-title">📷 Foto Vistoria</div>
     <div class="selfie-container">
@@ -1050,12 +1071,6 @@ const _imageCache = new Map();
 
 /* ============================================================
    CALLMEBOT — NOTIFICAÇÕES WHATSAPP
-   ============================================================
-   - Fila com envio sequencial
-   - Delay de 3s entre envios (respeita rate-limit do CallMeBot)
-   - Timeout de segurança de 10s (não trava a fila)
-   - Limite de 900 caracteres por mensagem
-   - Sanitização de quebras de linha
    ============================================================ */
 const CALLMEBOT_PHONE  = '5511974910081';
 const CALLMEBOT_APIKEY = '7052412';
@@ -1155,6 +1170,10 @@ const permissoesPadrao = {
 };
 
 let selfieStream = null, selfieDataUrl = null, selfieClienteTemp = null, selfieUsuarioTemp = null, selfieDestino = 'cliente';
+let selfieUsuarioDescriptorTemp = null, selfieClienteDescriptorTemp = null;
+let faceModelsLoaded = false, faceModelsLoading = false;
+let faceLoginStream = null, faceLoginInterval = null, loginFacialProcessando = false;
+const FACE_MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.15/model';
 let vistoriaStream = null, vistoriaDataUrl = null, vistoriaPlacaAtual = null;
 let usuarioEditandoIndex = null, compraEditandoIndex = null, pendenciaEditandoIndex = null;
 let veiculoEditandoIndex = null, clienteEditandoIndex = null, locacaoEditandoIndex = null;
@@ -1692,6 +1711,155 @@ function atualizarTabelaAuditoria() {
     });
 }
 
+/* ============================================================
+   RECONHECIMENTO FACIAL — face-api.js
+   ============================================================ */
+async function carregarModelosFace() {
+    if (faceModelsLoaded) return true;
+    if (typeof faceapi === 'undefined') throw new Error('Biblioteca face-api não carregada.');
+    if (faceModelsLoading) {
+        return new Promise((resolve) => {
+            const t = setInterval(() => {
+                if (faceModelsLoaded) { clearInterval(t); resolve(true); }
+                else if (!faceModelsLoading) { clearInterval(t); resolve(false); }
+            }, 200);
+        });
+    }
+    faceModelsLoading = true;
+    try {
+        await Promise.all([
+            faceapi.nets.tinyFaceDetector.loadFromUri(FACE_MODEL_URL),
+            faceapi.nets.faceLandmark68Net.loadFromUri(FACE_MODEL_URL),
+            faceapi.nets.faceRecognitionNet.loadFromUri(FACE_MODEL_URL)
+        ]);
+        faceModelsLoaded = true;
+        return true;
+    } finally {
+        faceModelsLoading = false;
+    }
+}
+
+async function calcularDescriptorFacial(imgElement) {
+    if (!faceModelsLoaded) await carregarModelosFace();
+    const det = await faceapi
+        .detectSingleFace(imgElement, new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.5 }))
+        .withFaceLandmarks()
+        .withFaceDescriptor();
+    if (!det || !det.descriptor) return null;
+    return Array.from(det.descriptor);
+}
+
+function encontrarUsuarioPorDescriptor(descriptor, threshold) {
+    threshold = threshold || 0.55;
+    if (!descriptor || !Array.isArray(descriptor) || descriptor.length !== 128) return null;
+    let melhor = null, menorDist = Infinity;
+    (db.usuarios || []).forEach(u => {
+        if (!u || !Array.isArray(u.faceDescriptor) || u.faceDescriptor.length !== 128) return;
+        try {
+            const d = faceapi.euclideanDistance(descriptor, u.faceDescriptor);
+            if (d < menorDist) { menorDist = d; melhor = u; }
+        } catch(e) {}
+    });
+    if (melhor && menorDist < threshold) return { usuario: melhor, distancia: menorDist };
+    return null;
+}
+
+function efetuarLoginUsuario(u, metodo) {
+    document.getElementById('loginContainer').style.display = 'none';
+    document.getElementById('mainContainer').style.display = 'block';
+    aplicarPermissoes(u);
+    registrarAuditoria('Login', (metodo || 'Login') + ': ' + u.nome);
+    try { if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen(); } catch(e){}
+    const tabSOS = document.querySelector('.tab[data-tab="sos"]');
+    if (tabSOS && !tabSOS.classList.contains('hidden-tab')) tabSOS.click();
+    atualizarImagemGuincho();
+    setTimeout(mostrarGuinchoFullscreen, 100);
+    setTimeout(mostrarGuinchoFullscreen, 300);
+    setTimeout(mostrarGuinchoFullscreen, 800);
+    setTimeout(mostrarGuinchoFullscreen, 1500);
+}
+
+async function abrirLoginFacial() {
+    try {
+        await carregarModelosFace();
+    } catch (e) {
+        alert('⚠️ Não foi possível carregar os modelos de reconhecimento facial.\n\n' + (e.message || e) + '\n\nVerifique sua conexão com a internet.');
+        return;
+    }
+    const usuariosComFace = (db.usuarios || []).filter(u => u && Array.isArray(u.faceDescriptor) && u.faceDescriptor.length === 128);
+    if (usuariosComFace.length === 0) {
+        alert('⚠️ Nenhum usuário possui reconhecimento facial cadastrado.\n\nPara cadastrar:\n1) Entre com usuário e senha\n2) Vá em "👥 Usuário"\n3) Edite o usuário (ou crie um novo) e tire uma selfie\n4) Salve — o rosto será registrado automaticamente.');
+        return;
+    }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        alert('⚠️ Câmera não disponível neste navegador.\n\nUse HTTPS e um navegador atualizado.');
+        return;
+    }
+    const modal = document.getElementById('faceLoginModal');
+    const statusEl = document.getElementById('faceLoginStatus');
+    if (statusEl) statusEl.textContent = '🔍 Procurando rosto...';
+    modal.classList.add('active');
+    try {
+        faceLoginStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+        const video = document.getElementById('faceLoginVideo');
+        video.srcObject = faceLoginStream;
+        try { await video.play(); } catch(e) {}
+        iniciarDeteccaoFacialLogin();
+    } catch (err) {
+        alert('Erro ao acessar câmera: ' + (err && err.message ? err.message : err));
+        fecharLoginFacial();
+    }
+}
+
+function iniciarDeteccaoFacialLogin() {
+    if (faceLoginInterval) clearInterval(faceLoginInterval);
+    faceLoginInterval = setInterval(async () => {
+        if (loginFacialProcessando) return;
+        if (!faceLoginStream) return;
+        const video = document.getElementById('faceLoginVideo');
+        const statusEl = document.getElementById('faceLoginStatus');
+        if (!video || video.readyState < 2) return;
+        loginFacialProcessando = true;
+        try {
+            const det = await faceapi
+                .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.5 }))
+                .withFaceLandmarks()
+                .withFaceDescriptor();
+            if (det && det.descriptor) {
+                const descriptor = Array.from(det.descriptor);
+                const match = encontrarUsuarioPorDescriptor(descriptor);
+                if (match) {
+                    if (statusEl) statusEl.innerHTML = '✅ Olá, <strong>' + match.usuario.nome + '</strong>! Entrando...';
+                    if (faceLoginInterval) { clearInterval(faceLoginInterval); faceLoginInterval = null; }
+                    setTimeout(() => {
+                        fecharLoginFacial();
+                        efetuarLoginUsuario(match.usuario, 'Login Facial');
+                    }, 700);
+                    loginFacialProcessando = false;
+                    return;
+                } else {
+                    if (statusEl) statusEl.textContent = '🤔 Rosto detectado, mas não reconhecido. Aproxime-se mais.';
+                }
+            } else {
+                if (statusEl) statusEl.textContent = '🔍 Procurando rosto...';
+            }
+        } catch (e) {
+            console.warn('[PAIZÃO] Erro detecção facial:', e);
+        }
+        loginFacialProcessando = false;
+    }, 700);
+}
+
+function fecharLoginFacial() {
+    if (faceLoginInterval) { clearInterval(faceLoginInterval); faceLoginInterval = null; }
+    if (faceLoginStream) { try { faceLoginStream.getTracks().forEach(t => t.stop()); } catch(e) {} faceLoginStream = null; }
+    const modal = document.getElementById('faceLoginModal');
+    if (modal) modal.classList.remove('active');
+    const video = document.getElementById('faceLoginVideo');
+    if (video) video.srcObject = null;
+    loginFacialProcessando = false;
+}
+
 document.getElementById('loginForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const user = document.getElementById('loginUser').value.trim().toUpperCase();
@@ -1707,18 +1875,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     }
     const u = db.usuarios.find(x => x && x.nome === user && x.senha === pass);
     if (u) {
-        document.getElementById('loginContainer').style.display = 'none';
-        document.getElementById('mainContainer').style.display = 'block';
-        aplicarPermissoes(u);
-        registrarAuditoria('Login', 'Login: ' + user);
-        try { if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen(); } catch(e){}
-        const tabSOS = document.querySelector('.tab[data-tab="sos"]');
-        if (tabSOS && !tabSOS.classList.contains('hidden-tab')) tabSOS.click();
-        atualizarImagemGuincho();
-        setTimeout(mostrarGuinchoFullscreen, 100);
-        setTimeout(mostrarGuinchoFullscreen, 300);
-        setTimeout(mostrarGuinchoFullscreen, 800);
-        setTimeout(mostrarGuinchoFullscreen, 1500);
+        efetuarLoginUsuario(u, 'Login');
     } else {
         document.getElementById('loginError').style.display = 'block';
         registrarAuditoria('Login', 'Falha login: ' + user);
@@ -2602,7 +2759,7 @@ async function salvarCliente() {
         alert('✅ Cliente atualizado!');
     } else {
         db.clientes.push(cliente);
-        criarUsuarioDoCliente(cliente);
+        criarUsuarioDoCliente(cliente, selfieClienteDescriptorTemp);
         registrarAuditoria('Cadastro', `Novo cliente: ${cliente.nome}`);
         alert('Cliente salvo!');
     }
@@ -2618,6 +2775,7 @@ function limparCamposCliente() {
     ['cliNome','cliCpf','cliRg','cliCnh','cliDataCnh','cliTelefone','cliEndereco','cliCep','cliCidade','cliEstado'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
     const dataCadastroEl = document.getElementById('cliDataCadastro');
     if (dataCadastroEl) dataCadastroEl.value = obterDataHojeISO();
+    selfieClienteDescriptorTemp = null;
     clienteEditandoIndex = null;
     atualizarEstadoEdicaoCliente();
 }
@@ -2670,6 +2828,7 @@ async function editarCliente(i) {
     document.getElementById('cliCidade').value = c.cidade || '';
     document.getElementById('cliEstado').value = c.estado || '';
     selfieClienteTemp = null;
+    selfieClienteDescriptorTemp = null;
     const prevSelfie = document.getElementById('selfiePreviewCliente');
     if (prevSelfie) {
         prevSelfie.innerHTML = '';
@@ -2728,12 +2887,20 @@ async function excluirCliente(i) {
     salvarDB();
     alert('✅ Cliente excluído!' + (relatorio.length ? '\n\n📋 Itens removidos:\n' + relatorio.join('\n') : ''));
 }
-function criarUsuarioDoCliente(cliente) {
+function criarUsuarioDoCliente(cliente, faceDescriptor) {
     const primeiroNome = cliente.nome.split(/\s+/)[0].toUpperCase();
     if (db.usuarios.some(u => u && u.nome === primeiroNome)) return;
     const tel = cliente.telefone.replace(/\D/g, '');
     const senha = tel.length >= 10 ? tel.substring(2) : tel;
-    db.usuarios.push({ nome: primeiroNome, senha, tipo: 'MOTORISTA', permissoes: JSON.parse(JSON.stringify(permissoesPadrao.MOTORISTA)), selfieStorageId: cliente.selfieStorageId || null, podeRevisaoKmSemSenha: false });
+    db.usuarios.push({
+        nome: primeiroNome,
+        senha,
+        tipo: 'MOTORISTA',
+        permissoes: JSON.parse(JSON.stringify(permissoesPadrao.MOTORISTA)),
+        selfieStorageId: cliente.selfieStorageId || null,
+        podeRevisaoKmSemSenha: false,
+        faceDescriptor: (faceDescriptor && Array.isArray(faceDescriptor) && faceDescriptor.length === 128) ? faceDescriptor : null
+    });
     atualizarTabelaUsuario();
 }
 
@@ -2771,6 +2938,7 @@ async function editarUsuario(i) {
     document.getElementById('userTipo').value = u.tipo || 'ADM';
     usuarioEditandoIndex = i;
     selfieUsuarioTemp = null;
+    selfieUsuarioDescriptorTemp = null;
     const prev = document.getElementById('selfiePreviewUsuario');
     if (prev) {
         prev.innerHTML = '';
@@ -2802,24 +2970,28 @@ async function salvarUsuario() {
     if (!nome || !senha) { alert('Preencha nome e senha!'); return; }
     const permissoes = coletarPermissoesUI();
     let selfieStorageId = null;
+    let faceDescriptor = null;
     if (selfieUsuarioTemp && selfieUsuarioTemp.startsWith('data:')) {
         try {
             selfieStorageId = 'sel_usr_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
             await salvarImagemFirestore(selfieStorageId, selfieUsuarioTemp, { nomeArquivo: 'selfie_usuario.jpg', tipo: 'image/jpeg', categoria: 'selfie' });
+            faceDescriptor = selfieUsuarioDescriptorTemp;
         } catch(e) { selfieStorageId = null; alert('⚠️ Erro ao salvar selfie: ' + e.message); }
-    } else if (usuarioEditandoIndex !== null && db.usuarios[usuarioEditandoIndex] && db.usuarios[usuarioEditandoIndex].selfieStorageId) {
-        selfieStorageId = db.usuarios[usuarioEditandoIndex].selfieStorageId;
+    } else if (usuarioEditandoIndex !== null && db.usuarios[usuarioEditandoIndex]) {
+        if (db.usuarios[usuarioEditandoIndex].selfieStorageId) selfieStorageId = db.usuarios[usuarioEditandoIndex].selfieStorageId;
+        if (Array.isArray(db.usuarios[usuarioEditandoIndex].faceDescriptor)) faceDescriptor = db.usuarios[usuarioEditandoIndex].faceDescriptor;
     }
+    if (selfieUsuarioDescriptorTemp) faceDescriptor = selfieUsuarioDescriptorTemp;
     if (usuarioEditandoIndex !== null) {
         const outro = db.usuarios.find((u, idx) => idx !== usuarioEditandoIndex && u && u.nome === nome);
         if (outro) { alert('Já existe outro usuário com esse nome!'); return; }
         const usuarioAnterior = db.usuarios[usuarioEditandoIndex] || {};
         const podeRevisaoKmSemSenha = (tipo === 'ADM') ? true : (usuarioAnterior.podeRevisaoKmSemSenha === true);
-        db.usuarios[usuarioEditandoIndex] = { nome, senha, tipo, permissoes, selfieStorageId, podeRevisaoKmSemSenha: podeRevisaoKmSemSenha };
+        db.usuarios[usuarioEditandoIndex] = { nome, senha, tipo, permissoes, selfieStorageId, podeRevisaoKmSemSenha: podeRevisaoKmSemSenha, faceDescriptor: faceDescriptor || null };
         usuarioEditandoIndex = null;
     } else {
         if (db.usuarios.some(u => u && u.nome === nome)) { alert('Já existe esse usuário!'); return; }
-        db.usuarios.push({ nome, senha, tipo, permissoes, selfieStorageId, podeRevisaoKmSemSenha: (tipo === 'ADM') });
+        db.usuarios.push({ nome, senha, tipo, permissoes, selfieStorageId, podeRevisaoKmSemSenha: (tipo === 'ADM'), faceDescriptor: faceDescriptor || null });
     }
     atualizarTabelaUsuario();
     renderizarListaAcessoKmSemSenha();
@@ -2830,6 +3002,7 @@ async function salvarUsuario() {
 function limparCamposUsuario() {
     ['userNome','userSenha'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
     selfieUsuarioTemp = null;
+    selfieUsuarioDescriptorTemp = null;
     const prev = document.getElementById('selfiePreviewUsuario');
     if (prev) prev.innerHTML = '';
     usuarioEditandoIndex = null;
@@ -3661,15 +3834,38 @@ function capturarSelfie() {
     if (selfieStream) { selfieStream.getTracks().forEach(t => t.stop()); selfieStream = null; }
     document.getElementById('selfieVideo').srcObject = null;
 }
-function confirmarSelfie() {
+async function confirmarSelfie() {
     if (!selfieDataUrl) { alert('Nenhuma selfie capturada!'); return; }
+    const btn = document.getElementById('selfieConfirmBtn');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Analisando rosto...'; }
+
+    let faceDescriptor = null;
+    try {
+        await carregarModelosFace();
+        const img = new Image();
+        img.src = selfieDataUrl;
+        await new Promise(r => { img.onload = r; img.onerror = r; });
+        faceDescriptor = await calcularDescriptorFacial(img);
+    } catch (e) {
+        console.warn('[PAIZÃO] Erro ao calcular descriptor facial:', e);
+    }
+
+    if (btn) { btn.disabled = false; btn.textContent = '✅ Confirmar'; }
+
+    if (!faceDescriptor) {
+        const cont = confirm('⚠️ Não foi possível detectar um rosto claro nesta selfie.\n\nO RECONHECIMENTO FACIAL não ficará disponível para este usuário.\n\nDeseja continuar mesmo assim?');
+        if (!cont) return;
+    }
+
     if (selfieDestino === 'usuario') {
         selfieUsuarioTemp = selfieDataUrl;
+        selfieUsuarioDescriptorTemp = faceDescriptor;
         const c = document.getElementById('selfiePreviewUsuario');
         if (c) c.innerHTML = `<img src="${selfieDataUrl}" class="selfie-thumbnail" alt="selfie">`;
         fecharModalSelfie();
     } else {
         selfieClienteTemp = selfieDataUrl;
+        selfieClienteDescriptorTemp = faceDescriptor;
         const c = document.getElementById('selfiePreviewCliente');
         if (c) c.innerHTML = `<img src="${selfieDataUrl}" class="selfie-thumbnail" alt="selfie">`;
         fecharModalSelfie();
@@ -5903,6 +6099,12 @@ async function inicializarSistemaCompleto() {
     if (vistImagemInput && vistImagemInput.dataset.bound !== '1') { vistImagemInput.dataset.bound = '1'; vistImagemInput.addEventListener('change', handleVistoriaImagemSelecionada); }
     const loginUserEl = document.getElementById('loginUser');
     if (loginUserEl && !loginUserEl.value) loginUserEl.value = 'SERGIO';
+    const btnLoginFace = document.getElementById('loginFaceBtn');
+    if (btnLoginFace && btnLoginFace.dataset.bound !== '1') {
+        btnLoginFace.dataset.bound = '1';
+        btnLoginFace.addEventListener('click', abrirLoginFacial);
+    }
+    setTimeout(() => { carregarModelosFace().catch(() => {}); }, 2000);
     setTimeout(() => { const el = document.getElementById('loginPassword'); if (el && document.getElementById('loginContainer').style.display !== 'none') { try { el.focus(); } catch(e) {} } }, 100);
 }
 

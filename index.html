@@ -1070,20 +1070,20 @@ const FIRESTORE_MAX_BASE64 = 900000;
 const _imageCache = new Map();
 
 /* ============================================================
-   CALLMEBOT — NOTIFICAÇÕES WHATSAPP
+   TEXTMEBOT — NOTIFICAÇÕES WHATSAPP
    ============================================================ */
-const CALLMEBOT_PHONE  = '5511974910081';
-const CALLMEBOT_APIKEY = '7052412';
-const CALLMEBOT_DELAY_MS = 3000;
-const CALLMEBOT_MAX_LEN = 900;
-const CALLMEBOT_TIMEOUT_MS = 10000;
+const TEXTMEBOT_PHONE  = '5511974910081';
+const TEXTMEBOT_APIKEY = 'GsPLELXst6J8';
+const TEXTMEBOT_DELAY_MS = 3000;
+const TEXTMEBOT_MAX_LEN = 900;
+const TEXTMEBOT_TIMEOUT_MS = 10000;
 
-let _callmebotFila = [];
-let _callmebotEnviando = false;
-let _callmebotBloqueadoAte = 0;
-let _callmebotTimer = null;
+let _textmebotFila = [];
+let _textmebotEnviando = false;
+let _textmebotBloqueadoAte = 0;
+let _textmebotTimer = null;
 
-function enviarWhatsAppCallMeBot(mensagem) {
+function enviarWhatsAppTextMeBot(mensagem) {
     if (!mensagem) return;
     try {
         let texto = String(mensagem)
@@ -1091,54 +1091,54 @@ function enviarWhatsAppCallMeBot(mensagem) {
             .replace(/\n{3,}/g, '\n\n')
             .trim();
         if (!texto) return;
-        if (texto.length > CALLMEBOT_MAX_LEN) {
-            texto = texto.substring(0, CALLMEBOT_MAX_LEN - 3) + '...';
+        if (texto.length > TEXTMEBOT_MAX_LEN) {
+            texto = texto.substring(0, TEXTMEBOT_MAX_LEN - 3) + '...';
         }
-        _callmebotFila.push(texto);
-        processarFilaCallMeBot();
+        _textmebotFila.push(texto);
+        processarFilaTextMeBot();
     } catch (e) { }
 }
 
-function processarFilaCallMeBot() {
-    if (_callmebotEnviando) return;
-    if (_callmebotFila.length === 0) return;
+function processarFilaTextMeBot() {
+    if (_textmebotEnviando) return;
+    if (_textmebotFila.length === 0) return;
 
     const agora = Date.now();
-    if (agora < _callmebotBloqueadoAte) {
-        if (_callmebotTimer) clearTimeout(_callmebotTimer);
-        _callmebotTimer = setTimeout(processarFilaCallMeBot, _callmebotBloqueadoAte - agora);
+    if (agora < _textmebotBloqueadoAte) {
+        if (_textmebotTimer) clearTimeout(_textmebotTimer);
+        _textmebotTimer = setTimeout(processarFilaTextMeBot, _textmebotBloqueadoAte - agora);
         return;
     }
 
-    _callmebotEnviando = true;
-    const msg = _callmebotFila.shift();
+    _textmebotEnviando = true;
+    const msg = _textmebotFila.shift();
 
-    const url = 'https://api.callmebot.com/whatsapp.php'
-        + '?phone=' + encodeURIComponent(CALLMEBOT_PHONE)
-        + '&text=' + encodeURIComponent(msg)
-        + '&apikey=' + encodeURIComponent(CALLMEBOT_APIKEY);
+    const url = 'https://api.textmebot.com/send.php'
+        + '?recipient=' + encodeURIComponent(TEXTMEBOT_PHONE)
+        + '&apikey=' + encodeURIComponent(TEXTMEBOT_APIKEY)
+        + '&text=' + encodeURIComponent(msg);
 
     let finalizado = false;
     const finalizar = function() {
         if (finalizado) return;
         finalizado = true;
-        _callmebotEnviando = false;
-        _callmebotBloqueadoAte = Date.now() + CALLMEBOT_DELAY_MS;
-        if (_callmebotTimer) clearTimeout(_callmebotTimer);
-        _callmebotTimer = setTimeout(processarFilaCallMeBot, CALLMEBOT_DELAY_MS);
+        _textmebotEnviando = false;
+        _textmebotBloqueadoAte = Date.now() + TEXTMEBOT_DELAY_MS;
+        if (_textmebotTimer) clearTimeout(_textmebotTimer);
+        _textmebotTimer = setTimeout(processarFilaTextMeBot, TEXTMEBOT_DELAY_MS);
     };
 
     try {
         fetch(url, { mode: 'no-cors', cache: 'no-store', keepalive: true })
             .then(finalizar)
             .catch(finalizar);
-        setTimeout(finalizar, CALLMEBOT_TIMEOUT_MS);
+        setTimeout(finalizar, TEXTMEBOT_TIMEOUT_MS);
     } catch (e) {
         finalizar();
     }
 }
 
-function formatarMensagemCallMeBot(registro) {
+function formatarMensagemTextMeBot(registro) {
     const dataHora = registro.data || new Date().toLocaleString('pt-BR');
     return '🔔 PAIZÃO UBER 2.0'
         + '\n👤 ' + (registro.usuario || 'SISTEMA')
@@ -1680,7 +1680,7 @@ function registrarAuditoria(acao, descricao) {
     try { atualizarTabelaAuditoria(); } catch(e) {}
 
     try {
-        enviarWhatsAppCallMeBot(formatarMensagemCallMeBot(registro));
+        enviarWhatsAppTextMeBot(formatarMensagemTextMeBot(registro));
     } catch(e) { }
 }
 

@@ -1764,6 +1764,59 @@ function encontrarUsuarioPorDescriptor(descriptor, threshold) {
     return null;
 }
 
+// ============================================================
+// NOVA FUNÇÃO: VERIFICAR VENCIMENTOS PRÓXIMOS (1 DIA)
+// ============================================================
+function verificarVencimentosProximos() {
+    if (!db) return;
+
+    // Calcula a data de amanhã no formato YYYY-MM-DD de forma segura (evitando problemas de fuso horário)
+    const hoje = new Date();
+    const amanha = new Date(hoje);
+    amanha.setDate(amanha.getDate() + 1);
+    const amanhaISO = amanha.getFullYear() + '-' + String(amanha.getMonth() + 1).padStart(2, '0') + '-' + String(amanha.getDate()).padStart(2, '0');
+
+    let mensagens = [];
+
+    // 1. Verificar Aluguéis (Sub Pagamentos)
+    if (Array.isArray(db.alugueis)) {
+        db.alugueis.forEach(al => {
+            if (al && al.status !== 'pago' && al.vencimento === amanhaISO) {
+                mensagens.push(`• Aluguel: ${al.locatario} | Placa: ${al.placa} | Valor: ${al.valor}`);
+            }
+        });
+    }
+
+    // 2. Verificar Pendências
+    if (Array.isArray(db.pendentes)) {
+        db.pendentes.forEach(p => {
+            if (p && p.status !== 'Pago' && p.vencimento === amanhaISO) {
+                const valorStr = [];
+                if (p.credito) valorStr.push(`Crédito: ${p.credito}`);
+                if (p.debito) valorStr.push(`Débito: ${p.debito}`);
+                mensagens.push(`• Pendência: ${p.descricao} | Placa: ${p.placa} | ${valorStr.join(' - ')}`);
+            }
+        });
+    }
+
+    // Se houver mensagens, dispara os alertas
+    if (mensagens.length > 0) {
+        const dataFormatada = formatarDataBR(amanhaISO);
+        const msgTexto = `⚠️ ATENÇÃO: Vencimentos amanhã (${dataFormatada})\n\n` + mensagens.join('\n');
+        
+        // Alerta visual no sistema (ocorre 100ms depois para não conflitar com a renderização da tela)
+        setTimeout(() => {
+            alert(msgTexto);
+        }, 100);
+
+        // Alerta via TextMeBot (WhatsApp)
+        enviarWhatsAppTextMeBot(msgTexto);
+        
+        // Registrar na auditoria
+        registrarAuditoria('Alerta', 'Aviso de vencimentos para amanhã gerado no sistema e WhatsApp');
+    }
+}
+
 function efetuarLoginUsuario(u, metodo) {
     document.getElementById('loginContainer').style.display = 'none';
     document.getElementById('mainContainer').style.display = 'block';
@@ -1777,6 +1830,12 @@ function efetuarLoginUsuario(u, metodo) {
     setTimeout(mostrarGuinchoFullscreen, 300);
     setTimeout(mostrarGuinchoFullscreen, 800);
     setTimeout(mostrarGuinchoFullscreen, 1500);
+    
+    // NOVO: Verifica vencimentos próximos 5 segundos após o login, apenas uma vez por sessão
+    if (!sessionStorage.getItem('paizao_alerta_vencimento')) {
+        sessionStorage.setItem('paizao_alerta_vencimento', 'true');
+        setTimeout(verificarVencimentosProximos, 5000);
+    }
 }
 
 async function abrirLoginFacial() {
@@ -1893,6 +1952,7 @@ function sairSistema() {
     document.getElementById('loginPassword').value = '';
     document.getElementById('loginError').style.display = 'none';
     usuarioLogado = null;
+    sessionStorage.removeItem('paizao_alerta_vencimento'); // Limpa o alerta para permitir nova verificação no próximo login
     try {
         const btn = document.getElementById('downloadAppBtn');
         if (btn) {

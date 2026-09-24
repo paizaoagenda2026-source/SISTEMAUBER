@@ -327,8 +327,8 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
         <button class="tab tab-in-group" data-tab="auditoria">🔍 Auditoria</button>
         <button class="tab tab-in-group" data-tab="historico">📜 HISTÓRICO</button>
 
-        <!-- ====== ABA STANDALONE ====== -->
-        <button class="tab" data-tab="configuracao">⚙️ Configuração</button>
+        <!-- ====== ABA STANDALONE (NOVO BOTÃO SEGURO) ====== -->
+        <button class="tab" data-tab="seguro_novo">🛡️ Seguro</button>
 
         <!-- ====== BOTÕES DE AÇÃO ====== -->
         <button class="fullscreen-btn" id="fullscreenBtn">🖥️ Tela Cheia</button>
@@ -838,6 +838,35 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
         <div class="table-container">
             <table id="tabelaCompras">
                 <thead><tr><th>Data</th><th>Produto</th><th>Fornecedor</th><th>Placa</th><th>Valor</th><th>Status</th><th>Ações</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ====== NOVA ABA: SEGURO (CRIADA CONFORME SOLICITADO) ====== -->
+    <div class="tab-content" id="seguro_novo">
+        <h2>🛡️ Seguro</h2>
+        <div class="form-grid">
+            <div class="form-group"><label>Seguradora</label><input type="text" id="novoSegSeguradora" class="campo-enter"></div>
+            <div class="form-group"><label>Responsável</label><input type="text" id="novoSegResponsavel" class="campo-enter"></div>
+            <div class="form-group"><label>Fone</label><input type="text" id="novoSegFone" class="campo-enter"></div>
+            <div class="form-group"><label>Veiculo</label><input type="text" id="novoSegVeiculo" class="campo-enter"></div>
+            <div class="form-group"><label>Placa</label><input type="text" id="novoSegPlaca" class="campo-enter"></div>
+            <div class="form-group"><label>Categoria</label><input type="text" id="novoSegCategoria" class="campo-enter"></div>
+            <div class="form-group"><label>R$ Fipe</label><input type="text" id="novoSegFipe" class="money campo-enter"></div>
+            <div class="form-group"><label>R$ Protegido</label><input type="text" id="novoSegProtegido" class="money campo-enter"></div>
+            <div class="form-group"><label>Plano</label><input type="text" id="novoSegPlano" class="campo-enter"></div>
+            <div class="form-group"><label>Cobertura Incluída</label><input type="text" id="novoSegCoberturaIncluida" class="campo-enter"></div>
+            <div class="form-group"><label>Coberturas Adicionais</label><input type="text" id="novoSegCoberturasAdicionais" class="campo-enter"></div>
+            <div class="form-group"><label>Franquia</label><input type="text" id="novoSegFranquia" class="campo-enter"></div>
+            <div class="form-group"><label>Taxa de Adesão</label><input type="text" id="novoSegTaxaAdesao" class="money campo-enter"></div>
+            <div class="form-group"><label>R$ Mensal</label><input type="text" id="novoSegMensal" class="money campo-enter"></div>
+            <div class="form-group"><label>Vencimento</label><input type="date" id="novoSegVencimento" class="campo-enter"></div>
+        </div>
+        <button class="btn-primary" onclick="salvarNovoSeguro()">💾 Salvar</button>
+        <div class="table-container">
+            <table id="tabelaNovoSeguro">
+                <thead><tr><th>Seguradora</th><th>Responsável</th><th>Fone</th><th>Veículo</th><th>Placa</th><th>Plano</th><th>R$ Mensal</th><th>Vencimento</th><th>Ações</th></tr></thead>
                 <tbody></tbody>
             </table>
         </div>
@@ -1358,18 +1387,18 @@ const todasAbas = [
     { id: 'manutencao' }, { id: 'mecanico' }, { id: 'usuario' }, { id: 'garagem' },
     { id: 'sos' }, { id: 'comprovantes' }, { id: 'pagamentos' }, { id: 'banco' },
     { id: 'fluxocaixa' }, { id: 'compras' }, { id: 'configuracao' }, { id: 'auditoria' },
-    { id: 'pendente' }, { id: 'historico' }, { id: 'vistoria' }
+    { id: 'pendente' }, { id: 'historico' }, { id: 'vistoria' }, { id: 'seguro_novo' }
 ];
 const todasPermissoes = ['veiculos_salvar','veiculos_rastreador','veiculos_multas','clientes_salvar','locacoes_salvar','locacoes_contrato','manutencao_salvar','mecanico_salvar','usuario_salvar','usuario_editar','usuario_excluir','usuario_limpar','garagem_buscar','garagem_salvar','sos_buscar','sos_salvar','sos_baixar','comprovantes_buscar','comprovantes_salvar','banco_salvar','banco_editar','banco_copiar','banco_excluir','fluxocaixa_salvar','doc_salvar','doc_limpar','doc_selecionar','compras_salvar','compras_editar','compras_limpar','compras_excluir','config_salvar','config_restaurar','auditoria_filtrar','auditoria_limpar','pendente_salvar','pendente_editar','pendente_excluir','vistoria_camera'];
 
 const permissoesPadrao = {
     ADM: { abas: Object.fromEntries(todasAbas.map(a => [a.id, true])), botoes: Object.fromEntries(todasPermissoes.map(b => [b, true])), veiculos: {} },
     MOTORISTA: {
-        abas: { veiculos:false, clientes:false, locacoes:false, locEncerrada:false, seguro:false, manutencao:true, mecanico:false, usuario:false, garagem:true, sos:true, comprovantes:true, pagamentos:false, banco:true, fluxocaixa:false, compras:false, configuracao:false, auditoria:false, pendente:false, historico:false, vistoria:true },
+        abas: { veiculos:false, clientes:false, locacoes:false, locEncerrada:false, seguro:false, manutencao:true, mecanico:false, usuario:false, garagem:true, sos:true, comprovantes:true, pagamentos:false, banco:true, fluxocaixa:false, compras:false, configuracao:false, auditoria:false, pendente:false, historico:false, vistoria:true, seguro_novo:false },
         botoes: { banco_copiar:true, comprovantes_buscar:true, comprovantes_salvar:true }, veiculos: {}
     },
     OFICINA: {
-        abas: { veiculos:true, clientes:false, locacoes:false, locEncerrada:false, seguro:false, manutencao:true, mecanico:true, usuario:false, garagem:true, sos:true, comprovantes:false, pagamentos:false, banco:false, fluxocaixa:false, compras:true, configuracao:false, auditoria:false, pendente:false, historico:false, vistoria:true },
+        abas: { veiculos:true, clientes:false, locacoes:false, locEncerrada:false, seguro:false, manutencao:true, mecanico:true, usuario:false, garagem:true, sos:true, comprovantes:false, pagamentos:false, banco:false, fluxocaixa:false, compras:true, configuracao:false, auditoria:false, pendente:false, historico:false, vistoria:true, seguro_novo:false },
         botoes: { manutencao_salvar:true, mecanico_salvar:true }, veiculos: {}
     },
     VISITANTE: { abas: Object.fromEntries(todasAbas.map(a => [a.id, true])), botoes: {}, veiculos: {} }
@@ -1604,7 +1633,7 @@ async function processarArquivosImagem(files, maxWidth, quality) {
 
 function criarDBPadrao() {
     return {
-        veiculos: [], clientes: [], locacoes: [], locacoesEncerradas: [], manutencao: [], mecanico: [], seguros: [],
+        veiculos: [], clientes: [], locacoes: [], locacoesEncerradas: [], manutencao: [], mecanico: [], seguros: [], seguros_novo: [],
         usuarios: [{ nome: 'SERGIO', senha: '080888', tipo: 'ADM', permissoes: JSON.parse(JSON.stringify(permissoesPadrao.ADM)), selfie: null, podeRevisaoKmSemSenha: true }],
         alugueis: [], fluxoCaixa: [], documentos: [], compras: [], auditoria: [], bancos: [], pendentes: [], historico: [],
         historicoAlugueis: [], comprovantesPagamento: [], comprovantesDoc: [],
@@ -1627,7 +1656,7 @@ async function carregarDB() {
         } catch (e) { db = criarDBPadrao(); }
     }
     if (!db || typeof db !== 'object') db = criarDBPadrao();
-    ['veiculos','clientes','locacoes','locacoesEncerradas','manutencao','mecanico','seguros',
+    ['veiculos','clientes','locacoes','locacoesEncerradas','manutencao','mecanico','seguros','seguros_novo',
      'alugueis','fluxoCaixa','documentos','compras','auditoria','bancos',
      'pendentes','historico','usuarios','historicoAlugueis','comprovantesPagamento','docsVeiculos','comprovantesDoc'].forEach(k => {
         if (!Array.isArray(db[k])) db[k] = [];
@@ -2162,6 +2191,7 @@ document.querySelectorAll('.tab').forEach(tab => {
         if (tabId === 'configuracao') carregarConfiguracoes();
         if (tabId === 'usuario') { gerarPermissoesUI(); atualizarTabelaUsuario(); renderizarListaAcessoKmSemSenha(); }
         if (tabId === 'seguro') { atualizarPlacasSeguro(); atualizarTabelaSeguros(); }
+        if (tabId === 'seguro_novo') atualizarTabelaNovoSeguro();
     });
 });
 
@@ -2745,6 +2775,73 @@ function excluirSeguro(i) {
     atualizarTabelaSeguros();
     salvarDB();
     registrarAuditoria('Exclusão', 'Seguro excluído: ' + s.placa);
+    alert('✅ Seguro excluído.');
+}
+
+/* ============================================================
+   NOVO SEGURO (CONFORME SOLICITADO)
+   ============================================================ */
+function salvarNovoSeguro() {
+    const seguradora = document.getElementById('novoSegSeguradora').value.trim();
+    const responsavel = document.getElementById('novoSegResponsavel').value.trim();
+    const fone = document.getElementById('novoSegFone').value.trim();
+    const veiculo = document.getElementById('novoSegVeiculo').value.trim();
+    const placa = document.getElementById('novoSegPlaca').value.trim();
+    const categoria = document.getElementById('novoSegCategoria').value.trim();
+    const fipe = document.getElementById('novoSegFipe').value.trim();
+    const protegido = document.getElementById('novoSegProtegido').value.trim();
+    const plano = document.getElementById('novoSegPlano').value.trim();
+    const coberturaIncluida = document.getElementById('novoSegCoberturaIncluida').value.trim();
+    const coberturasAdicionais = document.getElementById('novoSegCoberturasAdicionais').value.trim();
+    const franquia = document.getElementById('novoSegFranquia').value.trim();
+    const taxaAdesao = document.getElementById('novoSegTaxaAdesao').value.trim();
+    const mensal = document.getElementById('novoSegMensal').value.trim();
+    const vencimento = document.getElementById('novoSegVencimento').value;
+    
+    if (!seguradora || !placa) { alert('Preencha pelo menos Seguradora e Placa!'); return; }
+    
+    if (!Array.isArray(db.seguros_novo)) db.seguros_novo = [];
+    
+    db.seguros_novo.push({ seguradora, responsavel, fone, veiculo, placa, categoria, fipe, protegido, plano, coberturaIncluida, coberturasAdicionais, franquia, taxaAdesao, mensal, vencimento });
+    
+    atualizarTabelaNovoSeguro();
+    salvarDB();
+    registrarAuditoria('Cadastro', 'Novo seguro (v2): ' + placa + ' - ' + seguradora);
+    alert('✅ Seguro salvo!');
+    
+    // Limpar campos
+    ['novoSegSeguradora','novoSegResponsavel','novoSegFone','novoSegVeiculo','novoSegPlaca','novoSegCategoria','novoSegFipe','novoSegProtegido','novoSegPlano','novoSegCoberturaIncluida','novoSegCoberturasAdicionais','novoSegFranquia','novoSegTaxaAdesao','novoSegMensal','novoSegVencimento'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+}
+
+function atualizarTabelaNovoSeguro() {
+    const tbody = document.querySelector('#tabelaNovoSeguro tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    const lista = db.seguros_novo || [];
+    if (lista.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#999;padding:20px;">Nenhum seguro cadastrado.</td></tr>';
+        return;
+    }
+    lista.forEach((s, i) => {
+        if (!s) return;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${s.seguradora || ''}</td><td>${s.responsavel || ''}</td><td>${s.fone || ''}</td><td>${s.veiculo || ''}</td><td>${s.placa || ''}</td><td>${s.plano || ''}</td><td>${s.mensal || ''}</td><td>${formatarDataBR(s.vencimento)}</td><td><button class="btn-danger" onclick="excluirNovoSeguro(${i})">🗑️</button></td>`;
+        tbody.appendChild(tr);
+    });
+}
+
+function excluirNovoSeguro(i) {
+    if (!confirmarSenhaADM()) return;
+    const s = db.seguros_novo[i];
+    if (!s) return;
+    if (!confirm('Excluir o seguro da placa ' + s.placa + '?')) return;
+    db.seguros_novo.splice(i, 1);
+    atualizarTabelaNovoSeguro();
+    salvarDB();
+    registrarAuditoria('Exclusão', 'Seguro (v2) excluído: ' + s.placa);
     alert('✅ Seguro excluído.');
 }
 
@@ -5720,7 +5817,7 @@ async function inicializarSistemaCompleto() {
     atualizarTabelaVeiculos(); atualizarTabelaClientes(); atualizarTabelaUsuario(); atualizarCombosLocacao();
     preencherDatasAutomaticas();
     atualizarPlacasManutencao(); atualizarPlacasMecanico(); atualizarPlacasCompras(); atualizarPlacasPendentes();
-    atualizarPlacasSeguro(); atualizarTabelaSeguros();
+    atualizarPlacasSeguro(); atualizarTabelaSeguros(); atualizarTabelaNovoSeguro();
     atualizarTabelaLocacoes(); atualizarTabelaLocEncerrada();
     atualizarTabelaManutencao(); atualizarTabelaMecanico();
     atualizarTabelaHistorico(); atualizarTabelaHistoricoAlugueis();

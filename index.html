@@ -1128,14 +1128,34 @@ function processarFilaTextMeBot() {
         _textmebotTimer = setTimeout(processarFilaTextMeBot, TEXTMEBOT_DELAY_MS);
     };
 
+    // ============================================================
+    // MÉTODO PRINCIPAL: new Image() — funciona em PC, Android e iOS.
+    // O fetch com no-cors é bloqueado ou falha silenciosamente em
+    // vários navegadores móveis. O Image() dispara um GET confiável
+    // em qualquer dispositivo (é a técnica clássica de pixel de tracking).
+    // Mesmo que o servidor retorne HTML/JSON (e não uma imagem), o
+    // navegador JÁ ENVIOU a requisição — o onerror apenas sinaliza que
+    // a resposta não pôde ser decodificada como imagem, o que é esperado.
+    // ============================================================
     try {
-        fetch(url, { mode: 'no-cors', cache: 'no-store', keepalive: true })
-            .then(finalizar)
-            .catch(finalizar);
-        setTimeout(finalizar, TEXTMEBOT_TIMEOUT_MS);
+        const img = new Image();
+        img.onload  = finalizar;
+        img.onerror = finalizar;
+        img.referrerPolicy = 'no-referrer';
+        img.src = url;
     } catch (e) {
-        finalizar();
+        // Fallback raro: se Image() não puder ser criado, tenta fetch
+        try {
+            fetch(url, { mode: 'no-cors', cache: 'no-store' })
+                .then(finalizar)
+                .catch(finalizar);
+        } catch (e2) {
+            finalizar();
+        }
     }
+
+    // Timeout de segurança: libera a fila mesmo se nenhum evento disparar
+    setTimeout(finalizar, TEXTMEBOT_TIMEOUT_MS);
 }
 
 function formatarMensagemTextMeBot(registro) {

@@ -848,6 +848,7 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
         <h2>🛡️ Seguro</h2>
         <div class="form-grid">
             <div class="form-group"><label>Seguradora</label><input type="text" id="novoSegSeguradora" class="campo-enter"></div>
+            <div class="form-group"><label>Contrato</label><input type="text" id="novoSegContrato" class="campo-enter"></div>
             <div class="form-group"><label>Responsável</label><input type="text" id="novoSegResponsavel" class="campo-enter"></div>
             <div class="form-group"><label>Fone</label><input type="text" id="novoSegFone" class="campo-enter"></div>
             <div class="form-group"><label>Veiculo</label><input type="text" id="novoSegVeiculo" class="campo-enter"></div>
@@ -864,9 +865,11 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
             <div class="form-group"><label>Vencimento</label><input type="date" id="novoSegVencimento" class="campo-enter"></div>
         </div>
         <button class="btn-primary" onclick="salvarNovoSeguro()">💾 Salvar</button>
+        <button class="btn-buscar" id="btnBuscarPdfNovoSeg" onclick="document.getElementById('novoSegPdfInput').click()">📄 Buscar PDF</button>
+        <input type="file" id="novoSegPdfInput" accept="application/pdf" style="display:none;">
         <div class="table-container">
             <table id="tabelaNovoSeguro">
-                <thead><tr><th>Seguradora</th><th>Responsável</th><th>Fone</th><th>Veículo</th><th>Placa</th><th>Plano</th><th>R$ Mensal</th><th>Vencimento</th><th>Ações</th></tr></thead>
+                <thead><tr><th>Seguradora</th><th>Contrato</th><th>Responsável</th><th>Fone</th><th>Veículo</th><th>Placa</th><th>Plano</th><th>R$ Mensal</th><th>Vencimento</th><th>Ações</th></tr></thead>
                 <tbody></tbody>
             </table>
         </div>
@@ -1417,6 +1420,9 @@ let garagemImagensTemp = [], sosImagensTemp = [];
 let galeriaAtual = [], galeriaIndexAtual = 0;
 let relatorioMecanicoTemp = [], comprovantesPagTemp = [], docComprovantesTemp = [];
 let docVeiculoAtual = null;
+// === NOVO: Variáveis para a aba Seguro (standalone) ===
+let novoSegEditandoIndex = null;
+let novoSegPdfTemp = null;
 
 function campoVazio(v) { return !v || String(v).trim() === ''; }
 function formatarMoedaBR(v) { return 'R$ ' + (Number(v) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
@@ -2781,8 +2787,9 @@ function excluirSeguro(i) {
 /* ============================================================
    NOVO SEGURO (CONFORME SOLICITADO)
    ============================================================ */
-function salvarNovoSeguro() {
+async function salvarNovoSeguro() {
     const seguradora = document.getElementById('novoSegSeguradora').value.trim();
+    const contrato = document.getElementById('novoSegContrato').value.trim();
     const responsavel = document.getElementById('novoSegResponsavel').value.trim();
     const fone = document.getElementById('novoSegFone').value.trim();
     const veiculo = document.getElementById('novoSegVeiculo').value.trim();
@@ -2801,19 +2808,53 @@ function salvarNovoSeguro() {
     if (!seguradora || !placa) { alert('Preencha pelo menos Seguradora e Placa!'); return; }
     
     if (!Array.isArray(db.seguros_novo)) db.seguros_novo = [];
-    
-    db.seguros_novo.push({ seguradora, responsavel, fone, veiculo, placa, categoria, fipe, protegido, plano, coberturaIncluida, coberturasAdicionais, franquia, taxaAdesao, mensal, vencimento });
-    
+
+    // Resolve PDF: se novo PDF temporário com base64, faz upload
+    let pdfStorageId = null;
+    let pdfNome = '';
+    if (novoSegPdfTemp && novoSegPdfTemp.base64) {
+        try {
+            pdfStorageId = 'pdfseg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+            await salvarImagemFirestore(pdfStorageId, novoSegPdfTemp.base64, { nomeArquivo: novoSegPdfTemp.nome, tipo: 'application/pdf', categoria: 'seguro' });
+            pdfNome = novoSegPdfTemp.nome || '';
+        } catch (e) {
+            alert('⚠️ Erro ao salvar PDF: ' + e.message);
+            pdfStorageId = null;
+        }
+    } else if (novoSegPdfTemp && novoSegPdfTemp.storageId) {
+        pdfStorageId = novoSegPdfTemp.storageId;
+        pdfNome = novoSegPdfTemp.nome || '';
+    } else if (novoSegEditandoIndex !== null && db.seguros_novo[novoSegEditandoIndex]) {
+        const prev = db.seguros_novo[novoSegEditandoIndex];
+        if (prev.pdfStorageId) { pdfStorageId = prev.pdfStorageId; pdfNome = prev.pdfNome || ''; }
+    }
+
+    const seguroObj = { seguradora, contrato, responsavel, fone, veiculo, placa, categoria, fipe, protegido, plano, coberturaIncluida, coberturasAdicionais, franquia, taxaAdesao, mensal, vencimento, pdfStorageId, pdfNome };
+
+    if (novoSegEditandoIndex !== null && db.seguros_novo[novoSegEditandoIndex]) {
+        db.seguros_novo[novoSegEditandoIndex] = seguroObj;
+        registrarAuditoria('Edição', 'Seguro (v2) atualizado: ' + placa + ' - ' + seguradora);
+        novoSegEditandoIndex = null;
+        alert('✅ Seguro atualizado!');
+    } else {
+        db.seguros_novo.push(seguroObj);
+        registrarAuditoria('Cadastro', 'Novo seguro (v2): ' + placa + ' - ' + seguradora);
+        alert('✅ Seguro salvo!');
+    }
+
     atualizarTabelaNovoSeguro();
     salvarDB();
-    registrarAuditoria('Cadastro', 'Novo seguro (v2): ' + placa + ' - ' + seguradora);
-    alert('✅ Seguro salvo!');
-    
+
     // Limpar campos
-    ['novoSegSeguradora','novoSegResponsavel','novoSegFone','novoSegVeiculo','novoSegPlaca','novoSegCategoria','novoSegFipe','novoSegProtegido','novoSegPlano','novoSegCoberturaIncluida','novoSegCoberturasAdicionais','novoSegFranquia','novoSegTaxaAdesao','novoSegMensal','novoSegVencimento'].forEach(id => {
+    ['novoSegSeguradora','novoSegContrato','novoSegResponsavel','novoSegFone','novoSegVeiculo','novoSegPlaca','novoSegCategoria','novoSegFipe','novoSegProtegido','novoSegPlano','novoSegCoberturaIncluida','novoSegCoberturasAdicionais','novoSegFranquia','novoSegTaxaAdesao','novoSegMensal','novoSegVencimento'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = '';
     });
+    novoSegPdfTemp = null;
+    const btn = document.getElementById('btnBuscarPdfNovoSeg');
+    if (btn) btn.textContent = '📄 Buscar PDF';
+    const inputFile = document.getElementById('novoSegPdfInput');
+    if (inputFile) { try { inputFile.value = ''; } catch(e) {} }
 }
 
 function atualizarTabelaNovoSeguro() {
@@ -2822,27 +2863,106 @@ function atualizarTabelaNovoSeguro() {
     tbody.innerHTML = '';
     const lista = db.seguros_novo || [];
     if (lista.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#999;padding:20px;">Nenhum seguro cadastrado.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:#999;padding:20px;">Nenhum seguro cadastrado.</td></tr>';
         return;
     }
     lista.forEach((s, i) => {
         if (!s) return;
+        const pdfBtn = s.pdfStorageId ? '<button class="btn-info" onclick="abrirPdfNovoSeguro(' + i + ')" title="Abrir PDF">📄</button>' : '';
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${s.seguradora || ''}</td><td>${s.responsavel || ''}</td><td>${s.fone || ''}</td><td>${s.veiculo || ''}</td><td>${s.placa || ''}</td><td>${s.plano || ''}</td><td>${s.mensal || ''}</td><td>${formatarDataBR(s.vencimento)}</td><td><button class="btn-danger" onclick="excluirNovoSeguro(${i})">🗑️</button></td>`;
+        tr.innerHTML = `<td>${s.seguradora || ''}</td><td>${s.contrato || ''}</td><td>${s.responsavel || ''}</td><td>${s.fone || ''}</td><td>${s.veiculo || ''}</td><td>${s.placa || ''}</td><td>${s.plano || ''}</td><td>${s.mensal || ''}</td><td>${formatarDataBR(s.vencimento)}</td><td><button class="btn-warning" onclick="editarNovoSeguro(${i})">✏️</button> <button class="btn-danger" onclick="excluirNovoSeguro(${i})">🗑️</button> ${pdfBtn}</td>`;
         tbody.appendChild(tr);
     });
 }
 
-function excluirNovoSeguro(i) {
+function editarNovoSeguro(i) {
+    if (!confirmarSenhaADM()) return;
+    const s = db.seguros_novo[i];
+    if (!s) { alert('Seguro não encontrado.'); return; }
+    novoSegEditandoIndex = i;
+    document.getElementById('novoSegSeguradora').value = s.seguradora || '';
+    document.getElementById('novoSegContrato').value = s.contrato || '';
+    document.getElementById('novoSegResponsavel').value = s.responsavel || '';
+    document.getElementById('novoSegFone').value = s.fone || '';
+    document.getElementById('novoSegVeiculo').value = s.veiculo || '';
+    document.getElementById('novoSegPlaca').value = s.placa || '';
+    document.getElementById('novoSegCategoria').value = s.categoria || '';
+    document.getElementById('novoSegFipe').value = s.fipe || '';
+    document.getElementById('novoSegProtegido').value = s.protegido || '';
+    document.getElementById('novoSegPlano').value = s.plano || '';
+    document.getElementById('novoSegCoberturaIncluida').value = s.coberturaIncluida || '';
+    document.getElementById('novoSegCoberturasAdicionais').value = s.coberturasAdicionais || '';
+    document.getElementById('novoSegFranquia').value = s.franquia || '';
+    document.getElementById('novoSegTaxaAdesao').value = s.taxaAdesao || '';
+    document.getElementById('novoSegMensal').value = s.mensal || '';
+    document.getElementById('novoSegVencimento').value = s.vencimento || '';
+
+    novoSegPdfTemp = null;
+    const btn = document.getElementById('btnBuscarPdfNovoSeg');
+    if (s.pdfStorageId) {
+        novoSegPdfTemp = { nome: s.pdfNome || 'contrato.pdf', storageId: s.pdfStorageId };
+        if (btn) btn.textContent = '📄 PDF: ' + (s.pdfNome || 'Anexado');
+    } else {
+        if (btn) btn.textContent = '📄 Buscar PDF';
+    }
+    const inputFile = document.getElementById('novoSegPdfInput');
+    if (inputFile) { try { inputFile.value = ''; } catch(e) {} }
+    window.scrollTo(0, 0);
+}
+
+async function excluirNovoSeguro(i) {
     if (!confirmarSenhaADM()) return;
     const s = db.seguros_novo[i];
     if (!s) return;
     if (!confirm('Excluir o seguro da placa ' + s.placa + '?')) return;
+    if (s.pdfStorageId) { try { await excluirImagemFirestore(s.pdfStorageId); } catch(e) {} }
     db.seguros_novo.splice(i, 1);
+    if (novoSegEditandoIndex === i) { novoSegEditandoIndex = null; novoSegPdfTemp = null; }
+    else if (novoSegEditandoIndex !== null && novoSegEditandoIndex > i) novoSegEditandoIndex--;
     atualizarTabelaNovoSeguro();
     salvarDB();
     registrarAuditoria('Exclusão', 'Seguro (v2) excluído: ' + s.placa);
     alert('✅ Seguro excluído.');
+}
+
+function handleNovoSegPdfInputChange(e) {
+    const input = e.target || this;
+    const file = input.files && input.files[0];
+    if (!file) return;
+    const nomeLow = (file.name || '').toLowerCase();
+    if (file.type !== 'application/pdf' && !nomeLow.endsWith('.pdf')) {
+        alert('Selecione um arquivo PDF válido!');
+        try { input.value = ''; } catch(e) {}
+        return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+        alert('Arquivo muito grande (máx 5MB).');
+        try { input.value = ''; } catch(e) {}
+        return;
+    }
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+        novoSegPdfTemp = { nome: file.name, tipo: 'application/pdf', base64: ev.target.result };
+        const btn = document.getElementById('btnBuscarPdfNovoSeg');
+        if (btn) btn.textContent = '📄 ' + file.name;
+        alert('✅ PDF anexado: ' + file.name);
+    };
+    reader.onerror = function() { alert('Erro ao ler o PDF.'); };
+    reader.readAsDataURL(file);
+}
+
+async function abrirPdfNovoSeguro(i) {
+    const s = db.seguros_novo[i];
+    if (!s) { alert('Seguro não encontrado.'); return; }
+    if (!s.pdfStorageId) { alert('Nenhum PDF anexado a este seguro.'); return; }
+    let url = null;
+    try { url = await obterImagemFirestore(s.pdfStorageId); } catch(e) {}
+    if (!url) { alert('PDF não encontrado.'); return; }
+    const win = window.open();
+    if (!win) { alert('Bloqueio de pop-up. Permita pop-ups para este site.'); return; }
+    const nomeSafe = (s.pdfNome || 'Contrato').replace(/</g, '&lt;');
+    win.document.write('<html><head><title>' + nomeSafe + '</title></head><body style="margin:0;"><iframe src="' + url + '" frameborder="0" style="border:0;position:fixed;top:0;left:0;width:100%;height:100%;" allowfullscreen></iframe></body></html>');
+    win.document.close();
 }
 
 /* ============================================================
@@ -5837,6 +5957,9 @@ async function inicializarSistemaCompleto() {
     if (docCompInput && docCompInput.dataset.bound !== '1') { docCompInput.dataset.bound = '1'; docCompInput.addEventListener('change', handleDocComprovanteInputChange); }
     const vistImagemInput = document.getElementById('vistoriaImagemInput');
     if (vistImagemInput && vistImagemInput.dataset.bound !== '1') { vistImagemInput.dataset.bound = '1'; vistImagemInput.addEventListener('change', handleVistoriaImagemSelecionada); }
+    // === NOVO: Listener do input PDF da aba Seguro ===
+    const novoSegPdfInput = document.getElementById('novoSegPdfInput');
+    if (novoSegPdfInput && novoSegPdfInput.dataset.bound !== '1') { novoSegPdfInput.dataset.bound = '1'; novoSegPdfInput.addEventListener('change', handleNovoSegPdfInputChange); }
     const loginUserEl = document.getElementById('loginUser');
     if (loginUserEl && !loginUserEl.value) loginUserEl.value = 'SERGIO';
     const btnLoginFace = document.getElementById('loginFaceBtn');

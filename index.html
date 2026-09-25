@@ -845,7 +845,7 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
             <div class="form-group"><label>Valor</label><input type="text" id="fcValor" class="money"></div>
             <div class="form-group"><label>Tipo</label><select id="fcTipo"><option value="entrada">Entrada</option><option value="saida">Saída</option></select></div>
         </div>
-        <button class="btn-primary" data-permissao="fluxocaixa_salvar" onclick="salvarFluxoCaixa()">💾 Salvar Lançamento Manual</button>
+        <button class="btn-primary" id="btnSalvarFluxoCaixa" data-permissao="fluxocaixa_salvar" onclick="salvarFluxoCaixa()">💾 Salvar Lançamento Manual</button>
         <div class="dashboard-encerradas" style="margin-top:20px;">
             <div class="kpi-card green"><div class="kpi-value" id="totalEntradas">R$ 0,00</div><div class="kpi-label">Entradas</div></div>
             <div class="kpi-card red"><div class="kpi-value" id="totalSaidas">R$ 0,00</div><div class="kpi-label">Saídas</div></div>
@@ -1581,6 +1581,7 @@ let vistoriaStream = null, vistoriaDataUrl = null, vistoriaPlacaAtual = null;
 let usuarioEditandoIndex = null, compraEditandoIndex = null, pendenciaEditandoIndex = null;
 let veiculoEditandoIndex = null, clienteEditandoIndex = null, locacaoEditandoIndex = null;
 let bancoEditandoIndex = null;
+let fluxoCaixaEditandoIndex = null;
 let garagemImagensTemp = [], sosImagensTemp = [];
 let galeriaAtual = [], galeriaIndexAtual = 0;
 let relatorioMecanicoTemp = [], comprovantesPagTemp = [], docComprovantesTemp = [];
@@ -5187,7 +5188,7 @@ function atualizarTabelaFluxoCaixa() {
         if (f.tipo === 'entrada') totalEntradas += valorNum; else totalSaidas += valorNum;
         const tr = document.createElement('tr');
         tr.setAttribute('data-date', converterDataParaISO(f.data) || '');
-        tr.innerHTML = `<td>${formatarDataBR(f.data)}</td><td>${formatarDataBR(f.vencimento)}</td><td>${f.descricao || ''}</td><td>${f.categoria || ''}</td><td>${f.valor || formatarMoedaBR(valorNum)}</td><td>${(f.tipo || '').toUpperCase()}</td><td><button class="btn-danger" onclick="excluirFluxoCaixa(${lista.length - 1 - index})">🗑️</button></td>`;
+        tr.innerHTML = `<td>${formatarDataBR(f.data)}</td><td>${formatarDataBR(f.vencimento)}</td><td>${f.descricao || ''}</td><td>${f.categoria || ''}</td><td>${f.valor || formatarMoedaBR(valorNum)}</td><td>${(f.tipo || '').toUpperCase()}</td><td><button class="btn-warning" onclick="editarFluxoCaixa(${lista.length - 1 - index})" title="Editar">✏️</button> <button class="btn-danger" onclick="excluirFluxoCaixa(${lista.length - 1 - index})">🗑️</button></td>`;
         tbody.appendChild(tr);
     });
     const saldo = totalEntradas - totalSaidas;
@@ -5199,7 +5200,30 @@ function atualizarTabelaFluxoCaixa() {
         if (filtroEl._filterHandler) filtroEl._filterHandler.call(filtroEl);
     }
 }
-function excluirFluxoCaixa(i) { if (!confirmarSenhaADM()) return; if (!confirm('Excluir este lançamento?')) return; db.fluxoCaixa.splice(i, 1); atualizarTabelaFluxoCaixa(); salvarDB(); }
+function editarFluxoCaixa(i) {
+    if (!confirmarSenhaADM()) return;
+    const f = db.fluxoCaixa[i];
+    if (!f) { alert('Lançamento não encontrado.'); return; }
+    fluxoCaixaEditandoIndex = i;
+    const elData = document.getElementById('fcData'); if (elData) elData.value = f.data || '';
+    const elVenc = document.getElementById('fcVencimento'); if (elVenc) elVenc.value = f.vencimento || '';
+    const elDesc = document.getElementById('fcDescricao'); if (elDesc) elDesc.value = f.descricao || '';
+    const elCat = document.getElementById('fcCategoria'); if (elCat) elCat.value = f.categoria || '';
+    const elVal = document.getElementById('fcValor'); if (elVal) elVal.value = f.valor || '';
+    const elTipo = document.getElementById('fcTipo'); if (elTipo) elTipo.value = f.tipo || 'entrada';
+    const btn = document.getElementById('btnSalvarFluxoCaixa');
+    if (btn) btn.textContent = '💾 Atualizar Lançamento';
+    window.scrollTo(0, 0);
+}
+function cancelarEdicaoFluxoCaixa() {
+    fluxoCaixaEditandoIndex = null;
+    const btn = document.getElementById('btnSalvarFluxoCaixa');
+    if (btn) btn.textContent = '💾 Salvar Lançamento Manual';
+    ['fcDescricao','fcCategoria','fcValor','fcVencimento'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    const elData = document.getElementById('fcData'); if (elData) elData.value = obterDataHojeISO();
+    const elTipo = document.getElementById('fcTipo'); if (elTipo) elTipo.value = 'entrada';
+}
+function excluirFluxoCaixa(i) { if (!confirmarSenhaADM()) return; if (!confirm('Excluir este lançamento?')) return; db.fluxoCaixa.splice(i, 1); if (fluxoCaixaEditandoIndex !== null) { if (fluxoCaixaEditandoIndex === i) { fluxoCaixaEditandoIndex = null; const btn = document.getElementById('btnSalvarFluxoCaixa'); if (btn) btn.textContent = '💾 Salvar Lançamento Manual'; } else if (fluxoCaixaEditandoIndex > i) fluxoCaixaEditandoIndex--; } atualizarTabelaFluxoCaixa(); salvarDB(); }
 function salvarFluxoCaixa() {
     const data = document.getElementById('fcData').value || obterDataHojeISO();
     const vencimento = document.getElementById('fcVencimento').value;
@@ -5210,6 +5234,22 @@ function salvarFluxoCaixa() {
     if (!data || !descricao || !valorStr) { alert('Preencha Data, Descrição e Valor!'); return; }
     const valorNum = parseMoeda(valorStr);
     if (!Array.isArray(db.fluxoCaixa)) db.fluxoCaixa = [];
+    if (fluxoCaixaEditandoIndex !== null && db.fluxoCaixa[fluxoCaixaEditandoIndex]) {
+        db.fluxoCaixa[fluxoCaixaEditandoIndex] = { data, vencimento, descricao, categoria, valor: valorStr, valorNumerico: valorNum, tipo };
+        registrarAuditoria('Edição', 'Lançamento de fluxo de caixa atualizado: ' + descricao);
+        fluxoCaixaEditandoIndex = null;
+        const btn = document.getElementById('btnSalvarFluxoCaixa');
+        if (btn) btn.textContent = '💾 Salvar Lançamento Manual';
+        document.getElementById('fcDescricao').value = '';
+        document.getElementById('fcCategoria').value = '';
+        document.getElementById('fcValor').value = '';
+        document.getElementById('fcVencimento').value = '';
+        document.getElementById('fcData').value = obterDataHojeISO();
+        document.getElementById('fcTipo').value = 'entrada';
+        atualizarTabelaFluxoCaixa(); salvarDB();
+        alert('✅ Lançamento atualizado!');
+        return;
+    }
     db.fluxoCaixa.push({ data, vencimento, descricao, categoria, valor: valorStr, valorNumerico: valorNum, tipo });
     document.getElementById('fcDescricao').value = '';
     document.getElementById('fcCategoria').value = '';

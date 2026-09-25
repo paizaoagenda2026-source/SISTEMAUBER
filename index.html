@@ -1478,15 +1478,16 @@ let selfieStream = null, selfieDataUrl = null, selfieClienteTemp = null, selfieU
 let selfieUsuarioDescriptorTemp = null, selfieClienteDescriptorTemp = null;
 let faceModelsLoaded = false, faceModelsLoading = false;
 let faceLoginStream = null, faceLoginInterval = null, loginFacialProcessando = false;
-/* ==== NOVO: variáveis da AÇÃO ALEATÓRIA do login facial ==== */
+/* ==== variáveis da AÇÃO ALEATÓRIA do login facial ==== */
 let faceLoginAcaoAtual = null;
 let faceLoginAcaoConcluida = false;
 let faceLoginContFrames = 0;
+/* ==== controle de sessão do login facial (CORRIGE BUG DO CANCELAR) ==== */
+let faceLoginSessaoAtiva = false;
 /* =========================================================== */
 const FACE_MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.15/model';
-/* ==== NOVO: ações possíveis do login facial (sorteio aleatório) ==== */
+/* ==== ações possíveis do login facial (sorteio aleatório) — "piscar" removido ==== */
 const ACOES_FACIAIS_LOGIN = [
-    { id: 'piscar',         emoji: '😉', texto: 'PISQUE os olhos' },
     { id: 'virar_esquerda', emoji: '↩️', texto: 'VIRE a cabeça para a ESQUERDA' },
     { id: 'abrir_boca',     emoji: '😮', texto: 'ABRA a boca' }
 ];
@@ -1978,20 +1979,6 @@ function _distanciaPontosFace(p1, p2) {
     return Math.sqrt(dx * dx + dy * dy);
 }
 
-/* EAR — Eye Aspect Ratio (detecta olho fechado) */
-function _calcularEARFacial(positions) {
-    function earOlho(pts) {
-        const A = _distanciaPontosFace(pts[1], pts[5]);
-        const B = _distanciaPontosFace(pts[2], pts[4]);
-        const C = _distanciaPontosFace(pts[0], pts[3]);
-        if (C === 0) return 0.3;
-        return (A + B) / (2.0 * C);
-    }
-    const olhoEsq = [positions[36], positions[37], positions[38], positions[39], positions[40], positions[41]];
-    const olhoDir = [positions[42], positions[43], positions[44], positions[45], positions[46], positions[47]];
-    return (earOlho(olhoEsq) + earOlho(olhoDir)) / 2;
-}
-
 /* Abertura da boca (distância lábios superior/inferior sobre largura) */
 function _calcularAberturaBocaFacial(positions) {
     const sup = positions[62];
@@ -2026,18 +2013,6 @@ function detectarAcaoFacialLogin(deteccao, acao) {
     const pos = deteccao.landmarks.positions;
     if (pos.length < 68) return false;
     const box = deteccao.detection ? deteccao.detection.box : null;
-
-    if (acao === 'piscar') {
-        const ear = _calcularEARFacial(pos);
-        // EAR abaixo de ~0.19 indica olhos fechados
-        if (ear < 0.19) {
-            faceLoginContFrames++;
-            if (faceLoginContFrames >= 1) return true;
-        } else {
-            faceLoginContFrames = 0;
-        }
-        return false;
-    }
 
     if (acao === 'abrir_boca') {
         const abertura = _calcularAberturaBocaFacial(pos);
@@ -2128,6 +2103,8 @@ async function abrirLoginFacial() {
     faceLoginAcaoAtual = sortearAcaoFacialLogin();
     faceLoginAcaoConcluida = false;
     faceLoginContFrames = 0;
+    /* ===== marca a sessão como ativa (bug do cancelar) ===== */
+    faceLoginSessaoAtiva = true;
     if (statusEl) statusEl.innerHTML = '🎭 AÇÃO NECESSÁRIA: ' + faceLoginAcaoAtual.emoji + ' <strong>' + faceLoginAcaoAtual.texto + '</strong>';
     /* ==================================================== */
 
@@ -2146,6 +2123,7 @@ function iniciarDeteccaoFacialLogin() {
     faceLoginInterval = setInterval(async () => {
         if (loginFacialProcessando) return;
         if (!faceLoginStream) return;
+        if (!faceLoginSessaoAtiva) return;
         const video = document.getElementById('faceLoginVideo');
         const statusEl = document.getElementById('faceLoginStatus');
         if (!video || video.readyState < 2) return;
@@ -2172,7 +2150,14 @@ function iniciarDeteccaoFacialLogin() {
                 if (match) {
                     if (statusEl) statusEl.innerHTML = '✅ Olá, <strong>' + match.usuario.nome + '</strong>! Entrando...';
                     if (faceLoginInterval) { clearInterval(faceLoginInterval); faceLoginInterval = null; }
-                    setTimeout(() => { fecharLoginFacial(); efetuarLoginUsuario(match.usuario, 'Login Facial'); }, 700);
+                    /* ===== guarda estado e confirma sessão antes do timeout ===== */
+                    setTimeout(() => {
+                        /* BUG FIX: não logar se a sessão foi cancelada nesse meio tempo */
+                        if (!faceLoginSessaoAtiva) return;
+                        faceLoginSessaoAtiva = false;
+                        fecharLoginFacial();
+                        efetuarLoginUsuario(match.usuario, 'Login Facial');
+                    }, 700);
                     loginFacialProcessando = false;
                     return;
                 } else { if (statusEl) statusEl.innerHTML = '🤔 Rosto detectado, mas não reconhecido. Aproxime-se mais.'; }
@@ -2189,6 +2174,8 @@ function iniciarDeteccaoFacialLogin() {
 }
 
 function fecharLoginFacial() {
+    /* BUG FIX: invalida a sessão para que o setTimeout do login não execute após cancelar */
+    faceLoginSessaoAtiva = false;
     if (faceLoginInterval) { clearInterval(faceLoginInterval); faceLoginInterval = null; }
     if (faceLoginStream) { try { faceLoginStream.getTracks().forEach(t => t.stop()); } catch(e) {} faceLoginStream = null; }
     const modal = document.getElementById('faceLoginModal');
@@ -2196,7 +2183,7 @@ function fecharLoginFacial() {
     const video = document.getElementById('faceLoginVideo');
     if (video) video.srcObject = null;
     loginFacialProcessando = false;
-    /* ===== NOVO: limpa estado da ação aleatória ===== */
+    /* ===== limpa estado da ação aleatória ===== */
     faceLoginAcaoAtual = null;
     faceLoginAcaoConcluida = false;
     faceLoginContFrames = 0;

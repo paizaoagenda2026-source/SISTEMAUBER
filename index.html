@@ -1478,7 +1478,19 @@ let selfieStream = null, selfieDataUrl = null, selfieClienteTemp = null, selfieU
 let selfieUsuarioDescriptorTemp = null, selfieClienteDescriptorTemp = null;
 let faceModelsLoaded = false, faceModelsLoading = false;
 let faceLoginStream = null, faceLoginInterval = null, loginFacialProcessando = false;
+/* ==== NOVO: variáveis da AÇÃO ALEATÓRIA do login facial ==== */
+let faceLoginAcaoAtual = null;
+let faceLoginAcaoConcluida = false;
+let faceLoginContFrames = 0;
+/* =========================================================== */
 const FACE_MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.15/model';
+/* ==== NOVO: ações possíveis do login facial (sorteio aleatório) ==== */
+const ACOES_FACIAIS_LOGIN = [
+    { id: 'piscar',         emoji: '😉', texto: 'PISQUE os olhos' },
+    { id: 'virar_esquerda', emoji: '↩️', texto: 'VIRE a cabeça para a ESQUERDA' },
+    { id: 'abrir_boca',     emoji: '😮', texto: 'ABRA a boca' }
+];
+/* ================================================================== */
 let vistoriaStream = null, vistoriaDataUrl = null, vistoriaPlacaAtual = null;
 let usuarioEditandoIndex = null, compraEditandoIndex = null, pendenciaEditandoIndex = null;
 let veiculoEditandoIndex = null, clienteEditandoIndex = null, locacaoEditandoIndex = null;
@@ -1954,6 +1966,108 @@ function encontrarUsuarioPorDescriptor(descriptor, threshold) {
     return null;
 }
 
+/* ============================================================
+   AÇÃO ALEATÓRIA DO LOGIN FACIAL (LIVENESS)
+   ============================================================ */
+function sortearAcaoFacialLogin() {
+    return ACOES_FACIAIS_LOGIN[Math.floor(Math.random() * ACOES_FACIAIS_LOGIN.length)];
+}
+
+function _distanciaPontosFace(p1, p2) {
+    const dx = p1.x - p2.x, dy = p1.y - p2.y;
+    return Math.sqrt(dx * dx + dy * dy);
+}
+
+/* EAR — Eye Aspect Ratio (detecta olho fechado) */
+function _calcularEARFacial(positions) {
+    function earOlho(pts) {
+        const A = _distanciaPontosFace(pts[1], pts[5]);
+        const B = _distanciaPontosFace(pts[2], pts[4]);
+        const C = _distanciaPontosFace(pts[0], pts[3]);
+        if (C === 0) return 0.3;
+        return (A + B) / (2.0 * C);
+    }
+    const olhoEsq = [positions[36], positions[37], positions[38], positions[39], positions[40], positions[41]];
+    const olhoDir = [positions[42], positions[43], positions[44], positions[45], positions[46], positions[47]];
+    return (earOlho(olhoEsq) + earOlho(olhoDir)) / 2;
+}
+
+/* Abertura da boca (distância lábios superior/inferior sobre largura) */
+function _calcularAberturaBocaFacial(positions) {
+    const sup = positions[62];
+    const inf = positions[66];
+    const esq = positions[48];
+    const dir = positions[54];
+    const altura = _distanciaPontosFace(sup, inf);
+    const largura = _distanciaPontosFace(esq, dir);
+    if (largura === 0) return 0;
+    return altura / largura;
+}
+
+/* Deslocamento (yaw) — nariz em relação ao centro do rosto */
+function _calcularYawFacial(positions, box) {
+    const narizX = positions[30].x;
+    let centroX = 0, largura = 0;
+    if (box) {
+        centroX = box.x + box.width / 2;
+        largura = box.width;
+    } else {
+        const olhoEsqExt = positions[36];
+        const olhoDirExt = positions[45];
+        centroX = (olhoEsqExt.x + olhoDirExt.x) / 2;
+        largura = Math.abs(olhoDirExt.x - olhoEsqExt.x) * 2;
+    }
+    if (largura === 0) return 0;
+    return (narizX - centroX) / largura;
+}
+
+function detectarAcaoFacialLogin(deteccao, acao) {
+    if (!deteccao || !deteccao.landmarks || !deteccao.landmarks.positions) return false;
+    const pos = deteccao.landmarks.positions;
+    if (pos.length < 68) return false;
+    const box = deteccao.detection ? deteccao.detection.box : null;
+
+    if (acao === 'piscar') {
+        const ear = _calcularEARFacial(pos);
+        // EAR abaixo de ~0.19 indica olhos fechados
+        if (ear < 0.19) {
+            faceLoginContFrames++;
+            if (faceLoginContFrames >= 1) return true;
+        } else {
+            faceLoginContFrames = 0;
+        }
+        return false;
+    }
+
+    if (acao === 'abrir_boca') {
+        const abertura = _calcularAberturaBocaFacial(pos);
+        if (abertura > 0.30) {
+            faceLoginContFrames++;
+            if (faceLoginContFrames >= 1) return true;
+        } else {
+            faceLoginContFrames = 0;
+        }
+        return false;
+    }
+
+    if (acao === 'virar_esquerda') {
+        const yaw = _calcularYawFacial(pos, box);
+        // Usuário vira cabeça para ESQUERDA dele -> no vídeo cru o nariz desloca para a direita da imagem
+        if (yaw > 0.07) {
+            faceLoginContFrames++;
+            if (faceLoginContFrames >= 2) return true;
+        } else {
+            faceLoginContFrames = 0;
+        }
+        return false;
+    }
+
+    return false;
+}
+/* ============================================================
+   FIM — AÇÃO ALEATÓRIA
+   ============================================================ */
+
 function verificarVencimentosProximos() {
     if (!db) return;
     const hoje = new Date();
@@ -2009,7 +2123,14 @@ async function abrirLoginFacial() {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { alert('⚠️ Câmera não disponível neste navegador.'); return; }
     const modal = document.getElementById('faceLoginModal');
     const statusEl = document.getElementById('faceLoginStatus');
-    if (statusEl) statusEl.textContent = '🔍 Procurando rosto...';
+
+    /* ===== NOVO: sorteia ação aleatória a cada login ===== */
+    faceLoginAcaoAtual = sortearAcaoFacialLogin();
+    faceLoginAcaoConcluida = false;
+    faceLoginContFrames = 0;
+    if (statusEl) statusEl.innerHTML = '🎭 AÇÃO NECESSÁRIA: ' + faceLoginAcaoAtual.emoji + ' <strong>' + faceLoginAcaoAtual.texto + '</strong>';
+    /* ==================================================== */
+
     modal.classList.add('active');
     try {
         faceLoginStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
@@ -2032,6 +2153,20 @@ function iniciarDeteccaoFacialLogin() {
         try {
             const det = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.5 })).withFaceLandmarks().withFaceDescriptor();
             if (det && det.descriptor) {
+                /* ===== ETAPA 1: verificar ação facial aleatória ===== */
+                if (!faceLoginAcaoConcluida && faceLoginAcaoAtual) {
+                    const acaoDetectada = detectarAcaoFacialLogin(det, faceLoginAcaoAtual.id);
+                    if (!acaoDetectada) {
+                        if (statusEl) statusEl.innerHTML = '🎭 ' + faceLoginAcaoAtual.emoji + ' <strong>' + faceLoginAcaoAtual.texto + '</strong>';
+                        loginFacialProcessando = false;
+                        return;
+                    }
+                    faceLoginAcaoConcluida = true;
+                    if (statusEl) statusEl.innerHTML = '✅ Ação detectada! Verificando identidade...';
+                    loginFacialProcessando = false;
+                    return;
+                }
+                /* ===== ETAPA 2: reconhecimento facial ===== */
                 const descriptor = Array.from(det.descriptor);
                 const match = encontrarUsuarioPorDescriptor(descriptor);
                 if (match) {
@@ -2040,11 +2175,17 @@ function iniciarDeteccaoFacialLogin() {
                     setTimeout(() => { fecharLoginFacial(); efetuarLoginUsuario(match.usuario, 'Login Facial'); }, 700);
                     loginFacialProcessando = false;
                     return;
-                } else { if (statusEl) statusEl.textContent = '🤔 Rosto detectado, mas não reconhecido. Aproxime-se mais.'; }
-            } else { if (statusEl) statusEl.textContent = '🔍 Procurando rosto...'; }
+                } else { if (statusEl) statusEl.innerHTML = '🤔 Rosto detectado, mas não reconhecido. Aproxime-se mais.'; }
+            } else {
+                if (!faceLoginAcaoConcluida && faceLoginAcaoAtual) {
+                    if (statusEl) statusEl.innerHTML = '🎭 ' + faceLoginAcaoAtual.emoji + ' <strong>' + faceLoginAcaoAtual.texto + '</strong>';
+                } else {
+                    if (statusEl) statusEl.textContent = '🔍 Procurando rosto...';
+                }
+            }
         } catch (e) {}
         loginFacialProcessando = false;
-    }, 700);
+    }, 200);
 }
 
 function fecharLoginFacial() {
@@ -2055,6 +2196,11 @@ function fecharLoginFacial() {
     const video = document.getElementById('faceLoginVideo');
     if (video) video.srcObject = null;
     loginFacialProcessando = false;
+    /* ===== NOVO: limpa estado da ação aleatória ===== */
+    faceLoginAcaoAtual = null;
+    faceLoginAcaoConcluida = false;
+    faceLoginContFrames = 0;
+    /* ============================================== */
 }
 
 document.getElementById('loginForm').addEventListener('submit', async function(e) {

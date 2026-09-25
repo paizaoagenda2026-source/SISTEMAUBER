@@ -166,7 +166,7 @@ tr:hover { background: #f5f5f5; }
 .status-pendente { background-color: #ffc107; color: #000; padding: 5px 10px; border-radius: 5px; font-weight: bold; }
 .status-pago { background-color: #28a745; color: white; padding: 5px 10px; border-radius: 5px; font-weight: bold; }
 .status-atrasado { background-color: #dc3545; color: white; padding: 5px 10px; border-radius: 5px; font-weight: bold; }
-.permissoes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #ddd; }
+.permissoes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #ddd; }
 .permissao-item { display: flex; align-items: center; gap: 8px; padding: 5px; border-radius: 4px; }
 .permissao-item input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
 .permissao-item label { cursor: pointer; font-size: 14px; user-select: none; }
@@ -377,7 +377,7 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
         <button class="btn-primary" id="btnSalvarVeiculo" data-permissao="veiculos_salvar" onclick="salvarVeiculo()">💾 Salvar</button>
         <button class="btn-info" data-permissao="veiculos_rastreador" onclick="abrirRastreador()">📍 Rastreador</button>
         <button class="btn-warning" data-permissao="veiculos_multas" onclick="window.open('https://sempararempresas.usezapay.com.br/', '_blank')">🚨 Multas</button>
-        <button class="btn-secondary" id="btnDocVeiculo" onclick="abrirDocVeiculo()">📄 DOC VEÍCULO</button>
+        <button class="btn-secondary" id="btnDocVeiculo" data-permissao="doc_salvar" onclick="abrirDocVeiculo()">📄 DOC VEÍCULO</button>
         <div class="table-container">
             <table id="tabelaVeiculos">
                 <thead><tr><th>Fab/Modelo</th><th>Placa</th><th>Cor</th><th>Ano</th><th>R$ Fipe</th><th>Ações</th></tr></thead>
@@ -453,8 +453,8 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
             </div>
             <div class="form-group"><label>R$ CAUÇÃO PAGO</label><input type="text" id="locCaucaoPago" class="money campo-enter"></div>
         </div>
-        <button class="btn-primary" id="btnSalvarLocacao" onclick="salvarLocacao()">💾 Salvar</button>
-        <button class="btn-secondary" onclick="abrirModalContratos()">📄 Contrato</button>
+        <button class="btn-primary" id="btnSalvarLocacao" data-permissao="locacoes_salvar" onclick="salvarLocacao()">💾 Salvar</button>
+        <button class="btn-secondary" data-permissao="locacoes_contrato" onclick="abrirModalContratos()">📄 Contrato</button>
         <div class="table-container">
             <table id="tabelaLocacoes">
                 <thead><tr><th>Locatário</th><th>Veículo</th><th>Placa</th><th>Início</th><th>Fim</th><th>Aluguel / Total c/ Caução</th><th>Ações</th></tr></thead>
@@ -506,7 +506,7 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
             <div class="form-group"><label>Cobertura</label><input type="text" id="segCobertura" class="campo-enter"></div>
             <div class="form-group"><label>Observações</label><textarea id="segObs"></textarea></div>
         </div>
-        <button class="btn-primary" onclick="salvarSeguro()">💾 Salvar</button>
+        <button class="btn-primary" data-permissao="seguro_salvar" onclick="salvarSeguro()">💾 Salvar</button>
         <div class="table-container">
             <table id="tabelaSeguros">
                 <thead><tr><th>Placa</th><th>Seguradora</th><th>Apólice</th><th>Início</th><th>Vencimento</th><th>Valor</th><th>Cobertura</th><th>Ações</th></tr></thead>
@@ -604,7 +604,7 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
             <h3 style="margin-top: 20px;">🚗 Placas Permitidas</h3>
             <div id="placasPermissoesContainer" class="permissoes-grid"></div>
         </div>
-        <button class="btn-primary" onclick="salvarUsuario()">💾 Salvar</button>
+        <button class="btn-primary" data-permissao="usuario_salvar" onclick="salvarUsuario()">💾 Salvar</button>
         <div class="table-container">
             <table id="tabelaUsuario">
                 <thead><tr><th>Nome</th><th>Tipo</th><th>Selfie</th><th>Ações</th></tr></thead>
@@ -796,7 +796,7 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
             <div class="form-group"><label>Valor</label><input type="text" id="fcValor" class="money"></div>
             <div class="form-group"><label>Tipo</label><select id="fcTipo"><option value="entrada">Entrada</option><option value="saida">Saída</option></select></div>
         </div>
-        <button class="btn-primary" onclick="salvarFluxoCaixa()">💾 Salvar Lançamento Manual</button>
+        <button class="btn-primary" data-permissao="fluxocaixa_salvar" onclick="salvarFluxoCaixa()">💾 Salvar Lançamento Manual</button>
         <div class="dashboard-encerradas" style="margin-top:20px;">
             <div class="kpi-card green"><div class="kpi-value" id="totalEntradas">R$ 0,00</div><div class="kpi-label">Entradas</div></div>
             <div class="kpi-card red"><div class="kpi-value" id="totalSaidas">R$ 0,00</div><div class="kpi-label">Saídas</div></div>
@@ -834,7 +834,7 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
             <div class="form-group"><label>Total</label><input type="text" id="compValorTotal" class="money" readonly></div>
             <div class="form-group"><label>Status</label><select id="compStatus"><option value="pendente">Pendente</option><option value="pago">Pago</option></select></div>
         </div>
-        <button class="btn-primary" onclick="salvarCompra()">💾 Salvar</button>
+        <button class="btn-primary" data-permissao="compras_salvar" onclick="salvarCompra()">💾 Salvar</button>
         <div class="table-container">
             <table id="tabelaCompras">
                 <thead><tr><th>Data</th><th>Produto</th><th>Fornecedor</th><th>Placa</th><th>Valor</th><th>Status</th><th>Ações</th></tr></thead>
@@ -864,8 +864,8 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
             <div class="form-group"><label>R$ Mensal</label><input type="text" id="novoSegMensal" class="money campo-enter"></div>
             <div class="form-group"><label>Vencimento</label><input type="date" id="novoSegVencimento" class="campo-enter"></div>
         </div>
-        <button class="btn-primary" onclick="salvarNovoSeguro()">💾 Salvar</button>
-        <button class="btn-buscar" id="btnBuscarPdfNovoSeg" onclick="document.getElementById('novoSegPdfInput').click()">📄 Buscar PDF</button>
+        <button class="btn-primary" data-permissao="seguro_novo_salvar" onclick="salvarNovoSeguro()">💾 Salvar</button>
+        <button class="btn-buscar" id="btnBuscarPdfNovoSeg" data-permissao="seguro_novo_pdf" onclick="document.getElementById('novoSegPdfInput').click()">📄 Buscar PDF</button>
         <input type="file" id="novoSegPdfInput" accept="application/pdf" style="display:none;">
         <div class="table-container">
             <table id="tabelaNovoSeguro">
@@ -887,13 +887,13 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
                 <div class="form-group"><label>Endereço</label><input type="text" id="configEndereco"></div>
             </div>
         </div>
-        <button class="btn-primary" onclick="salvarConfiguracao()">💾 Salvar</button>
+        <button class="btn-primary" data-permissao="config_salvar" onclick="salvarConfiguracao()">💾 Salvar</button>
     </div>
 
     <div class="tab-content" id="auditoria">
         <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
             <h2 style="margin: 0;">🔍 Auditoria</h2>
-            <button class="btn-danger" onclick="limparAuditoriaManual()" style="padding: 8px 15px; font-size: 14px;">🗑️ Limpar Auditoria</button>
+            <button class="btn-danger" data-permissao="auditoria_limpar" onclick="limparAuditoriaManual()" style="padding: 8px 15px; font-size: 14px;">🗑️ Limpar Auditoria</button>
         </div>
         <div class="table-container">
             <table id="tabelaAuditoria">
@@ -914,7 +914,7 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
             <div class="form-group"><label>Data Inicio</label><input type="date" id="pendVencimento"></div>
             <div class="form-group"><label>Data Final</label><input type="date" id="pendDataFinal"></div>
         </div>
-        <button class="btn-primary" onclick="salvarPendencia()">💾 Salvar</button>
+        <button class="btn-primary" data-permissao="pendente_salvar" onclick="salvarPendencia()">💾 Salvar</button>
         <div class="table-container">
             <table id="tabelaPendentes">
                 <thead><tr><th>Data</th><th>Descrição</th><th>Placa</th><th>Crédito</th><th>Débito</th><th>Vencimento</th><th>Status</th><th>Ações</th></tr></thead>
@@ -1229,14 +1229,12 @@ function renderSubtabsForGroup(grupo) {
 }
 
 function ativarGrupo(grupo, autoClickFirst) {
-    // Atualiza estado visual dos botões de grupo
     document.querySelectorAll('.group-tab').forEach(b => b.classList.remove('active'));
     const gb = document.querySelector('.group-tab[data-group="' + grupo + '"]');
     if (gb) gb.classList.add('active');
 
     const firstSub = renderSubtabsForGroup(grupo);
 
-    // Verifica se a aba ativa atual pertence a este grupo
     const activeTab = document.querySelector('.tab.active');
     const activeTabId = activeTab ? activeTab.dataset.tab : null;
     const tabs = GRUPOS[grupo] || [];
@@ -1392,7 +1390,76 @@ const todasAbas = [
     { id: 'fluxocaixa' }, { id: 'compras' }, { id: 'configuracao' }, { id: 'auditoria' },
     { id: 'pendente' }, { id: 'historico' }, { id: 'vistoria' }, { id: 'seguro_novo' }
 ];
-const todasPermissoes = ['veiculos_salvar','veiculos_rastreador','veiculos_multas','clientes_salvar','locacoes_salvar','locacoes_contrato','manutencao_salvar','mecanico_salvar','usuario_salvar','usuario_editar','usuario_excluir','usuario_limpar','garagem_buscar','garagem_salvar','sos_buscar','sos_salvar','sos_baixar','comprovantes_buscar','comprovantes_salvar','banco_salvar','banco_editar','banco_copiar','banco_excluir','fluxocaixa_salvar','doc_salvar','doc_limpar','doc_selecionar','compras_salvar','compras_editar','compras_limpar','compras_excluir','config_salvar','config_restaurar','auditoria_filtrar','auditoria_limpar','pendente_salvar','pendente_editar','pendente_excluir','vistoria_camera'];
+const todasPermissoes = ['veiculos_salvar','veiculos_rastreador','veiculos_multas','clientes_salvar','locacoes_salvar','locacoes_contrato','manutencao_salvar','mecanico_salvar','usuario_salvar','usuario_editar','usuario_excluir','usuario_limpar','garagem_buscar','garagem_salvar','sos_buscar','sos_salvar','sos_baixar','comprovantes_buscar','comprovantes_salvar','banco_salvar','banco_editar','banco_copiar','banco_excluir','fluxocaixa_salvar','doc_salvar','doc_limpar','doc_selecionar','compras_salvar','compras_editar','compras_limpar','compras_excluir','config_salvar','config_restaurar','auditoria_filtrar','auditoria_limpar','pendente_salvar','pendente_editar','pendente_excluir','vistoria_camera','seguro_salvar','seguro_novo_salvar','seguro_novo_pdf'];
+
+/* ===== RÓTULOS AMIGÁVEIS PARA O PAINEL DE PERMISSÕES ===== */
+const LABELS_ABAS = {
+    veiculos: '🚗 Veículos',
+    clientes: '👤 Clientes',
+    locacoes: '📋 Locações',
+    locEncerrada: '🏁 Locações Encerradas',
+    seguro: '🛡️ Seguro',
+    seguro_novo: '🛡️ Seguro (Novo)',
+    garagem: '🏠 Garagem',
+    vistoria: '📸 Vistoria',
+    sos: '🆘 SOS',
+    banco: '🏦 Banco',
+    fluxocaixa: '💵 Fluxo de Caixa',
+    pagamentos: '💰 Sub Pagamentos',
+    pendente: '⏳ Pendente',
+    manutencao: '🔧 Manutenção',
+    mecanico: '👨‍🔧 Mecânico',
+    compras: '🛒 Compras',
+    comprovantes: '📄 Documentos/Comprovantes',
+    usuario: '👥 Usuário',
+    auditoria: '🔍 Auditoria',
+    historico: '📜 Histórico',
+    configuracao: '⚙️ Configurações'
+};
+const LABELS_PERMISSOES = {
+    veiculos_salvar: 'Veículos — Salvar',
+    veiculos_rastreador: 'Veículos — Rastreador',
+    veiculos_multas: 'Veículos — Multas',
+    clientes_salvar: 'Clientes — Salvar',
+    locacoes_salvar: 'Locações — Salvar',
+    locacoes_contrato: 'Locações — Contrato',
+    manutencao_salvar: 'Manutenção — Salvar',
+    mecanico_salvar: 'Mecânico — Salvar',
+    usuario_salvar: 'Usuário — Salvar',
+    usuario_editar: 'Usuário — Editar',
+    usuario_excluir: 'Usuário — Excluir',
+    usuario_limpar: 'Usuário — Limpar',
+    garagem_buscar: 'Garagem — Buscar',
+    garagem_salvar: 'Garagem — Salvar',
+    sos_buscar: 'SOS — Buscar',
+    sos_salvar: 'SOS — Salvar',
+    sos_baixar: 'SOS — Baixar',
+    comprovantes_buscar: 'Comprovantes — Buscar',
+    comprovantes_salvar: 'Comprovantes — Salvar',
+    banco_salvar: 'Banco — Salvar',
+    banco_editar: 'Banco — Editar',
+    banco_copiar: 'Banco — Copiar PIX',
+    banco_excluir: 'Banco — Excluir',
+    fluxocaixa_salvar: 'Fluxo de Caixa — Salvar',
+    doc_salvar: 'Documentos — Salvar',
+    doc_limpar: 'Documentos — Limpar',
+    doc_selecionar: 'Documentos — Selecionar',
+    compras_salvar: 'Compras — Salvar',
+    compras_editar: 'Compras — Editar',
+    compras_limpar: 'Compras — Limpar',
+    compras_excluir: 'Compras — Excluir',
+    config_salvar: 'Configurações — Salvar',
+    config_restaurar: 'Configurações — Restaurar',
+    auditoria_filtrar: 'Auditoria — Filtrar',
+    auditoria_limpar: 'Auditoria — Limpar',
+    pendente_salvar: 'Pendente — Salvar',
+    pendente_editar: 'Pendente — Editar',
+    pendente_excluir: 'Pendente — Excluir',
+    vistoria_camera: 'Vistoria — Câmera / Buscar Imagens',
+    seguro_salvar: 'Seguro — Salvar',
+    seguro_novo_salvar: 'Seguro (Novo) — Salvar',
+    seguro_novo_pdf: 'Seguro (Novo) — Buscar PDF'
+};
 
 const permissoesPadrao = {
     ADM: { abas: Object.fromEntries(todasAbas.map(a => [a.id, true])), botoes: Object.fromEntries(todasPermissoes.map(b => [b, true])), veiculos: {} },
@@ -1420,7 +1487,6 @@ let garagemImagensTemp = [], sosImagensTemp = [];
 let galeriaAtual = [], galeriaIndexAtual = 0;
 let relatorioMecanicoTemp = [], comprovantesPagTemp = [], docComprovantesTemp = [];
 let docVeiculoAtual = null;
-// === NOVO: Variáveis para a aba Seguro (standalone) ===
 let novoSegEditandoIndex = null;
 let novoSegPdfTemp = null;
 
@@ -2058,18 +2124,21 @@ function sairSistema() {
 function gerarPermissoesUI() {
     const container = document.getElementById('permissoesContainer');
     if (!container) return;
-    container.innerHTML = '<h5>📑 Abas</h5>';
+    container.innerHTML = '<h5>📑 Abas do Sistema</h5>';
     const grid = document.createElement('div'); grid.className = 'permissoes-grid';
     todasAbas.forEach(a => {
+        const label = LABELS_ABAS[a.id] || a.id;
         const d = document.createElement('div'); d.className = 'permissao-item';
-        d.innerHTML = `<input type="checkbox" id="perm_aba_${a.id}" checked> <label for="perm_aba_${a.id}">${a.id}</label>`;
+        d.innerHTML = `<input type="checkbox" id="perm_aba_${a.id}" checked> <label for="perm_aba_${a.id}">${label}</label>`;
         grid.appendChild(d);
     });
     container.appendChild(grid);
+    container.insertAdjacentHTML('beforeend', '<h5>🔧 Botões e Ações do Sistema</h5>');
     const grid2 = document.createElement('div'); grid2.className = 'permissoes-grid';
     todasPermissoes.forEach(p => {
+        const label = LABELS_PERMISSOES[p] || p;
         const d = document.createElement('div'); d.className = 'permissao-item';
-        d.innerHTML = `<input type="checkbox" id="perm_botao_${p}" checked> <label for="perm_botao_${p}">${p}</label>`;
+        d.innerHTML = `<input type="checkbox" id="perm_botao_${p}" checked> <label for="perm_botao_${p}">${label}</label>`;
         grid2.appendChild(d);
     });
     container.appendChild(grid2);
@@ -2809,7 +2878,6 @@ async function salvarNovoSeguro() {
     
     if (!Array.isArray(db.seguros_novo)) db.seguros_novo = [];
 
-    // Resolve PDF: se novo PDF temporário com base64, faz upload
     let pdfStorageId = null;
     let pdfNome = '';
     if (novoSegPdfTemp && novoSegPdfTemp.base64) {
@@ -2845,7 +2913,6 @@ async function salvarNovoSeguro() {
     atualizarTabelaNovoSeguro();
     salvarDB();
 
-    // Limpar campos
     ['novoSegSeguradora','novoSegContrato','novoSegResponsavel','novoSegFone','novoSegVeiculo','novoSegPlaca','novoSegCategoria','novoSegFipe','novoSegProtegido','novoSegPlano','novoSegCoberturaIncluida','novoSegCoberturasAdicionais','novoSegFranquia','novoSegTaxaAdesao','novoSegMensal','novoSegVencimento'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = '';
@@ -5957,7 +6024,6 @@ async function inicializarSistemaCompleto() {
     if (docCompInput && docCompInput.dataset.bound !== '1') { docCompInput.dataset.bound = '1'; docCompInput.addEventListener('change', handleDocComprovanteInputChange); }
     const vistImagemInput = document.getElementById('vistoriaImagemInput');
     if (vistImagemInput && vistImagemInput.dataset.bound !== '1') { vistImagemInput.dataset.bound = '1'; vistImagemInput.addEventListener('change', handleVistoriaImagemSelecionada); }
-    // === NOVO: Listener do input PDF da aba Seguro ===
     const novoSegPdfInput = document.getElementById('novoSegPdfInput');
     if (novoSegPdfInput && novoSegPdfInput.dataset.bound !== '1') { novoSegPdfInput.dataset.bound = '1'; novoSegPdfInput.addEventListener('change', handleNovoSegPdfInputChange); }
     const loginUserEl = document.getElementById('loginUser');

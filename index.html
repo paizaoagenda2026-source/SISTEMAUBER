@@ -455,6 +455,18 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
         </div>
         <button class="btn-primary" id="btnSalvarLocacao" data-permissao="locacoes_salvar" onclick="salvarLocacao()">💾 Salvar</button>
         <button class="btn-secondary" data-permissao="locacoes_contrato" onclick="abrirModalContratos()">📄 Contrato</button>
+        <div class="filter-bar">
+            <input type="text" class="filter-input" placeholder="🔍 Filtrar locações..." id="filterLocacoes" style="margin-bottom:0;">
+            <div class="filter-date-group">
+                <label>Data Início</label>
+                <input type="date" id="filterLocacoesDataInicio">
+            </div>
+            <div class="filter-date-group">
+                <label>Data Fim</label>
+                <input type="date" id="filterLocacoesDataFim">
+            </div>
+            <button class="btn-buscar" onclick="limparFiltro('filterLocacoes', 'filterLocacoesDataInicio', 'filterLocacoesDataFim', 'tabelaLocacoes')" style="padding:10px 20px;margin:0;font-size:14px;">🧹 Limpar Filtro</button>
+        </div>
         <div class="table-container">
             <table id="tabelaLocacoes">
                 <thead><tr><th>Locatário</th><th>Veículo</th><th>Placa</th><th>Início</th><th>Fim</th><th>Aluguel / Total c/ Caução</th><th>Ações</th></tr></thead>
@@ -531,6 +543,11 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
             </div>
         </div>
 
+        <div class="filter-bar">
+            <input type="text" class="filter-input" placeholder="🔍 Filtrar manutenções..." id="filterManutencao" style="margin-bottom:0;">
+            <button class="btn-buscar" onclick="limparFiltro('filterManutencao', null, null, 'tabelaManutencao')" style="padding:10px 20px;margin:0;font-size:14px;">🧹 Limpar Filtro</button>
+        </div>
+
         <div class="table-container">
             <table id="tabelaManutencao">
                 <thead><tr><th>Veículo</th><th>Placa</th><th>Tipo</th><th>KM</th><th>Ações</th></tr></thead>
@@ -576,6 +593,18 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
                 </div>
             </div>
         </div>
+        <div class="filter-bar">
+            <input type="text" class="filter-input" placeholder="🔍 Filtrar serviços..." id="filterMecanico" style="margin-bottom:0;">
+            <div class="filter-date-group">
+                <label>Data Início</label>
+                <input type="date" id="filterMecanicoDataInicio">
+            </div>
+            <div class="filter-date-group">
+                <label>Data Fim</label>
+                <input type="date" id="filterMecanicoDataFim">
+            </div>
+            <button class="btn-buscar" onclick="limparFiltro('filterMecanico', 'filterMecanicoDataInicio', 'filterMecanicoDataFim', 'tabelaMecanico')" style="padding:10px 20px;margin:0;font-size:14px;">🧹 Limpar Filtro</button>
+        </div>
         <div class="table-container" style="margin-top: 30px;">
             <h3>📋 Histórico de Serviços</h3>
             <table id="tabelaMecanico">
@@ -605,6 +634,10 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
             <div id="placasPermissoesContainer" class="permissoes-grid"></div>
         </div>
         <button class="btn-primary" data-permissao="usuario_salvar" onclick="salvarUsuario()">💾 Salvar</button>
+        <div class="filter-bar">
+            <input type="text" class="filter-input" placeholder="🔍 Filtrar usuários..." id="filterUsuario" style="margin-bottom:0;">
+            <button class="btn-buscar" onclick="limparFiltro('filterUsuario', null, null, 'tabelaUsuario')" style="padding:10px 20px;margin:0;font-size:14px;">🧹 Limpar Filtro</button>
+        </div>
         <div class="table-container">
             <table id="tabelaUsuario">
                 <thead><tr><th>Nome</th><th>Tipo</th><th>Selfie</th><th>Ações</th></tr></thead>
@@ -759,6 +792,18 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
 
     <div class="tab-content" id="pagamentos">
         <h2>💰 Sub Pagamentos</h2>
+        <div class="filter-bar">
+            <input type="text" class="filter-input" placeholder="🔍 Filtrar pagamentos..." id="filterPagamentos" style="margin-bottom:0;">
+            <div class="filter-date-group">
+                <label>Data Início</label>
+                <input type="date" id="filterPagamentosDataInicio">
+            </div>
+            <div class="filter-date-group">
+                <label>Data Fim</label>
+                <input type="date" id="filterPagamentosDataFim">
+            </div>
+            <button class="btn-buscar" onclick="limparFiltro('filterPagamentos', 'filterPagamentosDataInicio', 'filterPagamentosDataFim', 'tabelaPagamentos')" style="padding:10px 20px;margin:0;font-size:14px;">🧹 Limpar Filtro</button>
+        </div>
         <div class="table-container">
             <table id="tabelaPagamentos">
                 <thead><tr><th>Locatário</th><th>Veículo</th><th>Placa</th><th>Início</th><th>Fim</th><th>Vencimento</th><th>Aluguel / Total c/ Caução</th><th>Ações</th></tr></thead>
@@ -778,6 +823,10 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
             <div class="form-group"><label>Titular</label><input type="text" id="bancoTitular" class="campo-enter"></div>
         </div>
         <button class="btn-primary" id="btnSalvarBanco" data-permissao="banco_salvar" onclick="salvarBanco()">💾 Salvar</button>
+        <div class="filter-bar">
+            <input type="text" class="filter-input" placeholder="🔍 Filtrar bancos..." id="filterBancos" style="margin-bottom:0;">
+            <button class="btn-buscar" onclick="limparFiltro('filterBancos', null, null, 'tabelaBancos')" style="padding:10px 20px;margin:0;font-size:14px;">🧹 Limpar Filtro</button>
+        </div>
         <div class="table-container">
             <table id="tabelaBancos">
                 <thead><tr><th>Banco</th><th>Agência</th><th>Conta</th><th>PIX</th><th>Titular</th><th>Ações</th></tr></thead>
@@ -835,6 +884,18 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
             <div class="form-group"><label>Status</label><select id="compStatus"><option value="pendente">Pendente</option><option value="pago">Pago</option></select></div>
         </div>
         <button class="btn-primary" data-permissao="compras_salvar" onclick="salvarCompra()">💾 Salvar</button>
+        <div class="filter-bar">
+            <input type="text" class="filter-input" placeholder="🔍 Filtrar compras..." id="filterCompras" style="margin-bottom:0;">
+            <div class="filter-date-group">
+                <label>Data Início</label>
+                <input type="date" id="filterComprasDataInicio">
+            </div>
+            <div class="filter-date-group">
+                <label>Data Fim</label>
+                <input type="date" id="filterComprasDataFim">
+            </div>
+            <button class="btn-buscar" onclick="limparFiltro('filterCompras', 'filterComprasDataInicio', 'filterComprasDataFim', 'tabelaCompras')" style="padding:10px 20px;margin:0;font-size:14px;">🧹 Limpar Filtro</button>
+        </div>
         <div class="table-container">
             <table id="tabelaCompras">
                 <thead><tr><th>Data</th><th>Produto</th><th>Fornecedor</th><th>Placa</th><th>Valor</th><th>Status</th><th>Ações</th></tr></thead>
@@ -895,6 +956,18 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
             <h2 style="margin: 0;">🔍 Auditoria</h2>
             <button class="btn-danger" data-permissao="auditoria_limpar" onclick="limparAuditoriaManual()" style="padding: 8px 15px; font-size: 14px;">🗑️ Limpar Auditoria</button>
         </div>
+        <div class="filter-bar">
+            <input type="text" class="filter-input" placeholder="🔍 Filtrar auditoria..." id="filterAuditoria" style="margin-bottom:0;">
+            <div class="filter-date-group">
+                <label>Data Início</label>
+                <input type="date" id="filterAuditoriaDataInicio">
+            </div>
+            <div class="filter-date-group">
+                <label>Data Fim</label>
+                <input type="date" id="filterAuditoriaDataFim">
+            </div>
+            <button class="btn-buscar" onclick="limparFiltro('filterAuditoria', 'filterAuditoriaDataInicio', 'filterAuditoriaDataFim', 'tabelaAuditoria')" style="padding:10px 20px;margin:0;font-size:14px;">🧹 Limpar Filtro</button>
+        </div>
         <div class="table-container">
             <table id="tabelaAuditoria">
                 <thead><tr><th>Data/Hora</th><th>Usuário</th><th>Ação</th><th>Descrição</th></tr></thead>
@@ -915,6 +988,18 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
             <div class="form-group"><label>Data Final</label><input type="date" id="pendDataFinal"></div>
         </div>
         <button class="btn-primary" data-permissao="pendente_salvar" onclick="salvarPendencia()">💾 Salvar</button>
+        <div class="filter-bar">
+            <input type="text" class="filter-input" placeholder="🔍 Filtrar pendências..." id="filterPendentes" style="margin-bottom:0;">
+            <div class="filter-date-group">
+                <label>Data Início</label>
+                <input type="date" id="filterPendentesDataInicio">
+            </div>
+            <div class="filter-date-group">
+                <label>Data Fim</label>
+                <input type="date" id="filterPendentesDataFim">
+            </div>
+            <button class="btn-buscar" onclick="limparFiltro('filterPendentes', 'filterPendentesDataInicio', 'filterPendentesDataFim', 'tabelaPendentes')" style="padding:10px 20px;margin:0;font-size:14px;">🧹 Limpar Filtro</button>
+        </div>
         <div class="table-container">
             <table id="tabelaPendentes">
                 <thead><tr><th>Data</th><th>Descrição</th><th>Placa</th><th>Crédito</th><th>Débito</th><th>Vencimento</th><th>Status</th><th>Ações</th></tr></thead>
@@ -1513,8 +1598,9 @@ function obterDataHojeISO() { const h = new Date(); return h.getFullYear() + '-'
 
 function converterDataParaISO(dataStr) {
     if (!dataStr) return '';
-    const s = String(dataStr).trim();
+    let s = String(dataStr).trim();
     if (!s) return '';
+    s = s.split(' ')[0];
     if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.substring(0, 10);
     if (s.includes('/')) {
         const p = s.split('/');
@@ -1920,6 +2006,15 @@ function atualizarTabelaAuditoria() {
     (db.auditoria || []).slice(-100).reverse().forEach(a => {
         if (!a) return;
         const tr = document.createElement('tr');
+        let dataISO = '';
+        if (a.data) {
+            const dataPart = String(a.data).split(' ')[0];
+            if (dataPart.includes('/')) {
+                const ps = dataPart.split('/');
+                if (ps.length === 3) dataISO = ps[2] + '-' + ps[1].padStart(2, '0') + '-' + ps[0].padStart(2, '0');
+            }
+        }
+        tr.setAttribute('data-date', dataISO);
         tr.innerHTML = `<td>${a.data||''}</td><td>${a.usuario||''}</td><td>${a.acao||''}</td><td>${a.descricao||''}</td>`;
         tbody.appendChild(tr);
     });
@@ -2027,7 +2122,6 @@ function detectarAcaoFacialLogin(deteccao, acao) {
 
     if (acao === 'virar_esquerda') {
         const yaw = _calcularYawFacial(pos, box);
-        // Usuário vira cabeça para ESQUERDA dele -> no vídeo cru o nariz desloca para a direita da imagem
         if (yaw > 0.07) {
             faceLoginContFrames++;
             if (faceLoginContFrames >= 2) return true;
@@ -2039,9 +2133,6 @@ function detectarAcaoFacialLogin(deteccao, acao) {
 
     return false;
 }
-/* ============================================================
-   FIM — AÇÃO ALEATÓRIA
-   ============================================================ */
 
 function verificarVencimentosProximos() {
     if (!db) return;
@@ -2099,14 +2190,11 @@ async function abrirLoginFacial() {
     const modal = document.getElementById('faceLoginModal');
     const statusEl = document.getElementById('faceLoginStatus');
 
-    /* ===== NOVO: sorteia ação aleatória a cada login ===== */
     faceLoginAcaoAtual = sortearAcaoFacialLogin();
     faceLoginAcaoConcluida = false;
     faceLoginContFrames = 0;
-    /* ===== marca a sessão como ativa (bug do cancelar) ===== */
     faceLoginSessaoAtiva = true;
     if (statusEl) statusEl.innerHTML = '🎭 AÇÃO NECESSÁRIA: ' + faceLoginAcaoAtual.emoji + ' <strong>' + faceLoginAcaoAtual.texto + '</strong>';
-    /* ==================================================== */
 
     modal.classList.add('active');
     try {
@@ -2131,7 +2219,6 @@ function iniciarDeteccaoFacialLogin() {
         try {
             const det = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.5 })).withFaceLandmarks().withFaceDescriptor();
             if (det && det.descriptor) {
-                /* ===== ETAPA 1: verificar ação facial aleatória ===== */
                 if (!faceLoginAcaoConcluida && faceLoginAcaoAtual) {
                     const acaoDetectada = detectarAcaoFacialLogin(det, faceLoginAcaoAtual.id);
                     if (!acaoDetectada) {
@@ -2144,15 +2231,12 @@ function iniciarDeteccaoFacialLogin() {
                     loginFacialProcessando = false;
                     return;
                 }
-                /* ===== ETAPA 2: reconhecimento facial ===== */
                 const descriptor = Array.from(det.descriptor);
                 const match = encontrarUsuarioPorDescriptor(descriptor);
                 if (match) {
                     if (statusEl) statusEl.innerHTML = '✅ Olá, <strong>' + match.usuario.nome + '</strong>! Entrando...';
                     if (faceLoginInterval) { clearInterval(faceLoginInterval); faceLoginInterval = null; }
-                    /* ===== guarda estado e confirma sessão antes do timeout ===== */
                     setTimeout(() => {
-                        /* BUG FIX: não logar se a sessão foi cancelada nesse meio tempo */
                         if (!faceLoginSessaoAtiva) return;
                         faceLoginSessaoAtiva = false;
                         fecharLoginFacial();
@@ -2174,7 +2258,6 @@ function iniciarDeteccaoFacialLogin() {
 }
 
 function fecharLoginFacial() {
-    /* BUG FIX: invalida a sessão para que o setTimeout do login não execute após cancelar */
     faceLoginSessaoAtiva = false;
     if (faceLoginInterval) { clearInterval(faceLoginInterval); faceLoginInterval = null; }
     if (faceLoginStream) { try { faceLoginStream.getTracks().forEach(t => t.stop()); } catch(e) {} faceLoginStream = null; }
@@ -2183,11 +2266,9 @@ function fecharLoginFacial() {
     const video = document.getElementById('faceLoginVideo');
     if (video) video.srcObject = null;
     loginFacialProcessando = false;
-    /* ===== limpa estado da ação aleatória ===== */
     faceLoginAcaoAtual = null;
     faceLoginAcaoConcluida = false;
     faceLoginContFrames = 0;
-    /* ============================================== */
 }
 
 document.getElementById('loginForm').addEventListener('submit', async function(e) {
@@ -2586,18 +2667,18 @@ function aplicarFiltroHistoricoAlugueis() {
 
 setupFilter('filterVeiculos', 'tabelaVeiculos');
 setupFilter('filterClientes', 'tabelaClientes', null, 'filterClientesDataInicio', 'filterClientesDataFim');
-setupFilter('filterLocacoes', 'tabelaLocacoes');
+setupFilter('filterLocacoes', 'tabelaLocacoes', null, 'filterLocacoesDataInicio', 'filterLocacoesDataFim');
 setupFilter('filterManutencao', 'tabelaManutencao');
-setupFilter('filterMecanico', 'tabelaMecanico');
+setupFilter('filterMecanico', 'tabelaMecanico', null, 'filterMecanicoDataInicio', 'filterMecanicoDataFim');
 setupFilter('filterUsuario', 'tabelaUsuario');
-setupFilter('filterPagamentos', 'tabelaPagamentos');
+setupFilter('filterPagamentos', 'tabelaPagamentos', null, 'filterPagamentosDataInicio', 'filterPagamentosDataFim');
 setupFilter('filterBancos', 'tabelaBancos');
 setupFilter('filterFluxoCaixa', 'tabelaFluxoCaixa', recalcularDashboardFluxoCaixa, 'filterFluxoCaixaDataInicio', 'filterFluxoCaixaDataFim');
 setupFilter('filterDoc', 'tabelaDoc', null, 'filterDocDataInicio', 'filterDocDataFim');
-setupFilter('filterCompras', 'tabelaCompras');
-setupFilter('filterAuditoria', 'tabelaAuditoria');
+setupFilter('filterCompras', 'tabelaCompras', null, 'filterComprasDataInicio', 'filterComprasDataFim');
+setupFilter('filterAuditoria', 'tabelaAuditoria', null, 'filterAuditoriaDataInicio', 'filterAuditoriaDataFim');
 setupFilter('filterLocEncerrada', 'tabelaLocEncerrada', recalcularDashboardLocEncerrada, 'filterLocEncerradaDataInicio', 'filterLocEncerradaDataFim');
-setupFilter('filterPendentes', 'tabelaPendentes');
+setupFilter('filterPendentes', 'tabelaPendentes', null, 'filterPendentesDataInicio', 'filterPendentesDataFim');
 setupFilter('filterHistorico', 'tabelaHistorico', null, 'filterHistoricoDataInicio', 'filterHistoricoDataFim');
 setupFilter('filterComprovantesPag', 'tabelaComprovantesPag', null, 'filterComprovantesPagDataInicio', 'filterComprovantesPagDataFim');
 
@@ -3579,9 +3660,14 @@ function atualizarTabelaLocacoes() {
         const caucaoLabel = l.pagCaucao ? l.pagCaucao.toUpperCase() : 'À VISTA';
         const totalTxt = l.valorTotalParcelas ? `<br><small style="color:#e63946;font-weight:bold;">Total: ${formatarMoedaBR(l.valorTotalParcelas)}</small>` : '';
         const tr = document.createElement('tr');
+        tr.setAttribute('data-date', converterDataParaISO(l.dataInicio) || '');
         tr.innerHTML = `<td>${l.locatario || ''}</td><td>${l.fabricante || ''}</td><td>${l.placa || ''}</td><td>${formatarDataBR(l.dataInicio)}</td><td>${formatarDataBR(l.dataFim)}</td><td>${l.valorAluguel || ''}<br><small style="color:#666;">${tipoLabel} · Caução: ${caucaoLabel}</small>${totalTxt}</td><td><button class="btn-warning" onclick="editarLocacao(${i})" title="Editar">✏️</button> <button class="btn-warning" onclick="encerrarLocacao(${i})" title="Encerrar">🏁</button> <button class="btn-danger" onclick="excluirLocacao(${i})" title="Excluir">🗑️</button></td>`;
         tbody.appendChild(tr);
     });
+    const filtroEl = document.getElementById('filterLocacoes');
+    if (filtroEl && (filtroEl.value.trim() || (document.getElementById('filterLocacoesDataInicio')||{}).value || (document.getElementById('filterLocacoesDataFim')||{}).value)) {
+        if (filtroEl._filterHandler) filtroEl._filterHandler.call(filtroEl);
+    }
 }
 function editarLocacao(i) {
     if (!confirmarSenhaADM()) return;
@@ -3911,9 +3997,14 @@ function atualizarTabelaMecanico() {
     itens.forEach(({ m, idx: i }) => {
         const statusBadge = m.pago ? '<span class="status-pago">PAGO</span>' : '<span class="status-pendente">PENDENTE</span>';
         const tr = document.createElement('tr');
+        tr.setAttribute('data-date', converterDataParaISO(m.data) || '');
         tr.innerHTML = `<td>${m.data||''}</td><td>${m.oficina||''}</td><td>${m.servico||''}</td><td>${m.carro||''}</td><td>${m.valor||''}</td><td>${statusBadge}</td><td><button class="btn-danger" onclick="excluirMecanico(${i})">🗑️</button></td>`;
         tbody.appendChild(tr);
     });
+    const filtroEl = document.getElementById('filterMecanico');
+    if (filtroEl && (filtroEl.value.trim() || (document.getElementById('filterMecanicoDataInicio')||{}).value || (document.getElementById('filterMecanicoDataFim')||{}).value)) {
+        if (filtroEl._filterHandler) filtroEl._filterHandler.call(filtroEl);
+    }
 }
 function excluirMecanico(i) {
     if (!confirmarSenhaADM()) return;
@@ -3998,6 +4089,10 @@ function atualizarTabelaHistorico() {
         tr.innerHTML = `<td>${h.data||''}</td><td>${h.descricao||''}</td><td>${h.placa||''}</td><td>${h.valor||''}</td><td>${h.fornecedor||''}</td><td>${h.oficina||''}</td><td><button class="btn-danger" onclick="excluirHistorico(${realIndex})" title="Excluir">🗑️</button></td>`;
         tbody.appendChild(tr);
     });
+    const filtroEl = document.getElementById('filterHistorico');
+    if (filtroEl && (filtroEl.value.trim() || (document.getElementById('filterHistoricoDataInicio')||{}).value || (document.getElementById('filterHistoricoDataFim')||{}).value)) {
+        if (filtroEl._filterHandler) filtroEl._filterHandler.call(filtroEl);
+    }
 }
 function excluirHistorico(index) {
     if (!confirmarSenhaADM()) return;
@@ -4995,9 +5090,14 @@ function atualizarTabelaAlugueis() {
         const totalTxt = a.totalParcelas ? '<br><small style="color:#e63946;font-weight:bold;">Total: ' + a.totalParcelas + '</small>' : '';
         const origemTxt = a.origem ? '<br><small style="color:#666;">' + a.origem + '</small>' : '';
         const tr = document.createElement('tr');
+        tr.setAttribute('data-date', converterDataParaISO(a.vencimento) || '');
         tr.innerHTML = `<td>${a.locatario || ''}</td><td>${a.fabricante || ''}</td><td>${a.placa || ''}</td><td>${formatarDataBR(a.dataInicio)}</td><td>${formatarDataBR(a.dataFim)}</td><td>${formatarDataBR(a.vencimento)}</td><td>${a.valor || ''}${origemTxt}<br><small style="color:#666;">${tipoLabel} · Caução: ${caucaoLabel}</small>${totalTxt}</td><td>${status !== 'pago' ? '<button class="btn-success" onclick="marcarPagamentoPago(' + i + ')" title="Pagar">✅</button>' : ''}<button class="btn-danger" onclick="excluirPagamento(${i})">🗑️</button></td>`;
         tbody.appendChild(tr);
     });
+    const filtroEl = document.getElementById('filterPagamentos');
+    if (filtroEl && (filtroEl.value.trim() || (document.getElementById('filterPagamentosDataInicio')||{}).value || (document.getElementById('filterPagamentosDataFim')||{}).value)) {
+        if (filtroEl._filterHandler) filtroEl._filterHandler.call(filtroEl);
+    }
 }
 
 function processarPagamentoAutomatico(aluguelObj, dataPagamentoISO) {
@@ -5227,9 +5327,14 @@ function atualizarTabelaCompras() {
         if (!c) return;
         const statusBadge = (c.status === 'pago') ? '<span class="status-pago">PAGO</span>' : '<span class="status-pendente">PENDENTE</span>';
         const tr = document.createElement('tr');
+        tr.setAttribute('data-date', converterDataParaISO(c.data) || '');
         tr.innerHTML = `<td>${formatarDataBR(c.data)}</td><td>${c.produto || ''}</td><td>${c.fornecedor || ''}</td><td>${c.placa || ''}</td><td>${c.valorTotal || c.valorUnitario || ''}</td><td>${statusBadge}</td><td><button class="btn-warning" onclick="editarCompra(${i})">✏️</button> <button class="btn-danger" onclick="excluirCompra(${i})">🗑️</button></td>`;
         tbody.appendChild(tr);
     });
+    const filtroEl = document.getElementById('filterCompras');
+    if (filtroEl && (filtroEl.value.trim() || (document.getElementById('filterComprasDataInicio')||{}).value || (document.getElementById('filterComprasDataFim')||{}).value)) {
+        if (filtroEl._filterHandler) filtroEl._filterHandler.call(filtroEl);
+    }
 }
 function salvarCompra() {
     const data = document.getElementById('compData').value || obterDataHojeISO();
@@ -5367,9 +5472,14 @@ function atualizarTabelaPendentes() {
         if (p.status !== 'Pago') botoes.push('<button class="btn-success" onclick="marcarPendenciaPaga(' + i + ')" style="padding:8px 12px;font-size:13px;">💰 Pago</button>');
         botoes.push('<button class="btn-danger" onclick="excluirPendencia(' + i + ')" style="padding:8px 12px;font-size:13px;">🗑️</button>');
         const tr = document.createElement('tr');
+        tr.setAttribute('data-date', converterDataParaISO(p.data) || '');
         tr.innerHTML = `<td>${formatarDataBR(p.data)}</td><td>${p.descricao || ''}</td><td>${p.placa || ''}</td><td>${p.credito || '-'}</td><td>${p.debito || '-'}</td><td>${formatarDataBR(p.vencimento)}</td><td>${statusBadge}</td><td>${botoes.join(' ')}</td>`;
         tbody.appendChild(tr);
     });
+    const filtroEl = document.getElementById('filterPendentes');
+    if (filtroEl && (filtroEl.value.trim() || (document.getElementById('filterPendentesDataInicio')||{}).value || (document.getElementById('filterPendentesDataFim')||{}).value)) {
+        if (filtroEl._filterHandler) filtroEl._filterHandler.call(filtroEl);
+    }
 }
 function marcarPendenciaPaga(i) {
     const p = db.pendentes[i]; if (!p) { alert('Pendência não encontrada.'); return; }

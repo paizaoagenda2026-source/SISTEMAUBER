@@ -375,9 +375,10 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
             </div>
         </div>
         <button class="btn-primary" id="btnSalvarVeiculo" data-permissao="veiculos_salvar" onclick="salvarVeiculo()">💾 Salvar</button>
-        <button class="btn-info" data-permissao="veiculos_rastreador" onclick="abrirRastreador()">📍 Rastreador</button>
-        <button class="btn-warning" data-permissao="veiculos_multas" onclick="window.open('https://sempararempresas.usezapay.com.br/', '_blank')">🚨 Multas</button>
-        <button class="btn-secondary" id="btnDocVeiculo" data-permissao="doc_salvar" onclick="abrirDocVeiculo()">📄 DOC VEÍCULO</button>
+        <button class="btn-primary" data-permissao="veiculos_rastreador" onclick="abrirRastreador()">📍 Rastreador</button>
+        <button class="btn-primary" data-permissao="veiculos_multas" onclick="window.open('https://sempararempresas.usezapay.com.br/', '_blank')">🚨 Multas</button>
+        <button class="btn-primary" id="btnDocVeiculo" data-permissao="doc_salvar" onclick="abrirDocVeiculo()">📄 DOC VEÍCULO</button>
+        <button class="btn-primary" data-permissao="veiculos_pedagio" onclick="window.open('https://pedagiodigital.com/debitos', '_blank')">🚧 PEDAGIO</button>
         <div class="table-container">
             <table id="tabelaVeiculos">
                 <thead><tr><th>Fab/Modelo</th><th>Placa</th><th>Cor</th><th>Ano</th><th>R$ Fipe</th><th>Ações</th></tr></thead>
@@ -1475,7 +1476,7 @@ const todasAbas = [
     { id: 'fluxocaixa' }, { id: 'compras' }, { id: 'configuracao' }, { id: 'auditoria' },
     { id: 'pendente' }, { id: 'historico' }, { id: 'vistoria' }, { id: 'seguro_novo' }
 ];
-const todasPermissoes = ['veiculos_salvar','veiculos_rastreador','veiculos_multas','clientes_salvar','locacoes_salvar','locacoes_contrato','manutencao_salvar','mecanico_salvar','usuario_salvar','usuario_editar','usuario_excluir','usuario_limpar','garagem_buscar','garagem_salvar','sos_buscar','sos_salvar','sos_baixar','comprovantes_buscar','comprovantes_salvar','banco_salvar','banco_editar','banco_copiar','banco_excluir','fluxocaixa_salvar','doc_salvar','doc_limpar','doc_selecionar','compras_salvar','compras_editar','compras_limpar','compras_excluir','config_salvar','config_restaurar','auditoria_filtrar','auditoria_limpar','pendente_salvar','pendente_editar','pendente_excluir','vistoria_camera','seguro_salvar','seguro_novo_salvar','seguro_novo_pdf'];
+const todasPermissoes = ['veiculos_salvar','veiculos_rastreador','veiculos_multas','veiculos_pedagio','clientes_salvar','locacoes_salvar','locacoes_contrato','manutencao_salvar','mecanico_salvar','usuario_salvar','usuario_editar','usuario_excluir','usuario_limpar','garagem_buscar','garagem_salvar','sos_buscar','sos_salvar','sos_baixar','comprovantes_buscar','comprovantes_salvar','banco_salvar','banco_editar','banco_copiar','banco_excluir','fluxocaixa_salvar','doc_salvar','doc_limpar','doc_selecionar','compras_salvar','compras_editar','compras_limpar','compras_excluir','config_salvar','config_restaurar','auditoria_filtrar','auditoria_limpar','pendente_salvar','pendente_editar','pendente_excluir','vistoria_camera','seguro_salvar','seguro_novo_salvar','seguro_novo_pdf'];
 
 /* ===== RÓTULOS AMIGÁVEIS PARA O PAINEL DE PERMISSÕES ===== */
 const LABELS_ABAS = {
@@ -1505,6 +1506,7 @@ const LABELS_PERMISSOES = {
     veiculos_salvar: 'Veículos — Salvar',
     veiculos_rastreador: 'Veículos — Rastreador',
     veiculos_multas: 'Veículos — Multas',
+    veiculos_pedagio: 'Veículos — Pedágio',
     clientes_salvar: 'Clientes — Salvar',
     locacoes_salvar: 'Locações — Salvar',
     locacoes_contrato: 'Locações — Contrato',

@@ -11,10 +11,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="PAIZÃO UBER">
 <meta name="application-name" content="PAIZÃO UBER">
-<link rel="manifest" href="manifest.json">
-<link rel="icon" type="image/jpeg" href="lobao.jpg">
-<link rel="shortcut icon" type="image/jpeg" href="lobao.jpg">
-<link rel="apple-touch-icon" href="lobao.jpg">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%231a3c6e' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='70' font-size='62' font-family='Arial' font-weight='bold' text-anchor='middle' fill='white'%3EP%3C/text%3E%3C/svg%3E">
+<link rel="shortcut icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%231a3c6e' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='70' font-size='62' font-family='Arial' font-weight='bold' text-anchor='middle' fill='white'%3EP%3C/text%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%231a3c6e' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='70' font-size='62' font-family='Arial' font-weight='bold' text-anchor='middle' fill='white'%3EP%3C/text%3E%3C/svg%3E">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
@@ -34,7 +33,7 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
     body { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
     .tabs-container { padding-top: calc(10px + env(safe-area-inset-top)); }
 }
-.login-container { display: flex; justify-content: center; align-items: center; height: 100vh; background: url('lobao.jpg') no-repeat center center fixed; background-size: cover; }
+.login-container { display: flex; justify-content: center; align-items: center; height: 100vh; background: linear-gradient(135deg, #1a3c6e 0%, #0d1b2a 100%); }
 .login-box { background: rgba(255, 255, 255, 0.92); padding: 40px; border-radius: var(--radius); box-shadow: 0 15px 30px rgba(0,0,0,0.3); width: 400px; max-width: 92vw; text-align: center; }
 .login-logo { width: 130px; height: 130px; object-fit: cover; border-radius: 50%; display: block; margin: 0 auto 15px auto; border: 4px solid var(--primary); box-shadow: 0 6px 18px rgba(0,0,0,0.25); background: #fff; }
 .login-box h1 { color: var(--primary); margin-bottom: 10px; font-size: 28px; }
@@ -266,7 +265,7 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
 
 <div class="login-container" id="loginContainer">
     <div class="login-box">
-        <img src="lobao.jpg" alt="Logo PAIZÃO UBER" class="login-logo" onerror="this.style.display='none'">
+        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 130 130'%3E%3Ccircle cx='65' cy='65' r='65' fill='%231a3c6e'/%3E%3Ctext x='65' y='90' font-size='70' font-family='Arial' font-weight='bold' text-anchor='middle' fill='white'%3EP%3C/text%3E%3C/svg%3E" alt="Logo PAIZÃO UBER" class="login-logo">
         <h1>PAIZÃO UBER 2.0</h1>
         <h2>SISTEMA DE LOCAÇÃO DE CARROS</h2>
         <form id="loginForm">
@@ -321,6 +320,7 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
         <button class="tab tab-in-group" data-tab="manutencao">🔧 Manutenção</button>
         <button class="tab tab-in-group" data-tab="mecanico">👨‍🔧 Mecânico</button>
         <button class="tab tab-in-group" data-tab="compras">🛒 Compras</button>
+        <button class="tab tab-in-group" data-tab="infracoes">🚨 Infrações</button>
         <button class="tab tab-in-group" data-tab="comprovantes">📄 Documentos</button>
 
         <button class="tab tab-in-group" data-tab="usuario">👥 Usuário</button>
@@ -610,6 +610,36 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
             <h3>📋 Histórico de Serviços</h3>
             <table id="tabelaMecanico">
                 <thead><tr><th>Data</th><th>Oficina</th><th>Serviço</th><th>Carro</th><th>Valor</th><th>Status</th><th>Ações</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ====== NOVA ABA: INFRAÇÕES ====== -->
+    <div class="tab-content" id="infracoes">
+        <h2>🚨 Infrações</h2>
+        <div class="editando-aviso" id="avisoEditandoInfracao">✏️ <strong>Modo Edição</strong> — Você está editando uma infração existente.</div>
+        <div class="form-grid">
+            <div class="form-group"><label>Placa</label><select id="infPlaca" class="campo-enter" onchange="selecionarPlacaInfracao()"><option value="">Selecione</option></select></div>
+            <div class="form-group"><label>Veículo</label><input type="text" id="infVeiculo" readonly></div>
+            <div class="form-group"><label>Data Infração</label><input type="date" id="infData" class="campo-enter"></div>
+            <div class="form-group"><label>Local da Infração</label><input type="text" id="infLocal" class="campo-enter"></div>
+            <div class="form-group"><label>Motorista</label><input type="text" id="infMotorista" class="campo-enter"></div>
+            <div class="form-group"><label>Pontos</label><input type="text" id="infPontos" class="campo-enter"></div>
+            <div class="form-group"><label>R$ Multa</label><input type="text" id="infValor" class="money campo-enter"></div>
+            <div class="form-group"><label>Vencimento</label><input type="date" id="infVencimento" class="campo-enter"></div>
+        </div>
+        <input type="file" id="infPdfInput" accept="application/pdf" style="display:none;">
+        <button class="btn-primary" id="btnSalvarInfracao" onclick="salvarInfracao()">💾 Salvar</button>
+        <button class="btn-buscar" onclick="document.getElementById('infPdfInput').click()">📄 Buscar PDF</button>
+        <div id="infPdfName" style="display:inline-block; margin-left:10px; font-size:14px; color:#555;"></div>
+        <div class="filter-bar" style="margin-top:15px;">
+            <input type="text" class="filter-input" placeholder="🔍 Filtrar infrações..." id="filterInfracoes" style="margin-bottom:0;">
+            <button class="btn-buscar" onclick="limparFiltro('filterInfracoes', null, null, 'tabelaInfracoes')" style="padding:10px 20px;margin:0;font-size:14px;">🧹 Limpar Filtro</button>
+        </div>
+        <div class="table-container">
+            <table id="tabelaInfracoes">
+                <thead><tr><th>Placa</th><th>Veículo</th><th>Data Infração</th><th>Local</th><th>Motorista</th><th>Pontos</th><th>R$ Multa</th><th>Vencimento</th><th>Status</th><th>PDF</th><th>Ações</th></tr></thead>
                 <tbody></tbody>
             </table>
         </div>
@@ -1014,6 +1044,7 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
         <div class="sub-tabs">
             <button class="sub-tab active" onclick="switchSubTabHistorico('geral')">📜 Histórico Geral</button>
             <button class="sub-tab" onclick="switchSubTabHistorico('alugueis')">💰 Histórico de Aluguéis</button>
+            <button class="sub-tab" onclick="switchSubTabHistorico('infracoes')">🚨 Histórico de Infrações</button>
         </div>
         <div class="sub-tab-content active" id="subTabHistGeral">
             <div class="filter-bar">
@@ -1055,6 +1086,27 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
             <div class="table-container">
                 <table id="tabelaHistoricoAlugueis">
                     <thead><tr><th>Data Pgto</th><th>Locatário</th><th>Placa</th><th>Parcela</th><th>Descrição</th><th>Valor</th><th>Vencimento</th><th>Tipo</th><th>Ações</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+        <!-- NOVA SUBTAB: HISTÓRICO DE INFRAÇÕES -->
+        <div class="sub-tab-content" id="subTabHistInfracoes">
+            <div class="filter-bar">
+                <input type="text" class="filter-input" placeholder="🔍 Filtrar infrações pagas..." id="filterHistInfracoes" style="margin-bottom:0;">
+                <div class="filter-date-group">
+                    <label>Data Início</label>
+                    <input type="date" id="filterHistInfDataInicio">
+                </div>
+                <div class="filter-date-group">
+                    <label>Data Fim</label>
+                    <input type="date" id="filterHistInfDataFim">
+                </div>
+                <button class="btn-buscar" onclick="limparFiltro('filterHistInfracoes', 'filterHistInfDataInicio', 'filterHistInfDataFim', 'tabelaHistoricoInfracoes')" style="padding:10px 20px;margin:0;font-size:14px;">🧹 Limpar Filtro</button>
+            </div>
+            <div class="table-container">
+                <table id="tabelaHistoricoInfracoes">
+                    <thead><tr><th>Data Pgto</th><th>Placa</th><th>Veículo</th><th>Motorista</th><th>Pontos</th><th>Valor Pago</th><th>Vencimento</th><th>Ações</th></tr></thead>
                     <tbody></tbody>
                 </table>
             </div>
@@ -1284,7 +1336,7 @@ const GRUPOS = {
     cadastro:   ['veiculos', 'clientes', 'locacoes', 'locEncerrada', 'seguro'],
     imagens:    ['garagem', 'vistoria', 'sos'],
     financeiro: ['banco', 'fluxocaixa', 'pagamentos', 'pendente'],
-    motorista:  ['manutencao', 'mecanico', 'compras', 'comprovantes'],
+    motorista:  ['manutencao', 'mecanico', 'compras', 'infracoes', 'comprovantes'],
     config:     ['usuario', 'auditoria', 'historico']
 };
 let grupoAtivoAtual = null;
@@ -1471,12 +1523,12 @@ function formatarMensagemTextMeBot(registro) {
 
 const todasAbas = [
     { id: 'veiculos' }, { id: 'clientes' }, { id: 'locacoes' }, { id: 'locEncerrada' }, { id: 'seguro' },
-    { id: 'manutencao' }, { id: 'mecanico' }, { id: 'usuario' }, { id: 'garagem' },
+    { id: 'manutencao' }, { id: 'mecanico' }, { id: 'infracoes' }, { id: 'usuario' }, { id: 'garagem' },
     { id: 'sos' }, { id: 'comprovantes' }, { id: 'pagamentos' }, { id: 'banco' },
     { id: 'fluxocaixa' }, { id: 'compras' }, { id: 'configuracao' }, { id: 'auditoria' },
     { id: 'pendente' }, { id: 'historico' }, { id: 'vistoria' }, { id: 'seguro_novo' }
 ];
-const todasPermissoes = ['veiculos_salvar','veiculos_rastreador','veiculos_multas','veiculos_pedagio','clientes_salvar','locacoes_salvar','locacoes_contrato','manutencao_salvar','mecanico_salvar','usuario_salvar','usuario_editar','usuario_excluir','usuario_limpar','garagem_buscar','garagem_salvar','sos_buscar','sos_salvar','sos_baixar','comprovantes_buscar','comprovantes_salvar','banco_salvar','banco_editar','banco_copiar','banco_excluir','fluxocaixa_salvar','doc_salvar','doc_limpar','doc_selecionar','compras_salvar','compras_editar','compras_limpar','compras_excluir','config_salvar','config_restaurar','auditoria_filtrar','auditoria_limpar','pendente_salvar','pendente_editar','pendente_excluir','vistoria_camera','seguro_salvar','seguro_novo_salvar','seguro_novo_pdf'];
+const todasPermissoes = ['veiculos_salvar','veiculos_rastreador','veiculos_multas','veiculos_pedagio','clientes_salvar','locacoes_salvar','locacoes_contrato','manutencao_salvar','mecanico_salvar','infracoes_salvar','infracoes_pagar','infracoes_excluir','usuario_salvar','usuario_editar','usuario_excluir','usuario_limpar','garagem_buscar','garagem_salvar','sos_buscar','sos_salvar','sos_baixar','comprovantes_buscar','comprovantes_salvar','banco_salvar','banco_editar','banco_copiar','banco_excluir','fluxocaixa_salvar','doc_salvar','doc_limpar','doc_selecionar','compras_salvar','compras_editar','compras_limpar','compras_excluir','config_salvar','config_restaurar','auditoria_filtrar','auditoria_limpar','pendente_salvar','pendente_editar','pendente_excluir','vistoria_camera','seguro_salvar','seguro_novo_salvar','seguro_novo_pdf'];
 
 /* ===== RÓTULOS AMIGÁVEIS PARA O PAINEL DE PERMISSÕES ===== */
 const LABELS_ABAS = {
@@ -1496,6 +1548,7 @@ const LABELS_ABAS = {
     manutencao: '🔧 Manutenção',
     mecanico: '👨‍🔧 Mecânico',
     compras: '🛒 Compras',
+    infracoes: '🚨 Infrações',
     comprovantes: '📄 Documentos/Comprovantes',
     usuario: '👥 Usuário',
     auditoria: '🔍 Auditoria',
@@ -1512,6 +1565,9 @@ const LABELS_PERMISSOES = {
     locacoes_contrato: 'Locações — Contrato',
     manutencao_salvar: 'Manutenção — Salvar',
     mecanico_salvar: 'Mecânico — Salvar',
+    infracoes_salvar: 'Infrações — Salvar',
+    infracoes_pagar: 'Infrações — Pagar',
+    infracoes_excluir: 'Infrações — Excluir',
     usuario_salvar: 'Usuário — Salvar',
     usuario_editar: 'Usuário — Editar',
     usuario_excluir: 'Usuário — Excluir',
@@ -1551,11 +1607,11 @@ const LABELS_PERMISSOES = {
 const permissoesPadrao = {
     ADM: { abas: Object.fromEntries(todasAbas.map(a => [a.id, true])), botoes: Object.fromEntries(todasPermissoes.map(b => [b, true])), veiculos: {} },
     MOTORISTA: {
-        abas: { veiculos:false, clientes:false, locacoes:false, locEncerrada:false, seguro:false, manutencao:true, mecanico:false, usuario:false, garagem:true, sos:true, comprovantes:true, pagamentos:false, banco:true, fluxocaixa:false, compras:false, configuracao:false, auditoria:false, pendente:false, historico:false, vistoria:true, seguro_novo:false },
-        botoes: { banco_copiar:true, comprovantes_buscar:true, comprovantes_salvar:true }, veiculos: {}
+        abas: { veiculos:false, clientes:false, locacoes:false, locEncerrada:false, seguro:false, manutencao:true, mecanico:false, infracoes:true, usuario:false, garagem:true, sos:true, comprovantes:true, pagamentos:false, banco:true, fluxocaixa:false, compras:false, configuracao:false, auditoria:false, pendente:false, historico:false, vistoria:true, seguro_novo:false },
+        botoes: { banco_copiar:true, comprovantes_buscar:true, comprovantes_salvar:true, infracoes_salvar:true, infracoes_pagar:false, infracoes_excluir:false }, veiculos: {}
     },
     OFICINA: {
-        abas: { veiculos:true, clientes:false, locacoes:false, locEncerrada:false, seguro:false, manutencao:true, mecanico:true, usuario:false, garagem:true, sos:true, comprovantes:false, pagamentos:false, banco:false, fluxocaixa:false, compras:true, configuracao:false, auditoria:false, pendente:false, historico:false, vistoria:true, seguro_novo:false },
+        abas: { veiculos:true, clientes:false, locacoes:false, locEncerrada:false, seguro:false, manutencao:true, mecanico:true, infracoes:false, usuario:false, garagem:true, sos:true, comprovantes:false, pagamentos:false, banco:false, fluxocaixa:false, compras:true, configuracao:false, auditoria:false, pendente:false, historico:false, vistoria:true, seguro_novo:false },
         botoes: { manutencao_salvar:true, mecanico_salvar:true }, veiculos: {}
     },
     VISITANTE: { abas: Object.fromEntries(todasAbas.map(a => [a.id, true])), botoes: {}, veiculos: {} }
@@ -1590,6 +1646,9 @@ let relatorioMecanicoTemp = [], comprovantesPagTemp = [], docComprovantesTemp = 
 let docVeiculoAtual = null;
 let novoSegEditandoIndex = null;
 let novoSegPdfTemp = null;
+/* ==== NOVAS VARIÁVEIS PARA INFRAÇÕES ==== */
+let infracaoEditandoIndex = null;
+let infracaoPdfTemp = null;
 
 function campoVazio(v) { return !v || String(v).trim() === ''; }
 function formatarMoedaBR(v) { return 'R$ ' + (Number(v) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
@@ -1811,7 +1870,7 @@ function criarDBPadrao() {
         usuarios: [{ nome: 'SERGIO', senha: '080888', tipo: 'ADM', permissoes: JSON.parse(JSON.stringify(permissoesPadrao.ADM)), selfie: null, podeRevisaoKmSemSenha: true }],
         alugueis: [], fluxoCaixa: [], documentos: [], compras: [], auditoria: [], bancos: [], pendentes: [], historico: [],
         historicoAlugueis: [], comprovantesPagamento: [], comprovantesDoc: [],
-        documentosPlacas: {}, docsVeiculos: [],
+        documentosPlacas: {}, docsVeiculos: [], infracoes: [], historicoInfracoes: [],
         contratos: { contratoLocacao:{}, termoResponsabilidade:{}, notaPromissoria:{} },
         imagens: { garagem:{fotos:[]}, sos:{fotos:[]}, comprovantes:{fotos:[]} },
         config: { empresa: 'LOBÃO', cnpj:'', telefone:'', email:'', endereco:'', ultimaLimpezaAuditoria: null }
@@ -1832,7 +1891,7 @@ async function carregarDB() {
     if (!db || typeof db !== 'object') db = criarDBPadrao();
     ['veiculos','clientes','locacoes','locacoesEncerradas','manutencao','mecanico','seguros','seguros_novo',
      'alugueis','fluxoCaixa','documentos','compras','auditoria','bancos',
-     'pendentes','historico','usuarios','historicoAlugueis','comprovantesPagamento','docsVeiculos','comprovantesDoc'].forEach(k => {
+     'pendentes','historico','usuarios','historicoAlugueis','comprovantesPagamento','docsVeiculos','comprovantesDoc','infracoes','historicoInfracoes'].forEach(k => {
         if (!Array.isArray(db[k])) db[k] = [];
     });
     if (!db.contratos) db.contratos = { contratoLocacao:{}, termoResponsabilidade:{}, notaPromissoria:{} };
@@ -1852,6 +1911,7 @@ async function carregarDB() {
     if (db.locacoesEncerradas) db.locacoesEncerradas.forEach(l => { if (!l) return; if (!l.vistoria) l.vistoria = []; });
     db.pendentes.forEach(p => { if (!p) return; if (!p.status) p.status = 'Pendente'; });
     db.mecanico.forEach(m => { if (!m) return; if (m.pago === undefined) m.pago = false; });
+    db.infracoes.forEach(i => { if (!i) return; if (i.status === undefined) i.status = 'Pendente'; });
 
     let precisaSalvar = false;
     const lobao = db.usuarios.find(u => u && u.nome === 'LOBÃO');
@@ -2156,6 +2216,13 @@ function verificarVencimentosProximos() {
             }
         });
     }
+    if (Array.isArray(db.infracoes)) {
+        db.infracoes.forEach(i => {
+            if (i && i.status !== 'Pago' && i.vencimento === amanhaISO) {
+                mensagens.push(`• Infração: ${i.placa} | ${i.local} | Valor: ${i.valor}`);
+            }
+        });
+    }
     if (mensagens.length > 0) {
         const dataFormatada = formatarDataBR(amanhaISO);
         const msgTexto = `⚠️ ATENÇÃO: Vencimentos amanhã (${dataFormatada})\n\n` + mensagens.join('\n');
@@ -2170,7 +2237,7 @@ function efetuarLoginUsuario(u, metodo) {
     document.getElementById('mainContainer').style.display = 'block';
     aplicarPermissoes(u);
     registrarAuditoria('Login', (metodo || 'Login') + ': ' + u.nome);
-    try { if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen(); } catch(e){}
+    try { if (document.documentElement.requestFullscreen) { var __p = document.documentElement.requestFullscreen(); if (__p && __p.catch) __p.catch(function(){}); } } catch(e){}
     const tabSOS = document.querySelector('.tab[data-tab="sos"]');
     if (tabSOS && !tabSOS.classList.contains('hidden-tab')) tabSOS.click();
     atualizarImagemGuincho();
@@ -2292,7 +2359,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
 
 function sairSistema() {
     if (!confirm('Sair do sistema?')) return;
-    try { if (document.fullscreenElement) document.exitFullscreen(); } catch(e){}
+    try { if (document.fullscreenElement) { var _p3 = document.exitFullscreen(); if (_p3 && _p3.catch) _p3.catch(function(){}); } } catch(e){}
     const overlay = document.getElementById('guinchoOverlay');
     if (overlay) { overlay.classList.remove('active'); overlay.style.display = 'none'; }
     document.getElementById('mainContainer').style.display = 'none';
@@ -2469,7 +2536,7 @@ document.querySelectorAll('.tab').forEach(tab => {
         if (tabId === 'locEncerrada') atualizarTabelaLocEncerrada();
         if (tabId === 'manutencao') { atualizarPlacasManutencao(); atualizarTabelaManutencao(); }
         if (tabId === 'mecanico') atualizarPlacasMecanico();
-        if (tabId === 'historico') { atualizarTabelaHistorico(); atualizarTabelaHistoricoAlugueis(); }
+        if (tabId === 'historico') { atualizarTabelaHistorico(); atualizarTabelaHistoricoAlugueis(); atualizarTabelaHistoricoInfracoes(); }
         if (tabId === 'auditoria') atualizarTabelaAuditoria();
         if (tabId === 'pagamentos') atualizarTabelaAlugueis();
         if (tabId === 'fluxocaixa') atualizarTabelaFluxoCaixa();
@@ -2480,6 +2547,7 @@ document.querySelectorAll('.tab').forEach(tab => {
         if (tabId === 'pendente') atualizarTabelaPendentes();
         if (tabId === 'vistoria') atualizarAbasVistoria();
         if (tabId === 'compras') { atualizarPlacasCompras(); atualizarTabelaCompras(); }
+        if (tabId === 'infracoes') { atualizarPlacasInfracao(); atualizarTabelaInfracoes(); }
         if (tabId === 'configuracao') carregarConfiguracoes();
         if (tabId === 'usuario') { gerarPermissoesUI(); atualizarTabelaUsuario(); renderizarListaAcessoKmSemSenha(); }
         if (tabId === 'seguro') { atualizarPlacasSeguro(); atualizarTabelaSeguros(); }
@@ -2524,8 +2592,15 @@ document.querySelectorAll('.group-tab').forEach(btn => {
 });
 
 document.getElementById('fullscreenBtn').addEventListener('click', function() {
-    if (document.fullscreenElement) { document.exitFullscreen(); this.textContent = '🖥️ Tela Cheia'; }
-    else { document.documentElement.requestFullscreen(); this.textContent = '🖥️ Sair'; }
+    if (document.fullscreenElement) {
+        var _p1 = document.exitFullscreen();
+        if (_p1 && _p1.catch) _p1.catch(function(){});
+        this.textContent = '🖥️ Tela Cheia';
+    } else {
+        var _p2 = document.documentElement.requestFullscreen();
+        if (_p2 && _p2.catch) _p2.catch(function(){});
+        this.textContent = '🖥️ Sair';
+    }
 });
 
 function switchSubTabHistorico(tipo) {
@@ -2534,7 +2609,8 @@ function switchSubTabHistorico(tipo) {
     tabs.forEach(t => t.classList.remove('active'));
     contents.forEach(c => c.classList.remove('active'));
     if (tipo === 'geral') { tabs[0].classList.add('active'); document.getElementById('subTabHistGeral').classList.add('active'); atualizarTabelaHistorico(); }
-    else { tabs[1].classList.add('active'); document.getElementById('subTabHistAlugueis').classList.add('active'); atualizarTabelaHistoricoAlugueis(); }
+    else if (tipo === 'alugueis') { tabs[1].classList.add('active'); document.getElementById('subTabHistAlugueis').classList.add('active'); atualizarTabelaHistoricoAlugueis(); }
+    else if (tipo === 'infracoes') { tabs[2].classList.add('active'); document.getElementById('subTabHistInfracoes').classList.add('active'); atualizarTabelaHistoricoInfracoes(); }
 }
 
 function setupFilter(inputId, tableId, dashboardCallback, dateIniId, dateFimId) {
@@ -2684,6 +2760,8 @@ setupFilter('filterLocEncerrada', 'tabelaLocEncerrada', recalcularDashboardLocEn
 setupFilter('filterPendentes', 'tabelaPendentes', null, 'filterPendentesDataInicio', 'filterPendentesDataFim');
 setupFilter('filterHistorico', 'tabelaHistorico', null, 'filterHistoricoDataInicio', 'filterHistoricoDataFim');
 setupFilter('filterComprovantesPag', 'tabelaComprovantesPag', null, 'filterComprovantesPagDataInicio', 'filterComprovantesPagDataFim');
+setupFilter('filterInfracoes', 'tabelaInfracoes');
+setupFilter('filterHistInfracoes', 'tabelaHistoricoInfracoes', null, 'filterHistInfDataInicio', 'filterHistInfDataFim');
 
 (function configurarFiltroHistoricoAlugueis() {
     const txt = document.getElementById('filterHistoricoAlugueis');
@@ -2752,7 +2830,7 @@ function preencherDataInicioLocacao() {
 }
 function preencherDatasAutomaticas() {
     const hoje = obterDataHojeISO();
-    ['cliDataCadastro', 'mecData', 'fcData', 'compData', 'pendData', 'relMecDataInicio', 'relMecDataFim'].forEach(id => {
+    ['cliDataCadastro', 'mecData', 'fcData', 'compData', 'pendData', 'relMecDataInicio', 'relMecDataFim', 'infData'].forEach(id => {
         const el = document.getElementById(id);
         if (el && !el.value) el.value = hoje;
     });
@@ -2890,6 +2968,7 @@ async function salvarVeiculo() {
     }
     atualizarTabelaVeiculos(); atualizarCombosLocacao(); atualizarPlacasManutencao(); atualizarPlacasMecanico();
     atualizarComboPlacasDocumentos(); atualizarPlacasCompras(); atualizarPlacasPendentes(); atualizarPlacasSeguro();
+    atualizarPlacasInfracao();
     salvarDB(); limparCamposVeiculo(); gerarPermissoesUI();
 }
 function limparCamposVeiculo() {
@@ -2966,6 +3045,13 @@ async function excluirVeiculo(i) {
     antes = db.seguros.length;
     db.seguros = db.seguros.filter(s => !s || normalizarPlaca(s.placa) !== placaNorm);
     if (antes - db.seguros.length > 0) relatorio.push('• ' + (antes - db.seguros.length) + ' seguro(s)');
+    antes = db.infracoes.length;
+    for (const inf of db.infracoes) { if (inf && normalizarPlaca(inf.placa) === placaNorm && inf.pdfStorageId) { await excluirImagemFirestore(inf.pdfStorageId); } }
+    db.infracoes = db.infracoes.filter(inf => !inf || normalizarPlaca(inf.placa) !== placaNorm);
+    if (antes - db.infracoes.length > 0) relatorio.push('• ' + (antes - db.infracoes.length) + ' infração(ões)');
+    antes = db.historicoInfracoes.length;
+    db.historicoInfracoes = db.historicoInfracoes.filter(inf => !inf || normalizarPlaca(inf.placa) !== placaNorm);
+    if (antes - db.historicoInfracoes.length > 0) relatorio.push('• ' + (antes - db.historicoInfracoes.length) + ' histórico de infração(ões)');
     antes = db.comprovantesPagamento.length;
     for (const c of db.comprovantesPagamento) { if (c && normalizarPlaca(c.placa) === placaNorm && c.storageId) { await excluirImagemFirestore(c.storageId); } }
     db.comprovantesPagamento = db.comprovantesPagamento.filter(c => !c || normalizarPlaca(c.placa) !== placaNorm);
@@ -2992,6 +3078,7 @@ async function excluirVeiculo(i) {
     atualizarTabelaHistorico(); atualizarTabelaHistoricoAlugueis(); atualizarTabelaManutencao();
     atualizarTabelaMecanico(); atualizarTabelaPendentes(); atualizarTabelaComprovantesPag(); atualizarTabelaDoc();
     atualizarGaleriaComprovantes(); atualizarTabelaFluxoCaixa(); atualizarTabelaCompras(); atualizarTabelaSeguros();
+    atualizarPlacasInfracao(); atualizarTabelaInfracoes(); atualizarTabelaHistoricoInfracoes();
     gerarPermissoesUI();
     registrarAuditoria('Exclusão', `Veículo excluído: ${v.fabricante} - ${v.placa}`);
     salvarDB();
@@ -3004,6 +3091,353 @@ async function apagarFotosLocacao(loc) {
 }
 function debugVeiculos() {
     alert('USUÁRIOS:\n' + (db.usuarios || []).map(u => '• ' + u.nome + ' (' + u.tipo + ')').join('\n') + '\n\nTotal de veículos: ' + (db.veiculos || []).length);
+}
+
+/* ============================================================
+   INFRAÇÕES
+   ============================================================ */
+function atualizarPlacasInfracao() {
+    const s = document.getElementById('infPlaca');
+    if (!s) return;
+    const valorAtual = s.value;
+    s.innerHTML = '<option value="">Selecione</option>';
+    (db.veiculos || []).forEach(v => {
+        if (!v || !v.placa) return;
+        const o = document.createElement('option');
+        o.value = v.placa;
+        o.textContent = v.placa + ' - ' + (v.fabricante || '');
+        s.appendChild(o);
+    });
+    if (valorAtual) { const existe = Array.from(s.options).some(o => o.value === valorAtual); if (existe) s.value = valorAtual; }
+}
+
+function selecionarPlacaInfracao() {
+    const p = document.getElementById('infPlaca').value;
+    const v = (db.veiculos || []).find(x => x && x.placa === p);
+    if (v) document.getElementById('infVeiculo').value = v.fabricante || '';
+    else document.getElementById('infVeiculo').value = '';
+}
+
+function handlePdfInfracaoChange(e) {
+    const input = e.target || this;
+    const file = input.files && input.files[0];
+    if (!file) return;
+    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+        alert('Selecione um arquivo PDF válido!');
+        input.value = '';
+        return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+        alert('Arquivo muito grande (máx 5MB).');
+        input.value = '';
+        return;
+    }
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+        infracaoPdfTemp = { nome: file.name, base64: ev.target.result };
+        document.getElementById('infPdfName').textContent = '✅ PDF: ' + file.name;
+    };
+    reader.onerror = function() { alert('Erro ao ler o PDF.'); };
+    reader.readAsDataURL(file);
+}
+
+async function salvarInfracao() {
+    const placa = document.getElementById('infPlaca').value.trim();
+    const veiculo = document.getElementById('infVeiculo').value.trim();
+    const data = document.getElementById('infData').value;
+    const local = document.getElementById('infLocal').value.trim();
+    const motorista = document.getElementById('infMotorista').value.trim();
+    const pontos = document.getElementById('infPontos').value.trim();
+    const valor = document.getElementById('infValor').value;
+    const vencimento = document.getElementById('infVencimento').value;
+
+    if (!placa || !data || !local || !motorista || !valor || !vencimento) {
+        alert('Preencha todos os campos obrigatórios!');
+        return;
+    }
+
+    if (!Array.isArray(db.infracoes)) db.infracoes = [];
+
+    let pdfStorageId = null;
+    if (infracaoPdfTemp && infracaoPdfTemp.base64) {
+        try {
+            pdfStorageId = 'inf_pdf_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+            await salvarImagemFirestore(pdfStorageId, infracaoPdfTemp.base64, { nomeArquivo: infracaoPdfTemp.nome, tipo: 'application/pdf', categoria: 'infracao' });
+        } catch (e) {
+            alert('⚠️ Erro ao salvar PDF: ' + e.message);
+            pdfStorageId = null;
+        }
+    } else if (infracaoEditandoIndex !== null && db.infracoes[infracaoEditandoIndex]) {
+        const prev = db.infracoes[infracaoEditandoIndex];
+        if (prev.pdfStorageId) pdfStorageId = prev.pdfStorageId;
+    }
+
+    const infracaoObj = {
+        placa, veiculo, data, local, motorista, pontos,
+        valor, valorNumerico: parseMoeda(valor),
+        vencimento, status: 'Pendente', pdfStorageId,
+        dataUpload: new Date().toLocaleString('pt-BR')
+    };
+
+    if (infracaoEditandoIndex !== null && db.infracoes[infracaoEditandoIndex]) {
+        const prev = db.infracoes[infracaoEditandoIndex];
+        infracaoObj.status = prev.status || 'Pendente';
+        if (prev.dataPagamento) infracaoObj.dataPagamento = prev.dataPagamento;
+        db.infracoes[infracaoEditandoIndex] = infracaoObj;
+        registrarAuditoria('Edição', `Infração atualizada: ${placa} - ${local}`);
+        infracaoEditandoIndex = null;
+        document.getElementById('avisoEditandoInfracao').classList.remove('ativo');
+        document.getElementById('btnSalvarInfracao').textContent = '💾 Salvar';
+        alert('✅ Infração atualizada!');
+    } else {
+        db.infracoes.push(infracaoObj);
+        registrarAuditoria('Cadastro', `Nova infração: ${placa} - ${local}`);
+        alert('✅ Infração salva!');
+    }
+
+    atualizarTabelaInfracoes();
+    salvarDB();
+    limparCamposInfracao();
+}
+
+function limparCamposInfracao() {
+    ['infPlaca','infVeiculo','infData','infLocal','infMotorista','infPontos','infValor','infVencimento'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    document.getElementById('infPdfName').textContent = '';
+    document.getElementById('infPdfInput').value = '';
+    infracaoPdfTemp = null;
+    infracaoEditandoIndex = null;
+    document.getElementById('avisoEditandoInfracao').classList.remove('ativo');
+    document.getElementById('btnSalvarInfracao').textContent = '💾 Salvar';
+    preencherDatasAutomaticas();
+}
+
+function atualizarTabelaInfracoes() {
+    const tbody = document.querySelector('#tabelaInfracoes tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    const lista = db.infracoes || [];
+    const placasFiltro = getPlacasPermitidasParaFiltro();
+
+    const itens = lista.map((inf, i) => ({ inf, idx: i })).filter(x => {
+        if (!x.inf) return false;
+        if (placasFiltro === null) return true;
+        return placasFiltro.includes(normalizarPlaca(x.inf.placa));
+    });
+
+    if (itens.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:#999;padding:20px;">Nenhuma infração registrada.</td></tr>';
+        return;
+    }
+
+    itens.forEach(({ inf, idx: i }) => {
+        const statusBadge = inf.status === 'Pago' ? '<span class="status-pago">PAGO</span>' : '<span class="status-pendente">PENDENTE</span>';
+        const pdfBtn = inf.pdfStorageId ? `<button class="btn-info" onclick="abrirPdfInfracao(${i})" title="Abrir PDF">📄</button>` : '';
+        
+        const btnPagar = inf.status !== 'Pago' ? `<button class="btn-success" onclick="pagarInfracao(${i})" title="Pagar">✅</button>` : '';
+        const btnEditar = `<button class="btn-warning" onclick="editarInfracao(${i})" title="Editar">✏️</button>`;
+        const btnExcluir = `<button class="btn-danger" onclick="excluirInfracao(${i})" title="Excluir">🗑️</button>`;
+
+        const tr = document.createElement('tr');
+        tr.setAttribute('data-date', converterDataParaISO(inf.data) || '');
+        tr.innerHTML = `
+            <td>${inf.placa || ''}</td>
+            <td>${inf.veiculo || ''}</td>
+            <td>${formatarDataBR(inf.data)}</td>
+            <td>${inf.local || ''}</td>
+            <td>${inf.motorista || ''}</td>
+            <td>${inf.pontos || ''}</td>
+            <td>${inf.valor || ''}</td>
+            <td>${formatarDataBR(inf.vencimento)}</td>
+            <td>${statusBadge}</td>
+            <td>${pdfBtn}</td>
+            <td>${btnPagar} ${btnEditar} ${btnExcluir}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    const filtroEl = document.getElementById('filterInfracoes');
+    if (filtroEl && filtroEl.value.trim()) {
+        if (filtroEl._filterHandler) filtroEl._filterHandler.call(filtroEl);
+    }
+}
+
+function editarInfracao(i) {
+    if (!confirmarSenhaADM()) return;
+    const inf = db.infracoes[i];
+    if (!inf) { alert('Infração não encontrada.'); return; }
+
+    infracaoEditandoIndex = i;
+    document.getElementById('infPlaca').value = inf.placa || '';
+    document.getElementById('infVeiculo').value = inf.veiculo || '';
+    document.getElementById('infData').value = inf.data || '';
+    document.getElementById('infLocal').value = inf.local || '';
+    document.getElementById('infMotorista').value = inf.motorista || '';
+    document.getElementById('infPontos').value = inf.pontos || '';
+    document.getElementById('infValor').value = inf.valor || '';
+    document.getElementById('infVencimento').value = inf.vencimento || '';
+    
+    if (inf.pdfStorageId) {
+        document.getElementById('infPdfName').textContent = '📄 PDF já anexado';
+    } else {
+        document.getElementById('infPdfName').textContent = '';
+    }
+    infracaoPdfTemp = null;
+    document.getElementById('infPdfInput').value = '';
+
+    document.getElementById('avisoEditandoInfracao').classList.add('ativo');
+    document.getElementById('btnSalvarInfracao').textContent = '💾 Atualizar';
+    window.scrollTo(0, 0);
+}
+
+async function excluirInfracao(i) {
+    if (!confirmarSenhaADM()) return;
+    const inf = db.infracoes[i];
+    if (!inf) return;
+    if (!confirm(`Excluir a infração da placa ${inf.placa}?`)) return;
+
+    if (inf.pdfStorageId) {
+        try { await excluirImagemFirestore(inf.pdfStorageId); } catch(e) {}
+    }
+    db.infracoes.splice(i, 1);
+    if (infracaoEditandoIndex === i) {
+        infracaoEditandoIndex = null;
+        document.getElementById('avisoEditandoInfracao').classList.remove('ativo');
+        document.getElementById('btnSalvarInfracao').textContent = '💾 Salvar';
+    } else if (infracaoEditandoIndex !== null && infracaoEditandoIndex > i) {
+        infracaoEditandoIndex--;
+    }
+    atualizarTabelaInfracoes();
+    salvarDB();
+    registrarAuditoria('Exclusão', `Infração excluída: ${inf.placa} - ${inf.local}`);
+    alert('✅ Infração excluída.');
+}
+
+async function pagarInfracao(i) {
+    if (!confirmarSenhaADM()) return;
+    const inf = db.infracoes[i];
+    if (!inf) return;
+    if (inf.status === 'Pago') { alert('Esta infração já está paga!'); return; }
+    
+    if (!confirm(`Confirmar pagamento da infração da placa ${inf.placa} no valor de ${inf.valor}?`)) return;
+
+    const hojeISO = new Date().toISOString().split('T')[0];
+    const dataPagamento = new Date().toLocaleString('pt-BR');
+    
+    // Atualiza a infração
+    inf.status = 'Pago';
+    inf.dataPagamento = hojeISO;
+
+    // Move para o histórico de infrações
+    if (!Array.isArray(db.historicoInfracoes)) db.historicoInfracoes = [];
+    db.historicoInfracoes.push({
+        ...inf,
+        dataPagamento: hojeISO,
+        valorPago: inf.valor,
+        valorPagoNumerico: inf.valorNumerico
+    });
+
+    // Lança no Fluxo de Caixa (como saída, pois é um pagamento)
+    if (!Array.isArray(db.fluxoCaixa)) db.fluxoCaixa = [];
+    db.fluxoCaixa.push({
+        data: hojeISO,
+        vencimento: inf.vencimento || '',
+        descricao: `Pagamento de Multa - ${inf.placa} - ${inf.local}`,
+        categoria: 'Infrações',
+        valor: inf.valor,
+        valorNumerico: inf.valorNumerico,
+        tipo: 'saida' // Saída de caixa
+    });
+
+    // Remove da lista de infrações ativas
+    db.infracoes.splice(i, 1);
+
+    atualizarTabelaInfracoes();
+    atualizarTabelaHistoricoInfracoes();
+    atualizarTabelaFluxoCaixa();
+    salvarDB();
+    
+    registrarAuditoria('Pagamento', `Infração paga: ${inf.placa} - ${inf.local} - ${inf.valor}`);
+    alert('✅ Infração paga e registrada no Fluxo de Caixa e Histórico!');
+}
+
+async function abrirPdfInfracao(i) {
+    const inf = db.infracoes[i];
+    if (!inf) { alert('Infração não encontrada.'); return; }
+    if (!inf.pdfStorageId) { alert('Nenhum PDF anexado.'); return; }
+
+    let url = null;
+    try { url = await obterImagemFirestore(inf.pdfStorageId); } catch(e) {}
+    if (!url) { alert('PDF não encontrado.'); return; }
+
+    const win = window.open();
+    if (!win) { alert('Bloqueio de pop-up.'); return; }
+    win.document.write('<html><head><title>Multa - ' + inf.placa + '</title></head><body style="margin:0;"><iframe src="' + url + '" frameborder="0" style="border:0;position:fixed;top:0;left:0;width:100%;height:100%;" allowfullscreen></iframe></body></html>');
+    win.document.close();
+}
+
+function atualizarTabelaHistoricoInfracoes() {
+    const tbody = document.querySelector('#tabelaHistoricoInfracoes tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    const lista = db.historicoInfracoes || [];
+    const placasFiltro = getPlacasPermitidasParaFiltro();
+
+    const itens = lista.map((inf, i) => ({ inf, idx: i })).filter(x => {
+        if (!x.inf) return false;
+        if (placasFiltro === null) return true;
+        return placasFiltro.includes(normalizarPlaca(x.inf.placa));
+    });
+
+    if (itens.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#999;padding:20px;">Nenhuma infração paga registrada.</td></tr>';
+        return;
+    }
+
+    itens.sort((a, b) => {
+        const dtA = a.inf.dataPagamento ? new Date(a.inf.dataPagamento + 'T00:00:00') : new Date('2099-12-31');
+        const dtB = b.inf.dataPagamento ? new Date(b.inf.dataPagamento + 'T00:00:00') : new Date('2099-12-31');
+        return dtB - dtA;
+    });
+
+    itens.forEach(({ inf, idx: i }) => {
+        const tr = document.createElement('tr');
+        tr.setAttribute('data-date', converterDataParaISO(inf.dataPagamento) || '');
+        tr.innerHTML = `
+            <td>${formatarDataBR(inf.dataPagamento)}</td>
+            <td>${inf.placa || ''}</td>
+            <td>${inf.veiculo || ''}</td>
+            <td>${inf.motorista || ''}</td>
+            <td>${inf.pontos || ''}</td>
+            <td><strong style="color:#28a745;">${inf.valorPago || inf.valor || ''}</strong></td>
+            <td>${formatarDataBR(inf.vencimento)}</td>
+            <td><button class="btn-danger" onclick="excluirHistoricoInfracao(${i})" title="Excluir">🗑️</button></td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    const filtroEl = document.getElementById('filterHistInfracoes');
+    if (filtroEl && filtroEl.value.trim()) {
+        if (filtroEl._filterHandler) filtroEl._filterHandler.call(filtroEl);
+    }
+}
+
+async function excluirHistoricoInfracao(i) {
+    if (!confirmarSenhaADM()) return;
+    const inf = db.historicoInfracoes[i];
+    if (!inf) return;
+    if (!confirm(`Excluir o registro de pagamento da multa da placa ${inf.placa}?`)) return;
+
+    if (inf.pdfStorageId) {
+        try { await excluirImagemFirestore(inf.pdfStorageId); } catch(e) {}
+    }
+    db.historicoInfracoes.splice(i, 1);
+    atualizarTabelaHistoricoInfracoes();
+    salvarDB();
+    registrarAuditoria('Exclusão', `Histórico de infração excluído: ${inf.placa}`);
+    alert('✅ Registro excluído do histórico.');
 }
 
 /* ============================================================
@@ -6269,7 +6703,8 @@ function configurarBotaoInstalar() {
     });
 }
 
-if ('serviceWorker' in navigator) {
+/* CORREÇÃO: Service Worker só é registrado quando NÃO for file:// (evita erro em uso local) */
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
 }
 
@@ -6290,6 +6725,7 @@ async function inicializarSistemaCompleto() {
     preencherDatasAutomaticas();
     atualizarPlacasManutencao(); atualizarPlacasMecanico(); atualizarPlacasCompras(); atualizarPlacasPendentes();
     atualizarPlacasSeguro(); atualizarTabelaSeguros(); atualizarTabelaNovoSeguro();
+    atualizarPlacasInfracao(); atualizarTabelaInfracoes(); atualizarTabelaHistoricoInfracoes();
     atualizarTabelaLocacoes(); atualizarTabelaLocEncerrada();
     atualizarTabelaManutencao(); atualizarTabelaMecanico();
     atualizarTabelaHistorico(); atualizarTabelaHistoricoAlugueis();
@@ -6311,6 +6747,8 @@ async function inicializarSistemaCompleto() {
     if (vistImagemInput && vistImagemInput.dataset.bound !== '1') { vistImagemInput.dataset.bound = '1'; vistImagemInput.addEventListener('change', handleVistoriaImagemSelecionada); }
     const novoSegPdfInput = document.getElementById('novoSegPdfInput');
     if (novoSegPdfInput && novoSegPdfInput.dataset.bound !== '1') { novoSegPdfInput.dataset.bound = '1'; novoSegPdfInput.addEventListener('change', handleNovoSegPdfInputChange); }
+    const infPdfInput = document.getElementById('infPdfInput');
+    if (infPdfInput && infPdfInput.dataset.bound !== '1') { infPdfInput.dataset.bound = '1'; infPdfInput.addEventListener('change', handlePdfInfracaoChange); }
     const loginUserEl = document.getElementById('loginUser');
     if (loginUserEl && !loginUserEl.value) loginUserEl.value = 'SERGIO';
     const btnLoginFace = document.getElementById('loginFaceBtn');

@@ -1761,12 +1761,32 @@ function idbExcluir(id) {
 }
 
 async function salvarImagemFirestore(id, base64String, meta) {
-    if (!dbFirestore) throw new Error('Firestore não inicializado');
     if (!base64String || typeof base64String !== 'string') throw new Error('Base64 inválido');
-    if (base64String.length > FIRESTORE_MAX_BASE64) throw new Error('Imagem muito grande (' + Math.round(base64String.length/1024) + 'KB). Reduza a qualidade.');
-    await dbFirestore.collection('paizao_imagens').doc(id).set({ base64: base64String, meta: meta || {}, dataUpload: new Date().toISOString() });
-    _imageCache.set(id, base64String);
-    try { const blob = dataUrlParaBlobLocal(base64String); await idbSalvar(id, blob, meta); } catch(e) {}
+
+    let idbSuccess = false;
+    try {
+        const blob = dataUrlParaBlobLocal(base64String);
+        await idbSalvar(id, blob, meta);
+        idbSuccess = true;
+        _imageCache.set(id, base64String);
+    } catch(e) { console.warn('IDB falhou ao salvar, tentando Firestore...', e); }
+
+    if (!dbFirestore) {
+        if (!idbSuccess) throw new Error('Firestore não inicializado e IDB falhou.');
+        return; 
+    }
+
+    if (base64String.length > FIRESTORE_MAX_BASE64) {
+        if (!idbSuccess) throw new Error('Imagem muito grande para o Firebase e não foi possível salvar localmente.');
+        return; 
+    }
+
+    try {
+        await dbFirestore.collection('paizao_imagens').doc(id).set({ base64: base64String, meta: meta || {}, dataUpload: new Date().toISOString() });
+    } catch (e) {
+        if (!idbSuccess) throw e;
+        console.warn('Falha ao salvar no Firestore, mas a imagem foi salva localmente', e);
+    }
 }
 
 async function obterImagemFirestore(id) {
@@ -3759,7 +3779,7 @@ async function atualizarTabelaClientes() {
         if (!c) { selfiesResolvidas.push(null); continue; }
         let url = null;
         if (c.selfieStorageId) { try { url = await obterImagemFirestore(c.selfieStorageId); } catch(e) {} }
-        else if (typeof c.selfie === 'string' && c.selfie.startsWith('data:')) url = c.selfie;
+        if (!url && typeof c.selfie === 'string' && c.selfie.startsWith('data:')) url = c.selfie;
         selfiesResolvidas.push(url);
     }
     const galeria = selfiesResolvidas.filter(s => s);
@@ -3862,7 +3882,7 @@ async function atualizarTabelaUsuario() {
         if (!u) { selfiesResolvidas.push(null); continue; }
         let url = null;
         if (u.selfieStorageId) { try { url = await obterImagemFirestore(u.selfieStorageId); } catch(e) {} }
-        else if (typeof u.selfie === 'string' && u.selfie.startsWith('data:')) url = u.selfie;
+        if (!url && typeof u.selfie === 'string' && u.selfie.startsWith('data:')) url = u.selfie;
         selfiesResolvidas.push(url);
     }
     const galeria = selfiesResolvidas.filter(s => s);
@@ -5133,7 +5153,10 @@ async function renderizarFotosVistoria(locacao) {
         let base64Img = null, idFoto = null;
         if (foto && typeof foto === 'object' && foto.id) idFoto = foto.id;
         else if (typeof foto === 'string' && foto.startsWith('data:')) base64Img = foto;
+        
         if (idFoto) { try { base64Img = await obterImagemFirestore(idFoto); } catch(e) {} }
+        if (!base64Img && foto && typeof foto === 'object' && foto.dataUrl) base64Img = foto.dataUrl;
+        
         if (base64Img) {
             const img = document.createElement('img'); img.src = base64Img; img.alt = 'vistoria';
             img.onclick = async (ev) => {
@@ -5384,7 +5407,9 @@ async function atualizarGaleriaGaragem() {
         const div = document.createElement('div'); div.className = 'saved-image-item';
         let base64Img = null;
         if (foto && typeof foto === 'object' && foto.id) { try { base64Img = await obterImagemFirestore(foto.id); } catch(e) {} }
-        else if (typeof foto === 'string') base64Img = foto;
+        if (!base64Img && foto && typeof foto === 'object' && foto.dataUrl) base64Img = foto.dataUrl;
+        else if (!base64Img && typeof foto === 'string') base64Img = foto;
+        
         if (base64Img) {
             const img = document.createElement('img'); img.src = base64Img; img.alt = 'foto';
             img.addEventListener('click', async (ev) => { ev.stopPropagation(); openImageModal(base64Img, [base64Img], 0); });
@@ -5455,7 +5480,9 @@ async function atualizarGaleriaSOS() {
         const div = document.createElement('div'); div.className = 'saved-image-item';
         let base64Img = null;
         if (foto && typeof foto === 'object' && foto.id) { try { base64Img = await obterImagemFirestore(foto.id); } catch(e) {} }
-        else if (typeof foto === 'string') base64Img = foto;
+        if (!base64Img && foto && typeof foto === 'object' && foto.dataUrl) base64Img = foto.dataUrl;
+        else if (!base64Img && typeof foto === 'string') base64Img = foto;
+        
         if (base64Img) {
             const img = document.createElement('img'); img.src = base64Img; img.alt = 'foto';
             img.addEventListener('click', async (ev) => { ev.stopPropagation(); openImageModal(base64Img, [base64Img], 0); });
@@ -5490,7 +5517,9 @@ async function atualizarImagemGuincho() {
     const ultima = fotos.length > 0 ? fotos[fotos.length - 1] : null;
     let src = null;
     if (ultima && typeof ultima === 'object' && ultima.id) { try { src = await obterImagemFirestore(ultima.id); } catch(e) {} }
-    else if (typeof ultima === 'string') src = ultima;
+    if (!src && ultima && typeof ultima === 'object' && ultima.dataUrl) src = ultima.dataUrl;
+    else if (!src && typeof ultima === 'string') src = ultima;
+    
     ['guinchoCardImg', 'guinchoOverlayImg'].forEach(function(id) {
         const img = document.getElementById(id);
         if (!img) return;

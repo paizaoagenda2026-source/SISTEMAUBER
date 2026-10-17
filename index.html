@@ -271,6 +271,21 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
     border-radius: 8px;
     z-index: 1;
 }
+/* Contorno piscante da imagem ampliada (triplo da espessura: 12px) */
+@keyframes blinkerAvailableModal {
+    0% { box-shadow: 0 0 0 12px #28a745, 0 0 45px #28a745; }
+    50% { box-shadow: 0 0 0 12px #dc3545, 0 0 45px #dc3545; }
+    100% { box-shadow: 0 0 0 12px #28a745, 0 0 45px #28a745; }
+}
+#modalImage.blinking-available-modal {
+    animation: blinkerAvailableModal 0.8s infinite;
+    border-radius: 8px;
+    width: auto !important;
+    height: auto !important;
+    max-width: calc(100vw - 80px) !important;
+    max-height: calc(100vh - 80px) !important;
+    object-fit: contain;
+}
 .unavailable-banner {
     position: absolute;
     top: 50%;
@@ -1672,6 +1687,7 @@ let bancoEditandoIndex = null;
 let fluxoCaixaEditandoIndex = null;
 let garagemImagensTemp = [], sosImagensTemp = [];
 let galeriaAtual = [], galeriaIndexAtual = 0;
+let modalEstaPiscante = false;
 let relatorioMecanicoTemp = [], comprovantesPagTemp = [], docComprovantesTemp = [];
 let docVeiculoAtual = null;
 let novoSegEditandoIndex = null;
@@ -4719,7 +4735,8 @@ async function confirmarSelfie() {
 }
 function limparSelfieCliente() { selfieClienteTemp = null; const c = document.getElementById('selfiePreviewCliente'); if (c) c.innerHTML = ''; }
 
-function openImageModal(src, gallery, index) {
+function openImageModal(src, gallery, index, isBlinking) {
+    modalEstaPiscante = !!isBlinking;
     if (Array.isArray(gallery) && gallery.length > 0) {
         galeriaAtual = gallery.slice();
         if (typeof index === 'number' && index >= 0 && index < gallery.length) galeriaIndexAtual = index;
@@ -4738,6 +4755,8 @@ function renderizarModalImagem() {
     if (galeriaIndexAtual < 0) galeriaIndexAtual = 0;
     if (galeriaIndexAtual >= galeriaAtual.length) galeriaIndexAtual = galeriaAtual.length - 1;
     img.src = galeriaAtual[galeriaIndexAtual];
+    if (modalEstaPiscante) img.classList.add('blinking-available-modal');
+    else img.classList.remove('blinking-available-modal');
     if (galeriaAtual.length > 1) {
         if (prevBtn) prevBtn.style.display = 'flex';
         if (nextBtn) nextBtn.style.display = 'flex';
@@ -4757,7 +4776,9 @@ function closeImageModal() {
     const modal = document.getElementById('imageModal');
     if (modal) modal.classList.remove('active');
     galeriaAtual = []; galeriaIndexAtual = 0;
-    const img = document.getElementById('modalImage'); if (img) img.src = '';
+    modalEstaPiscante = false;
+    const img = document.getElementById('modalImage');
+    if (img) { img.src = ''; img.classList.remove('blinking-available-modal'); }
     const prevBtn = document.getElementById('modalPrevBtn'); if (prevBtn) prevBtn.style.display = 'none';
     const nextBtn = document.getElementById('modalNextBtn'); if (nextBtn) nextBtn.style.display = 'none';
     const counter = document.getElementById('modalCounter'); if (counter) counter.style.display = 'none';
@@ -5491,7 +5512,7 @@ async function atualizarGaleriaGaragem() {
         
         if (base64Img) {
             const img = document.createElement('img'); img.src = base64Img; img.alt = 'foto';
-            img.addEventListener('click', async (ev) => { ev.stopPropagation(); openImageModal(base64Img, [base64Img], 0); });
+            img.addEventListener('click', async (ev) => { ev.stopPropagation(); openImageModal(base64Img, [base64Img], 0, statusInfo && statusInfo.status === 'disponivel'); });
             div.appendChild(img);
         } else {
             const placeholder = document.createElement('div');

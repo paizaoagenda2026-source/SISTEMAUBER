@@ -259,6 +259,36 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
 .despesas-modal-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: var(--primary); color: white; }
 .despesas-modal-header h3 { font-size: 18px; margin: 0; }
 .despesas-modal-body { flex: 1; overflow-y: auto; padding: 20px; }
+
+/* Adicionado para status da garagem */
+@keyframes blinkerAvailable {
+    0% { box-shadow: 0 0 0 4px #28a745, 0 0 15px #28a745; }
+    50% { box-shadow: 0 0 0 4px #dc3545, 0 0 15px #dc3545; }
+    100% { box-shadow: 0 0 0 4px #28a745, 0 0 15px #28a745; }
+}
+.blinking-available {
+    animation: blinkerAvailable 0.8s infinite;
+    border-radius: 8px;
+    z-index: 1;
+}
+.unavailable-banner {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    transform: translateY(-50%);
+    background: rgba(220, 53, 69, 0.95);
+    color: white;
+    padding: 8px 0;
+    font-weight: bold;
+    font-size: 14px;
+    text-align: center;
+    z-index: 10;
+    pointer-events: none;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+}
 </style>
 </head>
 <body>
@@ -5396,6 +5426,38 @@ async function salvarGaragem() {
     registrarAuditoria('Cadastro', salvas + ' imagem(ns) salva(s) na Garagem');
     alert('✅ ' + salvas + ' imagem(ns) salva(s)!' + (erros > 0 ? '\n⚠️ ' + erros + ' falharam.' + (erroMsg ? '\nMotivo: ' + erroMsg : '') : ''));
 }
+
+function obterStatusVeiculoPorImagem(nomeArquivo) {
+    if (!nomeArquivo) return null;
+    const nomeUpper = nomeArquivo.toUpperCase();
+    
+    // 1. Tenta achar placa no nome (ex: ABC1234.jpg)
+    const placaMatch = nomeUpper.match(/\b([A-Z]{3}[0-9][A-Z0-9][0-9]{2})\b/);
+    if (placaMatch) {
+        const placa = placaMatch[1];
+        const veiculo = (db.veiculos || []).find(v => v && normalizarPlaca(v.placa) === placa);
+        if (veiculo) {
+            const locado = (db.locacoes || []).some(l => l && normalizarPlaca(l.placa) === placa);
+            return { status: locado ? 'locado' : 'disponivel', veiculo };
+        }
+    }
+    
+    // 2. Tenta achar pelo fabricante/modelo (ex: MOBI.jpg)
+    const nomeSemExt = nomeUpper.replace(/\.[^/.]+$/, "").trim();
+    for (const v of (db.veiculos || [])) {
+        if (!v || !v.fabricante) continue;
+        const fabricanteUpper = v.fabricante.toUpperCase();
+        
+        if (nomeSemExt.includes(fabricanteUpper) || fabricanteUpper.includes(nomeSemExt)) {
+            const placa = normalizarPlaca(v.placa);
+            const locado = (db.locacoes || []).some(l => l && normalizarPlaca(l.placa) === placa);
+            return { status: locado ? 'locado' : 'disponivel', veiculo: v };
+        }
+    }
+    
+    return null;
+}
+
 async function atualizarGaleriaGaragem() {
     const container = document.getElementById('garagemSavedImages');
     if (!container) return;
@@ -5405,6 +5467,23 @@ async function atualizarGaleriaGaragem() {
     for (let i = 0; i < fotos.length; i++) {
         const foto = fotos[i];
         const div = document.createElement('div'); div.className = 'saved-image-item';
+        
+        let statusInfo = null;
+        if (foto && typeof foto === 'object' && foto.nome) {
+            statusInfo = obterStatusVeiculoPorImagem(foto.nome);
+        }
+        
+        if (statusInfo) {
+            if (statusInfo.status === 'disponivel') {
+                div.classList.add('blinking-available');
+            } else if (statusInfo.status === 'locado') {
+                const banner = document.createElement('div');
+                banner.className = 'unavailable-banner';
+                banner.textContent = 'VEÍCULO INDISPONÍVEL';
+                div.appendChild(banner);
+            }
+        }
+        
         let base64Img = null;
         if (foto && typeof foto === 'object' && foto.id) { try { base64Img = await obterImagemFirestore(foto.id); } catch(e) {} }
         if (!base64Img && foto && typeof foto === 'object' && foto.dataUrl) base64Img = foto.dataUrl;

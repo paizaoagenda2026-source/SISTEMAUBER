@@ -414,6 +414,10 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
             </div>
             <div class="form-group"><label>Nome</label><input type="text" id="veicProprietario" class="campo-enter"></div>
             <div class="form-group"><label>CPF Propr</label><input type="text" id="veicCpfPropr" class="campo-enter"></div>
+            <div class="form-group" style="justify-content:flex-end;">
+                <label>&nbsp;</label>
+                <button type="button" class="btn-danger" onclick="limparCamposVeiculo();cancelarDocVeiculo();" style="padding:10px;font-size:15px;font-weight:bold;width:100%;margin:0;">🧹 Limpar Campos</button>
+            </div>
         </div>
         <div class="doc-veiculo-info" id="docVeiculoInfo">
             <div><strong>📄 Documento importado:</strong> <span id="docVeiculoNome"></span></div>

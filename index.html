@@ -1704,6 +1704,7 @@ let infracaoPdfTemp = null;
 function campoVazio(v) { return !v || String(v).trim() === ''; }
 function formatarMoedaBR(v) { return 'R$ ' + (Number(v) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 function normalizarPlaca(p) { return String(p || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); }
+function normalizarNome(s) { return String(s || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim(); }
 function formatarDataBR(d) { if (!d) return ''; const p = String(d).split('-'); return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : d; }
 function parseMoeda(s) { if (typeof s === 'number') return s; return parseFloat(String(s || '0').replace('R$', '').replace(/\./g, '').replace(',', '.').trim()) || 0; }
 function gerarIdImagem() { return 'img_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8); }
@@ -2423,7 +2424,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
         db.usuarios.push({ nome: 'SERGIO', senha: '080888', tipo: 'ADM', permissoes: JSON.parse(JSON.stringify(permissoesPadrao.ADM)), selfie: null, podeRevisaoKmSemSenha: true });
         await salvarDB();
     }
-    const u = db.usuarios.find(x => x && x.nome === user && x.senha === pass);
+    const u = db.usuarios.find(x => x && normalizarNome(x.nome) === normalizarNome(user) && x.senha === pass);
     if (u) efetuarLoginUsuario(u, 'Login');
     else { document.getElementById('loginError').style.display = 'block'; registrarAuditoria('Login', 'Falha login: ' + user); }
 });
@@ -2937,6 +2938,7 @@ async function buscarFipeAutomatica(silencioso) {
     if (!silencioso) { fipeInput.value = 'Consultando FIPE...'; fipeInput.disabled = true; if (btn) { btn.disabled = true; btn.textContent = '⏳'; } }
     try {
         const respMarcas = await fetch('https://parallelum.com.br/fipe/api/v1/carros/marcas');
+        if (!respMarcas.ok) throw new Error('FIPE indisponível (HTTP ' + respMarcas.status + ')');
         const marcas = await respMarcas.json();
         const fabNorm = normalizarTextoFipe(fabricante);
         let marcaEncontrada = null;
@@ -2984,14 +2986,41 @@ async function buscarFipeAutomatica(silencioso) {
             return '';
         }
         let anoEncontrado = null;
-        if (anoModel) anoEncontrado = anos.find(a => extrairAnoDoItem(a) === anoModel);
-        if (!anoEncontrado && anoFabr) anoEncontrado = anos.find(a => extrairAnoDoItem(a) === anoFabr);
+        const anoAlvo = anoModel || anoFabr;
+        if (anoAlvo) {
+            anoEncontrado = anos.find(a => extrairAnoDoItem(a) === anoAlvo);
+            if (!anoEncontrado) {
+                const alvoNum = parseInt(anoAlvo, 10);
+                if (!isNaN(alvoNum)) {
+                    for (let delta = 0; delta <= 5; delta++) {
+                        const tentativas = [alvoNum - delta, alvoNum + delta];
+                        for (const t of tentativas) {
+                            const achou = anos.find(a => extrairAnoDoItem(a) === String(t));
+                            if (achou) { anoEncontrado = achou; break; }
+                        }
+                        if (anoEncontrado) break;
+                    }
+                }
+            }
+        }
+        if (!anoEncontrado) {
+            const comAno = anos.map(a => ({ item: a, ano: extrairAnoDoItem(a) })).filter(x => x.ano).sort((a, b) => parseInt(b.ano, 10) - parseInt(a.ano, 10));
+            if (comAno.length > 0) anoEncontrado = comAno[0].item;
+        }
         if (!anoEncontrado) { if (!silencioso) alert('Ano não encontrado.'); fipeInput.value = ''; return; }
         const respValor = await fetch('https://parallelum.com.br/fipe/api/v1/carros/marcas/' + marcaEncontrada.codigo + '/modelos/' + melhorModelo.codigo + '/anos/' + anoEncontrado.codigo);
         const dataValor = await respValor.json();
         fipeInput.value = dataValor.Valor || '';
         if (!silencioso) alert('✅ Valor FIPE: ' + (dataValor.Valor || ''));
-    } catch (err) { if (!silencioso) alert('Erro ao consultar a FIPE.'); fipeInput.value = ''; }
+    } catch (err) {
+        fipeInput.value = '';
+        if (!silencioso) {
+            const det = (err && err.message) ? err.message : String(err);
+            let dica = '';
+            if (/Failed to fetch|NetworkError|Load failed|CORS/i.test(det)) dica = '\n\n📌 Possível bloqueio do navegador: se o arquivo está aberto direto (file://), o navegador impede a consulta. Abra o sistema por um servidor (http://) ou use o app instalado para conseguir consultar a FIPE.';
+            alert('Erro ao consultar a FIPE.\n' + det + dica);
+        }
+    }
     finally { fipeInput.disabled = false; if (btn) { btn.disabled = false; btn.textContent = '🔍 FIPE'; } }
 }
 let _fipeDebounceId = null;
@@ -3116,6 +3145,10 @@ async function excluirVeiculo(i) {
     antes = db.seguros.length;
     db.seguros = db.seguros.filter(s => !s || normalizarPlaca(s.placa) !== placaNorm);
     if (antes - db.seguros.length > 0) relatorio.push('• ' + (antes - db.seguros.length) + ' seguro(s)');
+    antes = (db.seguros_novo || []).length;
+    for (const s of (db.seguros_novo || [])) { if (s && normalizarPlaca(s.placa) === placaNorm && s.pdfStorageId) { await excluirImagemFirestore(s.pdfStorageId); } }
+    db.seguros_novo = (db.seguros_novo || []).filter(s => !s || normalizarPlaca(s.placa) !== placaNorm);
+    if (antes - db.seguros_novo.length > 0) relatorio.push('• ' + (antes - db.seguros_novo.length) + ' seguro(s) v2');
     antes = db.infracoes.length;
     for (const inf of db.infracoes) { if (inf && normalizarPlaca(inf.placa) === placaNorm && inf.pdfStorageId) { await excluirImagemFirestore(inf.pdfStorageId); } }
     db.infracoes = db.infracoes.filter(inf => !inf || normalizarPlaca(inf.placa) !== placaNorm);
@@ -3148,7 +3181,7 @@ async function excluirVeiculo(i) {
     atualizarTabelaLocacoes(); atualizarTabelaLocEncerrada(); atualizarTabelaAlugueis();
     atualizarTabelaHistorico(); atualizarTabelaHistoricoAlugueis(); atualizarTabelaManutencao();
     atualizarTabelaMecanico(); atualizarTabelaPendentes(); atualizarTabelaComprovantesPag(); atualizarTabelaDoc();
-    atualizarGaleriaComprovantes(); atualizarTabelaFluxoCaixa(); atualizarTabelaCompras(); atualizarTabelaSeguros();
+    atualizarGaleriaComprovantes(); atualizarTabelaFluxoCaixa(); atualizarTabelaCompras(); atualizarTabelaSeguros(); atualizarTabelaNovoSeguro();
     atualizarPlacasInfracao(); atualizarTabelaInfracoes(); atualizarTabelaHistoricoInfracoes();
     gerarPermissoesUI();
     registrarAuditoria('Exclusão', `Veículo excluído: ${v.fabricante} - ${v.placa}`);
@@ -3804,9 +3837,13 @@ async function salvarCliente() {
         alert('✅ Cliente atualizado!');
     } else {
         db.clientes.push(cliente);
-        criarUsuarioDoCliente(cliente, selfieClienteDescriptorTemp);
+        const usuarioCriado = criarUsuarioDoCliente(cliente, selfieClienteDescriptorTemp);
         registrarAuditoria('Cadastro', `Novo cliente: ${cliente.nome}`);
-        alert('Cliente salvo!');
+        if (usuarioCriado) {
+            alert('✅ Cliente salvo!\n\n👤 ACESSO DO MOTORISTA (criado automaticamente):\n\nUsuário: ' + usuarioCriado.nome + '\nSenha: ' + usuarioCriado.senha + '\n\nAnote e envie estas informações ao motorista para ele conseguir entrar no aplicativo.');
+        } else {
+            alert('✅ Cliente salvo!\n\n⚠️ Não foi possível criar o acesso do motorista automaticamente (já existe um usuário com esse primeiro nome).\nCrie o login manualmente na aba "Usuário".');
+        }
     }
     atualizarTabelaClientes(); atualizarTabelaUsuario(); atualizarCombosLocacao();
     salvarDB(); limparCamposCliente(); limparSelfieCliente(); preencherDatasAutomaticas();
@@ -3910,18 +3947,20 @@ async function excluirCliente(i) {
     alert('✅ Cliente excluído!' + (relatorio.length ? '\n\n📋 Itens removidos:\n' + relatorio.join('\n') : ''));
 }
 function criarUsuarioDoCliente(cliente, faceDescriptor) {
-    const primeiroNome = cliente.nome.split(/\s+/)[0].toUpperCase();
-    if (db.usuarios.some(u => u && u.nome === primeiroNome)) return;
-    const tel = cliente.telefone.replace(/\D/g, '');
+    const primeiroNome = normalizarNome(cliente.nome.split(/\s+/)[0]);
+    if (db.usuarios.some(u => u && normalizarNome(u.nome) === primeiroNome)) return null;
+    const tel = String(cliente.telefone || '').replace(/\D/g, '');
     const senha = tel.length >= 10 ? tel.substring(2) : tel;
-    db.usuarios.push({
+    const novoUsuario = {
         nome: primeiroNome, senha, tipo: 'MOTORISTA',
         permissoes: JSON.parse(JSON.stringify(permissoesPadrao.MOTORISTA)),
         selfieStorageId: cliente.selfieStorageId || null,
         podeRevisaoKmSemSenha: false,
         faceDescriptor: (faceDescriptor && Array.isArray(faceDescriptor) && faceDescriptor.length === 128) ? faceDescriptor : null
-    });
+    };
+    db.usuarios.push(novoUsuario);
     atualizarTabelaUsuario();
+    return novoUsuario;
 }
 
 async function atualizarTabelaUsuario() {
@@ -6238,21 +6277,38 @@ function extrairDadosCRLV(textoOriginal) {
     if (!mR) { const cands = [...tU.matchAll(/\b(\d{11})\b/g)]; for (const c of cands) { const antes = tU.substring(Math.max(0, c.index - 30), c.index); if (!/CRV|N[ÚU]MERO/i.test(antes)) { mR = c; break; } } }
     if (mR) dados.renavam = mR[1] || mR[0];
     const marcas = ['VOLKSWAGEN','VW','FIAT','CHEVROLET','GM','FORD','TOYOTA','HONDA','HYUNDAI','RENAULT','NISSAN','JEEP','PEUGEOT','CITROEN','CITROËN','MITSUBISHI','KIA','BMW','MERCEDES','AUDI','VOLVO','LAND ROVER','JAGUAR','SUZUKI','CHERY','CAOA','DODGE','CHRYSLER','TROLLER','EFFA','LIFAN','JAC','RAM','IVECO','SCANIA','BYD','GWM','HAVAL','PORSCHE','SUBARU','LEXUS','MINI','SMART'];
+    const limparRotuloMarca = (s) => String(s || '').replace(/^\s*(?:MARCA\s*\/?\s*MODELO\s*\/?\s*VERS[ÃA]O|MARCA\s*\/?\s*MODELO|MARCA)\s*:?\s*/i, '').replace(/\s+/g, ' ').trim();
+    const limparRotuloModelo = (s) => String(s || '').replace(/^\s*(?:MODELO\s*\/?\s*VERS[ÃA]O|MODELO|VERS[ÃA]O)\s*:?\s*/i, '').replace(/\s+/g, ' ').trim();
+    const temMarca = (s) => marcas.some(mar => new RegExp('\\b' + mar.replace(/\s+/g, '\\s+') + '\\b').test(String(s).toUpperCase()));
+    let fabVal = '';
     for (const linha of linhas) {
-        const up = linha.toUpperCase();
-        if (ehLabel(linha)) continue;
-        for (const mar of marcas) {
-            if (new RegExp('\\b' + mar.replace(/\s+/g, '\\s+') + '\\b').test(up)) {
-                let val = linha.replace(/MARCA\s*\/?\s*MODELO\s*\/?\s*VERS[ÃA]O\s*:?\s*/i, '').replace(/MARCA\s*\/?\s*MODELO\s*:?\s*/i, '').replace(/MARCA\s*:?\s*/i, '').trim();
-                if (val && val.length >= 4 && val.length <= 80) { dados.fabricante = val; break; }
+        if (!temMarca(linha)) continue;
+        const val = limparRotuloMarca(linha);
+        if (val && val.length >= 2) { fabVal = val; break; }
+    }
+    if (fabVal) {
+        for (const linha of linhas) {
+            const up = linha.toUpperCase();
+            if (/^(?:MODELO|VERS[ÃA]O)/.test(up)) {
+                const md = limparRotuloModelo(linha);
+                if (md && md.length >= 2 && fabVal.toUpperCase().indexOf(md.toUpperCase()) < 0) { fabVal = fabVal + ' ' + md; break; }
             }
         }
-        if (dados.fabricante) break;
     }
-    const anosCands = [...tU.matchAll(/\b(19[89]\d|20[0-3]\d)\b/g)].map(x => x[1]);
-    const uniq = [...new Set(anosCands)].filter(a => parseInt(a, 10) <= 2024);
-    if (uniq.length >= 2) { dados.anoFabr = uniq[0]; dados.anoModel = uniq[1]; }
-    else if (uniq.length === 1) { dados.anoFabr = uniq[0]; dados.anoModel = uniq[0]; }
+    if (fabVal && fabVal.length >= 3 && fabVal.length <= 80) dados.fabricante = fabVal;
+    const anoAtual = new Date().getFullYear();
+    let fabrMatch = tU.match(/(?:ANO\s*(?:DE\s*)?FAB(?:R(?:ICA[ÇC][ÃA]O)?)?|FABRICA[ÇC][ÃA]O)\s*\.?\s*:?\s*(\d{4})/i);
+    let modelMatch = tU.match(/ANO\s*(?:DO\s*)?MOD(?:ELO)?\s*\.?\s*:?\s*(\d{4})/i);
+    if (fabrMatch) dados.anoFabr = fabrMatch[1];
+    if (modelMatch) dados.anoModel = modelMatch[1];
+    if (!dados.anoFabr || !dados.anoModel) {
+        const anosCands = [...tU.matchAll(/\b(19[89]\d|20[0-3]\d)\b/g)].filter(m => { const antes = tU.substring(Math.max(0, m.index - 30), m.index); return !/EXERC[ÍI]CIO/.test(antes); }).map(x => x[1]);
+        const uniq = [...new Set(anosCands)].filter(a => parseInt(a, 10) <= anoAtual + 1);
+        if (!dados.anoFabr && uniq.length >= 1) dados.anoFabr = uniq[0];
+        if (!dados.anoModel && uniq.length >= 2) dados.anoModel = uniq[1];
+        if (!dados.anoModel && dados.anoFabr) dados.anoModel = dados.anoFabr;
+        if (!dados.anoFabr && dados.anoModel) dados.anoFabr = dados.anoModel;
+    }
     const cores = ['BRANCA','PRETA','PRATA','CINZA','VERMELHA','AZUL','VERDE','AMARELA','MARROM','BEGE','DOURADA','LARANJA','VINHO','ROSA','ROXA','BRANCO','PRETO','VERMELHO','AMARELO','DOURADO','LILAS','CREME','BORDÔ','BORDO'];
     for (const cor of cores) { if (new RegExp('\\b' + cor + '\\b').test(tU)) { dados.cor = cor; break; } }
     function pareceNomePessoa(v) {
@@ -6265,7 +6321,32 @@ function extrairDadosCRLV(textoOriginal) {
         if (palavras.length < 2 || palavras.length > 6) return false;
         return palavras.every(p => /^[A-ZÀ-Ú][A-ZÀ-Ú'\.\-]{1,}$/.test(p));
     }
-    for (const linha of linhas) { const mm = linha.toUpperCase().match(/^(?:NOME|PROPRIET[ÁA]RIO)(?:\s+DO\s+PROPRIET[ÁA]RIO)?\s*:?\s+(.+)$/); if (mm && pareceNomePessoa(mm[1].trim())) { dados.proprietario = mm[1].trim(); break; } }
+    (function extrairProprietario() {
+        // 1) Rótulo "NOME"/"PROPRIETÁRIO" com o valor na mesma linha
+        for (const linha of linhas) {
+            const mm = linha.toUpperCase().match(/^(?:NOME(?:\s+DO\s+PROPRIET[ÁA]RIO)?|PROPRIET[ÁA]RIO)\s*:?\s+(.+)$/);
+            if (mm && pareceNomePessoa(mm[1].trim())) { dados.proprietario = mm[1].trim(); return; }
+        }
+        // 2) Rótulo em uma linha e o nome na(s) linha(s) seguinte(s)
+        for (let i = 0; i < linhas.length; i++) {
+            const up = linhas[i].toUpperCase().trim();
+            if (/^(?:NOME(?:\s+DO\s+PROPRIET[ÁA]RIO)?|PROPRIET[ÁA]RIO)\s*:?$/.test(up)) {
+                for (let j = i + 1; j < Math.min(i + 4, linhas.length); j++) {
+                    if (pareceNomePessoa(linhas[j])) { dados.proprietario = linhas[j].trim(); return; }
+                }
+            }
+        }
+        // 3) Nome na linha anterior ou posterior ao CPF/CNPJ
+        const idxCpf = linhas.findIndex(l => /\b(\d{3}\.\d{3}\.\d{3}-\d{2})\b|\b(\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2})\b/.test(l.toUpperCase()));
+        if (idxCpf >= 0) {
+            for (let j = idxCpf - 1; j >= Math.max(0, idxCpf - 4); j--) {
+                if (pareceNomePessoa(linhas[j])) { dados.proprietario = linhas[j].trim(); return; }
+            }
+            for (let j = idxCpf + 1; j < Math.min(idxCpf + 4, linhas.length); j++) {
+                if (pareceNomePessoa(linhas[j])) { dados.proprietario = linhas[j].trim(); return; }
+            }
+        }
+    })();
     mR = tU.match(/\b(\d{3}\.\d{3}\.\d{3}-\d{2})\b/) || tU.match(/\b(\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2})\b/);
     if (mR) dados.cpfCnpj = mR[1];
     return dados;

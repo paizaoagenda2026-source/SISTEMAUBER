@@ -6266,17 +6266,27 @@ function extrairDadosComprovante(textoOriginal) {
     ];
     for (const p of valorPatterns) { const m = tU.match(p); if (m) { const v = parseValor(m[1]); if (v > 0) { valor = v; break; } } }
 
+    function padronizarData(s) {
+        if (!s) return '';
+        const p = String(s).split(/[\/.\-]/);
+        if (p.length !== 3) return String(s);
+        return String(p[0]).padStart(2, '0') + '/' + String(p[1]).padStart(2, '0') + '/' + p[2];
+    }
     let data = '';
     const dataPatterns = [
-        /DATA\s+E\s+HORA\s+DA\s+TRANSA[ÇC][ÃA]O\s+(\d{2}\/\d{2}\/\d{4})/,
-        /DATA\s+DA\s+TRANSFER[EÊ]NCIA\s*:?\s*(\d{2}\/\d{2}\/\d{4})/,
-        /DATA\s+DO\s+PAGAMENTO\s*:?\s*(\d{2}\/\d{2}\/\d{4})/,
-        /DATA\s+DO\s+PIX\s*:?\s*(\d{2}\/\d{2}\/\d{4})/,
-        /DATA\s+DA\s+OPERA[ÇC][ÃA]O\s*:?\s*(\d{2}\/\d{2}\/\d{4})/,
-        /DATA\s*:?\s*(\d{2}\/\d{2}\/\d{4})/
+        /DATA\s+E\s+HORA\s+DA\s+TRANSA[ÇC][ÃA]O\s*:?\s*(\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{4})/,
+        /DATA\s+DA\s+TRANSFER[EÊ]NCIA\s*:?\s*(\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{4})/,
+        /DATA\s+DO\s+PAGAMENTO\s*:?\s*(\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{4})/,
+        /DATA\s+DE\s+PAGAMENTO\s*:?\s*(\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{4})/,
+        /DATA\s+DO\s+PIX\s*:?\s*(\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{4})/,
+        /DATA\s+DO\s+DEP[OÓ]SITO\s*:?\s*(\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{4})/,
+        /DATA\s+DA\s+OPERA[ÇC][ÃA]O\s*:?\s*(\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{4})/,
+        /DATA\s+DA\s+TRANSA[ÇC][ÃA]O\s*:?\s*(\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{4})/,
+        /DEP[OÓ]SITO\s+(?:EM\s+)?(\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{4})/,
+        /DATA\s*:?\s*(\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{4})/
     ];
-    for (const p of dataPatterns) { const m = tU.match(p); if (m) { data = m[1]; break; } }
-    if (!data) { const m = tU.match(/(\d{2}\/\d{2}\/\d{4})/); if (m) data = m[1]; }
+    for (const p of dataPatterns) { const m = tU.match(p); if (m) { data = padronizarData(m[1]); break; } }
+    if (!data) { const m = tU.match(/(\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{4})/); if (m) data = padronizarData(m[1]); }
 
     function extrairNome(startIdx, maxLen) {
         maxLen = maxLen || 500;
@@ -6640,7 +6650,11 @@ async function handleComprovantesPagInputChange(e) {
     if (container) container.innerHTML = '<p style="color:#666;padding:10px;">⏳ Processando arquivos...</p>';
     let placasUsuario = getPlacasPermitidasParaFiltro();
     if (placasUsuario === null) placasUsuario = obterTodasPlacasCadastradas();
-    const placaAuto = placasUsuario.length > 0 ? placasUsuario[0] : '';
+    // Placa do carro locado para o usuário logado
+    const placasLocadas = obterPlacasDoUsuarioLogado();
+    const placaAuto = placasLocadas.length > 0 ? placasLocadas[0] : (placasUsuario.length > 0 ? placasUsuario[0] : '');
+    // Pagador = nome do usuário logado
+    const pagadorAuto = (usuarioLogado && usuarioLogado.nome) ? String(usuarioLogado.nome).trim() : '';
     const errors = [];
     for (let i = 0; i < files.length; i++) {
         const file = files[i];
@@ -6664,7 +6678,7 @@ async function handleComprovantesPagInputChange(e) {
             await salvarImagemFirestore(id, base64, { nomeArquivo: file.name, tipo: file.type || (isPDF ? 'application/pdf' : 'image/jpeg'), categoria: 'comprovante' });
             let previewUrl = null;
             if (isImg) previewUrl = base64;
-            comprovantesPagTemp.push({ storageId: id, nomeArquivo: file.name, tipoArquivo: file.type || (isPDF ? 'application/pdf' : 'image/jpeg'), previewUrl: previewUrl, pagador: dados.pagador || '', recebedor: dados.recebedor || '', valor: dados.valor || 0, valorFormatado: dados.valor ? formatarMoedaBR(dados.valor) : '', dataComprovante: dados.data || '', placa: placaAuto, dataUpload: new Date().toLocaleString('pt-BR') });
+            comprovantesPagTemp.push({ storageId: id, nomeArquivo: file.name, tipoArquivo: file.type || (isPDF ? 'application/pdf' : 'image/jpeg'), previewUrl: previewUrl, pagador: pagadorAuto || dados.pagador || '', recebedor: dados.recebedor || '', valor: dados.valor || 0, valorFormatado: dados.valor ? formatarMoedaBR(dados.valor) : '', dataComprovante: dados.data || '', placa: placaAuto, dataUpload: new Date().toLocaleString('pt-BR') });
         } catch (err) { errors.push(file.name + ': ' + (err.message || 'erro')); }
     }
     renderizarPreviewComprovantesPag();

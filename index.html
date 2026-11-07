@@ -6708,8 +6708,7 @@ async function salvarComprovantesPagamento() {
             const candidatos = db.alugueis.filter(a => { if (!a || a.placa !== placa) return false; if (a.status === 'pago') return false; const valA = Number(a.valorNumerico) || parseMoeda(a.valor) || 0; return Math.abs(valA - valorNum) < 0.01; });
             if (candidatos.length > 0) {
                 candidatos.sort((a, b) => { const dtA = a.vencimento ? new Date(a.vencimento + 'T00:00:00') : new Date('2099-12-31'); const dtB = b.vencimento ? new Date(b.vencimento + 'T00:00:00') : new Date('2099-12-31'); return dtA - dtB; });
-                let matchingAluguel = candidatos.find(a => { if (!a.vencimento) return false; return dataPgtoISO <= a.vencimento; });
-                if (!matchingAluguel) matchingAluguel = candidatos[0];
+                let matchingAluguel = candidatos.find(a => { if (!a.vencimento) return false; return dataDentroTolerancia(dataPgtoISO, a.vencimento, 5); });
                 if (matchingAluguel) { processarPagamentoAutomatico(matchingAluguel, dataPgtoISO); autoPagos++; registrarAuditoria('Pagamento Automático', 'Comprovante conciliado: ' + matchingAluguel.locatario + ' - ' + placa); }
             }
         }
@@ -6793,6 +6792,14 @@ async function excluirComprovanteSalvo(idx) {
    LEITURA AUTOMÁTICA DOC
    ============================================================ */
 function converterDataBRparaISO(dataBR) { if (!dataBR || !dataBR.includes('/')) return ''; const parts = dataBR.split('/'); if (parts.length !== 3) return ''; return parts[2] + '-' + parts[1] + '-' + parts[0]; }
+function dataDentroTolerancia(dataPgtoISO, vencimentoISO, maxDiasAtraso) {
+    if (!dataPgtoISO || !vencimentoISO) return true;
+    const dPgto = new Date(dataPgtoISO + 'T00:00:00');
+    const dVenc = new Date(vencimentoISO + 'T00:00:00');
+    if (isNaN(dPgto.getTime()) || isNaN(dVenc.getTime())) return true;
+    const diffDias = Math.round((dPgto.getTime() - dVenc.getTime()) / 86400000);
+    return diffDias >= 0 && diffDias <= (maxDiasAtraso || 5);
+}
 function encontrarPagamentoCorrespondente(valor, placa) {
     if (!valor || valor <= 0) return null;
     const candidatos = [];
@@ -6819,7 +6826,7 @@ function renderizarPreviewDocComprovante() {
         const aluguelMatch = item.aluguelMatch;
         if (aluguelMatch) {
             const valorMatch = Math.abs((Number(aluguelMatch.valorNumerico) || parseMoeda(aluguelMatch.valor) || 0) - (item.valor || 0)) < 0.01;
-            const dataMatch = !item.dataComprovante || !aluguelMatch.vencimento || converterDataBRparaISO(item.dataComprovante) === aluguelMatch.vencimento;
+            const dataMatch = !item.dataComprovante || !aluguelMatch.vencimento || dataDentroTolerancia(converterDataBRparaISO(item.dataComprovante), aluguelMatch.vencimento, 5);
             if (valorMatch && dataMatch) statusDiv.innerHTML = '<span class="status-pago" style="font-size:11px;">✅ PAGAMENTO ENCONTRADO</span>';
             else if (!valorMatch) statusDiv.innerHTML = '<span class="status-atrasado" style="font-size:11px;">⚠️ DIVERGÊNCIA DE VALOR</span>';
             else statusDiv.innerHTML = '<span class="status-atrasado" style="font-size:11px;">⚠️ DIVERGÊNCIA DE DATA</span>';
@@ -6903,7 +6910,7 @@ function salvarDoc() {
             if (match) {
                 const aluguel = match.aluguel;
                 const valorMatch = Math.abs((Number(aluguel.valorNumerico) || parseMoeda(aluguel.valor) || 0) - valorNum) < 0.01;
-                const dataMatch = !item.dataComprovante || !aluguel.vencimento || converterDataBRparaISO(item.dataComprovante) === aluguel.vencimento;
+                const dataMatch = !item.dataComprovante || !aluguel.vencimento || dataDentroTolerancia(converterDataBRparaISO(item.dataComprovante), aluguel.vencimento, 5);
                 if (valorMatch && dataMatch) { aprovado = true; motivo = 'Conciliado automaticamente'; aluguelParaConciliar = aluguel; }
                 else if (!valorMatch) { motivo = 'Divergência de valor'; divergentes++; }
                 else { motivo = 'Divergência de data'; divergentes++; }

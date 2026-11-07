@@ -2927,6 +2927,21 @@ function tokenizarModeloFipe(txt) {
     }
     return tokens;
 }
+const FIPE_BASE_URL = 'https://fipe.parallelum.com.br/api/v2';
+function fipeFetchComTimeout(url, ms) {
+    return new Promise((resolve, reject) => {
+        const ctrl = new AbortController();
+        const t = setTimeout(() => ctrl.abort(), ms);
+        fetch(url, { signal: ctrl.signal })
+            .then(r => { clearTimeout(t); resolve(r); })
+            .catch(e => { clearTimeout(t); reject(e); });
+    });
+}
+async function fipeFetch(recurso) {
+    const resp = await fipeFetchComTimeout(FIPE_BASE_URL + recurso, 15000);
+    if (!resp.ok) throw new Error('FIPE respondeu HTTP ' + resp.status);
+    return resp;
+}
 async function buscarFipeAutomatica(silencioso) {
     silencioso = !!silencioso;
     const fabricante = document.getElementById('veicFabricante').value.trim();
@@ -2937,23 +2952,21 @@ async function buscarFipeAutomatica(silencioso) {
     if (!fabricante) { if (!silencioso) alert('Informe o Fabricante/Modelo.'); return; }
     if (!silencioso) { fipeInput.value = 'Consultando FIPE...'; fipeInput.disabled = true; if (btn) { btn.disabled = true; btn.textContent = '⏳'; } }
     try {
-        const respMarcas = await fetch('https://parallelum.com.br/fipe/api/v1/carros/marcas');
-        if (!respMarcas.ok) throw new Error('FIPE indisponível (HTTP ' + respMarcas.status + ')');
+        const respMarcas = await fipeFetch('/cars/brands');
         const marcas = await respMarcas.json();
         const fabNorm = normalizarTextoFipe(fabricante);
         let marcaEncontrada = null;
-        const marcasOrdenadas = [...marcas].sort((a, b) => (b.nome || '').length - (a.nome || '').length);
+        const marcasOrdenadas = [...marcas].sort((a, b) => (b.name || '').length - (a.name || '').length);
         for (const m of marcasOrdenadas) {
-            const nomeNorm = normalizarTextoFipe(m.nome);
-            if (!nomeNorm) continue;
-            if (fabNorm === nomeNorm || fabNorm.startsWith(nomeNorm + ' ') || fabNorm.includes(' ' + nomeNorm + ' ') || fabNorm.endsWith(' ' + nomeNorm)) { marcaEncontrada = m; break; }
+            const nameNorm = normalizarTextoFipe(m.name);
+            if (!nameNorm) continue;
+            if (fabNorm === nameNorm || fabNorm.startsWith(nameNorm + ' ') || fabNorm.includes(' ' + nameNorm + ' ') || fabNorm.endsWith(' ' + nameNorm)) { marcaEncontrada = m; break; }
         }
-        if (!marcaEncontrada) { const primeiraPalavra = fabNorm.split(' ')[0]; marcaEncontrada = marcas.find(m => normalizarTextoFipe(m.nome) === primeiraPalavra) || marcas.find(m => normalizarTextoFipe(m.nome).startsWith(primeiraPalavra)); }
+        if (!marcaEncontrada) { const primeiraPalavra = fabNorm.split(' ')[0]; marcaEncontrada = marcas.find(m => normalizarTextoFipe(m.name) === primeiraPalavra) || marcas.find(m => normalizarTextoFipe(m.name).startsWith(primeiraPalavra)); }
         if (!marcaEncontrada) { if (!silencioso) alert('Marca não encontrada na FIPE: ' + fabricante); fipeInput.value = ''; return; }
-        const respModelos = await fetch('https://parallelum.com.br/fipe/api/v1/carros/marcas/' + marcaEncontrada.codigo + '/modelos');
-        const dataModelos = await respModelos.json();
-        const modelos = dataModelos.modelos || [];
-        const marcaNorm = normalizarTextoFipe(marcaEncontrada.nome);
+        const respModelos = await fipeFetch('/cars/brands/' + marcaEncontrada.code + '/models');
+        const modelos = await respModelos.json();
+        const marcaNorm = normalizarTextoFipe(marcaEncontrada.name);
         let modeloBusca = fabNorm.replace(marcaNorm, '').trim().replace(/^[\/\-\s]+/, '').replace(/\s+/g, ' ').trim();
         const tokensAlvo = tokenizarModeloFipe(modeloBusca);
         if (tokensAlvo.length === 0) { if (!silencioso) alert('Informe o modelo.'); fipeInput.value = ''; return; }
@@ -2973,16 +2986,16 @@ async function buscarFipeAutomatica(silencioso) {
         }
         let melhorModelo = null;
         let melhorInfo = { pontos: -Infinity, matches: 0 };
-        for (const mod of modelos) { const info = pontuarModelo(mod.nome); if (info.pontos > melhorInfo.pontos) { melhorInfo = info; melhorModelo = mod; } }
+        for (const mod of modelos) { const info = pontuarModelo(mod.name); if (info.pontos > melhorInfo.pontos) { melhorInfo = info; melhorModelo = mod; } }
         const precisaMatches = tokensAlvo.length >= 2 ? 2 : 1;
         if (!melhorModelo || melhorInfo.matches < precisaMatches) { if (!silencioso) alert('Modelo FIPE não encontrado.'); fipeInput.value = ''; return; }
-        const respAnos = await fetch('https://parallelum.com.br/fipe/api/v1/carros/marcas/' + marcaEncontrada.codigo + '/modelos/' + melhorModelo.codigo + '/anos');
+        const respAnos = await fipeFetch('/cars/brands/' + marcaEncontrada.code + '/models/' + melhorModelo.code + '/years');
         const anosBrutos = await respAnos.json();
-        const anos = (anosBrutos || []).filter(a => { const cod = String(a.codigo || '').trim(); const nome = String(a.nome || '').trim(); if (cod.startsWith('32000')) return false; if (nome.startsWith('32000')) return false; return true; });
+        const anos = (anosBrutos || []).filter(a => { const cod = String(a.code || '').trim(); const name = String(a.name || '').trim(); if (cod.startsWith('32000')) return false; if (name.startsWith('32000')) return false; return true; });
         function extrairAnoDoItem(item) {
-            const cod = String(item.codigo || '').trim(); const nome = String(item.nome || '').trim();
+            const cod = String(item.code || '').trim(); const name = String(item.name || '').trim();
             const mCod = cod.match(/^(19\d{2}|20\d{2})/); if (mCod) return mCod[1];
-            const mNome = nome.match(/\b(19\d{2}|20\d{2})\b/); if (mNome) return mNome[1];
+            const mName = name.match(/\b(19\d{2}|20\d{2})\b/); if (mName) return mName[1];
             return '';
         }
         let anoEncontrado = null;
@@ -3008,17 +3021,16 @@ async function buscarFipeAutomatica(silencioso) {
             if (comAno.length > 0) anoEncontrado = comAno[0].item;
         }
         if (!anoEncontrado) { if (!silencioso) alert('Ano não encontrado.'); fipeInput.value = ''; return; }
-        const respValor = await fetch('https://parallelum.com.br/fipe/api/v1/carros/marcas/' + marcaEncontrada.codigo + '/modelos/' + melhorModelo.codigo + '/anos/' + anoEncontrado.codigo);
+        const respValor = await fipeFetch('/cars/brands/' + marcaEncontrada.code + '/models/' + melhorModelo.code + '/years/' + anoEncontrado.code);
         const dataValor = await respValor.json();
-        fipeInput.value = dataValor.Valor || '';
-        if (!silencioso) alert('✅ Valor FIPE: ' + (dataValor.Valor || ''));
+        const valor = dataValor.price || '';
+        fipeInput.value = valor;
+        if (!silencioso) alert('✅ Valor FIPE: ' + valor);
     } catch (err) {
         fipeInput.value = '';
         if (!silencioso) {
             const det = (err && err.message) ? err.message : String(err);
-            let dica = '';
-            if (/Failed to fetch|NetworkError|Load failed|CORS/i.test(det)) dica = '\n\n📌 Possível bloqueio do navegador: se o arquivo está aberto direto (file://), o navegador impede a consulta. Abra o sistema por um servidor (http://) ou use o app instalado para conseguir consultar a FIPE.';
-            alert('Erro ao consultar a FIPE.\n' + det + dica);
+            alert('Erro ao consultar a FIPE.\n' + det + '\n\nVerifique sua conexão com a internet e tente novamente em instantes.');
         }
     }
     finally { fipeInput.disabled = false; if (btn) { btn.disabled = false; btn.textContent = '🔍 FIPE'; } }

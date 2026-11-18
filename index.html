@@ -5746,7 +5746,7 @@ function processarPagamentoAutomatico(aluguelObj, dataPagamentoISO) {
         if (!jaExiste) {
             const valorBase = parseMoeda(locAtiva.valorAluguel) || parseMoeda(locAtiva.aluguelMensal);
             let valorProx = valorBase, descricaoProx = 'Aluguel';
-            const parcelasExistentes = (db.alugueis || []).filter(x => x && x.locatario === aluguelObj.locatario && x.placa === aluguelObj.placa).length;
+            const parcelaAtual = Number(aluguelObj.parcela) || 1;
             const pagCaucao = locAtiva.pagCaucao || 'avista';
             const caucaoTotal = parseMoeda(locAtiva.caucao);
             const numDivisoes = getNumDivisoesCaucao(tipoPag);
@@ -5754,11 +5754,11 @@ function processarPagamentoAutomatico(aluguelObj, dataPagamentoISO) {
             if (pagCaucao === 'parcelado') totalCaucaoParcelas = numDivisoes;
             else if (pagCaucao === 'entrada') totalCaucaoParcelas = numDivisoes;
             else if (pagCaucao === 'avista') totalCaucaoParcelas = 1;
-            if (parcelasExistentes < totalCaucaoParcelas && pagCaucao !== 'avista') {
-                if (pagCaucao === 'parcelado') { valorProx = valorBase + (caucaoTotal / numDivisoes); descricaoProx = 'Aluguel + Caução ' + (parcelasExistentes + 1) + '/' + numDivisoes; }
-                else if (pagCaucao === 'entrada') { const entrada = parseMoeda(locAtiva.caucaoPago); const saldo = Math.max(0, caucaoTotal - entrada); const numSaldo = numDivisoes - 1; valorProx = valorBase + (numSaldo > 0 ? (saldo / numSaldo) : 0); descricaoProx = 'Aluguel + Saldo Caução ' + parcelasExistentes + '/' + numSaldo; }
+            if (parcelaAtual < totalCaucaoParcelas && pagCaucao !== 'avista') {
+                if (pagCaucao === 'parcelado') { valorProx = valorBase + (caucaoTotal / numDivisoes); descricaoProx = 'Aluguel + Caução ' + (parcelaAtual + 1) + '/' + numDivisoes; }
+                else if (pagCaucao === 'entrada') { const entrada = parseMoeda(locAtiva.caucaoPago); const saldo = Math.max(0, caucaoTotal - entrada); const numSaldo = numDivisoes - 1; valorProx = valorBase + (numSaldo > 0 ? (saldo / numSaldo) : 0); descricaoProx = 'Aluguel + Saldo Caução ' + parcelaAtual + '/' + numSaldo; }
             }
-            db.alugueis.push({ locatario: aluguelObj.locatario, fabricante: aluguelObj.fabricante || '', placa: aluguelObj.placa, data: dataPagamentoISO, vencimento: proximoVenc, valor: formatarMoedaBR(valorProx), valorNumerico: valorProx, origem: descricaoProx, tipoPagamento: aluguelObj.tipoPagamento || 'mensal', status: 'pendente', parcela: parcelasExistentes + 1, dataInicio: aluguelObj.dataInicio || locAtiva.dataInicio, dataFim: aluguelObj.dataFim || locAtiva.dataFim, pagCaucao: pagCaucao, totalParcelas: aluguelObj.totalParcelas || formatarMoedaBR(locAtiva.valorTotalParcelas) });
+            db.alugueis.push({ locatario: aluguelObj.locatario, fabricante: aluguelObj.fabricante || '', placa: aluguelObj.placa, data: dataPagamentoISO, vencimento: proximoVenc, valor: formatarMoedaBR(valorProx), valorNumerico: valorProx, origem: descricaoProx, tipoPagamento: aluguelObj.tipoPagamento || 'mensal', status: 'pendente', parcela: parcelaAtual + 1, dataInicio: aluguelObj.dataInicio || locAtiva.dataInicio, dataFim: aluguelObj.dataFim || locAtiva.dataFim, pagCaucao: pagCaucao, totalParcelas: aluguelObj.totalParcelas || formatarMoedaBR(locAtiva.valorTotalParcelas) });
         }
     }
     const idxRemover = db.alugueis.indexOf(aluguelObj);

@@ -1100,6 +1100,7 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
             <button class="sub-tab active" onclick="switchSubTabHistorico('geral')">📜 Histórico Geral</button>
             <button class="sub-tab" onclick="switchSubTabHistorico('alugueis')">💰 Histórico de Aluguéis</button>
             <button class="sub-tab" onclick="switchSubTabHistorico('infracoes')">🚨 Histórico de Infrações</button>
+            <button class="sub-tab" onclick="switchSubTabHistorico('vistoria')">📸 Histórico de Vistoria</button>
         </div>
         <div class="sub-tab-content active" id="subTabHistGeral">
             <div class="filter-bar">
@@ -1144,6 +1145,14 @@ input[type="text"], input[type="search"], textarea { text-transform: uppercase; 
                     <tbody></tbody>
                 </table>
             </div>
+        </div>
+        <!-- NOVA SUBTAB: HISTÓRICO DE VISTORIA -->
+        <div class="sub-tab-content" id="subTabHistVistoria">
+            <div class="filter-bar">
+                <input type="text" class="filter-input" placeholder="🔍 Filtrar por locatário ou placa..." id="filterHistVistoria" style="margin-bottom:0;">
+                <button class="btn-buscar" onclick="limparFiltroVistoria()" style="padding:10px 20px;margin:0;font-size:14px;">🧹 Limpar Filtro</button>
+            </div>
+            <div id="historicoVistoriaContainer"></div>
         </div>
         <!-- NOVA SUBTAB: HISTÓRICO DE INFRAÇÕES -->
         <div class="sub-tab-content" id="subTabHistInfracoes">
@@ -2688,8 +2697,103 @@ function switchSubTabHistorico(tipo) {
     if (tipo === 'geral') { tabs[0].classList.add('active'); document.getElementById('subTabHistGeral').classList.add('active'); atualizarTabelaHistorico(); }
     else if (tipo === 'alugueis') { tabs[1].classList.add('active'); document.getElementById('subTabHistAlugueis').classList.add('active'); atualizarTabelaHistoricoAlugueis(); }
     else if (tipo === 'infracoes') { tabs[2].classList.add('active'); document.getElementById('subTabHistInfracoes').classList.add('active'); atualizarTabelaHistoricoInfracoes(); }
+    else if (tipo === 'vistoria') { tabs[3].classList.add('active'); document.getElementById('subTabHistVistoria').classList.add('active'); atualizarHistoricoVistoria(); }
 }
 
+function limparFiltroVistoria() {
+    const el = document.getElementById('filterHistVistoria');
+    if (el) { el.value = ''; if (el._filterHandler) el._filterHandler.call(el); }
+}
+async function atualizarHistoricoVistoria() {
+    const container = document.getElementById('historicoVistoriaContainer');
+    if (!container) return;
+    container.innerHTML = '';
+    const lista = db.locacoesEncerradas || [];
+    // Filtrar apenas locações encerradas que possuem fotos de vistoria
+    let itens = lista.map((l, idx) => ({ l, idx })).filter(entry => entry.l && Array.isArray(entry.l.vistoria) && entry.l.vistoria.length > 0);
+    if (itens.length === 0) {
+        container.innerHTML = '<p style="color:#999;text-align:center;padding:40px;">Nenhuma vistoria registrada em locações encerradas.</p>';
+        return;
+    }
+    itens.sort((a, b) => (b.l.dataEncerramento || '').localeCompare(a.l.dataEncerramento || ''));
+    const filtroEl = document.getElementById('filterHistVistoria');
+    const render = function() {
+        const f = String(filtroEl && filtroEl.value ? filtroEl.value : '').toLowerCase();
+        container.innerHTML = '';
+        const visiveis = itens.filter(entry => {
+            if (!f) return true;
+            const hay = ((entry.l.locatario || '') + ' ' + (entry.l.placa || '') + ' ' + (entry.l.fabricante || '')).toLowerCase();
+            return hay.includes(f);
+        });
+        if (visiveis.length === 0) { container.innerHTML = '<p style="color:#999;text-align:center;padding:40px;">Nenhum resultado para o filtro.</p>'; return; }
+        visiveis.forEach(entry => { container.appendChild(criarCardVistoriaEncerrada(entry.l, entry.idx)); });
+    };
+    if (filtroEl && !filtroEl._filterHandlerVistoria) {
+        filtroEl._filterHandlerVistoria = render;
+        filtroEl.addEventListener('input', render);
+    }
+    // garantir que o handler principal também exista para compatibilidade
+    if (filtroEl && !filtroEl._filterHandler) filtroEl._filterHandler = render;
+    render();
+}
+function criarCardVistoriaEncerrada(l, idxLocacao) {
+    const card = document.createElement('div');
+    card.className = 'subfolder';
+    card.style.cssText = 'background:#fff;';
+    const header = document.createElement('div');
+    header.className = 'subfolder-header';
+    header.style.cssText = 'display:flex;flex-wrap:wrap;align-items:center;gap:12px;border-bottom:2px solid var(--primary);padding-bottom:8px;margin-bottom:12px;';
+    const dataFim = formatarDataBR(l.dataEncerramento || l.dataFimEfetiva) || l.dataEncerramento || '-';
+    const dataIni = formatarDataBR(l.dataInicio) || '';
+    header.innerHTML = '<h4 style="margin:0;color:var(--primary);font-size:15px;">📸 Vistoria — ' + (l.locatario || 'Sem locatário') + ' — ' + (l.placa || 'Sem placa') + '</h4>' +
+        '<span style="font-size:12px;color:#666;">🗓️ ' + (dataIni ? dataIni + ' → ' : '') + dataFim + '</span>' +
+        '<span style="font-size:12px;color:#555;">🚗 ' + (l.fabricante || '-') + '</span>' +
+        '<span style="margin-left:auto;font-size:12px;font-weight:bold;color:var(--primary);">' + (l.vistoria.length) + ' foto(s)</span>';
+    card.appendChild(header);
+    const fotosWrap = document.createElement('div');
+    fotosWrap.className = 'saved-images';
+    card.appendChild(fotosWrap);
+    // load fotos de forma assíncrona
+    (async function() {
+        const fotos = l.vistoria || [];
+        for (let i = 0; i < fotos.length; i++) {
+            const foto = fotos[i];
+            const div = document.createElement('div');
+            div.className = 'saved-image-item';
+            let base64Img = null, idFoto = null;
+            if (foto && typeof foto === 'object' && foto.id) idFoto = foto.id;
+            else if (typeof foto === 'string' && foto.startsWith('data:')) base64Img = foto;
+            if (idFoto) { try { base64Img = await obterImagemFirestore(idFoto); } catch(e) {} }
+            if (!base64Img && foto && typeof foto === 'object' && foto.dataUrl) base64Img = foto.dataUrl;
+            if (base64Img) {
+                const img = document.createElement('img'); img.src = base64Img; img.alt = 'vistoria';
+                img.onclick = () => openImageModal(base64Img, [base64Img], 0);
+                div.appendChild(img);
+            } else {
+                const ph = document.createElement('div');
+                ph.style.cssText = 'display:flex;align-items:center;justify-content:center;height:200px;background:#f0f0f0;color:#999;font-size:12px;text-align:center;padding:10px;width:200px;';
+                ph.textContent = '⚠️ Imagem indisponível';
+                div.appendChild(ph);
+            }
+            const btn = document.createElement('button');
+            btn.className = 'delete-btn'; btn.textContent = '×';
+            btn.title = 'Excluir foto';
+            btn.onclick = async (e) => {
+                e.stopPropagation();
+                if (!confirm('Excluir esta foto do histórico de vistoria?')) return;
+                const f = l.vistoria[i];
+                if (f && typeof f === 'object' && f.id) { try { await excluirImagemFirestore(f.id); } catch(err) {} }
+                l.vistoria.splice(i, 1);
+                await salvarDB();
+                registrarAuditoria('Exclusão', 'Foto de vistoria excluída da locação encerrada: ' + l.placa);
+                atualizarHistoricoVistoria();
+            };
+            div.appendChild(btn);
+            fotosWrap.appendChild(div);
+        }
+    })();
+    return card;
+}
 function setupFilter(inputId, tableId, dashboardCallback, dateIniId, dateFimId) {
     const input = document.getElementById(inputId);
     if (!input) return;
